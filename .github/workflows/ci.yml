@@ -1,0 +1,74 @@
+# CI for memex: fmt, clippy and tests on ubuntu, macos and windows, plus an MSRV 1.85 build.
+# MEMEX_BLESS must never be set here (a guard step fails the job). No secrets, no deploy.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: never
+
+jobs:
+  test:
+    name: "test (${{ matrix.os }})"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Keep LF line endings
+        shell: bash
+        run: git config --global core.autocrlf false
+
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Install stable Rust with clippy and rustfmt
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache cargo artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Refuse MEMEX_BLESS in CI
+        shell: bash
+        run: |
+          if [ -n "${MEMEX_BLESS:-}" ]; then echo "MEMEX_BLESS must not be set in CI"; exit 1; fi
+
+      - name: Format check
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo fmt --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets --locked -- -D warnings
+
+      - name: Test
+        run: cargo test --locked
+
+      - name: Tests leave the tree clean
+        shell: bash
+        run: git diff --exit-code
+
+  msrv:
+    name: MSRV 1.85
+    runs-on: ubuntu-latest
+    steps:
+      - name: Keep LF line endings
+        shell: bash
+        run: git config --global core.autocrlf false
+
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Install Rust 1.85
+        uses: dtolnay/rust-toolchain@1.85
+
+      - name: Build on MSRV
+        run: cargo build --locked
