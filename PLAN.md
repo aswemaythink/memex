@@ -316,7 +316,7 @@ Every slice writes its CASES.md entries (from the design § and the §2 must-cov
 
 **Phase 5: hardening**
 - **S5.1 PORT cases**, plus whatever the Windows CI shakes out.
-- **S5.2 Break-it cook** (worktree, does not commit). Targets prune and store paths (symlinks, a `..` stream, store not writable), the 16 KiB boundary with multibyte text, frontmatter injection, AGENTS.md marker damage, citation tokenizer edge cases, huge or binary files. Each finding becomes a case and a brief.
+- **S5.2 Break-it cook** (worktree, does not commit). Targets prune and store paths (symlinks, a `..` stream, store not writable), the 16 KiB boundary with multibyte text, frontmatter injection, AGENTS.md marker damage, the accepted prune race (a stream dir swapped for a symlink between check and unlink; closing it needs openat/unlinkat), citation tokenizer edge cases, huge or binary files. Each finding becomes a case and a brief.
 - **S5.3 Performance.** In reference-ui: `hyperfine -w3 'memex info' 'memex search namer' 'memex show packages/reference-rs'`. The target is under 200 ms each. Profile first; consult the oracle before adding the §9.4 cache.
 - **S5.4 Whole-crate refiner pass and coverage audit.** A scout maps every design.md sentence to case ids and reports gaps as Observed.
 
@@ -416,7 +416,7 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [x] Spike 2
 - [x] S1.1 (G1)
 - [x] S1.2
-- [x] S1.3 (refiner pass running)
+- [x] S1.3 (refined d66f8c5)
 - [ ] S2.0
 - [ ] S2.1
 - [ ] S2.2
