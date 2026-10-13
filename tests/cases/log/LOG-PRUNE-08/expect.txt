@@ -1,0 +1,17 @@
+$ memex log impl
+exit 0
+stdout
+| impl:20261013-120000-fresh-entry
+stderr
+| memex: warning: $SANDBOX/repo/.memex/config.json: key must be a string at line 1 column 2
+== snapshot repo/.memex/logs
+-- impl/20261009-120000-four-days-old.md
+| # Four days old
+| old body
+-- impl/20261013-120000-fresh-entry.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| ---
+| # Fresh entry
+| body

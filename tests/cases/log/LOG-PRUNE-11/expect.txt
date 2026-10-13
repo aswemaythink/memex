@@ -1,0 +1,25 @@
+$ memex log impl
+exit 0
+stdout
+| impl:20261013-120000-fresh-entry
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20260229-120000-not-a-leap-year.md
+| # February 29 in 2026
+| old body
+-- impl/20260230-120000-february-30.md
+| # February 30
+| old body
+-- impl/20261009-250000-hour-25.md
+| # Hour 25
+| old body
+-- impl/20261013-120000-fresh-entry.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| ---
+| # Fresh entry
+| body
+-- impl/20261340-250000-month-13.md
+| # Month 13
+| old body

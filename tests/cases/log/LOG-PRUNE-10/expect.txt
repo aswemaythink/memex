@@ -1,0 +1,33 @@
+$ memex log impl
+exit 0
+stdout
+| impl:20261013-120000-fresh-entry
+stderr (empty)
+== snapshot repo/.memex/logs
+-- .hidden-stream/20261009-120000-in-hidden-stream.md
+| # In a dot-named stream folder
+| old body
+-- impl/.20261009-120000-dotfile.md
+| # Dotfile
+| old body
+-- impl/20261009-1200-short-stamp.md
+| # Short stamp
+| old body
+-- impl/20261009-120000-notes.txt
+| old text file, not an entry
+-- impl/20261009120000-no-dashes.md
+| # No dashes in the stamp
+| old body
+-- impl/20261013-120000-fresh-entry.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| ---
+| # Fresh entry
+| body
+-- impl/archive/20261009-120000-in-subfolder.md
+| # In a subfolder
+| old body
+-- impl/notes-20261009-120000.md
+| # Stamp not first
+| old body

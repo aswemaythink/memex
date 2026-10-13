@@ -1,0 +1,1 @@
+{"git": "init", "setup": [{"run": ["git", "clean", "-f", "--", ".memex/logs/idle/placeholder"]}], "steps": [{"args": ["log", "impl"], "stdin": "# Fresh entry\nbody\n"}], "snapshot": ["repo/.memex/logs", "repo/.memex/logs/idle", "repo/.memex/logs/gone"]}

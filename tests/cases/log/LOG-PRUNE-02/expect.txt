@@ -1,0 +1,19 @@
+$ memex log impl
+exit 0
+stdout
+| impl:20261013-120000-fresh-entry
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20261010-120000-exactly-three-days.md
+| # Exactly three days
+| boundary body
+-- impl/20261013-120000-fresh-entry.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| ---
+| # Fresh entry
+| body
+-- impl/20261020-120000-future.md
+| # Stamped in the future
+| future body

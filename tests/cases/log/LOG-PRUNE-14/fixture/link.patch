@@ -1,0 +1,7 @@
+diff --git a/.memex/logs/impl/20261001-120000-linked.md b/.memex/logs/impl/20261001-120000-linked.md
+new file mode 120000
+--- /dev/null
++++ b/.memex/logs/impl/20261001-120000-linked.md
+@@ -0,0 +1 @@
++../../../outside/20261001-120000-target.md
+\ No newline at end of file

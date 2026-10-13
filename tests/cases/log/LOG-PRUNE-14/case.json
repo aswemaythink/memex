@@ -1,0 +1,1 @@
+{"git": "init", "setup": [{"run": ["git", "apply", "../link.patch"]}], "steps": [{"args": ["log", "impl"], "stdin": "# Fresh entry\nbody\n"}], "snapshot": ["repo/.memex/logs", "repo/outside"], "platforms": ["unix"]}

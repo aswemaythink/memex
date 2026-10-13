@@ -1,5 +1,5 @@
-//! Reads the clock of design §3.6: MEMEX_NOW when it is set, else the system clock, and formats the instants that log files carry.
-//! Cases: LOG-WRITE-01, LOG-WRITE-11
+//! Reads the clock of design §3.6: MEMEX_NOW when it is set, else the system clock. It formats the instants that log files carry, and parses the stamps in log file names and the durations of keep_logs (design §4.3).
+//! Cases: LOG-WRITE-01, LOG-WRITE-11, LOG-PRUNE-03, LOG-PRUNE-04, LOG-PRUNE-05, LOG-PRUNE-07, LOG-PRUNE-11
 
 use std::ops::Range;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -26,6 +26,11 @@ impl Timestamp {
         let (year, month, day) = self.date();
         let (hour, minute, second) = self.time_of_day();
         format!("{year:04}{month:02}{day:02}-{hour:02}{minute:02}{second:02}")
+    }
+
+    /// The whole seconds from `earlier` to this instant: positive when this instant is later.
+    pub fn seconds_since(self, earlier: Timestamp) -> i64 {
+        self.0 - earlier.0
     }
 
     /// The civil date (year, month, day) of this instant.
@@ -74,16 +79,55 @@ fn parse(text: &str) -> Option<Timestamp> {
     if !shaped {
         return None;
     }
-    let (year, month, day) = (
+    from_fields([
         digits(text, 0..4)?,
         digits(text, 5..7)?,
         digits(text, 8..10)?,
-    );
-    let (hour, minute, second) = (
         digits(text, 11..13)?,
         digits(text, 14..16)?,
         digits(text, 17..19)?,
-    );
+    ])
+}
+
+/// Parses a log file's stamp, `YYYYMMDD-HHMMSS`, as UTC (design §4.3). Any other shape, and any date or time that does not exist, is None.
+pub fn parse_stamp(text: &str) -> Option<Timestamp> {
+    let shaped = text.len() == 15 && text.as_bytes()[8] == b'-';
+    if !shaped {
+        return None;
+    }
+    from_fields([
+        digits(text, 0..4)?,
+        digits(text, 4..6)?,
+        digits(text, 6..8)?,
+        digits(text, 9..11)?,
+        digits(text, 11..13)?,
+        digits(text, 13..15)?,
+    ])
+}
+
+/// Parses a keep_logs duration (design §4.3): one to six digits with no leading zero, then `m`, `h`, `d` or `w`. Returns the length in seconds.
+pub fn parse_duration(text: &str) -> Option<i64> {
+    let (&unit, number) = text.as_bytes().split_last()?;
+    let unit_seconds = match unit {
+        b'm' => 60,
+        b'h' => 3_600,
+        b'd' => DAY,
+        b'w' => 7 * DAY,
+        _ => return None,
+    };
+    let shaped = (1..=6).contains(&number.len())
+        && number[0] != b'0'
+        && number.iter().all(u8::is_ascii_digit);
+    if !shaped {
+        return None;
+    }
+    let count = digits(text, 0..number.len())?;
+    Some(count * unit_seconds)
+}
+
+/// Builds the instant of a UTC date and time from its six fields, or None when a field is out of range.
+fn from_fields(fields: [i64; 6]) -> Option<Timestamp> {
+    let [year, month, day, hour, minute, second] = fields;
     let valid = (1..=12).contains(&month)
         && (1..=days_in_month(year, month)).contains(&day)
         && hour <= 23
@@ -195,5 +239,48 @@ mod tests {
         let at = parse("1969-12-31T23:59:59Z").expect("a valid instant");
         assert_eq!(at, Timestamp(-1));
         assert_eq!(at.rfc3339(), "1969-12-31T23:59:59Z");
+    }
+
+    #[test]
+    fn durations_take_one_unit_and_no_leading_zero() {
+        assert_eq!(parse_duration("3d"), Some(3 * DAY));
+        assert_eq!(parse_duration("90m"), Some(5_400));
+        assert_eq!(parse_duration("36h"), Some(129_600));
+        assert_eq!(parse_duration("2w"), Some(14 * DAY));
+        assert_eq!(parse_duration("999999w"), Some(999_999 * 7 * DAY));
+        let refused = [
+            "", "d", "3", "0d", "03d", "3D", "3x", "1000000d", " 3d", "3d ", "+3d", "3.5d",
+            "forever", "3é",
+        ];
+        for text in refused {
+            assert_eq!(parse_duration(text), None, "{text:?}");
+        }
+    }
+
+    #[test]
+    fn stamps_parse_as_utc_and_refuse_times_that_do_not_exist() {
+        assert_eq!(
+            parse_stamp("20261013-120000"),
+            Some(Timestamp(1_791_892_800))
+        );
+        assert_eq!(parse_stamp("19691231-235959"), Some(Timestamp(-1)));
+        assert!(parse_stamp("20240229-000000").is_some());
+        let refused = [
+            "20260229-000000",
+            "20261340-250000",
+            "20260230-120000",
+            "20261009-240000",
+            "20261009-126000",
+            "20261013_120000",
+            "2026101-120000",
+            "20261013-12000",
+            "20261013-120000x",
+            "2026101a-120000",
+            "2026101é-12000",
+            "",
+        ];
+        for text in refused {
+            assert_eq!(parse_stamp(text), None, "{text:?}");
+        }
     }
 }

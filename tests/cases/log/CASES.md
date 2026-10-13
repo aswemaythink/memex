@@ -83,9 +83,35 @@
 
 ## PRUNE
 
-- `LOG-PRUNE-01` (planned) A write deletes entries older than keep_logs by their filename timestamp, only `YYYYMMDD-HHMMSS-*.md` files, and removes the stream folders it empties.
-  design §4.3 Cleanup; PLAN §1 fix 6. Run: memex log over entries dated before and after the cutoff.
-- `LOG-PRUNE-02` (planned) keep_logs `forever` disables pruning.
-  design §4.3. Run: memex log with keep_logs set to forever and an old entry present.
-- `LOG-PRUNE-03` (planned) An invalid keep_logs prints one warning on stderr and deletes nothing.
-  design §4.3; PLAN §1 fix 6. Run: memex log with keep_logs set to soon and an old entry present.
+- `LOG-PRUNE-01` With no config.json, a write deletes an entry older than 3 days by its filename stamp, keeps one 2 days old, and keeps the new entry.
+  design §4.3 Cleanup and §4.1 item 4 (the default 3d); PLAN §1 fix 6. Run: memex log impl over a 4-day-old and a 2-day-old entry, with no config.json.
+- `LOG-PRUNE-02` With a config.json that has no keep_logs key, the default 3d applies: an entry exactly 3 days old stays, one second older is deleted, and a future-stamped entry stays.
+  design §4.1 item 4 (a missing key means 3d) and §4.3 (older than keep_logs). Run: memex log impl with config `{}` over entries at 3 days, at 3 days and one second, and 7 days ahead.
+- `LOG-PRUNE-03` keep_logs `90m` deletes an entry older than 90 minutes and keeps one younger.
+  design §4.3 (keep_logs takes Nm). Run: memex log impl with keep_logs 90m over entries 91 and 89 minutes old.
+- `LOG-PRUNE-04` keep_logs `36h` deletes an entry older than 36 hours and keeps one younger.
+  design §4.3 (keep_logs takes Nh). Run: memex log impl with keep_logs 36h over entries 37 and 35 hours old.
+- `LOG-PRUNE-05` keep_logs `2w` deletes an entry older than two weeks and keeps one younger.
+  design §4.3 (keep_logs takes Nw). Run: memex log impl with keep_logs 2w over entries 15 and 13 days old.
+- `LOG-PRUNE-06` keep_logs `forever` deletes nothing, however old the entry.
+  design §4.3 ("forever" disables pruning). Run: memex log impl with keep_logs forever over an entry stamped 2020-01-01.
+- `LOG-PRUNE-07` An invalid keep_logs, such as `soon`, prints one warning on stderr that names the config file and the value, and deletes nothing.
+  design §4.3 (a warning and no pruning); PLAN §1 fix 6. Run: memex log impl with keep_logs soon over a 4-day-old entry.
+- `LOG-PRUNE-08` A config.json that is not valid JSON prints its warning and deletes nothing, so the 3-day default does not apply.
+  design §4.1 item 4 and §4.3 (never delete on config it can't read); PLAN §1 fix 6. Run: memex log impl with config.json `{not json` over a 4-day-old entry.
+- `LOG-PRUNE-09` A config.json with an unknown key prints its warning and deletes nothing.
+  design §4.1 item 4 and §4.3; PLAN §1 fix 6. Run: memex log impl with config.json `{"keep_log": "3d"}` over a 4-day-old entry.
+- `LOG-PRUNE-10` Only regular files named `YYYYMMDD-HHMMSS-*.md` directly inside a stream folder are deleted: other names, dotfiles, files in subfolders and dot-named stream folders survive.
+  design §4.3 ("only files matching"); PLAN §1 fix 6. Run: memex log impl over old entries of each kind, beside one old entry that is deleted.
+- `LOG-PRUNE-11` A name whose stamp is not a real UTC date-time, such as month 13, February 30 or hour 25, survives, while a real leap day is deleted like any old entry.
+  design §4.3 and §3.6 (UTC); PLAN §1 fix 6. Run: memex log impl over old names with those stamps, and over 20240229-120000.
+- `LOG-PRUNE-12` A stream folder that prune empties is removed, and prune reaches streams other than the one written.
+  design §4.3 (stream folders emptied by a prune are removed); PLAN §1 fix 6. Run: memex log impl over an old entry alone in stream gone, and an old entry in stream other beside a recent one.
+- `LOG-PRUNE-13` A stream folder that was already empty, and that prune did not empty, is left alone.
+  design §4.3 (only folders a prune emptied are removed). Run: memex log impl beside an empty folder idle, which setup makes with git clean.
+- `LOG-PRUNE-14` A symlink named like a log entry is never deleted, and the file it points to is untouched.
+  design §4.3 is silent on symlinks; PLAN §1 fix 6 deletes only log entries, and the S1.3 ruling is regular files only. Run: memex log impl over an old symlink into a sibling folder.
+- `LOG-PRUNE-15` A symlinked stream folder is never followed, so the old entries behind it survive.
+  design §4.3 is silent on symlinks; PLAN §1 fix 6 and the S1.3 ruling as in LOG-PRUNE-14. Run: memex log impl beside a stream folder symlink into a sibling folder that holds an old entry.
+- `LOG-PRUNE-16` A config.json that is a dangling symlink prints a warning that it cannot be read and deletes nothing, so the 3-day default does not apply.
+  design §4.1 item 4 and §4.3 (never delete on config it can't read); PLAN §1 fix 6. Run: memex log impl with .memex/config.json a symlink to a missing file, over a 4-day-old entry.

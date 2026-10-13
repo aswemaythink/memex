@@ -1,0 +1,7 @@
+diff --git a/.memex/config.json b/.memex/config.json
+new file mode 120000
+--- /dev/null
++++ b/.memex/config.json
+@@ -0,0 +1 @@
++../nowhere.json
+\ No newline at end of file
