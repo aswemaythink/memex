@@ -45,6 +45,26 @@ fn rule2_topic_mismatch() {
 }
 
 #[test]
+fn rule2_prefix_clash() {
+    assert_eq!(
+        check(&tree("rule2-prefix-clash")),
+        [
+            "rule2: prefix CLI is also used by family cli at other/CASES.md: give each family its own prefix",
+        ]
+    );
+}
+
+#[test]
+fn rule2_duplicate_id() {
+    assert_eq!(
+        check(&tree("rule2-duplicate-id")),
+        [
+            "rule2: id CLI-VERSION-02 is declared again on line 8 (first on line 7 of cli) at cli/CASES.md: ids are unique repo-wide; delete the duplicate entry",
+        ]
+    );
+}
+
+#[test]
 fn rule3_missing_dir() {
     assert_eq!(
         check(&tree("rule3-missing-dir")),
@@ -73,6 +93,42 @@ fn rule4_bad_json() {
     assert_eq!(
         check(&tree("rule4-bad-json")),
         ["rule4: case.json does not parse against the schema (EOF while parsing an object at line 1 column 1) at cli/CLI-VERSION-01/case.json: fix it; the schema is in tests/cases/README.md"]
+    );
+}
+
+#[test]
+fn rule4_setup() {
+    assert_eq!(
+        check(&tree("rule4-setup")),
+        [
+            "rule4: setup step 1 has an empty run list at cli/CLI-VERSION-01/case.json: give it an argv that starts with git or memex",
+            "rule4: setup step 2 runs \"sh\" at cli/CLI-VERSION-01/case.json: setup may run only git or memex",
+        ]
+    );
+}
+
+#[test]
+fn rule4_stdin() {
+    assert_eq!(
+        check(&tree("rule4-stdin")),
+        [
+            "rule4: step 1 sets both stdin and stdin_file at cli/CLI-VERSION-01/case.json: keep one of them",
+            "rule4: step 2 names stdin_file \"../in.txt\", which is not a plain file name at cli/CLI-VERSION-01/case.json: name a file directly inside the case folder",
+            "rule4: stdin_file in.txt is missing at cli/CLI-VERSION-01/in.txt: add the file, or fix the name in case.json",
+        ]
+    );
+}
+
+#[test]
+fn rule4_path_escape() {
+    assert_eq!(
+        check(&tree("rule4-path-escape")),
+        [
+            "rule4: step 1 cwd \"../outside\" is not a path inside the sandbox at cli/CLI-VERSION-01/case.json: write it relative to the sandbox, such as repo/sub, with no .., no leading / and no drive",
+            "rule4: snapshot \"/etc\" is not a path inside the sandbox at cli/CLI-VERSION-01/case.json: write it relative to the sandbox, such as repo/sub, with no .., no leading / and no drive",
+            "rule4: snapshot \"C:/x\" is not a path inside the sandbox at cli/CLI-VERSION-01/case.json: write it relative to the sandbox, such as repo/sub, with no .., no leading / and no drive",
+            "rule4: snapshot \"\" is not a path inside the sandbox at cli/CLI-VERSION-01/case.json: write it relative to the sandbox, such as repo/sub, with no .., no leading / and no drive",
+        ]
     );
 }
 

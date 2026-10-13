@@ -57,13 +57,13 @@ fn command_line(step: &StepRecord) -> String {
         line.push_str(&quote(arg));
     }
     if step.cwd != "repo" {
-        line.push_str(&format!("  [cwd {}]", step.cwd));
+        line.push_str(&format!("  [cwd {}]", quote(&step.cwd)));
     }
     if !step.env.is_empty() {
         let pairs: Vec<String> = step
             .env
             .iter()
-            .map(|(key, value)| format!("{key}={value}"))
+            .map(|(key, value)| quote(&format!("{key}={value}")))
             .collect();
         line.push_str(&format!("  [env {}]", pairs.join(" ")));
     }
@@ -230,7 +230,36 @@ pub fn redact(text: &str, spellings: &[String], version: &str) -> String {
     for spelling in spellings {
         out = out.replace(spelling.as_str(), "$SANDBOX");
     }
-    out.replace(version, "$VERSION")
+    redact_version(&out, version)
+}
+
+/// Replaces the version only where it stands alone as a version, so `0.1.0` is redacted
+/// but `10.1.0` and `0.1.0.5` are left as they are.
+fn redact_version(text: &str, version: &str) -> String {
+    if version.is_empty() {
+        return text.to_string();
+    }
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(at) = rest.find(version) {
+        let (before, after) = (&rest[..at], &rest[at + version.len()..]);
+        let joined_before = before.ends_with(|c: char| c.is_ascii_digit() || c == '.');
+        let mut next = after.chars();
+        let joined_after = match next.next() {
+            Some(c) if c.is_ascii_digit() => true,
+            Some('.') => next.next().is_some_and(|c| c.is_ascii_digit()),
+            _ => false,
+        };
+        out.push_str(before);
+        out.push_str(if joined_before || joined_after {
+            version
+        } else {
+            "$VERSION"
+        });
+        rest = after;
+    }
+    out.push_str(rest);
+    out
 }
 
 fn io_failure(what: &str, error: &io::Error) -> String {
@@ -271,6 +300,30 @@ mod tests {
         assert_eq!(
             redact("/private/var/x/repo and 0.1.0", &spellings, "0.1.0"),
             "$SANDBOX/repo and $VERSION"
+        );
+    }
+
+    #[test]
+    fn version_redaction_leaves_longer_numbers_alone() {
+        assert_eq!(
+            redact_version("v0.1.0, 10.1.0, 0.1.0.5, 0.1.0.\n", "0.1.0"),
+            "v$VERSION, 10.1.0, 0.1.0.5, $VERSION.\n"
+        );
+    }
+
+    #[test]
+    fn command_lines_quote_cwd_and_env() {
+        let step = StepRecord {
+            args: vec!["show".to_string()],
+            cwd: "a b".to_string(),
+            env: BTreeMap::from([("K".to_string(), "x y".to_string())]),
+            exit: Some(0),
+            stdout: Vec::new(),
+            stderr: Vec::new(),
+        };
+        assert_eq!(
+            command_line(&step),
+            "$ memex show  [cwd 'a b']  [env 'K=x y']"
         );
     }
 }

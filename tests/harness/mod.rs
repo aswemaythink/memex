@@ -4,6 +4,7 @@
 pub mod bless;
 pub mod conform;
 pub mod discover;
+pub mod env;
 pub mod sandbox;
 pub mod transcript;
 

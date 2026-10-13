@@ -66,7 +66,7 @@ stdout
 stderr (empty)
 ```
 
-Steps are separated by one blank line. Then each snapshot renders as `== snapshot <path>`, then each file as `-- <path>` and its rows, or `(missing)` for a missing path and `(empty)` for a folder with no files. Every output line is a `| ` row. A text that does not end in a newline ends with `\ no newline at end`. Arguments are quoted only when they hold anything outside `[A-Za-z0-9._/:@%+=,-]`. Redaction replaces the sandbox path with `$SANDBOX` and the crate version with `$VERSION`, and nothing else. The golden is compared byte for byte.
+Steps are separated by one blank line. Then each snapshot renders as `== snapshot <path>`, then each file as `-- <path>` and its rows, or `(missing)` for a missing path and `(empty)` for a folder with no files. Every output line is a `| ` row. A text that does not end in a newline ends with `\ no newline at end`. Arguments, the `[cwd X]` path and each `[env K=V]` pair are quoted only when they hold anything outside `[A-Za-z0-9._/:@%+=,-]`. Redaction replaces the sandbox path with `$SANDBOX` and the crate version with `$VERSION`, and nothing else. The version is replaced only where no digit or `.` precedes it and no digit or `.digit` follows it, so `10.1.0` stays as it is. The golden is compared byte for byte.
 
 ## Conformity rules
 
@@ -95,10 +95,10 @@ When any rule fails, the case trials are not created, and only the failing rules
 
 - The conformity messages name the rule as `rule1` to `rule6`, and paths use `/` on every OS.
 - Rule 1 also requires the hub README.md, and each family's README.md and CASES.md.
-- Rule 4 also checks `steps` is not empty, `stdin` and `stdin_file` are not both set, a stdin_file is a plain file name that exists, setup argv starts with `git` or `memex`, and `platforms` is not empty. `expect.txt` is optional, and a missing one fails its case.
+- Rule 4 also checks `steps` is not empty, `stdin` and `stdin_file` are not both set, a stdin_file is a plain file name that exists, setup argv starts with `git` or `memex`, every step `cwd` and `snapshot` path stays inside the sandbox (relative, no `..`, no leading separator, no drive or `:`), and `platforms` is not empty. `expect.txt` is optional, and a missing one fails its case.
 - Rule 5 looks for `$` followed by `[A-Z_]` and the run of `[A-Za-z0-9_]` after it. A `$ ` prompt is never a token. Bless also refuses a golden that rule 5 would reject.
 - Platform `unix` covers every OS that is not Windows.
-- `git: commit` passes `--allow-empty`, so an empty fixture still commits. Runner git runs use the sandbox environment plus the fixed identity and dates.
+- `git: commit` passes `--allow-empty`, so an empty fixture still commits. Runner git runs, including `git` setup runs, use the sandbox environment plus the fixed identity and dates, so setup commits have stable hashes too. A case's `env` overrides them.
 - Setup runs use the case environment, not a step's.
 - `XDG_CONFIG_HOME` is `home/.config`, where PLAN §2 says "under `home`".
 - Process output renders a signal end as `exit signal`. A stream that is empty renders `(empty)`, and a stream with a NUL byte or non-UTF-8 bytes renders `(binary)`.

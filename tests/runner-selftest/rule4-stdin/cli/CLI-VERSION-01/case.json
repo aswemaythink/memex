@@ -1,0 +1,1 @@
+{"steps":[{"args":["--version"],"stdin":"x","stdin_file":"in.txt"},{"args":["--version"],"stdin_file":"../in.txt"}]}
