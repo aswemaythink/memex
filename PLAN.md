@@ -414,7 +414,7 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [x] Q0 quality gates (user request 2026-10-13: ≤365 lines/file, headers, READMEs, clippy complexity; tests/quality.rs)
 - [x] Spike 1 (provisional; confirm at G1)
 - [x] Spike 2
-- [ ] S1.1 (G1)
+- [x] S1.1 (G1)
 - [ ] S1.2
 - [ ] S1.3
 - [ ] S2.0
