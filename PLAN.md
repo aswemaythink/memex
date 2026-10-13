@@ -412,11 +412,11 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [x] S0.3
 - [x] S0.4
 - [x] Q0 quality gates (user request 2026-10-13: ≤365 lines/file, headers, READMEs, clippy complexity; tests/quality.rs)
-- [x] Spike 1 (provisional; confirm at G1)
+- [x] Spike 1 (confirmed at G1: S1.2 cook's worktree log landed in main and survived worktree removal)
 - [x] Spike 2
 - [x] S1.1 (G1)
-- [ ] S1.2
-- [ ] S1.3
+- [x] S1.2
+- [x] S1.3 (refiner pass running)
 - [ ] S2.0
 - [ ] S2.1
 - [ ] S2.2
