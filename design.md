@@ -158,7 +158,7 @@ It takes one or more refs and prints a section for each, separated by `=== <labe
 - **Store.** `log` is allowed if the root or the main checkout has `.memex/`. With neither, it exits 3 with "run `memex init`" (§4.1).
 - **Extra fields.** An optional leading `---` frontmatter block in the body is merged in. Collisions with memex-owned keys exit 2.
 - **Stream name.** `[a-z0-9][a-z0-9-]{0,39}`. It must not be a reserved name or an existing manifest name. Streams need no declaration.
-- **Agent id.** Taken from `--agent`, then `$MEMEX_AGENT`, Otherwise it is omitted. No harness exposes a per-agent id in the environment (Spike 2), so there is no third source.
+- **Agent id.** Taken from `--agent`, then `$MEMEX_AGENT`; otherwise it is omitted. No harness exposes a per-agent id in the environment (Spike 2), so there is no third source.
 - **Output.** stdout is exactly the ref on one line, so `ref=$(memex log impl <<'EOF' … EOF)` works. With `--json`, the output is `{"ref","path"}`.
 - **Immutable.** There is no edit verb. A correction is a new entry that cites the old ref, and the old entry then shows it under "cited by".
 

@@ -409,8 +409,9 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [x] §1 fixes approved and folded into design.md
 - [x] S0.1
 - [x] S0.2
-- [ ] S0.3
-- [ ] S0.4
+- [x] S0.3
+- [x] S0.4
+- [x] Q0 quality gates (user request 2026-10-13: ≤365 lines/file, headers, READMEs, clippy complexity; tests/quality.rs)
 - [x] Spike 1 (provisional; confirm at G1)
 - [x] Spike 2
 - [ ] S1.1 (G1)
