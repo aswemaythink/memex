@@ -1,0 +1,8 @@
+$ memex log impl
+exit 2
+stdout (empty)
+stderr
+| memex: log body has no title line
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+== snapshot repo/.memex/logs
+(missing)

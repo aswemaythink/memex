@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "impl"], "stdin": "# Title\n---\ntime: 2020-01-01T00:00:00Z\n"}], "snapshot": ["repo/.memex/logs"]}

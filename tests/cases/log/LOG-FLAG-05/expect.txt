@@ -1,0 +1,20 @@
+$ memex log impl --to abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh
+exit 0
+stdout
+| impl:20261013-120000-longest-id
+stderr (empty)
+
+$ memex log impl --to abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghi
+exit 2
+stdout (empty)
+stderr
+| memex: invalid --to value 'abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghi'
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+== snapshot repo/.memex/logs
+-- impl/20261013-120000-longest-id.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| to: [abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh]
+| ---
+| Longest id

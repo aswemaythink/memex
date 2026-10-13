@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "impl", "--tag", "show,a#b"], "stdin": "Bad tag\n"}], "snapshot": ["repo/.memex/logs"]}

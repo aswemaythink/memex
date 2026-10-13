@@ -1,5 +1,5 @@
-//! Writes one log entry to the store (design §3.4 and §4.3): memex's frontmatter, the body verbatim, a file name from the title's slug, and never an overwrite.
-//! Cases: LOG-WRITE-01, LOG-WRITE-02, LOG-WRITE-03, LOG-WRITE-04, LOG-WRITE-05, LOG-WRITE-06, LOG-WRITE-08
+//! Writes one log entry to the store (design §3.4 and §4.3): memex's frontmatter with the agent's lines merged into it, the body verbatim, a file name from the title's slug, and never an overwrite.
+//! Cases: LOG-WRITE-01, LOG-WRITE-02, LOG-WRITE-03, LOG-WRITE-04, LOG-WRITE-05, LOG-WRITE-06, LOG-WRITE-08, LOG-FRONT-01, LOG-BODY-02
 
 use std::fs;
 use std::io::{self, Write};
@@ -33,7 +33,9 @@ pub struct Entry {
     pub worktree: Option<String>,
     /// The short commit of HEAD, when there is one.
     pub commit: Option<String>,
-    /// The body, with CRLF already normalised to LF.
+    /// The agent's own frontmatter lines, verbatim, written after memex's keys inside the same block.
+    pub front: Vec<String>,
+    /// The body after any agent frontmatter, with CRLF already normalised to LF.
     pub body: String,
 }
 
@@ -58,13 +60,10 @@ pub fn write_entry(place: &Place, entry: &Entry) -> Result<PathBuf, Error> {
     }
 }
 
-/// The title of a body: its first non-blank line after any leading frontmatter block, with leading `#`s and spaces removed.
-/// Empty when the body has no such line.
+/// The title of a body: its first non-blank line, with leading `#`s and spaces removed. Empty when there is no such line.
+/// The body is the text after any agent frontmatter, so the block is never read as a title.
 pub fn title_of(body: &str) -> String {
-    let lines: Vec<&str> = body.lines().collect();
-    let start = frontmatter_end(&lines);
-    lines[start..]
-        .iter()
+    body.lines()
         .find(|line| !line.trim().is_empty())
         .map(|line| line.trim_start_matches(['#', ' ']).to_string())
         .unwrap_or_default()
@@ -90,20 +89,8 @@ pub fn slug_of(title: &str) -> String {
     }
 }
 
-/// The index of the first line after a leading `---` frontmatter block, or 0 when there is none.
-/// The block opens on the first line and closes at the next line that is exactly `---`.
-fn frontmatter_end(lines: &[&str]) -> usize {
-    if lines.first() != Some(&"---") {
-        return 0;
-    }
-    lines
-        .iter()
-        .skip(1)
-        .position(|line| *line == "---")
-        .map_or(0, |closing| closing + 2)
-}
-
-/// The file's text: memex's frontmatter in its fixed key order, then the body verbatim (design §4.3).
+/// The file's text: memex's frontmatter in its fixed key order, then the agent's lines in their own order, then the body
+/// verbatim (design §4.3).
 fn render(entry: &Entry) -> String {
     let mut lines = vec![
         "---".to_string(),
@@ -128,6 +115,7 @@ fn render(entry: &Entry) -> String {
     if let Some(commit) = &entry.commit {
         lines.push(format!("commit: {commit}"));
     }
+    lines.extend(entry.front.iter().cloned());
     lines.push("---".to_string());
     let mut text = lines.join("\n");
     text.push('\n');
@@ -188,10 +176,10 @@ mod tests {
     }
 
     #[test]
-    fn titles_skip_frontmatter_and_leading_marks() {
+    fn titles_skip_blank_lines_and_leading_marks() {
         assert_eq!(title_of("## Heading\nbody"), "Heading");
-        assert_eq!(title_of("---\nkey: x\n---\n\n# Real\n"), "Real");
-        assert_eq!(title_of("---\nkey: x\n"), "---");
+        assert_eq!(title_of("\n  \n# Real\n"), "Real");
         assert_eq!(title_of("#\n"), "");
+        assert_eq!(title_of(" \n\t\n"), "");
     }
 }

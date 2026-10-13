@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "impl"], "stdin": "---\nnotes:\n  time: 1\n---\n# Indented key\n"}], "snapshot": ["repo/.memex/logs"]}

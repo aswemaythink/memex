@@ -1,0 +1,8 @@
+$ memex log rs-notes  [cwd wt]
+exit 2
+stdout (empty)
+stderr
+| memex: stream name 'rs-notes' is a collection
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+== snapshot repo/.memex/logs
+(missing)

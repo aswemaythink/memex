@@ -1,0 +1,8 @@
+$ memex log impl --to 'orchestrator,cook 2'
+exit 2
+stdout (empty)
+stderr
+| memex: invalid --to value 'cook 2'
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+== snapshot repo/.memex/logs
+(missing)

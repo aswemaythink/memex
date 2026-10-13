@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "impl"], "stdin": "Bad env agent\n", "env": {"MEMEX_AGENT": "scout:1"}}, {"args": ["log", "impl", "--agent", "cook-2"], "stdin": "Flag wins over bad env\n", "env": {"MEMEX_AGENT": "scout:1"}}], "snapshot": ["repo/.memex/logs"]}

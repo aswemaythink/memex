@@ -1,0 +1,14 @@
+$ memex log impl --to Orch.1@wt/a+b-c,cook-2,Orch.1@wt/a+b-c --tag show,namer,show
+exit 0
+stdout
+| impl:20261013-120000-repeats
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20261013-120000-repeats.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| to: [Orch.1@wt/a+b-c, cook-2]
+| tags: [show, namer]
+| ---
+| Repeats

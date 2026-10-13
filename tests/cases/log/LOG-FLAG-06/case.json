@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "impl", "--to", "Orch.1@wt/a+b-c,cook-2,Orch.1@wt/a+b-c", "--tag", "show,namer,show"], "stdin": "Repeats\n"}], "snapshot": ["repo/.memex/logs"]}

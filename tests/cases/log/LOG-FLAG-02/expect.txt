@@ -1,0 +1,8 @@
+$ memex log impl --tag 'show,a#b'
+exit 2
+stdout (empty)
+stderr
+| memex: invalid --tag value 'a#b'
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+== snapshot repo/.memex/logs
+(missing)

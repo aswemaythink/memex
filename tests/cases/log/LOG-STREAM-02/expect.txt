@@ -1,0 +1,19 @@
+$ memex log rs-notes
+exit 2
+stdout (empty)
+stderr
+| memex: stream name 'rs-notes' is a collection
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+
+$ memex log rs
+exit 0
+stdout
+| rs:20261013-120000-prefix-only
+stderr (empty)
+== snapshot repo/.memex/logs
+-- rs/20261013-120000-prefix-only.md
+| ---
+| stream: rs
+| time: 2026-10-13T12:00:00Z
+| ---
+| Prefix only

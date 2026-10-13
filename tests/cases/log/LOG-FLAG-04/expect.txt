@@ -1,0 +1,20 @@
+$ memex log impl  [env MEMEX_AGENT=scout:1]
+exit 2
+stdout (empty)
+stderr
+| memex: invalid MEMEX_AGENT value 'scout:1'
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+
+$ memex log impl --agent cook-2  [env MEMEX_AGENT=scout:1]
+exit 0
+stdout
+| impl:20261013-120000-flag-wins-over-bad-env
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20261013-120000-flag-wins-over-bad-env.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| agent: cook-2
+| ---
+| Flag wins over bad env

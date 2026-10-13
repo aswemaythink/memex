@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "impl", "--to", "abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh"], "stdin": "Longest id\n"}, {"args": ["log", "impl", "--to", "abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghi"], "stdin": "Too long id\n"}], "snapshot": ["repo/.memex/logs"]}

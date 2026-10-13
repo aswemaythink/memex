@@ -1,0 +1,1 @@
+{"git": "commit", "steps": [{"args": ["log", "impl"], "stdin": "---\r\nstatus: done\r\nnotes:\r\n  first: indented line\r\n- a list item\r\n\r\nmood: calm\r\n---\r\n# Merged block\r\nbody line\r\n"}], "snapshot": ["repo/.memex/logs"]}

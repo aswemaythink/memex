@@ -1,0 +1,29 @@
+$ memex log logs
+exit 2
+stdout (empty)
+stderr
+| memex: stream name 'logs' is reserved
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+
+$ memex log readmes
+exit 2
+stdout (empty)
+stderr
+| memex: stream name 'readmes' is reserved
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+
+$ memex log headers
+exit 2
+stdout (empty)
+stderr
+| memex: stream name 'headers' is reserved
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+
+$ memex log cases
+exit 2
+stdout (empty)
+stderr
+| memex: stream name 'cases' is reserved
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+== snapshot repo/.memex/logs
+(missing)
