@@ -1,0 +1,5 @@
+$ memex --help
+exit 0
+stdout
+| usage: memex <verb>
+stderr (empty)
