@@ -1,9 +1,11 @@
-//! Writes one log entry to the store (design §3.4 and §4.3): memex's frontmatter with the agent's lines merged into it, the body verbatim, a file name from the title's slug, and never an overwrite.
-//! Cases: LOG-WRITE-01, LOG-WRITE-02, LOG-WRITE-03, LOG-WRITE-04, LOG-WRITE-05, LOG-WRITE-06, LOG-WRITE-08, LOG-FRONT-01, LOG-BODY-02
+//! Writes one log entry to the store (design §3.4 and §4.3): memex's frontmatter with the agent's lines merged into it, the body verbatim, a file name from the title's slug, and never an overwrite. The store itself may be a symlink, which is followed; a symlinked stream folder is refused.
+//! Cases: LOG-WRITE-01, LOG-WRITE-02, LOG-WRITE-03, LOG-WRITE-04, LOG-WRITE-05, LOG-WRITE-06, LOG-WRITE-08, LOG-WRITE-14, LOG-FRONT-01, LOG-BODY-02
 
 use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
+
+use tempfile::NamedTempFile;
 
 use crate::clock::Timestamp;
 use crate::error::Error;
@@ -44,7 +46,7 @@ pub struct Entry {
 pub fn write_entry(place: &Place, entry: &Entry) -> Result<PathBuf, Error> {
     prepare_store(place)?;
     let dir = place.store.join(&entry.stream);
-    fs::create_dir_all(&dir).map_err(|failure| io_error("cannot create", &dir, &failure))?;
+    make_folder(&dir)?;
     let stem = format!("{}-{}", entry.time.stamp(), slug_of(&title_of(&entry.body)));
     let text = render(entry);
     let mut suffix = 1;
@@ -139,14 +141,25 @@ fn prepare_store(place: &Place) -> Result<(), Error> {
     }
 }
 
+/// Creates `dir` and everything above it, and refuses a `dir` that is a symlink: the store may be a link, but no folder
+/// below it is followed (the rule prune keeps too).
+fn make_folder(dir: &Path) -> Result<(), Error> {
+    fs::create_dir_all(dir).map_err(|failure| io_error("cannot create", dir, &failure))?;
+    match fs::symlink_metadata(dir) {
+        Ok(meta) if meta.is_dir() => Ok(()),
+        Ok(_) => Err(Error::io_message(format!(
+            "cannot write to {}: it is a symlink, and memex follows none inside the store",
+            slash(dir)
+        ))),
+        Err(failure) => Err(io_error("cannot read", dir, &failure)),
+    }
+}
+
 /// Writes `bytes` to `dir/name` through a dot-prefixed temporary file, so a reader never sees a partial
 /// entry. Returns the path, or None when the name is already taken, in which case nothing is written.
 fn write_new(dir: &Path, name: &str, bytes: &[u8]) -> Result<Option<PathBuf>, Error> {
     let target = dir.join(name);
-    let mut temp = tempfile::Builder::new()
-        .prefix(".")
-        .tempfile_in(dir)
-        .map_err(|failure| io_error("cannot create a temporary file in", dir, &failure))?;
+    let mut temp = temp_in(dir)?;
     temp.write_all(bytes)
         .map_err(|failure| io_error("cannot write", &target, &failure))?;
     match temp.persist_noclobber(&target) {
@@ -154,6 +167,20 @@ fn write_new(dir: &Path, name: &str, bytes: &[u8]) -> Result<Option<PathBuf>, Er
         Err(failed) if failed.error.kind() == io::ErrorKind::AlreadyExists => Ok(None),
         Err(failed) => Err(io_error("cannot write", &target, &failed.error)),
     }
+}
+
+/// A dot-prefixed temporary file in `dir`. A concurrent prune can remove a stream folder it has just emptied after
+/// `make_folder` made it, so a missing `dir` is made again and the file is tried once more.
+fn temp_in(dir: &Path) -> Result<NamedTempFile, Error> {
+    let create = || tempfile::Builder::new().prefix(".").tempfile_in(dir);
+    let temp = match create() {
+        Err(failure) if failure.kind() == io::ErrorKind::NotFound => {
+            make_folder(dir)?;
+            create()
+        }
+        other => other,
+    };
+    temp.map_err(|failure| io_error("cannot create a temporary file in", dir, &failure))
 }
 
 /// An I/O error that names what failed and the path, never the OS text (design §4.4).
@@ -173,6 +200,35 @@ mod tests {
         let long = slug_of(&"ab-".repeat(40));
         assert!(long.len() <= SLUG_MAX);
         assert!(!long.ends_with('-'));
+    }
+
+    #[test]
+    fn a_stream_folder_removed_before_the_write_is_made_again() {
+        let store = tempfile::tempdir().expect("a temporary store");
+        let dir = store.path().join("impl");
+        make_folder(&dir).expect("a stream folder");
+        // What a concurrent prune does when it empties the stream: the folder is gone before the temp file.
+        fs::remove_dir(&dir).expect("the folder removed");
+        let written = write_new(&dir, "20261013-120000-x.md", b"x\n").expect("a write");
+        assert_eq!(written, Some(dir.join("20261013-120000-x.md")));
+        assert_eq!(
+            fs::read(dir.join("20261013-120000-x.md")).expect("the entry"),
+            b"x\n"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_symlinked_stream_folder_is_refused_and_a_symlinked_store_is_followed() {
+        let root = tempfile::tempdir().expect("a temporary folder");
+        let elsewhere = root.path().join("elsewhere");
+        fs::create_dir(&elsewhere).expect("a target folder");
+        let store = root.path().join("store");
+        std::os::unix::fs::symlink(&elsewhere, &store).expect("a symlinked store");
+        make_folder(&store.join("impl")).expect("a stream under a symlinked store");
+        assert!(elsewhere.join("impl").is_dir());
+        std::os::unix::fs::symlink(&elsewhere, store.join("alias")).expect("a symlinked stream");
+        assert!(make_folder(&store.join("alias")).is_err());
     }
 
     #[test]

@@ -28,6 +28,8 @@
   design §3.4 Body. Run: memex log impl with no stdin.
 - `LOG-WRITE-13` A stream name outside `[a-z0-9][a-z0-9-]{0,39}`, such as `Impl` or `../x`, exits 2 and writes nothing.
   design §3.4 Stream name. Run: memex log Impl, then memex log ../x.
+- `LOG-WRITE-14` A stream folder that is a symlink is refused: exit 3 naming the folder, and nothing is written behind the link.
+  design §4.3 is silent on symlinks; the S1.3 review ruling: the store may be a symlink, but no symlink below it is followed, by write or by prune (LOG-PRUNE-15, LOG-PRUNE-17). Run: memex log alias where .memex/logs/alias links to a sibling folder.
 
 ## FLAG
 
@@ -115,3 +117,5 @@
   design §4.3 is silent on symlinks; PLAN §1 fix 6 and the S1.3 ruling as in LOG-PRUNE-14. Run: memex log impl beside a stream folder symlink into a sibling folder that holds an old entry.
 - `LOG-PRUNE-16` A config.json that is a dangling symlink prints a warning that it cannot be read and deletes nothing, so the 3-day default does not apply.
   design §4.1 item 4 and §4.3 (never delete on config it can't read); PLAN §1 fix 6. Run: memex log impl with .memex/config.json a symlink to a missing file, over a 4-day-old entry.
+- `LOG-PRUNE-17` A store that is itself a symlink is followed: the entry is written behind it, and the old entries there are pruned.
+  design §4.3 is silent on symlinks; the S1.3 review ruling as in LOG-WRITE-14. Run: memex log impl with .memex/logs a symlink to a sibling folder that holds a 4-day-old and a 2-day-old entry.

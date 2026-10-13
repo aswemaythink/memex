@@ -4,7 +4,7 @@ The log store code. Four modules check a `memex log` entry before anything is wr
 
 - `body.rs`: `read_stdin` and `read` (the terminal refusal is injected so a unit test can pin it), `check_title`, and the 16 KiB limit, counted before CRLF becomes LF.
 - `front.rs`: `split` returns the agent block's lines and the body after its closing fence. A key is a column-0 identifier followed by a colon; every other line is kept as continuation.
-- `stream.rs`: `check_grammar`, `check_reserved` and `check_collections`. The last looks for `.memex/collections/<stream>.json` under the nearest `.memex/` above the cwd and under the store owner's `.memex/`.
+- `stream.rs`: `check_grammar`, `check_reserved` and `check_collections`. The last looks for `.memex/collections/<stream>.json` under the nearest `.memex/` above the cwd (found by `root::nearest_memex`) and under the store owner's `.memex/`.
 - `values.rs`: `list` for the comma lists, `agent` for `--agent` or `$MEMEX_AGENT` (only the one in use is checked). Each value matches `[A-Za-z0-9._@/+-]{1,64}`.
-- `write.rs`: the entry, its frontmatter in fixed key order, the title and slug rules, and the `-2`, `-3` suffixes for a taken name.
-- `prune.rs`: `run(store, keep_logs, now)`, called after every write. It deletes only regular files named `YYYYMMDD-HHMMSS-*.md` one folder below the store, never follows a symlink, and reports a failure as a warning on stderr.
+- `write.rs`: the entry, its frontmatter in fixed key order, the title and slug rules, the `-2`, `-3` suffixes for a taken name, and the refusal of a symlinked stream folder. A stream folder that a concurrent prune removes just before the temp file is made again, once.
+- `prune.rs`: `run(store, keep, now)`, called after every write unless config.rs says nothing is pruned. It deletes only regular files named `YYYYMMDD-HHMMSS-*.md` one folder below the store, follows the store when it is a symlink but no symlink below it, and reports a failure as a warning on stderr.

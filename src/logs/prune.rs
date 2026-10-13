@@ -1,5 +1,5 @@
-//! Prunes the log store after every write (design §4.3): deletes each entry older than keep_logs by its filename stamp, and removes the stream folders that its deletions empty. Symlinks, hidden names and anything that is not a log entry are never touched.
-//! Cases: LOG-PRUNE-01, LOG-PRUNE-02, LOG-PRUNE-03, LOG-PRUNE-04, LOG-PRUNE-05, LOG-PRUNE-06, LOG-PRUNE-07, LOG-PRUNE-08, LOG-PRUNE-09, LOG-PRUNE-10, LOG-PRUNE-11, LOG-PRUNE-12, LOG-PRUNE-13, LOG-PRUNE-14, LOG-PRUNE-15
+//! Prunes the log store after every write (design §4.3): deletes each entry older than keep_logs by its filename stamp, and removes the stream folders that its deletions empty. The store itself may be a symlink, which is followed; no symlink below it is, and hidden names and anything that is not a log entry are never touched.
+//! Cases: LOG-PRUNE-01, LOG-PRUNE-02, LOG-PRUNE-03, LOG-PRUNE-04, LOG-PRUNE-05, LOG-PRUNE-06, LOG-PRUNE-07, LOG-PRUNE-08, LOG-PRUNE-09, LOG-PRUNE-10, LOG-PRUNE-11, LOG-PRUNE-12, LOG-PRUNE-13, LOG-PRUNE-14, LOG-PRUNE-15, LOG-PRUNE-17
 
 use std::ffi::OsStr;
 use std::fs;
@@ -7,31 +7,25 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 use crate::clock::{self, Timestamp};
-use crate::config::{self, Keep};
-use crate::error::Error;
 use crate::root::slash;
 
-/// Prunes `store` by `keep_logs` as of `now`. It always returns Ok: a failure is a warning on stderr, and the entry that was just written stays.
-pub fn run(store: &Path, keep_logs: &str, now: Timestamp) -> Result<(), Error> {
-    let Keep::For(keep) = config::parse_keep(keep_logs) else {
-        // `forever` prunes nothing, and config has already warned about a value it cannot use.
-        return Ok(());
-    };
-    if !is_real_folder(store) {
-        return Ok(());
+/// Deletes the entries of `store` whose stamps are more than `keep` seconds before `now`. A failure is a warning on stderr, never an error, so the entry that was just written stays and `log` still succeeds.
+pub fn run(store: &Path, keep: i64, now: Timestamp) {
+    // The store is followed, as a user may point `.memex/logs` elsewhere; its streams are described, never followed.
+    if !is_folder(store, fs::metadata(store)) {
+        return;
     }
     for stream in names(store) {
-        if is_real_folder(&stream) {
+        if is_folder(&stream, fs::symlink_metadata(&stream)) {
             prune_stream(&stream, keep, now);
         }
     }
-    Ok(())
 }
 
-/// True when `path` is a folder and not a symlink. A symlinked store or stream is never followed, so nothing behind it is deleted.
+/// True when `meta`, read from `path`, is a folder. Read with `symlink_metadata`, a symlink is not a folder, so nothing behind it is deleted.
 /// A path that cannot be read is a warning, and counts as not a folder.
-fn is_real_folder(path: &Path) -> bool {
-    match fs::symlink_metadata(path) {
+fn is_folder(path: &Path, meta: io::Result<fs::Metadata>) -> bool {
+    match meta {
         Ok(meta) => meta.is_dir(),
         Err(failure) => {
             warn("cannot read the folder", path, &failure);

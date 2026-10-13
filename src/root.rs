@@ -133,7 +133,7 @@ fn main_checkout(git: &Git) -> Option<PathBuf> {
 }
 
 /// The nearest folder, from `cwd` upward, that holds a `.memex/` directory.
-fn nearest_memex(cwd: &Path) -> Option<PathBuf> {
+pub fn nearest_memex(cwd: &Path) -> Option<PathBuf> {
     cwd.ancestors()
         .find(|dir| dir.join(".memex").is_dir())
         .map(Path::to_path_buf)

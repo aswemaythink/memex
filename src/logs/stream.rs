@@ -1,10 +1,11 @@
 //! Checks a stream name before it names a folder (design §3.1 and §3.4): its grammar, the built-in names that are reserved, and the manifests that already own a name.
 //! Cases: LOG-WRITE-13, LOG-STREAM-01, LOG-STREAM-02, LOG-STREAM-03
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::cli::Verb;
 use crate::error::Error;
+use crate::root::nearest_memex;
 use crate::scan::fail;
 
 /// The built-in collection names, which no stream may take (design §3.1).
@@ -56,13 +57,6 @@ pub fn check_collections(stream: &str, cwd: &Path, owner: &Path) -> Result<(), E
         ));
     }
     Ok(())
-}
-
-/// The nearest folder at or above `cwd` that holds a `.memex/`, found the way root.rs finds the root.
-fn nearest_memex(cwd: &Path) -> Option<PathBuf> {
-    cwd.ancestors()
-        .find(|dir| dir.join(".memex").is_dir())
-        .map(Path::to_path_buf)
 }
 
 #[cfg(test)]

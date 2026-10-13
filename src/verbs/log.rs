@@ -60,7 +60,9 @@ pub fn run(request: &Request) -> Result<String, Error> {
         body: split.rest,
     };
     let path = write::write_entry(&place, &entry)?;
-    prune::run(&place.store, &config.keep_logs, now)?;
+    if let Some(keep) = config.keep {
+        prune::run(&place.store, keep, now);
+    }
     Ok(output(&request.stream, &path, request.json))
 }
 

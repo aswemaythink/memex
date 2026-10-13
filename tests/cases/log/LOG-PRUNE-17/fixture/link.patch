@@ -1,0 +1,7 @@
+diff --git a/.memex/logs b/.memex/logs
+new file mode 120000
+--- /dev/null
++++ b/.memex/logs
+@@ -0,0 +1 @@
++../elsewhere
+\ No newline at end of file

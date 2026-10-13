@@ -1,0 +1,15 @@
+$ memex log alias
+exit 3
+stdout (empty)
+stderr
+| memex: cannot write to $SANDBOX/repo/.memex/logs/alias: it is a symlink, and memex follows none inside the store
+== snapshot repo/.memex/logs
+-- alias
+(symlink)
+-- impl/20261011-120000-recent.md
+| # Recent entry in impl
+| recent body
+== snapshot repo/outside
+-- 20261012-120000-behind-the-link.md
+| # Entry behind the link
+| body
