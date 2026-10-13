@@ -204,7 +204,7 @@ stderr (empty)
 - **End of each phase:** a promote-or-drop pass over the logs. What's still true goes into READMEs, headers or CASES.md; the rest expires (3d).
 
 ## 4. Crate layout
-One package, `agent-memex`: `[[bin]] memex`, lib `memex`, `[[test]] conformance` with `harness = false`, `rust-version = "1.80"`, `exclude = ["tests/","site/","plugins/"]`.
+One package, `agent-memex`: `[[bin]] memex`, lib `memex`, `[[test]] conformance` with `harness = false`, `rust-version = "1.85"` (the dev-deps need 1.85), `exclude = ["tests/","site/","plugins/"]`.
 - **Deps:** `ignore` (and its `globset`), `serde`, `serde_json`, `rust-stemmers`, `tempfile`, `dunce`.
 - **Dev-deps:** `libtest-mimic`, `similar`.
 - **Hand-rolled on purpose:** argv grammar (exact help, error text and JSON envelopes; no clap churn in goldens), flat-YAML frontmatter, UTC civil time, BM25F (no tantivy, no index files).
@@ -242,7 +242,7 @@ assets/agents-snippet.md   included with include_str!; the single source for ini
     - (a) It works → design stands.
     - (b) Blocked only by the harness sandbox, and an allow-rule fixes it → design stands; document the rule in the README and SKILL.
     - (c) Nothing fixes it → design §9.1 fallback (worktree-local store, reads merged across `git worktree list`). **Consult the oracle before adopting (c)**, since it breaks "logs survive worktree removal".
-  - Result: _pending_
+  - Result (2026-10-13): **(a), provisional; design stands.** From a worktree agent, `mkdir -p <main>/.memex/logs/spike` succeeded (no sandbox error). The file writes were refused by the harness's *command checker* (it could not parse a `printf` with `---` and a `$(git …)` form), not by the sandbox, and that doesn't affect memex, whose writes happen inside its own process. A rerun with plain `touch`/`cp`/`ln` (from the main checkout, since the worktree had already been removed) showed create, write, hard-link and no-clobber `EEXIST`. Final confirmation is the G1 check: the first worktree cook's `memex log` must land in the main checkout's `.memex/logs/`.
 - **Spike 2: agent ids.**
   - A `claude-code-guide` agent answers: which env vars a sub-agent's Bash sees; the SubagentStart and SessionStart hook input fields; and whether a hook can export env to the agent's shell (`CLAUDE_ENV_FILE`).
   - A scout sub-agent prints the *names* of `CLAUDE*`/`AGENT*` vars, then the values of non-secret candidates only.
@@ -408,10 +408,10 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 ## 11. Tracking
 - [x] §1 fixes approved and folded into design.md
 - [x] S0.1
-- [ ] S0.2
+- [x] S0.2
 - [ ] S0.3
 - [ ] S0.4
-- [ ] Spike 1
+- [x] Spike 1 (provisional; confirm at G1)
 - [x] Spike 2
 - [ ] S1.1 (G1)
 - [ ] S1.2
