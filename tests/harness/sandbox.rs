@@ -186,9 +186,10 @@ fn expect_success(out: &Outcome, what: &str) -> Result<(), String> {
 /// Makes repo/ a git repository on branch main, and optionally commits the fixture with a fixed identity and date.
 fn git_fixture(repo: &Path, base: &Env, commit: bool) -> Result<(), String> {
     let git = OsStr::new("git");
+    // --template= copies no system templates (hook samples and the like) into the fixture repo.
     let init = run(
         git,
-        &args(&["init", "-q", "-b", "main"]),
+        &args(&["init", "-q", "-b", "main", "--template="]),
         repo,
         base,
         Vec::new(),

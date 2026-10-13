@@ -25,6 +25,10 @@ harness = false
 name = "runner_selftest"
 path = "tests/runner_selftest.rs"
 
+[[test]]
+name = "quality"
+path = "tests/quality.rs"
+
 [dev-dependencies]
 dunce = "1.0.5"
 libtest-mimic = "0.8.2"
@@ -32,3 +36,23 @@ serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 similar = "3.2.0"
 tempfile = "3.27.0"
+
+[lints.rust]
+unsafe_code = "forbid"
+# Public items of the lib only: the bin and the test crates export nothing.
+missing_docs = "warn"
+
+[lints.clippy]
+correctness = { level = "warn", priority = -1 }
+suspicious = { level = "warn", priority = -1 }
+complexity = { level = "warn", priority = -1 }
+perf = { level = "warn", priority = -1 }
+style = { level = "warn", priority = -1 }
+uninlined_format_args = "warn"
+cognitive_complexity = "warn"
+too_many_lines = "warn"
+too_many_arguments = "warn"
+# Tests may unwrap: see allow-unwrap-in-tests in clippy.toml.
+unwrap_used = "warn"
+dbg_macro = "warn"
+todo = "warn"

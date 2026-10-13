@@ -42,7 +42,7 @@ An entry is a column-0 line that starts with ``- `ID` `` and has a claim after a
 
 Unknown keys are an error. Every field is optional except `steps`, which needs at least one step.
 
-- `git` is `init` or `commit`. It makes repo/ a git repository on branch `main` from the fixture, with a fixed identity and the date 2026-10-13T11:00:00Z.
+- `git` is `init` or `commit`. It makes repo/ a git repository on branch `main` from the fixture, with no system templates, a fixed identity and the date 2026-10-13T11:00:00Z.
 - `setup` is a list of `{"run": [argv]}`. The argv starts with `git` or `memex` (the built binary), and it runs in repo/. A nonzero exit fails the case, with its stderr.
 - `steps` each take `args`, then `stdin` or `stdin_file` (not both), `cwd` (relative to the sandbox, repo/ by default) and `env`.
 - `env` sets variables for the whole case. A step's `env` overrides it.
@@ -52,7 +52,7 @@ Unknown keys are an error. Every field is optional except `steps`, which needs a
 
 ## Sandbox
 
-Each case gets a fresh temp folder with repo/ and home/. The fixture is copied into it. The environment is the inherited one, minus `MEMEX_*`, `GIT_*`, `CLAUDE*` and `AI_AGENT`, and minus every PATH entry that holds a memex executable. Then the defaults are set: `HOME` and `USERPROFILE` are home/, `XDG_CONFIG_HOME` is home/.config, `LOCALAPPDATA` is home/AppData/Local, `GIT_CONFIG_NOSYSTEM=1`, `GIT_CONFIG_GLOBAL` is an empty home/.gitconfig, `GIT_CEILING_DIRECTORIES` is the sandbox, `NO_COLOR=1` and `MEMEX_NOW=2026-10-13T12:00:00Z`. The case's `env` and then each step's `env` override those.
+Each case gets a fresh temp folder with repo/ and home/. The fixture is copied into it. The environment is the inherited one, minus `MEMEX_*`, `GIT_*`, `CLAUDE*` and `AI_AGENT`, and minus every PATH entry that holds a memex executable. Then the defaults are set: `HOME` and `USERPROFILE` are home/, `XDG_CONFIG_HOME` is home/.config, `LOCALAPPDATA` is home/AppData/Local, `GIT_CONFIG_NOSYSTEM=1`, `GIT_CONFIG_GLOBAL` is an empty home/.gitconfig, `GIT_CEILING_DIRECTORIES` is the sandbox, `NO_COLOR=1`, `LC_ALL` and `LANG` are `C`, and `MEMEX_NOW=2026-10-13T12:00:00Z`. The case's `env` and then each step's `env` override those.
 
 ## Golden format (expect.txt)
 
@@ -89,7 +89,7 @@ When any rule fails, the case trials are not created, and only the failing rules
 
 ## Families
 
-- [cli](cli/README.md): `CLI-*`, design §3 and §3.6. Only `CLI-VERSION-01` exists so far.
+- [cli](cli/README.md): `CLI-*`, design §3 and §3.6.
 
 ## Choices where PLAN §2 is silent
 

@@ -39,3 +39,12 @@ Golden policy (PLAN.md §2, Bless):
 - Review blessed goldens with `git diff tests/cases`; the orchestrator checks `git show --stat`.
 - Bless is refused when `CI` is set.
 - Goldens may use only the `$SANDBOX` and `$VERSION` redactions: no other placeholder, no wildcard.
+
+### Code quality bar
+
+- At most 365 lines per file.
+- Each file opens with a `//!` header: its first sentence is the file's purpose, and a `Cases:` line names the ids it implements.
+- Each folder has a README.md whose first paragraph says what the folder is.
+- Functions have at most 60 lines and cognitive complexity 15, and take at most 6 arguments.
+- No `#[allow]` or `#[expect]` in src/: fix the code instead. tests/ may use `#[allow(dead_code)]` only.
+- CI enforces all of it: clippy with `-D warnings` (lints in Cargo.toml, thresholds in clippy.toml) and `tests/quality.rs`.

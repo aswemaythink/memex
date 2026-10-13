@@ -11,10 +11,15 @@ use crate::scan::{fail, parse_verb};
 /// The five verbs of design §3, in the order of the grammar block.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Verb {
+    /// `memex search`.
     Search,
+    /// `memex show`.
     Show,
+    /// `memex log`.
     Log,
+    /// `memex info`.
     Info,
+    /// `memex init`.
     Init,
 }
 
@@ -42,32 +47,53 @@ impl Verb {
 /// A parsed invocation. The verbs parse fully; running them is for later slices.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
+    /// `memex search`, with its words and flags.
     Search {
+        /// The words to search for.
         terms: Vec<String>,
+        /// The `--in` values, split on commas.
         in_: Option<Vec<String>>,
+        /// The value of `--limit`, if the flag was given.
         limit: Option<usize>,
+        /// True when `--json` was given.
         json: bool,
     },
+    /// `memex show`, with its refs and flags.
     Show {
+        /// The refs to show, in order.
         refs: Vec<String>,
+        /// The value of `--up`, if the flag was given.
         up: Option<usize>,
+        /// The value of `--limit`, if the flag was given.
         limit: Option<usize>,
+        /// True when `--json` was given.
         json: bool,
     },
+    /// `memex log`, with its stream and flags.
     Log {
+        /// The stream the entry goes to, such as `impl`.
         stream: String,
+        /// The `--to` values, split on commas.
         to: Vec<String>,
+        /// The `--tag` values, split on commas.
         tag: Vec<String>,
+        /// The value of `--agent`, if the flag was given.
         agent: Option<String>,
+        /// True when `--json` was given.
         json: bool,
     },
+    /// `memex info`, with its flags.
     Info {
+        /// The value of `--agent`, if the flag was given.
         agent: Option<String>,
+        /// True when `--json` was given.
         json: bool,
     },
+    /// `memex init`.
     Init,
     /// `--help`: the top-level help for None, otherwise one verb's help.
     Help(Option<Verb>),
+    /// `--version`: the crate version.
     Version,
 }
 

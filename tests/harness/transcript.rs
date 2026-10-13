@@ -269,11 +269,9 @@ fn io_failure(what: &str, error: &io::Error) -> String {
 /// Unit tests for the rendering rules. They run in runner_selftest; conformance.rs (harness = false) never compiles them in.
 #[cfg(test)]
 mod tests {
-    #[allow(unused_imports)] // unused only in the harness = false binary
-    use super::*;
-
     #[test]
     fn plain_args_stay_bare_and_others_are_quoted() {
+        use super::*;
         assert_eq!(quote("--tag"), "--tag");
         assert_eq!(quote("a b"), "'a b'");
         assert_eq!(quote(""), "''");
@@ -282,12 +280,14 @@ mod tests {
 
     #[test]
     fn rows_mark_a_missing_final_newline() {
+        use super::*;
         assert_eq!(rows("a\n\nb"), ["| a", "| ", "| b", "\\ no newline at end"]);
         assert_eq!(rows("\n"), ["| "]);
     }
 
     #[test]
     fn streams_render_empty_and_binary_as_one_line() {
+        use super::*;
         assert_eq!(stream("stderr", b""), ["stderr (empty)"]);
         assert_eq!(stream("stdout", b"\x00x"), ["stdout (binary)"]);
         assert_eq!(stream("stdout", &[0xff]), ["stdout (binary)"]);
@@ -296,6 +296,7 @@ mod tests {
 
     #[test]
     fn redaction_takes_the_longest_spelling_first() {
+        use super::*;
         let spellings = vec!["/private/var/x".to_string(), "/var/x".to_string()];
         assert_eq!(
             redact("/private/var/x/repo and 0.1.0", &spellings, "0.1.0"),
@@ -305,6 +306,7 @@ mod tests {
 
     #[test]
     fn version_redaction_leaves_longer_numbers_alone() {
+        use super::*;
         assert_eq!(
             redact_version("v0.1.0, 10.1.0, 0.1.0.5, 0.1.0.\n", "0.1.0"),
             "v$VERSION, 10.1.0, 0.1.0.5, $VERSION.\n"
@@ -313,6 +315,7 @@ mod tests {
 
     #[test]
     fn command_lines_quote_cwd_and_env() {
+        use super::*;
         let step = StepRecord {
             args: vec!["show".to_string()],
             cwd: "a b".to_string(),

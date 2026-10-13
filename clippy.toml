@@ -1,0 +1,6 @@
+# Thresholds for the lints that Cargo.toml [lints.clippy] turns on (CI runs them with -D warnings).
+cognitive-complexity-threshold = 15
+too-many-lines-threshold = 60
+too-many-arguments-threshold = 6
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true

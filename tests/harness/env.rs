@@ -58,6 +58,9 @@ pub fn base_env(root: &Path, bin: &Path, memex_on_path: bool) -> Result<Env, Str
     set(&mut env, "GIT_CEILING_DIRECTORIES", root.as_os_str());
     set(&mut env, "NO_COLOR", "1");
     set(&mut env, "MEMEX_NOW", NOW);
+    // The C locale, so memex and git print the same bytes on every machine.
+    set(&mut env, "LC_ALL", "C");
+    set(&mut env, "LANG", "C");
     Ok(env)
 }
 

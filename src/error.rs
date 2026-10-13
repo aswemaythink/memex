@@ -6,10 +6,15 @@ use std::io::{self, Write};
 /// The code of a fatal error, as design §3.6 names them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Code {
+    /// The `usage` code: exit 2.
     Usage,
+    /// The `not_found` code: exit 1.
     NotFound,
+    /// The `ambiguous` code: exit 1.
     Ambiguous,
+    /// The `no_root` code: exit 3.
     NoRoot,
+    /// The `io` code: exit 3.
     Io,
 }
 
@@ -38,6 +43,7 @@ impl Code {
 /// A fatal error: a code, a message, and the lines printed after the message on stderr.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Error {
+    /// Sets the JSON `code` and the exit status.
     pub code: Code,
     /// Printed as `memex: <message>`. Empty when the error is only its notes.
     pub message: String,
