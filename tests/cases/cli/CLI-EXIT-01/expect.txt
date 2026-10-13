@@ -1,0 +1,6 @@
+$ memex log impl --frob
+exit 2
+stdout (empty)
+stderr
+| memex: unknown flag '--frob'
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body

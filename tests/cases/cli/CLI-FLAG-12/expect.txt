@@ -1,0 +1,5 @@
+$ memex search words --json=yes
+exit 2
+stdout
+| {"error":{"code":"usage","message":"flag '--json' takes no value"}}
+stderr (empty)

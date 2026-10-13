@@ -1,0 +1,6 @@
+$ memex show ref --up --limit 2
+exit 2
+stdout (empty)
+stderr
+| memex: flag '--up' needs a value
+| usage: memex show   <path|ref>... [--up N] [--limit N] [--json]

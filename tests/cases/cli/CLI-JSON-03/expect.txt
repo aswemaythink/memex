@@ -1,0 +1,5 @@
+$ memex --json search words
+exit 2
+stdout
+| {"error":{"code":"usage","message":"misplaced flag '--json': flags go after the verb"}}
+stderr (empty)

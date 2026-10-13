@@ -1,0 +1,8 @@
+$ memex info --help
+exit 0
+stdout
+| memex info   [--agent <id>] [--json]
+| Print where things are, never their contents: the one overview for humans and agents.
+|   --agent <id>  agent id for the to line; else the MEMEX_AGENT variable
+|   --json        print one JSON document instead of text
+stderr (empty)

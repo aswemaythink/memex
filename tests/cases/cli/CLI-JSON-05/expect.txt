@@ -1,0 +1,5 @@
+$ memex search --json '--bad"\	'
+exit 2
+stdout
+| {"error":{"code":"usage","message":"unknown flag '--bad\"\\\t'"}}
+stderr (empty)

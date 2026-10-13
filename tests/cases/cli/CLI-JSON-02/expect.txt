@@ -1,0 +1,5 @@
+$ memex search --frob --json
+exit 2
+stdout
+| {"error":{"code":"usage","message":"unknown flag '--frob'"}}
+stderr (empty)

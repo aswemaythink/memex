@@ -1,0 +1,6 @@
+$ memex log
+exit 2
+stdout (empty)
+stderr
+| memex: log needs a stream name
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body

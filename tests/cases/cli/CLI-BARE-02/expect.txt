@@ -1,0 +1,6 @@
+$ memex search
+exit 2
+stdout (empty)
+stderr
+| memex: search needs words or filters; run memex info for an overview
+| usage: memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]

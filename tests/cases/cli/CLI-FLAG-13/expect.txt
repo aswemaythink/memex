@@ -1,0 +1,6 @@
+$ memex log -- --tag x
+exit 2
+stdout (empty)
+stderr
+| memex: unexpected argument 'x'
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body

@@ -1,0 +1,10 @@
+$ memex log --help
+exit 0
+stdout
+| memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+| Append an entry whose body is read from stdin, and print its ref.
+|   --to <id>[,...]   address the entry to these ids
+|   --tag <t>[,...]   tag the entry with these names
+|   --agent <id>      agent id; else the MEMEX_AGENT variable; else omitted
+|   --json            print {ref, path} as JSON
+stderr (empty)

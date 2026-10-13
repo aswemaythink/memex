@@ -1,0 +1,6 @@
+$ memex search words --in cases,
+exit 2
+stdout (empty)
+stderr
+| memex: bad value 'cases,' for '--in': expected comma-separated names, none empty
+| usage: memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]

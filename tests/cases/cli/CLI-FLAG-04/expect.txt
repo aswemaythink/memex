@@ -1,0 +1,6 @@
+$ memex search words --up 1
+exit 2
+stdout (empty)
+stderr
+| memex: misplaced flag '--up': not a flag of search
+| usage: memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]

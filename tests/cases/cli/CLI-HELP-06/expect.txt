@@ -1,0 +1,6 @@
+$ memex init --help
+exit 0
+stdout
+| memex init
+| Set up .memex/ and the AGENTS.md snippet; safe to run again, and it never overwrites a file.
+stderr (empty)

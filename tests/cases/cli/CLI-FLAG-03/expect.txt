@@ -1,0 +1,5 @@
+$ memex init --json
+exit 2
+stdout
+| {"error":{"code":"usage","message":"misplaced flag '--json': not a flag of init"}}
+stderr (empty)

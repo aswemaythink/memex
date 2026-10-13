@@ -1,0 +1,6 @@
+$ memex info x
+exit 2
+stdout (empty)
+stderr
+| memex: unexpected argument 'x'
+| usage: memex info   [--agent <id>] [--json]

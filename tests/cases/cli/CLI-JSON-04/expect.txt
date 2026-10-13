@@ -1,0 +1,6 @@
+$ memex init -- --json
+exit 2
+stdout (empty)
+stderr
+| memex: unexpected argument '--json'
+| usage: memex init
