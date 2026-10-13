@@ -1,5 +1,5 @@
 //! The fatal error of design §3.6: its five codes, their exit codes, and the text and JSON renderings.
-//! Cases: CLI-EXIT-*, CLI-JSON-*
+//! Cases: CLI-EXIT-*, CLI-JSON-*, DISC-ROOT-04, LOG-WRITE-11
 
 use std::io::{self, Write};
 
@@ -66,6 +66,24 @@ impl Error {
         Error {
             code: Code::Io,
             message: format!("{what} ({:?})", error.kind()),
+            notes: Vec::new(),
+        }
+    }
+
+    /// An environment error with a message memex wrote itself, such as an invalid MEMEX_NOW: exit 3, code `io`.
+    pub fn io_message(message: String) -> Error {
+        Error {
+            code: Code::Io,
+            message,
+            notes: Vec::new(),
+        }
+    }
+
+    /// The `no_root` error of design §4.1: `log` finds no `.memex/` in the root or the main checkout. Exit 3.
+    pub fn no_root() -> Error {
+        Error {
+            code: Code::NoRoot,
+            message: "no .memex/ here: run `memex init`".to_string(),
             notes: Vec::new(),
         }
     }

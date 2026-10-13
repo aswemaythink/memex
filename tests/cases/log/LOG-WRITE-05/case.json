@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "impl", "--to", "orchestrator,cook-3", "--tag", "show,namer"], "stdin": "Lists\n"}], "snapshot": ["repo/.memex/logs"]}

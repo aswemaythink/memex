@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "impl", "--json"], "stdin": "# Nested entry\nbody\n", "cwd": "repo/sub/deeper"}], "snapshot": ["repo/.memex/logs", "repo/sub/.memex/logs"]}

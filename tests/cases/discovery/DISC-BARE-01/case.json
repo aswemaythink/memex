@@ -1,0 +1,1 @@
+{"git": "commit", "setup": [{"run": ["git", "clone", "--bare", "--quiet", ".", "../bare.git"]}, {"run": ["git", "-C", "../bare.git", "worktree", "add", "-b", "feat", "../wt-bare"]}], "steps": [{"args": ["log", "impl", "--json"], "stdin": "Bare store\n", "cwd": "wt-bare"}], "snapshot": ["bare.git/memex/logs", "wt-bare/.memex"]}

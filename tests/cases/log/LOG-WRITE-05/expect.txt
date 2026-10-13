@@ -1,0 +1,14 @@
+$ memex log impl --to orchestrator,cook-3 --tag show,namer
+exit 0
+stdout
+| impl:20261013-120000-lists
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20261013-120000-lists.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| to: [orchestrator, cook-3]
+| tags: [show, namer]
+| ---
+| Lists

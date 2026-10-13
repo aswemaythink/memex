@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "Impl"], "stdin": "Bad stream\n"}, {"args": ["log", "../escape"], "stdin": "Bad stream\n"}], "snapshot": ["repo/.memex"]}

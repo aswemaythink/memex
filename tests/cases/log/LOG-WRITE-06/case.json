@@ -1,0 +1,1 @@
+{"git": "commit", "setup": [{"run": ["git", "worktree", "add", "../wt", "-b", "feat"]}], "steps": [{"args": ["log", "impl"], "stdin": "From a worktree\n", "cwd": "wt"}], "snapshot": ["repo/.memex/logs"]}

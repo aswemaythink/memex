@@ -1,0 +1,23 @@
+$ memex log impl --json  [cwd wt/sub]
+exit 0
+stdout
+| {"ref":"impl:20261013-120000-nested-worktree","path":"$SANDBOX/repo/sub/.memex/logs/impl/20261013-120000-nested-worktree.md"}
+stderr (empty)
+== snapshot repo/sub/.memex
+-- .gitignore
+| logs/
+| cache/
+-- config.json
+| {"keep_logs": "3d"}
+-- logs/impl/20261013-120000-nested-worktree.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| branch: feat
+| worktree: $SANDBOX/wt
+| commit: b054a09
+| ---
+| Nested worktree
+== snapshot wt/sub/.memex
+-- config.json
+| {"keep_logs": "3d"}

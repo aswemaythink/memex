@@ -1,0 +1,22 @@
+$ memex log impl --json  [cwd wt]
+exit 0
+stdout
+| {"ref":"impl:20261013-120000-from-the-worktree","path":"$SANDBOX/repo/.memex/logs/impl/20261013-120000-from-the-worktree.md"}
+stderr (empty)
+== snapshot repo/.memex
+-- .gitignore
+| logs/
+| cache/
+-- config.json
+| {"keep_logs": "3d"}
+-- logs/impl/20261013-120000-from-the-worktree.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| branch: feat
+| worktree: $SANDBOX/wt
+| commit: b02addf
+| ---
+| From the worktree
+== snapshot wt/.memex
+(missing)

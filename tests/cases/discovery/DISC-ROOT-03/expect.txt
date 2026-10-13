@@ -1,0 +1,7 @@
+$ memex log impl  [cwd outside]
+exit 3
+stdout (empty)
+stderr
+| memex: no .memex/ here: run `memex init`
+== snapshot outside/.memex
+(missing)

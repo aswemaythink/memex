@@ -1,0 +1,1 @@
+{"git": "commit", "steps": [{"args": ["log", "impl", "--json"], "stdin": "Lost entry\n"}], "snapshot": ["repo/.memex"]}

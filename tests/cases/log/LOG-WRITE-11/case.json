@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "impl"], "stdin": "Clock\n", "env": {"MEMEX_NOW": "not-a-time"}}, {"args": ["log", "impl"], "stdin": "Clock\n", "env": {"MEMEX_NOW": "2026-10-13T12:00:00+01:00"}}], "snapshot": ["repo/.memex/logs"]}

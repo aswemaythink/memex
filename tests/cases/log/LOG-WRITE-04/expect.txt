@@ -1,0 +1,13 @@
+$ memex log impl --agent cook-2  [env MEMEX_AGENT=scout-1]
+exit 0
+stdout
+| impl:20261013-120000-flag-beats-env
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20261013-120000-flag-beats-env.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| agent: cook-2
+| ---
+| Flag beats env

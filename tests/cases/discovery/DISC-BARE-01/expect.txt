@@ -1,0 +1,18 @@
+$ memex log impl --json  [cwd wt-bare]
+exit 0
+stdout
+| {"ref":"impl:20261013-120000-bare-store","path":"$SANDBOX/bare.git/memex/logs/impl/20261013-120000-bare-store.md"}
+stderr (empty)
+== snapshot bare.git/memex/logs
+-- impl/20261013-120000-bare-store.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| branch: feat
+| worktree: $SANDBOX/wt-bare
+| commit: b3cbae2
+| ---
+| Bare store
+== snapshot wt-bare/.memex
+-- config.json
+| {"keep_logs": "3d"}

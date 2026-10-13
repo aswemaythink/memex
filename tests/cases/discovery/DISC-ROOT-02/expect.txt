@@ -1,0 +1,7 @@
+$ memex log impl  [cwd repo/sub/deeper]
+exit 3
+stdout (empty)
+stderr
+| memex: no .memex/ here: run `memex init`
+== snapshot repo/.memex
+(missing)

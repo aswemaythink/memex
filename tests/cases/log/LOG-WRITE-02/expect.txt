@@ -1,0 +1,13 @@
+$ memex log impl --agent cook-2
+exit 0
+stdout
+| impl:20261013-120000-agent-flag
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20261013-120000-agent-flag.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| agent: cook-2
+| ---
+| Agent flag

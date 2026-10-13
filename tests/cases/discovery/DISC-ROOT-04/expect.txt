@@ -1,0 +1,7 @@
+$ memex log impl --json
+exit 3
+stdout
+| {"error":{"code":"no_root","message":"no .memex/ here: run `memex init`"}}
+stderr (empty)
+== snapshot repo/.memex
+(missing)

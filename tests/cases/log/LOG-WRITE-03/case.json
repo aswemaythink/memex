@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "impl"], "stdin": "Agent env\n", "env": {"MEMEX_AGENT": "scout-1"}}], "snapshot": ["repo/.memex/logs"]}

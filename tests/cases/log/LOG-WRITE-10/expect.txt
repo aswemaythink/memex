@@ -1,0 +1,12 @@
+$ memex log impl  [cwd repo/sub]
+exit 0
+stdout
+| impl:20261013-120000-plain-folder
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20261013-120000-plain-folder.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| ---
+| Plain folder

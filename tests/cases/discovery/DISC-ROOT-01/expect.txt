@@ -1,0 +1,15 @@
+$ memex log impl --json  [cwd repo/sub/deeper]
+exit 0
+stdout
+| {"ref":"impl:20261013-120000-nested-entry","path":"$SANDBOX/repo/sub/.memex/logs/impl/20261013-120000-nested-entry.md"}
+stderr (empty)
+== snapshot repo/.memex/logs
+(missing)
+== snapshot repo/sub/.memex/logs
+-- impl/20261013-120000-nested-entry.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| ---
+| # Nested entry
+| body

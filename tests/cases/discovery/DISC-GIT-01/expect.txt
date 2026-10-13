@@ -1,0 +1,12 @@
+$ memex log impl  [env PATH=/nonexistent]
+exit 0
+stdout
+| impl:20261013-120000-no-git-here
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20261013-120000-no-git-here.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| ---
+| No git here

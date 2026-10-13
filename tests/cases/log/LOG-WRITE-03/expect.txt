@@ -1,0 +1,13 @@
+$ memex log impl  [env MEMEX_AGENT=scout-1]
+exit 0
+stdout
+| impl:20261013-120000-agent-env
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20261013-120000-agent-env.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| agent: scout-1
+| ---
+| Agent env

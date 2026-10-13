@@ -1,12 +1,17 @@
 //! memex library: the module map for the intent-layer CLI, and the run function that main.rs calls.
 //! Modules are listed in PLAN.md §4 and added slice by slice.
-//! Cases: CLI-*
+//! Cases: CLI-*, LOG-WRITE-*
 
 pub mod cli;
+mod clock;
+mod config;
 pub mod error;
 mod grammar;
 pub mod help;
+mod logs;
+mod root;
 mod scan;
+mod verbs;
 
 use std::ffi::OsString;
 use std::io::{self, Write};
@@ -26,16 +31,39 @@ pub fn run(args: Vec<OsString>) -> i32 {
     }
 }
 
-/// Carries out a parsed command. Only help and version do anything yet.
+/// Carries out a parsed command. Help, version and log do their work; the other verbs are not built yet.
 fn dispatch(command: Command) -> i32 {
     match command {
         Command::Help(verb) => print_out(&help::text(verb)),
         Command::Version => print_out(&format!("memex {}\n", env!("CARGO_PKG_VERSION"))),
         Command::Search { .. } => not_implemented(Verb::Search),
         Command::Show { .. } => not_implemented(Verb::Show),
-        Command::Log { .. } => not_implemented(Verb::Log),
+        Command::Log {
+            stream,
+            to,
+            tag,
+            agent,
+            json,
+        } => {
+            let request = verbs::log::Request {
+                stream,
+                to,
+                tag,
+                agent,
+                json,
+            };
+            finish(verbs::log::run(&request), json)
+        }
         Command::Info { .. } => not_implemented(Verb::Info),
         Command::Init => not_implemented(Verb::Init),
+    }
+}
+
+/// Prints a verb's stdout, or its error the way the invocation asked for, and returns the exit status.
+fn finish(result: Result<String, Error>, json: bool) -> i32 {
+    match result {
+        Ok(text) => print_out(&text),
+        Err(error) => error::report(&error, json),
     }
 }
 

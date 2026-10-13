@@ -1,0 +1,13 @@
+$ memex log impl  [env MEMEX_NOW=not-a-time]
+exit 3
+stdout (empty)
+stderr
+| memex: invalid MEMEX_NOW: not-a-time
+
+$ memex log impl  [env MEMEX_NOW=2026-10-13T12:00:00+01:00]
+exit 3
+stdout (empty)
+stderr
+| memex: invalid MEMEX_NOW: 2026-10-13T12:00:00+01:00
+== snapshot repo/.memex/logs
+(missing)

@@ -1,0 +1,13 @@
+$ memex log impl
+exit 0
+stdout
+| impl:20261013-120000-windows-lines
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20261013-120000-windows-lines.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| ---
+| # Windows lines
+| second line
