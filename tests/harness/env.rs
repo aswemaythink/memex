@@ -3,7 +3,6 @@
 
 use std::collections::BTreeMap;
 use std::ffi::{OsStr, OsString};
-use std::fs;
 use std::path::{Path, PathBuf};
 
 /// The clock every case runs under (MEMEX_NOW). A step's env may override it.
@@ -108,7 +107,7 @@ fn has_memex(dir: &Path) -> bool {
 #[cfg(unix)]
 fn is_executable(path: &Path) -> bool {
     use std::os::unix::fs::PermissionsExt;
-    match fs::metadata(path) {
+    match std::fs::metadata(path) {
         Ok(meta) => meta.is_file() && meta.permissions().mode() & 0o111 != 0,
         Err(_) => false,
     }
