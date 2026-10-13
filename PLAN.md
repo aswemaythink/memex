@@ -2,7 +2,7 @@
 
 Why: [STORY.md](STORY.md). Bush's trail against his camera: authored context compression.
 What: [design.md](design.md) is authoritative on behaviour. This file is how memex gets built, and it replaces plan.md (deleted; the old one is in git history once committed).
-Status: blessed by the oracle 2026-10-13. Not started. Track progress in §11.
+Status: blessed by the oracle 2026-10-13. In progress. Track progress in §11.
 
 ## 0. Ground rules
 - **Principles (design §1).** Markdown and a CLI only. No server, daemon, MCP, LLM, vectors or database. Agent-agnostic, minimal surface. A feature earns its place through playtest friction plus a user-approved design.md edit. Logs are scaffolding; knowledge is authored.
@@ -31,7 +31,7 @@ Status: blessed by the oracle 2026-10-13. Not started. Track progress in §11.
 | license | MIT OR Apache-2.0 |
 
 ## 1. Design fixes before build
-The user approves this list, then S0.1 folds it into design.md in one commit. Until then these rulings win.
+Approved by the user and folded into design.md in S0.1 (2026-10-13). design.md is now authoritative; this list stays as the record.
 1. **§3.5 example store path.** `.git/memex/logs/` → `.memex/logs/`. The `info` header prints the store root-relative when it is inside the root, else absolute.
 2. **§4.2 duplicate ids.** "Warnings in bare `search`" contradicts §3.2, where bare search is a usage error. Duplicates are `info` warnings, and `ambiguous` in `show`.
 3. **§3.2 stray note.** Delete the "`--around`: cut." bullet.
@@ -248,7 +248,11 @@ assets/agents-snippet.md   included with include_str!; the single source for ini
   - A scout sub-agent prints the *names* of `CLAUDE*`/`AGENT*` vars, then the values of non-secret candidates only.
   - Optionally, a temporary SubagentStart hook in `.claude/settings.local.json` dumps its stdin to the scratchpad. The user must approve it first; remove it afterwards.
   - Output: the harness-variable list for the `--agent` chain (design §3.4), and whether the hook sets `MEMEX_AGENT` (§6). If no id is exposed, the skill tells agents to pass their role name. Never invent ids.
-  - Result: _pending_
+  - Result (2026-10-13, Claude Code desktop 2.1.295; live hook dump + docs + sub-agent env dump):
+    - **Harness-variable list: empty.** No env var identifies an agent. A sub-agent's shell sees `CLAUDECODE=1`, `CLAUDE_CODE_CHILD_SESSION=1`, `CLAUDE_CODE_ENTRYPOINT`, `AI_AGENT=claude-code_<ver>_agent` (a product tag) and `CLAUDE_CODE_SESSION_ID`, which equals the *parent* session id, so it is shared by every agent and unusable. The `--agent` chain is `--agent`, then `$MEMEX_AGENT`, then nothing.
+    - **SubagentStart hook input** (observed): `session_id, transcript_path, cwd, scratchpad_dir, prompt_id, agent_id, agent_type, hook_event_name`. `agent_type` is the role name (`cook`, `scout`); `agent_id` is an opaque per-run id.
+    - **The hook does not set `MEMEX_AGENT`.** `CLAUDE_ENV_FILE` exists for SessionStart (not SubagentStart, and unset in a sub-agent's shell); a session-wide export would leak the parent's id into every sub-agent.
+    - **What the hook does instead:** on SubagentStart it injects, via `hookSpecificOutput.additionalContext` (capped at 10,000 chars), the output of `memex info --agent <agent_type>` plus one line: "your memex id is `<agent_type>`; pass `--agent <agent_type>` to `memex log` and `memex info`". On SessionStart it prints `memex info` (stdout becomes context). The skill tells agents with no hook to pass their role name. design §6 is updated to match in S6.1.
 
 ## 6. Phases and slices
 **DONE(F)**, run by every slice:
@@ -402,13 +406,13 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - Lenient case-id grammars.
 
 ## 11. Tracking
-- [ ] §1 fixes approved and folded into design.md
-- [ ] S0.1
+- [x] §1 fixes approved and folded into design.md
+- [x] S0.1
 - [ ] S0.2
 - [ ] S0.3
 - [ ] S0.4
 - [ ] Spike 1
-- [ ] Spike 2
+- [x] Spike 2
 - [ ] S1.1 (G1)
 - [ ] S1.2
 - [ ] S1.3
