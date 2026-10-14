@@ -466,3 +466,4 @@ Open:
 - corpus.rs doesn't keep the loaded Manifest list and warnings, so info reads manifests twice: keep them in the corpus.
 - `$MEMEX_NOW` validation: design §3.6 says an invalid value exits 3 everywhere, but `show` ignores it. Validate it once at startup for every verb. Add SRCH-NOW-01 and SHOW-NOW-01.
 - INFO-CAP-02 (exactly 3,000 bytes) is planned: pin it with a unit test in src/render/info.rs, since the sandbox root length varies by OS.
+- tests/cases/cli/README.md still calls CLI-EXIT-04 planned; it is live now.
