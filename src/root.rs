@@ -2,6 +2,7 @@
 //! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-GIT-01, LOG-WRITE-06, LOG-WRITE-10
 
 use std::ffi::OsStr;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -100,7 +101,7 @@ fn checkout_place(
     worktree: Option<PathBuf>,
 ) -> Result<Place, Error> {
     let owner = store_owner(&root, git);
-    if !has_memex && !owner.join(".memex").is_dir() {
+    if !has_memex && !holds_memex(&owner) {
         return Err(Error::no_root());
     }
     let store = owner.join(".memex").join("logs");
@@ -135,8 +136,18 @@ fn main_checkout(git: &Git) -> Option<PathBuf> {
 /// The nearest folder, from `cwd` upward, that holds a `.memex/` directory.
 pub fn nearest_memex(cwd: &Path) -> Option<PathBuf> {
     cwd.ancestors()
-        .find(|dir| dir.join(".memex").is_dir())
+        .find(|dir| holds_memex(dir))
         .map(Path::to_path_buf)
+}
+
+/// True when `dir` lists a folder named exactly `.memex`. The name is matched against the listing, never probed on a guessed
+/// path, so a case-insensitive file system does not match another spelling (design §4.4 Name matching).
+fn holds_memex(dir: &Path) -> bool {
+    fs::read_dir(dir).is_ok_and(|entries| {
+        entries
+            .flatten()
+            .any(|entry| entry.file_name().to_str() == Some(".memex") && entry.path().is_dir())
+    })
 }
 
 impl Git {

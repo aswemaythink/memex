@@ -218,13 +218,23 @@ fn args(words: &[&str]) -> Vec<String> {
 
 /// Fails if the sandbox would sit under a directory that holds a .memex store.
 fn reject_memex_ancestor(root: &Path) -> Result<(), String> {
-    match root.ancestors().find(|dir| dir.join(".memex").is_dir()) {
+    match root.ancestors().find(|dir| holds_memex(dir)) {
         Some(_) => Err(
             "a .memex store sits above the sandbox; point TMPDIR (TEMP/TMP on Windows) outside it"
                 .to_string(),
         ),
         None => Ok(()),
     }
+}
+
+/// True when `dir` lists a folder named exactly `.memex`, matched against the listing and never probed on a guessed path,
+/// as src/root.rs does.
+fn holds_memex(dir: &Path) -> bool {
+    fs::read_dir(dir).is_ok_and(|entries| {
+        entries
+            .flatten()
+            .any(|entry| entry.file_name().to_str() == Some(".memex") && entry.path().is_dir())
+    })
 }
 
 /// Copies the fixture into the sandbox root. A path part that starts with `dot_` becomes `.`.
