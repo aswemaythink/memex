@@ -1,0 +1,14 @@
+$ memex log logs
+exit 2
+stdout (empty)
+stderr
+| memex: stream name 'logs' is reserved; pick another name, such as impl
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
+
+$ memex log --json cases
+exit 2
+stdout
+| {"error":{"code":"usage","message":"stream name 'cases' is reserved; pick another name, such as impl"}}
+stderr (empty)
+== snapshot repo/.memex/logs
+(missing)

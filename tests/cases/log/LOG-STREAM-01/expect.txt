@@ -2,28 +2,28 @@ $ memex log logs
 exit 2
 stdout (empty)
 stderr
-| memex: stream name 'logs' is reserved
-| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+| memex: stream name 'logs' is reserved; pick another name, such as impl
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
 
 $ memex log readmes
 exit 2
 stdout (empty)
 stderr
-| memex: stream name 'readmes' is reserved
-| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+| memex: stream name 'readmes' is reserved; pick another name, such as impl
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
 
 $ memex log headers
 exit 2
 stdout (empty)
 stderr
-| memex: stream name 'headers' is reserved
-| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+| memex: stream name 'headers' is reserved; pick another name, such as impl
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
 
 $ memex log cases
 exit 2
 stdout (empty)
 stderr
-| memex: stream name 'cases' is reserved
-| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+| memex: stream name 'cases' is reserved; pick another name, such as impl
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
 == snapshot repo/.memex/logs
 (missing)

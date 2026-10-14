@@ -1,6 +1,6 @@
 //! Prints `info`'s atlas as text under the 3,000-byte cap (design §3.5).
 //! It prints the header, one line per part and the use line, and cuts the longest list until the text fits.
-//! Cases: INFO-HEAD-01, INFO-HEAD-02, INFO-INTENT-01, INFO-INTENT-02, INFO-INTENT-03, INFO-COLL-01, INFO-COLL-02, INFO-STREAM-01, INFO-STREAM-02, INFO-STREAM-03, INFO-STREAM-04, INFO-TO-01, INFO-TO-02, INFO-TO-03, INFO-TO-04, INFO-HERE-01, INFO-HERE-02, INFO-HERE-03, INFO-HERE-04, INFO-USE-01, INFO-CAP-01, INFO-NOROOT-01, INFO-NOROOT-02, INFO-WARN-01
+//! Cases: INFO-HEAD-01, INFO-HEAD-02, INFO-INTENT-01, INFO-INTENT-02, INFO-INTENT-03, INFO-COLL-01, INFO-COLL-02, INFO-STREAM-01, INFO-STREAM-02, INFO-STREAM-03, INFO-STREAM-04, INFO-TO-01, INFO-TO-02, INFO-TO-03, INFO-TO-04, INFO-HERE-01, INFO-HERE-02, INFO-HERE-03, INFO-HERE-04, INFO-USE-01, INFO-CAP-01, INFO-NOROOT-01, INFO-NOROOT-02, INFO-WARN-01, INFO-ZERO-01, INFO-ZERO-02
 
 use super::{Atlas, Collection, HereLine, Intent, Stream, ToCount};
 use crate::render::text::clip;
@@ -12,7 +12,7 @@ pub(super) const CAP: usize = 3_000;
 const DOT: &str = " · ";
 
 /// The use line, which names the three commands that the atlas points to (design §3.5).
-const USE: &str = "memex show <path|ref> · memex search <words> · memex log <stream> < body";
+const USE: &str = "memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF";
 
 /// The text of the atlas (design §3.5): the header, then one line per part that has something to show. Text over the cap has
 /// its longest list line cut to its first items and a `+N more` ending, until the whole text is under the cap.
@@ -178,5 +178,14 @@ mod tests {
         assert_eq!(list.value(), "a 1 · +1 more");
         list.shown = 0;
         assert_eq!(list.value(), "+2 more");
+    }
+
+    #[test]
+    fn a_to_line_at_zero_says_zero_messages() {
+        let to = ToCount {
+            agent: "x".to_string(),
+            count: 0,
+        };
+        assert_eq!(to_value(&to), "0 messages → memex search to:x");
     }
 }

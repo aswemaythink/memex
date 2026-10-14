@@ -9,7 +9,7 @@ exit 2
 stdout (empty)
 stderr
 | memex: stream name 'rs-notes' is a collection
-| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
 == snapshot repo/.memex/logs
 -- notes/20261013-120000-case-folded-name.md
 | ---

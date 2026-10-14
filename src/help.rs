@@ -1,5 +1,5 @@
 //! The help texts and the grammar block of design §3, plus the usage lines that usage errors print.
-//! Cases: CLI-*, CLI-HELP-01, CLI-HELP-02, CLI-HELP-03, CLI-HELP-04, CLI-HELP-05, CLI-HELP-06
+//! Cases: CLI-*, CLI-HELP-01, CLI-HELP-02, CLI-HELP-03, CLI-HELP-04, CLI-HELP-05, CLI-HELP-06, CLI-HINTB-01
 
 use crate::cli::Verb;
 
@@ -8,7 +8,7 @@ use crate::cli::Verb;
 const GRAMMAR: [&str; 6] = [
     "memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]",
     "memex show   <path|ref>... [--up N] [--limit N] [--json]",
-    "memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body",
+    "memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF",
     "memex info   [--agent <id>] [--json]",
     "memex init",
     "memex --help | --version",

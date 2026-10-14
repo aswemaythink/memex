@@ -5,5 +5,5 @@ stdout
 | intent     1 readme · 0 headers · 0 cases
 | streams    impl 2 (2 new in 24h) · review 2 (2 new)
 | to cook-2  2 messages → memex search to:cook-2
-| use        memex show <path|ref> · memex search <words> · memex log <stream> < body
+| use        memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr (empty)

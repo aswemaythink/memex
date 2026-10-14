@@ -1,6 +1,6 @@
 //! The tables of design §3's grammar.
 //! Which flags each verb takes, what each flag takes after it, and how many words each verb takes.
-//! Cases: CLI-*
+//! Cases: CLI-*, CLI-HINTB-01
 
 use crate::cli::Verb;
 
@@ -53,7 +53,7 @@ pub(crate) const SPECS: [Spec; 5] = [
         flags: &["--to", "--tag", "--agent", "--json"],
         min: 1,
         max: Some(1),
-        missing: "log needs a stream name",
+        missing: "log needs a stream name: memex log <stream> <<'EOF' … EOF",
     },
     Spec {
         flags: &["--agent", "--json"],

@@ -1,5 +1,5 @@
 //! Carries out `memex info` (design §3.5 and §3.6): the atlas of where things are, as text or JSON.
-//! Cases: INFO-HEAD-01, INFO-HEAD-02, INFO-INTENT-01, INFO-INTENT-02, INFO-INTENT-03, INFO-COLL-01, INFO-COLL-02, INFO-STREAM-01, INFO-STREAM-02, INFO-STREAM-03, INFO-STREAM-04, INFO-TO-01, INFO-TO-02, INFO-TO-03, INFO-TO-04, INFO-TO-05, INFO-HERE-01, INFO-HERE-02, INFO-HERE-03, INFO-HERE-04, INFO-USE-01, INFO-CAP-01, INFO-WARN-01, INFO-WARN-02, INFO-NOROOT-01, INFO-NOROOT-02, INFO-JSON-01, INFO-JSON-02, INFO-JSON-03, CASE-DUP-02, INIT-INFO-03
+//! Cases: INFO-HEAD-01, INFO-HEAD-02, INFO-INTENT-01, INFO-INTENT-02, INFO-INTENT-03, INFO-COLL-01, INFO-COLL-02, INFO-STREAM-01, INFO-STREAM-02, INFO-STREAM-03, INFO-STREAM-04, INFO-TO-01, INFO-TO-02, INFO-TO-03, INFO-TO-04, INFO-TO-05, INFO-HERE-01, INFO-HERE-02, INFO-HERE-03, INFO-HERE-04, INFO-USE-01, INFO-CAP-01, INFO-WARN-01, INFO-WARN-02, INFO-NOROOT-01, INFO-NOROOT-02, INFO-JSON-01, INFO-JSON-02, INFO-JSON-03, CASE-DUP-02, INIT-INFO-03, INFO-ZERO-01, INFO-ZERO-02
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -74,7 +74,7 @@ fn atlas(here: &Here, agent: Option<String>, now: Timestamp, duplicates: &[Strin
         intent: intent_of(corpus),
         collections,
         streams: streams_of(corpus, now),
-        to: agent.and_then(|agent| to_of(corpus, agent)),
+        to: agent.map(|agent| to_of(corpus, agent)),
         here: here_of(corpus, &here.cwd),
         warnings,
     }
@@ -216,14 +216,14 @@ fn stamp_of(doc: &Doc) -> Option<Timestamp> {
     clock::leading_stamp(&doc.id)
 }
 
-/// The number of entries in the store that address the agent (design §3.5 `to` line), or None when there are none. The agent is
-/// matched without regard to case, as the `to:` filter matches (design §3.2).
-fn to_of(corpus: &Corpus, agent: String) -> Option<ToCount> {
+/// The number of entries in the store that address the agent (design §3.5 `to` line). It is zero when none does, since the line
+/// shows at zero (INFO-ZERO-01). The agent is matched without regard to case, as the `to:` filter matches (design §3.2).
+fn to_of(corpus: &Corpus, agent: String) -> ToCount {
     let count = corpus
         .all_docs()
         .filter(|doc| corpus.is_log(doc) && addressed(doc, &agent))
         .count();
-    (count > 0).then_some(ToCount { agent, count })
+    ToCount { agent, count }
 }
 
 /// True when the `to` list of a doc holds the agent, ignoring case.

@@ -9,7 +9,7 @@ exit 2
 stdout (empty)
 stderr
 | memex: invalid --to value 'abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghi'
-| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
 == snapshot repo/.memex/logs
 -- impl/20261013-120000-longest-id.md
 | ---

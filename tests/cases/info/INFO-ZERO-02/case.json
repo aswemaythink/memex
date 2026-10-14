@@ -1,0 +1,1 @@
+{"steps": [{"args": ["info"], "env": {"MEMEX_AGENT": "x"}}, {"args": ["info", "--json"], "env": {"MEMEX_AGENT": "x"}}]}

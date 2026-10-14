@@ -1,6 +1,6 @@
 //! Checks a stream name before it names a folder (design §3.1 and §3.4).
 //! It checks the grammar, the built-in and Windows device names that are reserved, and the manifests that already own a name.
-//! Cases: LOG-WRITE-13, LOG-STREAM-01, LOG-STREAM-02, LOG-STREAM-03, LOG-STREAM-04, LOG-STREAM-05, PORT-NAME-05
+//! Cases: LOG-WRITE-13, LOG-STREAM-01, LOG-STREAM-02, LOG-STREAM-03, LOG-STREAM-04, LOG-STREAM-05, PORT-NAME-05, CLI-HINTB-02
 
 use std::fs;
 use std::io;
@@ -41,7 +41,7 @@ pub fn check_reserved(stream: &str) -> Result<(), Error> {
     if RESERVED.contains(&stream) {
         return Err(fail(
             Verb::Log,
-            format!("stream name '{stream}' is reserved"),
+            format!("stream name '{stream}' is reserved; pick another name, such as impl"),
         ));
     }
     if DEVICE_NAMES.contains(&stream) {

@@ -6,7 +6,7 @@ stderr
 | usage:
 | memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]
 | memex show   <path|ref>... [--up N] [--limit N] [--json]
-| memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+| memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
 | memex info   [--agent <id>] [--json]
 | memex init
 | memex --help | --version

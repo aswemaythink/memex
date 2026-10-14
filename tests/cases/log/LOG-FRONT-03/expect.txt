@@ -3,6 +3,6 @@ exit 2
 stdout (empty)
 stderr
 | memex: frontmatter block is not closed
-| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
 == snapshot repo/.memex/logs
 (missing)

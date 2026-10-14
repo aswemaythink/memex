@@ -136,3 +136,10 @@
   design §3.5c Messages and §3.6. Run: memex --json bogus.
 - `CLI-HINT-12` (planned) A name that another process takes between init's check and its write prints `memex: cannot create <path>: another process created it while init ran, or a name that differs only in case holds it` on stderr, leaves that file as it is, and exits 3.
   design §3.5b (init race). Planned: a golden needs a concurrent writer or a case-insensitive file system, which no run can set up on every OS; the unit test in src/verbs/init/files.rs pins the text.
+
+## HINTB
+
+- `CLI-HINTB-01` `log` with no stream names its next step: stderr reads `memex: log needs a stream name: memex log <stream> <<'EOF' … EOF`, then the log usage line, and exits 2; with `--json` the same message is the usage envelope on stdout.
+  design §3.5c Messages (log needs a stream name adds the heredoc form). Run: memex log, then memex log --json.
+- `CLI-HINTB-02` A reserved stream name, `logs` for example, names its next step: stderr reads `memex: stream name '<name>' is reserved; pick another name, such as impl`, then the log usage line, and exits 2 with nothing written; with `--json` the same message is the usage envelope on stdout.
+  design §3.5c Messages (stream name is reserved adds the next step). Run: memex log logs, then memex log --json cases, in a root with a `.memex/`.

@@ -3,7 +3,7 @@ exit 0
 stdout
 | memex  $SANDBOX/repo · log store none (run memex init)
 | intent  0 readmes · 0 headers · 0 cases
-| use     memex show <path|ref> · memex search <words> · memex log <stream> < body
+| use     memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr (empty)
 
 $ memex info --json

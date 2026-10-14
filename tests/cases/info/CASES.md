@@ -40,8 +40,8 @@
   Scenario: four entries in two streams, two addressed to cook-2 (one also to orchestrator), one addressed to orchestrator alone and one with no `to`. design §3.5 `to` line and §3.4 Agent id.
 - `INFO-TO-02` The agent id comes from `$MEMEX_AGENT` when `--agent` is not given, and `--agent` wins over the variable.
   Scenario: with MEMEX_AGENT=cook-2 the line names cook-2; with the same variable and `--agent orchestrator` it names orchestrator. design §3.4 Agent id.
-- `INFO-TO-03` The to line is left out when no agent id is known, and when the agent has no entries.
-  Scenario: in the TO-01 store, `--agent nobody` and a plain `info` print no to line. design §3.5 `to` line; the rule that an agent with no entries gets no line is a choice pinned here.
+- `INFO-TO-03` The to line is left out when no agent id is known, and an agent with no entries still gets its line, at zero.
+  Scenario: in the TO-01 store, `--agent nobody` prints `to nobody`, then `0 messages → memex search to:nobody`, and a plain `info` prints no to line. design §3.5 `to` line (shown including at zero).
 - `INFO-TO-04` The agent id matches a `to` entry without regard to case, as the `to:` filter does.
   Scenario: `--agent COOK-2` in the TO-01 store counts the same two entries, and the line names the id as given: `to COOK-2`, then `2 messages → memex search to:COOK-2`. design §3.2 Filters (exact and case-insensitive).
 - `INFO-TO-05` An agent id that `log` would refuse is a usage error with exit 2, whether it comes from `--agent` or `$MEMEX_AGENT`, and with `--json` the error is the usage envelope.
@@ -79,8 +79,8 @@
 
 ## NOROOT
 
-- `INFO-NOROOT-01` With no `.memex/` and no git, info prints what it can for the cwd: the root is the cwd, the header reads `log store none (run memex init)`, and no streams or to line appears, exit 0.
-  Scenario: a folder with a README and a file with a header, run with `--agent cook-2`. design §4.1 item 1 and §3.5 Header.
+- `INFO-NOROOT-01` With no `.memex/` and no git, info prints what it can for the cwd: the root is the cwd, the header reads `log store none (run memex init)`, no streams line appears, and the to line for the agent is at zero, exit 0.
+  Scenario: a folder with a README and a file with a header, run with `--agent cook-2`, so the to line reads `0 messages`. design §4.1 item 1, §3.5 Header and the `to` line (shown including at zero).
 - `INFO-NOROOT-02` With git but no `.memex/`, the root is the git toplevel, the store is none, and the here line still finds the nearest README, exit 0.
   Scenario: a committed repo with a README at the top and in `src/`, run in `src/`; the header names the toplevel, and the here line names the folder `src` with the one-liner `The source folder.`. design §4.1 item 1 (git toplevel fallback).
 
@@ -100,3 +100,10 @@
 ## NOTEXT
 - `INFO-NOTEXT-01` `info` prints no log title or body text: its text and its `--json` hold names, counts and times, and never the words of a log.
   Scenario: a `quokka` log and a `zebra` log, each with its words in its title and its body; neither word appears in the text or the JSON output. design §3.5 (the atlas gives where things are, never their contents).
+
+## ZERO
+
+- `INFO-ZERO-01` With `--agent` and no entries in the store, the to line still prints, naming the agent and then `0 messages → memex search to:<agent>`, and the JSON `to` is `{"agent":"<agent>","count":0}`, exit 0.
+  Scenario: a root with a `.memex/` and no log entries; run `info --agent x`, then `info --json --agent x`. design §3.5 `to` line (shown including at zero, so an agent can tell that it is wired up) and §3.6 info (`to` is present whenever an agent is known).
+- `INFO-ZERO-02` `$MEMEX_AGENT` alone gives the same zero line in text and in JSON, with no `--agent` given.
+  Scenario: the ZERO-01 root with MEMEX_AGENT=x; run `info`, then `info --json`. design §3.4 Agent id and §3.5 `to` line.

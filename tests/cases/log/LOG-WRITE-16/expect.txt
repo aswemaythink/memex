@@ -9,7 +9,7 @@ exit 2
 stdout (empty)
 stderr
 | memex: invalid stream name 'abcdefghijabcdefghijabcdefghijabcdefghijk': use up to 40 lowercase letters, digits and dashes, starting with a letter or digit
-| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
 == snapshot repo/.memex/logs
 -- abcdefghijabcdefghijabcdefghijabcdefghij/20261013-120000-forty-characters.md
 | ---

@@ -1,0 +1,12 @@
+$ memex log
+exit 2
+stdout (empty)
+stderr
+| memex: log needs a stream name: memex log <stream> <<'EOF' … EOF
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
+
+$ memex log --json
+exit 2
+stdout
+| {"error":{"code":"usage","message":"log needs a stream name: memex log <stream> <<'EOF' … EOF"}}
+stderr (empty)
