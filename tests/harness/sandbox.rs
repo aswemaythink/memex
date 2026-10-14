@@ -219,9 +219,10 @@ fn args(words: &[&str]) -> Vec<String> {
 /// Fails if the sandbox would sit under a directory that holds a .memex store.
 fn reject_memex_ancestor(root: &Path) -> Result<(), String> {
     match root.ancestors().find(|dir| dir.join(".memex").is_dir()) {
-        Some(_) => {
-            Err("a .memex store sits above the sandbox; point TMPDIR outside it".to_string())
-        }
+        Some(_) => Err(
+            "a .memex store sits above the sandbox; point TMPDIR (TEMP/TMP on Windows) outside it"
+                .to_string(),
+        ),
         None => Ok(()),
     }
 }

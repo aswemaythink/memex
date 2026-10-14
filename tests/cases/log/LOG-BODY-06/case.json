@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "impl", "--agent", "cook-p1"], "stdin_file": "body.md"}], "snapshot": ["repo/.memex/logs"]}

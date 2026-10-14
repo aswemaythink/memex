@@ -1,1 +1,1 @@
-{"git": "commit", "platforms": ["unix"], "steps": [{"args": ["log", "impl"], "stdin": "No git here\n", "env": {"PATH": "/nonexistent"}}], "snapshot": ["repo/.memex/logs"]}
+{"git": "commit", "steps": [{"args": ["log", "impl"], "stdin": "No git here\n", "env": {"PATH": "/nonexistent"}}], "snapshot": ["repo/.memex/logs"]}

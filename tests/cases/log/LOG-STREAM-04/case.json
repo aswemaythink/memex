@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "nul"], "stdin": "Device name\n"}, {"args": ["log", "com1"], "stdin": "Device name\n"}], "snapshot": ["repo/.memex/logs"]}

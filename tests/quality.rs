@@ -100,7 +100,7 @@ fn every_folder_has_a_readme() {
         .iter()
         .filter(|node| node.is_dir && is_gated_folder(&node.rel))
     {
-        if !node.path.join("README.md").is_file() {
+        if !has_readme(&node.path) {
             problems.push(format!("{}/: no README.md", node.rel));
         }
     }
@@ -108,6 +108,15 @@ fn every_folder_has_a_readme() {
         &problems,
         "add a README.md whose first paragraph says what the folder is",
     );
+}
+
+/// True when `dir` lists a file named exactly `README.md`. The names are compared as listed, so a `readme.md` does not
+/// pass on a case-folding file system (design §4.4 Name matching).
+fn has_readme(dir: &Path) -> bool {
+    fs::read_dir(dir)
+        .unwrap_or_else(|e| panic!("cannot list {}: {e}", dir.display()))
+        .map(|entry| entry.expect("a folder entry is readable"))
+        .any(|entry| entry.file_name().to_str() == Some("README.md") && entry.path().is_file())
 }
 
 #[test]

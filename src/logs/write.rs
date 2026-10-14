@@ -1,5 +1,5 @@
 //! Writes one log entry to the store (design §3.4 and §4.3): memex's frontmatter with the agent's lines merged into it, the body verbatim, a file name from the title's slug, and never an overwrite. The store itself may be a symlink, which is followed; a symlinked stream folder is refused.
-//! Cases: LOG-WRITE-01, LOG-WRITE-02, LOG-WRITE-03, LOG-WRITE-04, LOG-WRITE-05, LOG-WRITE-06, LOG-WRITE-08, LOG-WRITE-14, LOG-FRONT-01, LOG-BODY-02
+//! Cases: LOG-WRITE-01, LOG-WRITE-02, LOG-WRITE-03, LOG-WRITE-04, LOG-WRITE-05, LOG-WRITE-06, LOG-WRITE-08, LOG-WRITE-14, LOG-WRITE-15, LOG-FRONT-01, LOG-BODY-02
 
 use std::fs;
 use std::io::{self, Write};
@@ -164,9 +164,15 @@ fn write_new(dir: &Path, name: &str, bytes: &[u8]) -> Result<Option<PathBuf>, Er
         .map_err(|failure| io_error("cannot write", &target, &failure))?;
     match temp.persist_noclobber(&target) {
         Ok(_) => Ok(Some(target)),
-        Err(failed) if failed.error.kind() == io::ErrorKind::AlreadyExists => Ok(None),
+        Err(failed) if taken(&target, &failed.error) => Ok(None),
         Err(failed) => Err(io_error("cannot write", &target, &failed.error)),
     }
+}
+
+/// True when a failed persist means the name is taken: the error says so, or something exists at the name in any form,
+/// which `symlink_metadata` sees without following it. Windows reports a folder there as a different error (design §4.4).
+fn taken(target: &Path, failure: &io::Error) -> bool {
+    failure.kind() == io::ErrorKind::AlreadyExists || fs::symlink_metadata(target).is_ok()
 }
 
 /// A dot-prefixed temporary file in `dir`. A concurrent prune can remove a stream folder it has just emptied after
@@ -229,6 +235,36 @@ mod tests {
         assert!(elsewhere.join("impl").is_dir());
         std::os::unix::fs::symlink(&elsewhere, store.join("alias")).expect("a symlinked stream");
         assert!(make_folder(&store.join("alias")).is_err());
+    }
+
+    #[test]
+    fn a_folder_at_the_target_name_takes_it_and_the_entry_is_written_as_2() {
+        let root = tempfile::tempdir().expect("a temporary folder");
+        let store = root.path().join(".memex").join("logs");
+        let place = Place {
+            owner: root.path().to_path_buf(),
+            store: store.clone(),
+            in_git_dir: false,
+            worktree: None,
+        };
+        let dir = store.join("impl");
+        let folder = dir.join("20261013-120000-x.md");
+        fs::create_dir_all(&folder).expect("a folder at the target name");
+        let entry = Entry {
+            stream: "impl".to_string(),
+            time: crate::clock::parse_stamp("20261013-120000").expect("a stamp"),
+            agent: None,
+            to: Vec::new(),
+            tags: Vec::new(),
+            branch: None,
+            worktree: None,
+            commit: None,
+            front: Vec::new(),
+            body: "# X\n".to_string(),
+        };
+        let path = write_entry(&place, &entry).expect("an entry");
+        assert_eq!(path, dir.join("20261013-120000-x-2.md"));
+        assert!(folder.is_dir(), "the folder is left as it was");
     }
 
     #[test]

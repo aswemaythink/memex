@@ -30,6 +30,8 @@
   design §3.4 Stream name. Run: memex log Impl, then memex log ../x.
 - `LOG-WRITE-14` A stream folder that is a symlink is refused: exit 3 naming the folder, and nothing is written behind the link.
   design §4.3 is silent on symlinks; the S1.3 review ruling: the store may be a symlink, but no symlink below it is followed, by write or by prune (LOG-PRUNE-15, LOG-PRUNE-17). Run: memex log alias where .memex/logs/alias links to a sibling folder.
+- `LOG-WRITE-15` A folder already at an entry's target name counts as taken: the entry is written with the `-2` suffix, and the folder and its contents are left as they were.
+  design §4.4 Atomic writes: a name that exists in any form is taken, since Windows reports a folder there differently. Run: memex log impl over a stream whose folder holds a folder named like the entry's file.
 
 ## FLAG
 
@@ -58,6 +60,8 @@
   design §3.4 Body: required and non-empty, blank counts as empty. Run: memex log impl with stdin of blank lines.
 - `LOG-BODY-05` A body whose only text after its frontmatter is blank lines exits 2 with `log body has no title line` and writes nothing.
   design §3.4 Body: the title is the first non-blank line after any frontmatter. Run: memex log impl with a `---` block, then blank lines.
+- `LOG-BODY-06` A UTF-8 BOM at the start of a body is dropped, so the agent frontmatter after it still merges, the title is read after it, and the stored entry starts with memex's `---` and has no BOM.
+  design §4.4 Text: a leading UTF-8 BOM is dropped on read. Run: memex log impl --agent cook-p1 with a stdin_file that starts with a BOM, then a `status: done` block, then `# BOM title`.
 
 ## FRONT
 
@@ -82,6 +86,10 @@
   design §3.4 Stream name; §4.2 manifests. Run: memex log rs-notes with that manifest present, then memex log rs, which is accepted because only the exact file name counts.
 - `LOG-STREAM-03` From a linked worktree, a manifest that exists only in the main checkout's `.memex/collections` also makes its name a collection.
   design §4.1 item 3 (the store owner is the main checkout) and §3.4 Stream name. Run: memex log rs-notes from a linked worktree, where `.memex/.gitignore` keeps the manifest out of git.
+- `LOG-STREAM-04` A Windows device name, `nul` or `com1`, exits 2 with `stream name '<name>' is a Windows device name` and writes nothing, on every OS.
+  design §3.4 Stream name: the device names are refused on every OS so a store stays portable. Run: memex log nul, then memex log com1.
+- `LOG-STREAM-05` A manifest name is matched by its exact file name: with `Notes.json` present, `memex log notes` succeeds on every OS, and with `rs-notes.json` present, `memex log rs-notes` exits 2 with `stream name 'rs-notes' is a collection`.
+  design §3.4 Stream name (matched against the listed file names, exactly, never by probing) and §4.4 Name matching. Run: memex log notes, then memex log rs-notes, with both manifests present.
 
 ## PRUNE
 

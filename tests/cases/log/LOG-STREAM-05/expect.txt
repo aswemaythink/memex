@@ -1,0 +1,19 @@
+$ memex log notes
+exit 0
+stdout
+| notes:20261013-120000-case-folded-name
+stderr (empty)
+
+$ memex log rs-notes
+exit 2
+stdout (empty)
+stderr
+| memex: stream name 'rs-notes' is a collection
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+== snapshot repo/.memex/logs
+-- notes/20261013-120000-case-folded-name.md
+| ---
+| stream: notes
+| time: 2026-10-13T12:00:00Z
+| ---
+| Case folded name

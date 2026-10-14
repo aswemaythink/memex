@@ -1,0 +1,15 @@
+$ memex log nul
+exit 2
+stdout (empty)
+stderr
+| memex: stream name 'nul' is a Windows device name
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+
+$ memex log com1
+exit 2
+stdout (empty)
+stderr
+| memex: stream name 'com1' is a Windows device name
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+== snapshot repo/.memex/logs
+(missing)

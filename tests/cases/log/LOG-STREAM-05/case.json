@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "notes"], "stdin": "Case folded name\n"}, {"args": ["log", "rs-notes"], "stdin": "Exact name\n"}], "snapshot": ["repo/.memex/logs"]}
