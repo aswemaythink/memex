@@ -2,7 +2,7 @@
 //! Cases: INIT-FRESH-01, INIT-KEEP-01, INIT-KEEP-02, INIT-RERUN-01, INIT-IO-01, INIT-LINK-01, INIT-LINK-02, PORT-MODE-01
 
 use std::fs;
-use std::io::{self, Write};
+use std::io::Write;
 use std::path::Path;
 
 use tempfile::NamedTempFile;
@@ -59,12 +59,11 @@ pub fn create_new(dir: &Path, name: &str, bytes: &[u8]) -> Result<(), Error> {
     let target = dir.join(name);
     match atomic::persist_new(dir, name, bytes) {
         Ok(Some(_)) => Ok(()),
-        // A taken name is an error, never an overwrite, and it reads as the persist error that finds the name taken.
-        Ok(None) => Err(Error::io_at(
-            "cannot create",
-            &target,
-            &io::Error::from(io::ErrorKind::AlreadyExists),
-        )),
+        // A name taken since init's check is an error, never an overwrite: the file that holds it stays as it is (design §3.5b).
+        Ok(None) => Err(Error::io_message(format!(
+            "cannot create {}: another process created it while init ran",
+            slash(&target)
+        ))),
         Err(failed) => Err(failed.into_error(dir, name)),
     }
 }
@@ -200,5 +199,22 @@ mod tests {
         fs::write(dir.path().join("plain"), b"x").expect("a plain file");
         let umask = 0o666 & !mode(&dir.path().join("plain"));
         assert_eq!(mode(&dir.path().join("CLAUDE.md")), 0o644 & !umask);
+    }
+
+    #[test]
+    fn a_name_taken_after_the_check_gets_the_race_message_and_keeps_its_file() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let path = dir.path().join("CLAUDE.md");
+        fs::write(&path, b"theirs").expect("a file");
+        let error = create_new(dir.path(), "CLAUDE.md", b"ours").expect_err("a taken name");
+        assert_eq!(error.code.as_str(), "io");
+        assert_eq!(
+            error.message,
+            format!(
+                "cannot create {}: another process created it while init ran",
+                slash(&path)
+            )
+        );
+        assert_eq!(fs::read(&path).expect("the file"), b"theirs");
     }
 }
