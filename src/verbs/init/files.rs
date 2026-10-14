@@ -1,8 +1,8 @@
 //! Writes the `.memex/` files (design §3.5b item 1) and holds the file helpers the init modules share.
-//! Cases: INIT-FRESH-01, INIT-KEEP-01, INIT-KEEP-02, INIT-RERUN-01, INIT-IO-01, INIT-LINK-01, INIT-LINK-02
+//! Cases: INIT-FRESH-01, INIT-KEEP-01, INIT-KEEP-02, INIT-RERUN-01, INIT-IO-01, INIT-LINK-01, INIT-LINK-02, PORT-MODE-01
 
 use std::fs;
-use std::io::Write;
+use std::io::{self, Write};
 use std::path::Path;
 
 use tempfile::NamedTempFile;
@@ -57,10 +57,24 @@ pub fn lists(dir: &Path, name: &str) -> Result<bool, Error> {
 /// an overwrite (design §4.4 Atomic writes).
 pub fn create_new(dir: &Path, name: &str, bytes: &[u8]) -> Result<(), Error> {
     let target = dir.join(name);
-    let temp = write_temp(dir, bytes, None)?;
-    temp.persist_noclobber(&target)
-        .map_err(|failed| Error::io_at("cannot create", &target, &failed.error))?;
-    Ok(())
+    match atomic::persist_new(dir, name, bytes) {
+        Ok(Some(_)) => Ok(()),
+        // A taken name is an error, never an overwrite, and it reads as the persist error that finds the name taken.
+        Ok(None) => Err(Error::io_at(
+            "cannot create",
+            &target,
+            &io::Error::from(io::ErrorKind::AlreadyExists),
+        )),
+        Err(atomic::Failure::Create(failure)) => Err(Error::io_at(
+            "cannot create a temporary file in",
+            dir,
+            &failure,
+        )),
+        Err(atomic::Failure::Write(failure)) => Err(Error::io_at("cannot write", dir, &failure)),
+        Err(atomic::Failure::Persist(failure)) => {
+            Err(Error::io_at("cannot create", &target, &failure))
+        }
+    }
 }
 
 /// Replaces the file at `path` with `bytes`, through a temp file beside it that takes the file's permissions, so the user's mode

@@ -1,12 +1,10 @@
 //! Writes one log entry to the store (design §3.4 and §4.3).
 //! memex's frontmatter with the agent's lines merged into it, the body verbatim, a file name from the title's slug, and never an overwrite. The store itself may be a symlink, which is followed; a symlinked stream folder is refused. A stream folder that a concurrent prune removes is made again (design §4.3 Vanished entries).
-//! Cases: LOG-WRITE-01, LOG-WRITE-02, LOG-WRITE-03, LOG-WRITE-04, LOG-WRITE-05, LOG-WRITE-06, LOG-WRITE-08, LOG-WRITE-14, LOG-WRITE-15, LOG-FRONT-01, LOG-BODY-02, DISC-STORE-01, DISC-STORE-02, PORT-MODE-01
+//! Cases: LOG-WRITE-01, LOG-WRITE-02, LOG-WRITE-03, LOG-WRITE-04, LOG-WRITE-05, LOG-WRITE-06, LOG-WRITE-08, LOG-WRITE-14, LOG-WRITE-15, LOG-FRONT-01, LOG-BODY-02, DISC-STORE-01, DISC-STORE-02, PORT-MODE-01, PORT-EXIT-01
 
 use std::fs;
-use std::io::{self, Write};
+use std::io;
 use std::path::{Path, PathBuf};
-
-use tempfile::NamedTempFile;
 
 use crate::atomic;
 use crate::clock::Timestamp;
@@ -178,55 +176,39 @@ fn make_folder(dir: &Path) -> Result<(), Error> {
     }
 }
 
-/// Writes `bytes` to `dir/name` through a dot-prefixed temporary file, so a reader never sees a partial
-/// entry. Returns the path, or None when the name is already taken, in which case nothing is written.
+/// Writes `bytes` to `dir/name` as a new file, through a dot-prefixed temporary file, so a reader never sees a partial entry.
+/// Returns the path, or None when the name is already taken, in which case nothing is written.
 fn write_new(dir: &Path, name: &str, bytes: &[u8]) -> Result<Option<PathBuf>, Error> {
     let target = dir.join(name);
-    let mut temp = temp_in(dir)?;
-    temp.write_all(bytes)
-        .map_err(|failure| Error::io_at("cannot write", &target, &failure))?;
-    match temp.persist_noclobber(&target) {
-        Ok(_) => Ok(Some(target)),
-        Err(failed) if taken(&target, &failed.error) => Ok(None),
-        Err(failed) => Err(Error::io_at("cannot write", &target, &failed.error)),
-    }
+    retry_vanished(dir, &target, || atomic::persist_new(dir, name, bytes))
 }
 
-/// True when a failed persist means the name is taken: the error says so, or something exists at the name in any form,
-/// which `symlink_metadata` sees without following it. Windows reports a folder there as a different error (design §4.4).
-fn taken(target: &Path, failure: &io::Error) -> bool {
-    failure.kind() == io::ErrorKind::AlreadyExists || fs::symlink_metadata(target).is_ok()
-}
-
-/// A dot-prefixed temporary file in `dir`, made with the mode a new file gets, so an entry is an ordinary file (design §4.4 File
-/// modes). A concurrent prune can remove the stream folder under the create, so `temp_with` retries it.
-fn temp_in(dir: &Path) -> Result<NamedTempFile, Error> {
-    temp_with(dir, |dir| atomic::temp_in(dir, None))
-}
-
-/// Makes the temporary file with `create`. While `dir` is not listed under its parent, any failure makes the folder again and
-/// tries once more (macOS says InvalidInput mid-removal), three attempts in all (design §4.3 Vanished entries). A listed folder
-/// is not made again, so its failure is returned.
-fn temp_with(
+/// Runs `write` until it has an outcome. While `dir` is not listed under its parent, a failure to create the temporary file makes
+/// the folder again and tries once more (macOS says InvalidInput mid-removal), three attempts in all (design §4.3 Vanished
+/// entries). A listed folder is not made again, and a failure after the create is never retried: each is returned as it is.
+fn retry_vanished(
     dir: &Path,
-    create: impl Fn(&Path) -> io::Result<NamedTempFile>,
-) -> Result<NamedTempFile, Error> {
-    let mut attempt = 1;
-    loop {
-        let failure = match create(dir) {
-            Ok(temp) => return Ok(temp),
-            Err(failure) => failure,
-        };
-        if attempt == ATTEMPTS || listed(dir) {
-            return Err(Error::io_at(
-                "cannot create a temporary file in",
-                dir,
-                &failure,
-            ));
+    target: &Path,
+    write: impl Fn() -> Result<Option<PathBuf>, atomic::Failure>,
+) -> Result<Option<PathBuf>, Error> {
+    let mut outcome = write();
+    for _ in 1..ATTEMPTS {
+        match outcome {
+            Err(atomic::Failure::Create(_)) if !listed(dir) => {
+                make_folder(dir)?;
+                outcome = write();
+            }
+            _ => break,
         }
-        make_folder(dir)?;
-        attempt += 1;
     }
+    outcome.map_err(|failed| match failed {
+        atomic::Failure::Create(failure) => {
+            Error::io_at("cannot create a temporary file in", dir, &failure)
+        }
+        atomic::Failure::Write(failure) | atomic::Failure::Persist(failure) => {
+            Error::io_at("cannot write", target, &failure)
+        }
+    })
 }
 
 /// True when `dir` is still listed under its parent by its exact name, which `store_listed` checks for any folder (design §4.4
@@ -308,23 +290,6 @@ mod tests {
         assert!(folder.is_dir(), "the folder is left as it was");
     }
 
-    #[cfg(unix)]
-    #[test]
-    fn an_entry_gets_0644_before_the_umask_and_not_the_private_one() {
-        use std::os::unix::fs::PermissionsExt;
-        let root = tempfile::tempdir().expect("a temporary folder");
-        let dir = root.path().join("impl");
-        make_folder(&dir).expect("a stream folder");
-        let entry = write_new(&dir, "20261013-120000-x.md", b"x\n")
-            .expect("a write")
-            .expect("the entry");
-        fs::write(root.path().join("plain"), b"x\n").expect("a plain file");
-        let mode = |path: &Path| fs::metadata(path).expect("metadata").permissions().mode() & 0o777;
-        // A file that File::create makes gets 0o666 less the umask, which recovers the umask of this run.
-        let umask = 0o666 & !mode(&root.path().join("plain"));
-        assert_eq!(mode(&entry), 0o644 & !umask);
-    }
-
     #[test]
     fn titles_skip_blank_lines_and_leading_marks() {
         assert_eq!(title_of("## Heading\nbody"), "Heading");
@@ -337,14 +302,17 @@ mod tests {
     fn a_create_that_fails_while_the_folder_is_gone_is_tried_three_times() {
         let store = tempfile::tempdir().expect("a temporary store");
         let dir = store.path().join("impl");
+        let target = dir.join("20261013-120000-x.md");
         let calls = std::cell::Cell::new(0);
         // Each attempt finds the folder gone, as a prune that empties it leaves it.
-        let gone = |dir: &Path| -> io::Result<NamedTempFile> {
+        let gone = || -> Result<Option<PathBuf>, atomic::Failure> {
             calls.set(calls.get() + 1);
-            let _ = fs::remove_dir(dir);
-            Err(io::Error::from(io::ErrorKind::InvalidInput))
+            let _ = fs::remove_dir(&dir);
+            Err(atomic::Failure::Create(io::Error::from(
+                io::ErrorKind::InvalidInput,
+            )))
         };
-        assert!(temp_with(&dir, gone).is_err());
+        assert!(retry_vanished(&dir, &target, gone).is_err());
         assert_eq!(calls.get(), 3);
     }
 
@@ -353,12 +321,15 @@ mod tests {
         let store = tempfile::tempdir().expect("a temporary store");
         let dir = store.path().join("impl");
         make_folder(&dir).expect("a stream folder");
+        let target = dir.join("20261013-120000-x.md");
         let calls = std::cell::Cell::new(0);
-        let refused = |_: &Path| -> io::Result<NamedTempFile> {
+        let refused = || -> Result<Option<PathBuf>, atomic::Failure> {
             calls.set(calls.get() + 1);
-            Err(io::Error::from(io::ErrorKind::PermissionDenied))
+            Err(atomic::Failure::Create(io::Error::from(
+                io::ErrorKind::PermissionDenied,
+            )))
         };
-        assert!(temp_with(&dir, refused).is_err());
+        assert!(retry_vanished(&dir, &target, refused).is_err());
         assert_eq!(calls.get(), 1);
     }
 }
