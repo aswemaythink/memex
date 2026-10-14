@@ -1,0 +1,5 @@
+$ memex search deep --json
+exit 0
+stdout
+| {"query":"deep","filters":{},"groups":[{"collection":"readmes","total":1,"hits":[{"ref":"src/deep/README.md","collection":"readmes","id":"src/deep/README.md","path":"src/deep/README.md","title":"The deep folder.","fields":{},"score":0.858,"snippet":"The deep folder.","fuzzy":[]}]},{"collection":"headers","total":1,"hits":[{"ref":"src/deep/cli.rs","collection":"headers","id":"src/deep/cli.rs","path":"src/deep/cli.rs","title":"The deep command line.","fields":{},"score":0.25,"snippet":"The deep command line.","fuzzy":[]}]}]}
+stderr (empty)

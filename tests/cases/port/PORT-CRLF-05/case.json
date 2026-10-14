@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "notes:alpha"], "cwd": "repo/crlf"}, {"args": ["show", "notes:alpha"], "cwd": "repo/lf"}]}

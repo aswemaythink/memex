@@ -1,0 +1,57 @@
+$ memex show src/deep/cli.rs
+exit 0
+stdout
+| === src/deep/cli.rs ===
+| The deep command line.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- src/deep/README.md
+| # Deep
+| 
+| The deep folder.
+| --- src/README.md
+| # Source
+| 
+| The source folder.
+| --- README.md
+| # Root
+| 
+| The root README.
+stderr (empty)
+
+$ memex show src/deep
+exit 0
+stdout
+| === src/deep ===
+| # Deep
+| 
+| The deep folder.
+| 
+| children
+|   cli.rs  The deep command line.
+|   showing 1 of 1
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- src/README.md
+| # Source
+| 
+| The source folder.
+| --- README.md
+| # Root
+| 
+| The root README.
+stderr (empty)

@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "docs"], "cwd": "repo/crlf"}, {"args": ["show", "docs/README.md"], "cwd": "repo/crlf"}, {"args": ["show", "docs"], "cwd": "repo/lf"}, {"args": ["show", "docs/README.md"], "cwd": "repo/lf"}, {"args": ["show", "docs", "--json"], "cwd": "repo/crlf"}, {"args": ["show", "docs", "--json"], "cwd": "repo/lf"}]}

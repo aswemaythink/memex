@@ -1,0 +1,5 @@
+$ memex log impl
+exit 3
+stdout (empty)
+stderr
+| memex: no .memex/ here: run `memex init`

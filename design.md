@@ -291,10 +291,11 @@ show walks hub READMEs
 
 One codebase for Linux, macOS and Windows, using only cross-platform APIs. No manual Windows testing; **CI runs the fixture suite on `ubuntu`, `macos` and `windows`**.
 
+- **File modes.** Files memex creates (log entries, init's files) get the ordinary mode for new files (0644 before umask on unix), not tempfile's private 0600; a file memex replaces keeps its mode.
 - **Atomic writes.** `tempfile` + `persist_noclobber` (atomic, never overwrites) on every platform, in place of raw `link()`. If persisting fails and the target name exists in any form (Windows reports a directory there differently), the name counts as taken and the `-2`, `-3` retry runs. Deletes that the OS refuses (on Windows, a file held open by another process) are warnings, never errors.
 - **Paths.** Labels and JSON always use `/`. Canonicalise with `dunce` (no `\\?\` prefixes). Compare paths case-sensitively in labels, since filesystem case behaviour varies.
 - **Filenames.** Log names have no colons. Slugs are `[a-z0-9-]`, max 60 chars. Windows reserved names are moot for entry files, because the timestamp prefix comes first; stream folders refuse them (§3.4).
-- **Name matching.** Special names (`README.md`, `CASES.md`, manifest files, `.memex`) are matched against directory listings, exactly. memex never decides by `exists()`, so case-insensitive filesystems behave like Linux.
+- **Name matching.** Special names (`README.md`, `CASES.md`, manifest files, `.memex` and everything memex reads inside it: `config.json`, `collections/`, `logs/`) are matched against directory listings, exactly. memex never decides by `exists()`, so case-insensitive filesystems behave like Linux.
 - **Text.** Accept `\r\n` everywhere (headers, CASES.md, frontmatter, log bodies). A leading UTF-8 BOM is dropped on read, so frontmatter still parses from shells that add one. Write `\n`, without a BOM.
 - **Encoding.** Non-UTF-8 file content is decoded lossily; non-UTF-8 path names are skipped.
 - **Errors.** Never print raw OS error strings. Print memex's message, the `io::ErrorKind` name and the path, so fixtures are identical across OSes.

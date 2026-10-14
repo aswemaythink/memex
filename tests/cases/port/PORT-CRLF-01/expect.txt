@@ -1,0 +1,115 @@
+$ memex show docs  [cwd repo/crlf]
+exit 0
+stdout
+| === docs ===
+| # Docs
+| 
+| The docs folder. It has two paragraphs.
+| 
+| Second paragraph of the docs.
+| 
+| children
+|   (none)
+|   showing 0 of 0
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Root
+| 
+| The root of the twin.
+stderr (empty)
+
+$ memex show docs/README.md  [cwd repo/crlf]
+exit 0
+stdout
+| === docs/README.md ===
+| # Docs
+| 
+| The docs folder. It has two paragraphs.
+| 
+| Second paragraph of the docs.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Root
+| 
+| The root of the twin.
+stderr (empty)
+
+$ memex show docs  [cwd repo/lf]
+exit 0
+stdout
+| === docs ===
+| # Docs
+| 
+| The docs folder. It has two paragraphs.
+| 
+| Second paragraph of the docs.
+| 
+| children
+|   (none)
+|   showing 0 of 0
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Root
+| 
+| The root of the twin.
+stderr (empty)
+
+$ memex show docs/README.md  [cwd repo/lf]
+exit 0
+stdout
+| === docs/README.md ===
+| # Docs
+| 
+| The docs folder. It has two paragraphs.
+| 
+| Second paragraph of the docs.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Root
+| 
+| The root of the twin.
+stderr (empty)
+
+$ memex show docs --json  [cwd repo/crlf]
+exit 0
+stdout
+| {"docs":[{"ref":"docs","collection":null,"id":null,"path":"docs","title":"The docs folder.","fields":{},"text":"# Docs\n\nThe docs folder. It has two paragraphs.\n\nSecond paragraph of the docs.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[{"path":"README.md","text":"# Root\n\nThe root of the twin.\n"}],"children":{"total":0,"items":[]}}],"errors":[]}
+stderr (empty)
+
+$ memex show docs --json  [cwd repo/lf]
+exit 0
+stdout
+| {"docs":[{"ref":"docs","collection":null,"id":null,"path":"docs","title":"The docs folder.","fields":{},"text":"# Docs\n\nThe docs folder. It has two paragraphs.\n\nSecond paragraph of the docs.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[{"path":"README.md","text":"# Root\n\nThe root of the twin.\n"}],"children":{"total":0,"items":[]}}],"errors":[]}
+stderr (empty)

@@ -453,3 +453,6 @@ Open:
 - Out-of-root `show` sections print `(none)` for cites and cited by; needs absolute refs decided first.
 - Perf leftovers from the S3.3 refiner: `tokenize::tokens` allocates a String per token (about 14ms); `Git::probe` runs `git rev-parse` twice (about 15ms). S5.3 decides.
 - init PATH check: implement the design §3.5b ruling (ignore `*/node_modules/.bin`; on Windows count `memex.exe` or `memex.cmd`), with INIT cases. Batch it with the S5.2 fixes.
+- Name matching inside `.memex/` (design §4.4): `config.json`, `collections/` and `logs/` are matched by listing, so `.memex/Config.json` is ignored on macOS as on Linux. PORT case.
+- Log entry file mode (design §4.4 File modes): entries are 0600 today (tempfile default); make them 0644 before umask, sharing init's helper. PORT or LOG case.
+- tests/cases/cli/README.md still says exit 3 is planned for PORT.

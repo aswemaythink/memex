@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "impl"], "cwd": "repo/crlf", "stdin_file": "body-crlf.md"}, {"args": ["show", "impl:20261013-120000-crlf-title"], "cwd": "repo/crlf"}, {"args": ["log", "impl"], "cwd": "repo/lf", "stdin_file": "body-lf.md"}, {"args": ["show", "impl:20261013-120000-crlf-title"], "cwd": "repo/lf"}], "snapshot": ["repo/crlf/.memex/logs", "repo/lf/.memex/logs"]}

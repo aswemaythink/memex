@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "src/bad.rs", "--up", "0"]}, {"args": ["show", "src/bad.rs", "--up", "0", "--json"]}]}

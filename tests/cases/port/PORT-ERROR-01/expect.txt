@@ -1,0 +1,8 @@
+$ memex log impl --json
+exit 3
+stdout
+| {"error":{"code":"io","message":"cannot create $SANDBOX/repo/.memex/logs (AlreadyExists)"}}
+stderr (empty)
+== snapshot repo/.memex/logs
+-- logs
+| not a folder

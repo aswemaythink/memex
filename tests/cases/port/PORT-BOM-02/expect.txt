@@ -1,0 +1,27 @@
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent       0 readmes · 0 headers · 0 cases
+| collections  rows 1
+| use          memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr (empty)
+
+$ memex show rows:R-1
+exit 0
+stdout
+| === rows:R-1 ===
+| R-1
+| Row one
+| 
+| fields
+|   id: R-1
+|   name: Row one
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

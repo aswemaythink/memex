@@ -1,0 +1,14 @@
+$ memex log impl --json  [cwd repo/src/deep]
+exit 0
+stdout
+| {"ref":"impl:20261013-120000-deep-log","path":"$SANDBOX/repo/.memex/logs/impl/20261013-120000-deep-log.md"}
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20261013-120000-deep-log.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| ---
+| # Deep log
+| 
+| Written from a nested folder.

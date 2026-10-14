@@ -1,0 +1,1 @@
+﻿{"name":"rows","description":"Rows with a BOM.","owner":"fixture","kind":"json","roots":["data"],"include":["*.json"],"id":"id","title":"name"}

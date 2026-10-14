@@ -1,0 +1,41 @@
+$ memex show cases:CRL-TOPIC-01  [cwd repo/crlf]
+exit 0
+stdout
+| === cases:CRL-TOPIC-01 ===
+| A claim written on one line.
+| A detail line, indented.
+| 
+| group
+|   TOPIC
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show cases:CRL-TOPIC-01  [cwd repo/lf]
+exit 0
+stdout
+| === cases:CRL-TOPIC-01 ===
+| A claim written on one line.
+| A detail line, indented.
+| 
+| group
+|   TOPIC
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

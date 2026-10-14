@@ -103,6 +103,7 @@ When any rule fails, the case trials are not created, and only the failing rules
 - [search](search/README.md): `SRCH-*`, design §3.2 and §3.6 (words).
 - [info](info/README.md): `INFO-*`, design §3.5 and §3.6 (the atlas).
 - [init](init/README.md): `INIT-*`, design §3.5b and §6.1 (setup).
+- [port](port/README.md): `PORT-*`, design §4.4 (portability).
 
 ## Choices where PLAN §2 is silent
 

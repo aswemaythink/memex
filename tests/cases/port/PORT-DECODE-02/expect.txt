@@ -1,0 +1,28 @@
+$ memex show guide
+exit 0
+stdout
+| === guide ===
+| # Guide
+| 
+| The name � is odd. Next sentence.
+| 
+| children
+|   (none)
+|   showing 0 of 0
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show guide --json
+exit 0
+stdout
+| {"docs":[{"ref":"guide","collection":null,"id":null,"path":"guide","title":"The name � is odd.","fields":{},"text":"# Guide\n\nThe name � is odd. Next sentence.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[],"children":{"total":0,"items":[]}}],"errors":[]}
+stderr (empty)

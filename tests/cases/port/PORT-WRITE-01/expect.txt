@@ -1,0 +1,18 @@
+$ memex log impl
+exit 0
+stdout
+| impl:20261013-120000-same-title-3
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20261013-120000-same-title-2.md/keep.txt
+| second folder
+-- impl/20261013-120000-same-title-3.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| ---
+| # Same title
+| 
+| body
+-- impl/20261013-120000-same-title.md/keep.txt
+| first folder

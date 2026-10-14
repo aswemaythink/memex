@@ -1,0 +1,13 @@
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent  0 readmes · 0 headers · 0 cases
+| use     memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr (empty)
+
+$ memex show NAM-ITEM-01
+exit 1
+stdout (empty)
+stderr
+| memex: not found: NAM-ITEM-01

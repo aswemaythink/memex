@@ -1,0 +1,8 @@
+$ memex log impl
+exit 3
+stdout (empty)
+stderr
+| memex: cannot create $SANDBOX/repo/.memex/logs/impl (AlreadyExists)
+== snapshot repo/.memex/logs
+-- impl
+| not a folder

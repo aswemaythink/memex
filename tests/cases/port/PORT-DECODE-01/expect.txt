@@ -1,0 +1,20 @@
+$ memex show src/bad.rs --up 0
+exit 0
+stdout
+| === src/bad.rs ===
+| Purpose with a bad byte � in it.
+| Second line.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show src/bad.rs --up 0 --json
+exit 0
+stdout
+| {"docs":[{"ref":"src/bad.rs","collection":"headers","id":"src/bad.rs","path":"src/bad.rs","title":"Purpose with a bad byte � in it.","fields":{},"text":"Purpose with a bad byte � in it.\nSecond line.","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
+stderr (empty)

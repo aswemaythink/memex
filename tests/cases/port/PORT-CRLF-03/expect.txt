@@ -1,0 +1,29 @@
+$ memex show tools/run.sh --up 0  [cwd repo/crlf]
+exit 0
+stdout
+| === tools/run.sh ===
+| Runs the checks.
+| Second line of the header.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show tools/run.sh --up 0  [cwd repo/lf]
+exit 0
+stdout
+| === tools/run.sh ===
+| Runs the checks.
+| Second line of the header.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

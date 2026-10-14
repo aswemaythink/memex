@@ -1,0 +1,28 @@
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent  0 readmes · 0 headers · 1 case
+| use     memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr (empty)
+
+$ memex show cases:BOM-TOPIC-01
+exit 0
+stdout
+| === cases:BOM-TOPIC-01 ===
+| First claim, saved by a Windows editor.
+| Detail line.
+| 
+| group
+|   TOPIC
+| 
+| defined in
+|   bom/CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

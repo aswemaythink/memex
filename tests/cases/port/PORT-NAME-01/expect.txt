@@ -1,0 +1,28 @@
+$ memex show caseV
+exit 0
+stdout
+| === caseV ===
+| (no README)
+| 
+| children
+|   Readme.md  (no header)
+|   showing 1 of 1
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent  0 readmes · 0 headers · 0 cases
+| use     memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr (empty)

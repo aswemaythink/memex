@@ -1,0 +1,71 @@
+$ memex show src/cli.rs --up 0  [cwd repo/crlf]
+exit 0
+stdout
+| === src/cli.rs ===
+| Parses the arguments.
+| Second line of the header.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show src  [cwd repo/crlf]
+exit 0
+stdout
+| === src ===
+| (no README)
+| 
+| children
+|   cli.rs  Parses the arguments.
+|   showing 1 of 1
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show src/cli.rs --up 0  [cwd repo/lf]
+exit 0
+stdout
+| === src/cli.rs ===
+| Parses the arguments.
+| Second line of the header.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show src  [cwd repo/lf]
+exit 0
+stdout
+| === src ===
+| (no README)
+| 
+| children
+|   cli.rs  Parses the arguments.
+|   showing 1 of 1
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)

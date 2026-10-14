@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "tools/run.sh", "--up", "0"], "cwd": "repo/crlf"}, {"args": ["show", "tools/run.sh", "--up", "0"], "cwd": "repo/lf"}]}

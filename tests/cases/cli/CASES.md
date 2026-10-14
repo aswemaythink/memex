@@ -105,5 +105,5 @@
   design §3.6 exit codes. Pinned by the REF family, where several refs match (design §3.1). Run: memex show README.md --json with cwd repo/src. The envelope is the show document, whose errors entry has code ambiguous and its candidates.
 - `CLI-EXIT-04` (planned) `no_root` exits 3, and with `--json` prints its envelope on stdout.
   design §3.6 exit codes. Pinned by the DISC family, where log finds no `.memex/` store (design §4.1).
-- `CLI-EXIT-05` (planned) `io` exits 3, and names the io::ErrorKind, never the OS text.
-  design §3.6 exit codes; PLAN §1 fix 17. Pinned by the PORT family.
+- `CLI-EXIT-05` `io` exits 3, and names the io::ErrorKind, never the OS text.
+  design §3.6 exit codes; PLAN §1 fix 17. Run: memex log impl with .memex/logs a regular file. Pinned by the PORT family, which also pins the JSON form.
