@@ -19,6 +19,8 @@
   design §2 is silent on a README with no H1. This reads the file's first prose paragraph where INT-LINE-01 reads the one after the H1. Run: memex show .
 - `INT-NOHEAD-02` With no H1, a heading block is skipped as it is after an H1, so the first prose paragraph after the heading gives the one-liner, exit 0.
   design §2 One-liners (the first paragraph); the no-H1 reading is as INT-NOHEAD-01 and headings are not paragraphs, as INT-LINE-03. Run: memex show .
+- `INT-NOHEAD-03` A subfolder whose README has no H1 and no prose lists with its name and nothing after it, not `(no README)`, while a subfolder with no README still shows `(no README)`, exit 0.
+  design §3.3 Folder: a README's one-liner comes from §2, and `(no README)` is for a folder with no README. Run: memex show .
 
 ## IGNORE
 
