@@ -430,7 +430,7 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [x] S3.2
 - [x] S3.3 (refined 4c6ab19)
 - [x] S3.4 (selfhost gate live)
-- [ ] S4.1
+- [x] S4.1
 - [ ] S4.2 (self-init)
 - [ ] S5.1
 - [ ] S5.2
@@ -459,3 +459,4 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - Unparseable collection data files (a folder marker, a json data file) are skipped silently: warn like an invalid manifest (MANK-FOLDER-09, MANK-JSON-07). A folder whose marker lacks the id field: warn too (MANK-FOLDER-06).
 - A json entry's default one-liner is its first string field, often its id: skip the id field when choosing the title (MANK-JSON-02).
 - Stale "waits for S2.5" comments: src/README.md, src/collections/mod.rs.
+- info reads manifests a second time for counts and JSON warnings (corpus.rs was full): use the corpus once T1 shrinks it.
