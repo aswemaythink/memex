@@ -10,12 +10,12 @@ use std::path::{Path, PathBuf};
 use ignore::overrides::OverrideBuilder;
 use serde_json::{Map, Value as Json};
 
-use super::{folder, json, markdown};
+use super::{folder, json, markdown, roots};
 use crate::corpus::{Doc, RESERVED};
 use crate::error;
 use crate::root::{lists, slash};
 use crate::text;
-use crate::walk::{is_label_name, rel_string};
+use crate::walk::is_label_name;
 
 /// How a manifest's roots are read (design §4.2 `kind`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -85,12 +85,14 @@ pub fn load(root: &Path, warnings: &mut Vec<String>) -> Vec<Manifest> {
     manifests
 }
 
-/// The docs of one manifest, read by the reader of its kind. A file that cannot be used adds its warning to `warnings`.
+/// The docs of one manifest, read by the reader of its kind from the roots that lie inside the repo root (design §4.2). A file that
+/// cannot be used adds its warning to `warnings`.
 pub fn docs(manifest: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Vec<Doc> {
-    match manifest.kind {
-        Kind::Markdown => markdown::docs(manifest, root, warnings),
-        Kind::Folder => folder::docs(manifest, root, warnings),
-        Kind::Json => json::docs(manifest, root, warnings),
+    let usable = roots::inside_repo(manifest, root, warnings);
+    match usable.kind {
+        Kind::Markdown => markdown::docs(&usable, root, warnings),
+        Kind::Folder => folder::docs(&usable, root, warnings),
+        Kind::Json => json::docs(&usable, root, warnings),
     }
 }
 
@@ -167,7 +169,7 @@ fn parse(stem: &str, value: &Json) -> Result<Manifest, String> {
         description: text_of(object, "description")?,
         owner: text_of(object, "owner")?,
         kind,
-        roots: roots_of(object)?,
+        roots: roots::roots_of(object)?,
         include,
         id: text_of(object, "id")?,
         title: text_of(object, "title")?,
@@ -225,24 +227,6 @@ fn kind_of(object: &Map<String, Json>) -> Result<Kind, String> {
         "json" => Ok(Kind::Json),
         other => Err(format!("kind '{other}' is not markdown, folder or json")),
     }
-}
-
-/// The roots: present, and each a folder inside the root, written relative to it.
-fn roots_of(object: &Map<String, Json>) -> Result<Vec<String>, String> {
-    match object.get("roots") {
-        Some(Json::Array(items)) => items.iter().map(root_of).collect(),
-        Some(_) => Err("key 'roots' must be a list of folders".to_string()),
-        None => Err("missing key 'roots'".to_string()),
-    }
-}
-
-/// One root, normalised to `/` separators; an absolute root, or one that climbs with `..`, is refused.
-fn root_of(item: &Json) -> Result<String, String> {
-    let text = item
-        .as_str()
-        .ok_or("key 'roots' must be a list of folders")?;
-    rel_string(Path::new(text))
-        .ok_or_else(|| format!("root '{text}' is not a folder inside the root"))
 }
 
 /// The text of a key whose value is a string, or None when the key is absent.

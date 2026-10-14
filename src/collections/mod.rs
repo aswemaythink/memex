@@ -7,6 +7,8 @@ pub mod globs;
 pub mod json;
 pub mod manifest;
 pub mod markdown;
+pub mod roots;
+pub mod title;
 
 #[cfg(test)]
 mod testing;

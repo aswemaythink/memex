@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "emptytitle:EMPTY-1", "emptytitle:FULL-1", "emptyfolder:EMPTY-2", "--json"]}]}

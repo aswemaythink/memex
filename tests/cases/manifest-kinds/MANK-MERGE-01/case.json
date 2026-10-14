@@ -1,0 +1,1 @@
+{"chmod": [{"path": "repo/units/MERGE-1/NOTES.md", "mode": "000"}, {"path": "repo/units/MERGE-1/spec.rs", "mode": "000"}], "platforms": ["unix"], "steps": [{"args": ["show", "mergewarn:MERGE-1", "--json"]}]}

@@ -1,0 +1,5 @@
+$ memex show marks:SEVEN-1 marks:SIX-1 marksfolder:SEVEN-2 --json
+exit 0
+stdout
+| {"docs":[{"ref":"marks:SEVEN-1","collection":"marks","id":"SEVEN-1","path":null,"title":"####### Seven marks","fields":{"name":"SEVEN-1","claim":"####### Seven marks\nBody line."},"text":"SEVEN-1\n####### Seven marks\nBody line.","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]},{"ref":"marks:SIX-1","collection":"marks","id":"SIX-1","path":null,"title":"Six marks","fields":{"name":"SIX-1","claim":"Lead line.\n###### Six marks"},"text":"SIX-1\nLead line.\n###### Six marks","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]},{"ref":"marksfolder:SEVEN-2","collection":"marksfolder","id":"SEVEN-2","path":null,"title":"####### Seven marks","fields":{},"text":"####### Seven marks\n\nBody.","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
+stderr (empty)

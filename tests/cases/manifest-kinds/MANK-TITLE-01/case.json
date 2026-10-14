@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "fenced:FENCE-1", "fencedfolder:FENCE-2", "--json"]}]}

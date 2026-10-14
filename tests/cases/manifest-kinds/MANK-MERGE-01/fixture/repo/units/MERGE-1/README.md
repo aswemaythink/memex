@@ -1,0 +1,3 @@
+# Readable merge
+
+Full text.

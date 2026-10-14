@@ -1,0 +1,1 @@
+{"git": "init", "setup": [{"run": ["git", "apply", "links.patch"]}], "platforms": ["unix"], "steps": [{"args": ["show", "links:SHORT-1", "links:Outside", "--json"]}, {"args": ["info"]}]}

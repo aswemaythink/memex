@@ -1,6 +1,6 @@
 //! Reads a `json` manifest's docs: each object of the array at `at` is one doc (design §4.2).
-//! It also holds the helpers that the folder and markdown kinds share with it: fields, one-liners and docs.
-//! Cases: MANK-JSON-01, MANK-JSON-02, MANK-JSON-03, MANK-JSON-04, MANK-JSON-05, MANK-JSON-06, MANK-JSON-07, MANK-JSON-08
+//! It also holds the field and doc helpers that the folder and markdown kinds share with it.
+//! Cases: MANK-JSON-01, MANK-JSON-02, MANK-JSON-03, MANK-JSON-04, MANK-JSON-05, MANK-JSON-06, MANK-JSON-07, MANK-JSON-08, MANK-TITLE-01, MANK-TITLE-02, MANK-TITLE-03
 
 use std::path::Path;
 
@@ -9,8 +9,8 @@ use serde_json::{Map, Value as Json};
 use super::frontmatter::Value;
 use super::globs;
 use super::manifest::{self, Manifest};
+use super::title;
 use crate::corpus::Doc;
-use crate::intent::sentence;
 use crate::text;
 use crate::walk::{self, Entry};
 
@@ -117,8 +117,8 @@ pub(super) fn field_text(fields: &[(String, Value)], key: &str) -> Option<String
         })
 }
 
-/// The doc of a manifest: labelled `<name>:<id>`, with its one-liner from the `title` field, else from the first sentence of
-/// `lead`, the text that the default line is read from.
+/// The doc of a manifest: labelled `<name>:<id>`, with its one-liner by the rule of `title` (design §4.2), read from `lead`, the
+/// text that the default line is read from.
 pub(super) fn doc(
     manifest: &Manifest,
     id: String,
@@ -126,7 +126,7 @@ pub(super) fn doc(
     fields: Vec<(String, Value)>,
     lead: &str,
 ) -> Doc {
-    let title = one_liner(manifest.title.as_deref(), &fields, lead);
+    let title = title::one_liner(manifest.title.as_deref(), &fields, lead);
     Doc {
         label: format!("{}:{id}", manifest.name),
         collection: manifest.name.clone(),
@@ -136,32 +136,6 @@ pub(super) fn doc(
         text,
         fields,
     }
-}
-
-/// The one-liner: the text of the field that the manifest's `title` names, else the default of `lead`, as its first sentence.
-fn one_liner(title: Option<&str>, fields: &[(String, Value)], lead: &str) -> String {
-    let line = title
-        .and_then(|key| field_text(fields, key))
-        .unwrap_or_else(|| default_title(lead));
-    sentence(&line)
-}
-
-/// The default one-liner of a text: its first `#` heading without the hashes, else its first non-blank line.
-fn default_title(text: &str) -> String {
-    let heading = text
-        .lines()
-        .map(str::trim_start)
-        .find(|line| is_heading(line));
-    let line = heading.or_else(|| text.lines().find(|line| !line.trim().is_empty()));
-    line.unwrap_or_default()
-        .trim_start_matches(['#', ' '])
-        .to_string()
-}
-
-/// True for a Markdown heading line: one or more hashes, then a space.
-fn is_heading(line: &str) -> bool {
-    let rest = line.trim_start_matches('#');
-    rest.len() < line.len() && rest.starts_with(' ')
 }
 
 #[cfg(test)]

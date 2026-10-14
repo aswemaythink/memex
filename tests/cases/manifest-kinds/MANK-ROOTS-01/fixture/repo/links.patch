@@ -1,0 +1,14 @@
+diff --git a/linked b/linked
+new file mode 120000
+--- /dev/null
++++ b/linked
+@@ -0,0 +1 @@
++../outside
+\ No newline at end of file
+diff --git a/shortcut b/shortcut
+new file mode 120000
+--- /dev/null
++++ b/shortcut
+@@ -0,0 +1 @@
++units
+\ No newline at end of file

@@ -1,0 +1,5 @@
+$ memex show fenced:FENCE-1 fencedfolder:FENCE-2 --json
+exit 0
+stdout
+| {"docs":[{"ref":"fenced:FENCE-1","collection":"fenced","id":"FENCE-1","path":null,"title":"Real heading","fields":{"name":"FENCE-1","claim":"Intro line.\n```\n# Fenced\n```\n# Real heading\n"},"text":"FENCE-1\nIntro line.\n```\n# Fenced\n```\n# Real heading\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]},{"ref":"fencedfolder:FENCE-2","collection":"fencedfolder","id":"FENCE-2","path":null,"title":"Real heading","fields":{},"text":"```md\n# Fenced\n```\n# Real heading","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
+stderr (empty)

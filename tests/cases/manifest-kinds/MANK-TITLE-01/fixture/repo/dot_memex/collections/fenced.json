@@ -1,0 +1,1 @@
+{"name": "fenced", "kind": "json", "roots": ["data"], "include": ["*.json"], "id": "name"}

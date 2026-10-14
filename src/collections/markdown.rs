@@ -9,8 +9,8 @@ use super::frontmatter::{split, Value};
 use super::globs::{self, Matched};
 use super::json::scalar_fields;
 use super::manifest::{self, Manifest};
+use super::title;
 use crate::corpus::Doc;
-use crate::fence;
 use crate::text;
 
 /// The globs of a markdown manifest that names none (design §4.2 `include`).
@@ -64,7 +64,7 @@ fn doc_of(manifest: &Manifest, file: &Matched, fields: Vec<(String, Value)>, bod
     Doc {
         label: format!("{}:{id}", manifest.name),
         collection: manifest.name.clone(),
-        title: title_of(manifest, &fields, &body),
+        title: title::one_liner(manifest.title.as_deref(), &fields, &body),
         id,
         path: Some(file.rel.clone()),
         text: body,
@@ -82,15 +82,6 @@ fn id_of(manifest: &Manifest, file: &Matched, fields: &[(String, Value)]) -> Str
     }
 }
 
-/// The one-liner of a doc (design §4.2 `title`): the text of the field that the manifest names, else the body's default.
-fn title_of(manifest: &Manifest, fields: &[(String, Value)], body: &str) -> String {
-    manifest
-        .title
-        .as_deref()
-        .and_then(|key| text_field(fields, key))
-        .unwrap_or_else(|| default_title(body))
-}
-
 /// The file name without its last extension.
 fn stem_of(rel: &str) -> String {
     Path::new(rel)
@@ -106,56 +97,15 @@ fn text_field(fields: &[(String, Value)], key: &str) -> Option<String> {
     })
 }
 
-/// The default one-liner: the first heading outside a code fence, else the first line with text, else nothing.
-fn default_title(body: &str) -> String {
-    heading(body)
-        .or_else(|| first_line(body))
-        .unwrap_or_default()
-}
-
-/// The text of the first ATX heading that is not inside a code fence, under the one fence definition (design §2.3).
-fn heading(body: &str) -> Option<String> {
-    fence::live_lines(body)
-        .into_iter()
-        .find_map(|line| heading_text(line.trim_start()))
-}
-
-/// The text of an ATX heading line: one to six `#` marks, then a space or the end of the line, and the text after them.
-fn heading_text(line: &str) -> Option<String> {
-    let marks = line.bytes().take_while(|byte| *byte == b'#').count();
-    let rest = &line[marks..];
-    let is_heading = (1..=6).contains(&marks) && (rest.is_empty() || rest.starts_with([' ', '\t']));
-    let text = rest.trim();
-    (is_heading && !text.is_empty()).then(|| text.to_string())
-}
-
-/// The first line of the body that has any text, trimmed.
-fn first_line(body: &str) -> Option<String> {
-    body.lines()
-        .map(str::trim)
-        .find(|line| !line.is_empty())
-        .map(str::to_string)
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    #[test]
-    fn headings_skip_fences_and_need_a_space_after_the_marks() {
-        assert_eq!(default_title("```\n# no\n```\n# Yes\n"), "Yes");
-        assert_eq!(default_title("#tag line\nSecond\n"), "#tag line");
-        assert_eq!(default_title("##  Two  \n"), "Two");
-        assert_eq!(default_title("\n\n  Plain  \n"), "Plain");
-        assert_eq!(default_title(""), "");
-    }
-
     #[cfg(unix)]
     #[test]
     fn an_unreadable_doc_warns_with_the_cannot_read_form_and_the_others_load() {
         use std::fs;
         use std::os::unix::fs::PermissionsExt;
 
+        use super::docs;
         use crate::collections::manifest::Kind;
         use crate::collections::testing;
 

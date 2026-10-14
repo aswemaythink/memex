@@ -1,0 +1,4 @@
+```md
+# Fenced
+```
+# Real heading

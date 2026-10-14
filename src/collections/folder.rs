@@ -1,6 +1,6 @@
 //! Reads a `folder` manifest's docs: each folder with its marker file is one doc (design §4.2).
-//! The marker gives the fields and, when it is Markdown, the start of the text; `merge` files add the rest.
-//! Cases: MANK-FOLDER-01, MANK-FOLDER-02, MANK-FOLDER-03, MANK-FOLDER-04, MANK-FOLDER-05, MANK-FOLDER-06, MANK-FOLDER-07, MANK-FOLDER-08, MANK-FOLDER-09
+//! The marker gives the fields and, when it is Markdown, the start of the text; `merge` files add the rest, and one that cannot be read warns.
+//! Cases: MANK-FOLDER-01, MANK-FOLDER-02, MANK-FOLDER-03, MANK-FOLDER-04, MANK-FOLDER-05, MANK-FOLDER-06, MANK-FOLDER-07, MANK-FOLDER-08, MANK-FOLDER-09, MANK-MERGE-01
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -58,7 +58,7 @@ fn folder_doc(
     if id.is_empty() {
         return None;
     }
-    let text = joined(body, merge_pieces(manifest, marker, siblings));
+    let text = joined(body, merge_pieces(manifest, marker, siblings, warnings));
     Some(doc(manifest, id, text.clone(), fields, &text))
 }
 
@@ -100,8 +100,14 @@ fn marker_fields(path: &Path) -> Result<(Vec<(String, Value)>, String), String> 
     }
 }
 
-/// The text the `merge` globs add to a marker's folder: each matching file except the marker, in name order.
-fn merge_pieces(manifest: &Manifest, marker: &Entry, siblings: &[&Entry]) -> Vec<String> {
+/// The text the `merge` globs add to a marker's folder: each matching file except the marker, in name order. A matching file that
+/// cannot be read adds its warning to `warnings`, and adds nothing (design §4.2 Unreadable files).
+fn merge_pieces(
+    manifest: &Manifest,
+    marker: &Entry,
+    siblings: &[&Entry],
+    warnings: &mut Vec<String>,
+) -> Vec<String> {
     let folder = marker.path.parent().unwrap_or_else(|| Path::new(""));
     let others: Vec<&Entry> = siblings
         .iter()
@@ -110,16 +116,28 @@ fn merge_pieces(manifest: &Manifest, marker: &Entry, siblings: &[&Entry]) -> Vec
         .collect();
     globs::hits(folder, &manifest.merge, &others)
         .into_iter()
-        .filter_map(|entry| merge_piece(&entry.path))
+        .filter_map(|entry| match merge_piece(&entry.path) {
+            Ok(piece) => piece,
+            Err(line) => {
+                warn(warnings, line);
+                None
+            }
+        })
         .collect()
 }
 
-/// What a merged file adds: a Markdown file in full, or a code file's header by the rule of design §2.1. Other files add nothing.
-fn merge_piece(path: &Path) -> Option<String> {
+/// What a merged file adds: a Markdown file in full, or a code file's header by the rule of design §2.1, or nothing for any other
+/// file. A file that cannot be read gives its warning line.
+fn merge_piece(path: &Path) -> Result<Option<String>, String> {
     if extension(path) == Some("md") {
-        return text::read(path).ok();
+        return text::read(path)
+            .map(Some)
+            .map_err(|failure| manifest::unreadable_warning(path, &failure));
     }
-    header::header(path, &header::read_head(path).ok()?)
+    match header::read_head(path) {
+        Ok(head) => Ok(header::header(path, &head)),
+        Err(failure) => Err(manifest::unreadable_warning(path, &failure)),
+    }
 }
 
 /// The files of a walk, grouped by the root-relative folder that holds them, in walk order.

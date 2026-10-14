@@ -1,0 +1,5 @@
+$ memex show emptytitle:EMPTY-1 emptytitle:FULL-1 emptyfolder:EMPTY-2 --json
+exit 0
+stdout
+| {"docs":[{"ref":"emptytitle:EMPTY-1","collection":"emptytitle","id":"EMPTY-1","path":null,"title":"Heading here","fields":{"name":"EMPTY-1","claim":"","note":"Plain line.\n# Heading here"},"text":"EMPTY-1\n\nPlain line.\n# Heading here","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]},{"ref":"emptytitle:FULL-1","collection":"emptytitle","id":"FULL-1","path":null,"title":"Titled line. Whole.","fields":{"name":"FULL-1","claim":"Titled line. Whole.","note":"Ignored line."},"text":"FULL-1\nTitled line. Whole.\nIgnored line.","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]},{"ref":"emptyfolder:EMPTY-2","collection":"emptyfolder","id":"EMPTY-2","path":null,"title":"Body heading","fields":{"claim":""},"text":"# Body heading","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
+stderr (empty)

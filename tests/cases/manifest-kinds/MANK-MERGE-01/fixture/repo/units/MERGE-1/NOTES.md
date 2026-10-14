@@ -1,0 +1,3 @@
+# Locked notes
+
+Never shown.
