@@ -1,0 +1,5 @@
+$ memex info --json  [cwd repo/src]
+exit 0
+stdout
+| {"collections":[{"builtin":true,"count":2,"description":null,"kind":null,"name":"readmes","owner":null},{"builtin":true,"count":0,"description":null,"kind":null,"name":"headers","owner":null},{"builtin":true,"count":0,"description":null,"kind":null,"name":"cases","owner":null}],"here":{"path":"src","title":"This folder holds the library code that the command line calls, and every module in it is described by a header that says what it does for the reader."},"log_store":"$SANDBOX/repo/.memex/logs","root":"$SANDBOX/repo","warnings":[]}
+stderr (empty)

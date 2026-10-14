@@ -1,6 +1,7 @@
 //! The sections and misses that `show` prints, with the lists they carry and the limits they keep (design §3.3 and §3.6). The text and JSON renderings are in render/.
 //! Cases: SHOW-FILE-01, SHOW-DIR-01, SHOW-LOG-01, SHOW-LIMIT-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-JSON-01, CASE-SECT-01, CASE-JSON-01
 
+pub mod info;
 pub mod json;
 pub mod search;
 pub mod text;

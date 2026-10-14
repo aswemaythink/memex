@@ -1,0 +1,17 @@
+$ memex info --agent nobody
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent   1 readme · 0 headers · 0 cases
+| streams  impl 2 (2 new in 24h) · review 2 (2 new)
+| use      memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr (empty)
+
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent   1 readme · 0 headers · 0 cases
+| streams  impl 2 (2 new in 24h) · review 2 (2 new)
+| use      memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr (empty)

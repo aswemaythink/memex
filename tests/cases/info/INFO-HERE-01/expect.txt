@@ -1,0 +1,8 @@
+$ memex info  [cwd repo/src/deep]
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent  2 readmes · 1 header · 0 cases
+| here    src — The source folder holds the library.
+| use     memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr (empty)

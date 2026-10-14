@@ -1,0 +1,19 @@
+$ memex info --agent 'bad id'
+exit 2
+stdout (empty)
+stderr
+| memex: invalid --agent value 'bad id'
+| usage: memex info   [--agent <id>] [--json]
+
+$ memex info --json --agent 'bad id'
+exit 2
+stdout
+| {"error":{"code":"usage","message":"invalid --agent value 'bad id'"}}
+stderr (empty)
+
+$ memex info  [env MEMEX_AGENT=bad:one]
+exit 2
+stdout (empty)
+stderr
+| memex: invalid MEMEX_AGENT value 'bad:one'
+| usage: memex info   [--agent <id>] [--json]

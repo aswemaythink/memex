@@ -1,0 +1,1 @@
+{"git": "commit", "steps": [{"args": ["info"], "cwd": "repo/src"}]}

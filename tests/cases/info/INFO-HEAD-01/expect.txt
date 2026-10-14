@@ -1,0 +1,8 @@
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent   1 readme · 0 headers · 0 cases
+| streams  impl 1 (1 new in 24h)
+| use      memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr (empty)

@@ -1,0 +1,5 @@
+$ memex info --json --agent cook-2
+exit 0
+stdout
+| {"collections":[{"builtin":true,"count":1,"description":null,"kind":null,"name":"readmes","owner":null},{"builtin":true,"count":0,"description":null,"kind":null,"name":"headers","owner":null},{"builtin":true,"count":0,"description":null,"kind":null,"name":"cases","owner":null},{"builtin":false,"count":1,"description":"Doom notes.","kind":"markdown","name":"doom","owner":"doom skill"},{"builtin":false,"count":1,"description":null,"kind":"log","name":"impl","new_24h":1,"newest":"2026-10-13T11:00:00Z","owner":null}],"log_store":"$SANDBOX/repo/.memex/logs","root":"$SANDBOX/repo","to":{"agent":"cook-2","count":1},"warnings":[]}
+stderr (empty)

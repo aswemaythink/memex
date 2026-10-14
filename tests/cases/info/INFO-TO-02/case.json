@@ -1,0 +1,1 @@
+{"steps": [{"args": ["info"], "env": {"MEMEX_AGENT": "cook-2"}}, {"args": ["info", "--agent", "orchestrator"], "env": {"MEMEX_AGENT": "cook-2"}}]}
