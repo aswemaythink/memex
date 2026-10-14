@@ -419,7 +419,8 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [x] S1.1 (G1)
 - [x] S1.2
 - [x] S1.3 (refined d66f8c5)
-- [ ] S2.0
+- [x] S2.0 (+ S2.0b fixes running)
+- [x] P1 portability fixes
 - [ ] S2.1
 - [ ] S2.2
 - [ ] S2.3
@@ -444,3 +445,10 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [ ] S8.2
 - [ ] S8.3
 - [ ] Site
+
+## 12. Tidy backlog (for the post-Phase-2 refiner pass)
+- `.memex` found by `is_dir` probes (src/root.rs, tests/harness/sandbox.rs); design §4.4 Name matching wants listing-based matching.
+- BOM drop is only in log bodies; design §4.4 says every read. Move it into one shared text-read helper (headers, READMEs, CASES.md, frontmatter, manifests).
+- `corpus::root_of` repeats root discovery from root.rs: export one.
+- `src/verbs/log.rs` header `Cases:` line is missing LOG-STREAM-04/05, LOG-BODY-06 and LOG-WRITE-15.
+- Header first sentences over 100 chars: add a gate to tests/quality.rs and shorten the existing ones.
