@@ -2,7 +2,7 @@
 
 Why: [STORY.md](STORY.md). Bush's trail against his camera: authored context compression.
 What: [design.md](design.md) is authoritative on behaviour. This file is how memex gets built, and it replaces plan.md (deleted; the old one is in git history once committed).
-Status: blessed by the oracle 2026-10-13. In progress. Track progress in §11.
+Status: blessed by the oracle 2026-10-13. Phases 0-5 done and S6.1 built (2026-10-14); waiting on user checkpoints 3, 4, 5, 6 and 7. Track progress in §11.
 
 ## 0. Ground rules
 - **Principles (design §1).** Markdown and a CLI only. No server, daemon, MCP, LLM, vectors or database. Agent-agnostic, minimal surface. A feature earns its place through playtest friction plus a user-approved design.md edit. Logs are scaffolding; knowledge is authored.
