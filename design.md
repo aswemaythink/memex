@@ -157,7 +157,7 @@ It takes one or more refs and prints a section for each, separated by `=== <labe
 - **Body.** Read from stdin, required and non-empty. If stdin is a TTY, memex exits 2. The maximum is 16 KiB, which exits 2 with the message "logs are findings: cite artifacts by path". The title is the first non-blank body line after any frontmatter, with leading `#`s and spaces stripped. If the title is empty, memex exits 2. The slug is made from the title: lowercase ASCII alphanumerics, other runs become `-`, trimmed, at most 60 chars, or `entry` if empty.
 - **Store.** `log` is allowed if the root or the main checkout has `.memex/`. With neither, it exits 3 with "run `memex init`" (§4.1).
 - **Extra fields.** An optional leading `---` frontmatter block in the body is merged in. Collisions with memex-owned keys exit 2.
-- **Stream name.** `[a-z0-9][a-z0-9-]{0,39}`. It must not be a reserved name or an existing manifest name. Streams need no declaration.
+- **Stream name.** `[a-z0-9][a-z0-9-]{0,39}`. It must not be a reserved name, a Windows device name (`con`, `prn`, `aux`, `nul`, `com0`–`com9`, `lpt0`–`lpt9`; refused on every OS so a store stays portable), or an existing manifest name (matched against the listed file names in `.memex/collections/`, exactly, never by probing). Streams need no declaration.
 - **Agent id.** Taken from `--agent`, then `$MEMEX_AGENT`; otherwise it is omitted. No harness exposes a per-agent id in the environment (Spike 2), so there is no third source.
 - **Output.** stdout is exactly the ref on one line, so `ref=$(memex log impl <<'EOF' … EOF)` works. With `--json`, the output is `{"ref","path"}`.
 - **Immutable.** There is no edit verb. A correction is a new entry that cites the old ref, and the old entry then shows it under "cited by".
@@ -291,10 +291,11 @@ show walks hub READMEs
 
 One codebase for Linux, macOS and Windows, using only cross-platform APIs. No manual Windows testing; **CI runs the fixture suite on `ubuntu`, `macos` and `windows`**.
 
-- **Atomic writes.** `tempfile` + `persist_noclobber` (atomic, never overwrites) on every platform, in place of raw `link()`.
+- **Atomic writes.** `tempfile` + `persist_noclobber` (atomic, never overwrites) on every platform, in place of raw `link()`. If persisting fails and the target name exists in any form (Windows reports a directory there differently), the name counts as taken and the `-2`, `-3` retry runs. Deletes that the OS refuses (on Windows, a file held open by another process) are warnings, never errors.
 - **Paths.** Labels and JSON always use `/`. Canonicalise with `dunce` (no `\\?\` prefixes). Compare paths case-sensitively in labels, since filesystem case behaviour varies.
-- **Filenames.** Log names have no colons. Slugs are `[a-z0-9-]`, max 60 chars. Windows reserved names are moot, because the timestamp prefix comes first.
-- **Text.** Accept `\r\n` everywhere (headers, CASES.md, frontmatter). Write `\n`.
+- **Filenames.** Log names have no colons. Slugs are `[a-z0-9-]`, max 60 chars. Windows reserved names are moot for entry files, because the timestamp prefix comes first; stream folders refuse them (§3.4).
+- **Name matching.** Special names (`README.md`, `CASES.md`, manifest files, `.memex`) are matched against directory listings, exactly. memex never decides by `exists()`, so case-insensitive filesystems behave like Linux.
+- **Text.** Accept `\r\n` everywhere (headers, CASES.md, frontmatter, log bodies). A leading UTF-8 BOM is dropped on read, so frontmatter still parses from shells that add one. Write `\n`, without a BOM.
 - **Encoding.** Non-UTF-8 file content is decoded lossily; non-UTF-8 path names are skipped.
 - **Errors.** Never print raw OS error strings. Print memex's message, the `io::ErrorKind` name and the path, so fixtures are identical across OSes.
 - **git.** Subprocess `git rev-parse`, no git library. If git is missing, treat the repo as non-git.
