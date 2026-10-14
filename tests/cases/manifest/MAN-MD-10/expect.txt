@@ -14,4 +14,4 @@ stdout
 |   showing 0 of 0
 stderr
 | memex: warning: $SANDBOX/repo/notes/broken.json: not valid JSON: trailing comma at line 1 column 20
-| memex: not found: sidecars:broken
+| memex: not found: sidecars:broken (find refs with memex search <words>)

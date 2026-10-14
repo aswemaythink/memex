@@ -1,7 +1,8 @@
 $ memex search kib
 exit 0
 stdout (empty)
-stderr (empty)
+stderr
+| memex: no hits for kib; try fewer or other words, or memex info
 
 $ memex search --in headers --json
 exit 0

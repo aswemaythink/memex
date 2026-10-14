@@ -8,4 +8,5 @@ $ memex search zzqq --json
 exit 0
 stdout
 | {"query":"zzqq","filters":{},"groups":[]}
-stderr (empty)
+stderr
+| memex: no hits for zzqq; try fewer or other words, or memex info

@@ -3,5 +3,5 @@ exit 1
 stdout (empty)
 stderr
 | memex: warning: $SANDBOX/repo/.memex/collections/notes.json: name 'journal' must match the file name 'notes'
-| memex: not found: journal:alpha
-| memex: not found: notes:alpha
+| memex: not found: journal:alpha (find refs with memex search <words>)
+| memex: not found: notes:alpha (find refs with memex search <words>)

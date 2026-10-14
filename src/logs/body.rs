@@ -1,6 +1,6 @@
 //! Reads the log body from stdin and checks it (design §3.4 Body and §4.4 Text).
 //! A terminal is refused, a leading UTF-8 BOM is dropped and CRLF read as LF, the 16 KiB limit is measured on that stored body, a blank body is refused, and the body needs a title line.
-//! Cases: LOG-WRITE-09, LOG-WRITE-12, LOG-BODY-01, LOG-BODY-02, LOG-BODY-03, LOG-BODY-04, LOG-BODY-05, LOG-BODY-06, LOG-BODY-07, LOG-BODY-08, PORT-CRLF-06; the terminal refusal has a unit test only (design §4.4)
+//! Cases: LOG-WRITE-09, LOG-WRITE-12, LOG-BODY-01, LOG-BODY-02, LOG-BODY-03, LOG-BODY-04, LOG-BODY-05, LOG-BODY-06, LOG-BODY-07, LOG-BODY-08, PORT-CRLF-06, CLI-HINT-05, CLI-HINT-06; the terminal refusal has a unit test only (design §4.4)
 
 use std::io::{self, IsTerminal, Read};
 
@@ -22,6 +22,9 @@ const TERMINAL: &str = "log body comes from stdin: memex log <stream> <<'EOF' �
 
 /// The usage message for a body over `LIMIT`: a log holds findings, so artifacts are cited by path.
 const OVER: &str = "log body is over 16 KiB: logs are findings: cite artifacts by path";
+
+/// The usage message for a blank body: it names the command that takes a body, with its heredoc (design §3.5c).
+const EMPTY: &str = "log body is empty: memex log <stream> <<'EOF' … EOF";
 
 /// The usage error for a body over `LIMIT` once stored.
 fn over() -> Error {
@@ -55,7 +58,7 @@ fn read(terminal: bool, input: impl Read) -> Result<String, Error> {
         return Err(over());
     }
     if body.trim().is_empty() {
-        return Err(fail(Verb::Log, "log body is empty".to_string()));
+        return Err(fail(Verb::Log, EMPTY.to_string()));
     }
     Ok(body)
 }
@@ -118,7 +121,7 @@ mod tests {
     #[test]
     fn blank_bodies_are_empty_and_crlf_becomes_lf() {
         let blank = read(false, &b" \r\n\t\n"[..]).unwrap_err();
-        assert_eq!(blank.message, "log body is empty");
+        assert_eq!(blank.message, EMPTY);
         assert_eq!(read(false, &b"a\r\nb\r\n"[..]).unwrap(), "a\nb\n");
     }
 
@@ -128,7 +131,7 @@ mod tests {
         let second = read(false, "\u{feff}\u{feff}x\n".as_bytes()).unwrap();
         assert_eq!(second, "\u{feff}x\n");
         let blank = read(false, "\u{feff} \n".as_bytes()).unwrap_err();
-        assert_eq!(blank.message, "log body is empty");
+        assert_eq!(blank.message, EMPTY);
     }
 
     #[test]

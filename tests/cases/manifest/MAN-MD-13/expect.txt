@@ -27,6 +27,6 @@ stdout
 |   (none)
 |   showing 0 of 0
 stderr
-| memex: not found: everything:private
-| memex: not found: everything:pkg
-| memex: not found: everything:built
+| memex: not found: everything:private (find refs with memex search <words>)
+| memex: not found: everything:pkg (find refs with memex search <words>)
+| memex: not found: everything:built (find refs with memex search <words>)

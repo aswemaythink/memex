@@ -25,7 +25,7 @@ $ memex show impl:.20261013-115500-widget-draft
 exit 1
 stdout (empty)
 stderr
-| memex: not found: impl:.20261013-115500-widget-draft
+| memex: not found: impl:.20261013-115500-widget-draft (find refs with memex search <words>)
 == snapshot repo/.memex/logs
 -- impl/.20261013-115500-widget-draft.md
 | ---

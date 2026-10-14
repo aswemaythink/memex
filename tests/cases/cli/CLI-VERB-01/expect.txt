@@ -2,7 +2,7 @@ $ memex bogus
 exit 2
 stdout (empty)
 stderr
-| memex: unknown verb 'bogus'
+| memex: unknown verb 'bogus'; run memex --help
 | usage:
 | memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]
 | memex show   <path|ref>... [--up N] [--limit N] [--json]

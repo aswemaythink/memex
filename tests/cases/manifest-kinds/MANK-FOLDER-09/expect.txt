@@ -1,6 +1,6 @@
 $ memex show broken:BAD-1 broken:GOOD-1 --json
 exit 1
 stdout
-| {"docs":[{"ref":"broken:GOOD-1","collection":"broken","id":"GOOD-1","path":null,"title":"","fields":{"claim":"Fine."},"text":"","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[{"arg":"broken:BAD-1","code":"not_found","message":"not found: broken:BAD-1"}]}
+| {"docs":[{"ref":"broken:GOOD-1","collection":"broken","id":"GOOD-1","path":null,"title":"","fields":{"claim":"Fine."},"text":"","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[{"arg":"broken:BAD-1","code":"not_found","message":"not found: broken:BAD-1 (find refs with memex search <words>)"}]}
 stderr
 | memex: warning: $SANDBOX/repo/broken/BAD-1/case.json: not valid JSON: key must be a string at line 1 column 2

@@ -1,12 +1,12 @@
 //! Reads and matches a search's filters, and checks its `--in` names (design §3.2).
-//! Cases: SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-07, SRCH-FILTER-08, SRCH-IN-03, SRCH-IN-04, SRCH-IN-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-JSON-03
+//! Cases: SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-07, SRCH-FILTER-08, SRCH-IN-03, SRCH-IN-04, SRCH-IN-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-JSON-03, CLI-HINT-03, CLI-HINT-04
 
 use std::collections::BTreeSet;
 
 use crate::cli::Verb;
 use crate::clock::{self, Timestamp};
 use crate::collections::frontmatter::Value;
-use crate::corpus::{Corpus, Doc};
+use crate::corpus::{Corpus, Doc, CASES, HEADERS, LOGS, READMES};
 use crate::error::Error;
 use crate::scan::fail;
 
@@ -117,10 +117,33 @@ pub fn check_in(corpus: &Corpus, names: &[String]) -> Result<(), Error> {
             .iter()
             .any(|found| found.manifest.name == *name);
         if !(builtin || held.contains(name.as_str()) || manifest) {
-            return Err(fail(Verb::Search, format!("unknown collection '{name}'")));
+            let listed = valid_names(corpus);
+            let message = format!("unknown collection '{name}'; collections: {listed}");
+            return Err(fail(Verb::Search, message));
         }
     }
     Ok(())
+}
+
+/// The names that `--in` takes, in the order design §3.5c gives: readmes, headers and cases, the manifests in name order, logs,
+/// then the streams in name order. A stream is a log doc's collection that no manifest takes, so each name is listed once.
+fn valid_names(corpus: &Corpus) -> String {
+    let manifests: BTreeSet<&str> = corpus
+        .manifests
+        .iter()
+        .map(|found| found.manifest.name.as_str())
+        .collect();
+    let streams: BTreeSet<&str> = corpus
+        .all_docs()
+        .filter(|doc| corpus.is_log(doc))
+        .map(|doc| doc.collection.as_str())
+        .filter(|name| !manifests.contains(name))
+        .collect();
+    let mut names = vec![READMES, HEADERS, CASES];
+    names.extend(manifests.iter().copied());
+    names.push(LOGS);
+    names.extend(streams);
+    names.join(", ")
 }
 
 /// The instant of a doc's `time` field, which is written as `YYYY-MM-DDTHH:MM:SSZ` (design §3.6). None for a doc with no time, and

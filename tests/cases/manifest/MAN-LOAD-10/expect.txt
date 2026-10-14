@@ -5,6 +5,6 @@ stderr
 | memex: warning: $SANDBOX/repo/.memex/collections/badglob.json: include 'notes/[' is not a valid glob
 | memex: warning: $SANDBOX/repo/.memex/collections/badkind.json: kind 'table' is not markdown, folder or json
 | memex: warning: $SANDBOX/repo/.memex/collections/outside.json: root '../elsewhere' is not a folder inside the root
-| memex: not found: badglob:alpha
-| memex: not found: badkind:alpha
-| memex: not found: outside:alpha
+| memex: not found: badglob:alpha (find refs with memex search <words>)
+| memex: not found: badkind:alpha (find refs with memex search <words>)
+| memex: not found: outside:alpha (find refs with memex search <words>)

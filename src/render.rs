@@ -1,6 +1,6 @@
 //! The sections and misses that `show` prints (design §3.3 and §3.6).
 //! Each carries its lists and limits. The text and JSON renderings are in render/.
-//! Cases: SHOW-FILE-01, SHOW-DIR-01, SHOW-LOG-01, SHOW-LIMIT-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-JSON-01, CASE-SECT-01, CASE-JSON-01, SHOW-OTHER-01
+//! Cases: SHOW-FILE-01, SHOW-DIR-01, SHOW-LOG-01, SHOW-LIMIT-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-JSON-01, CASE-SECT-01, CASE-JSON-01, SHOW-OTHER-01, CLI-HINT-01, CLI-HINT-02
 
 pub mod info;
 pub mod json;
@@ -129,7 +129,7 @@ impl Miss {
         Miss {
             arg: arg.to_string(),
             code: Code::NotFound,
-            message: format!("not found: {arg}"),
+            message: format!("not found: {arg} (find refs with memex search <words>)"),
             candidates: Vec::new(),
         }
     }

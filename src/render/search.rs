@@ -1,5 +1,5 @@
 //! Prints `search`'s groups as text (design §3.2) and as the `--json` document (design §3.6).
-//! Cases: SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-FUZZY-01, SRCH-LINE-01, SRCH-JSON-01, SRCH-JSON-02, SRCH-JSON-03, SRCH-FILTER-06, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01
+//! Cases: SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-FUZZY-01, SRCH-LINE-01, SRCH-JSON-01, SRCH-JSON-02, SRCH-JSON-03, SRCH-FILTER-06, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01, SRCH-NOHITS-01, SRCH-NOHITS-02, SRCH-NOHITS-03
 
 use std::collections::BTreeMap;
 
@@ -39,6 +39,22 @@ pub struct Hit<'a> {
 /// The text of the groups: each group's heading, then its hit lines. No groups give no text.
 pub fn text(groups: &[Group]) -> String {
     groups.iter().map(group_text).collect()
+}
+
+/// The stderr lines of a search with no hits (design §3.2 Zero hits). `terms` are every term as typed, and `words` are those
+/// that are not filters. With words, the hint names them as typed; with filters only, it names the filters; a query with neither,
+/// a roster with no filter, gets no hint, since design §3.2 gives none for it.
+pub fn no_hits(terms: &[String], words: &[String]) -> Vec<String> {
+    if !words.is_empty() {
+        let text = words.join(" ");
+        return vec![format!(
+            "memex: no hits for {text}; try fewer or other words, or memex info"
+        )];
+    }
+    if terms.is_empty() {
+        return Vec::new();
+    }
+    vec![format!("memex: no docs match {}; …", terms.join(" "))]
 }
 
 /// The age of an entry in the short form of design §3.6: `Nm` below an hour, `Nh` below 48 hours, else `Nd`. A negative age
@@ -182,5 +198,21 @@ mod tests {
         assert_eq!(age(47 * 3_600), "47h");
         assert_eq!(age(48 * 3_600), "2d");
         assert_eq!(age(-5), "0m");
+    }
+
+    #[test]
+    fn a_hint_names_the_words_else_the_filters_and_a_roster_has_none() {
+        let terms =
+            |text: &[&str]| -> Vec<String> { text.iter().map(|word| word.to_string()).collect() };
+        let words_hint = "memex: no hits for zzqq; try fewer or other words, or memex info";
+        assert_eq!(
+            no_hits(&terms(&["zzqq", "tag:x"]), &terms(&["zzqq"])),
+            vec![words_hint]
+        );
+        assert_eq!(
+            no_hits(&terms(&["tag:x"]), &[]),
+            vec!["memex: no docs match tag:x; …"]
+        );
+        assert!(no_hits(&[], &[]).is_empty());
     }
 }

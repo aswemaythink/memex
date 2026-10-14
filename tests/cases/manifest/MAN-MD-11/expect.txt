@@ -40,7 +40,7 @@ stdout
 |   (none)
 |   showing 0 of 0
 stderr
-| memex: not found: notes:readme
+| memex: not found: notes:readme (find refs with memex search <words>)
 
 $ memex show anchored:alpha anywhere:alpha
 exit 1
@@ -58,4 +58,4 @@ stdout
 |   (none)
 |   showing 0 of 0
 stderr
-| memex: not found: anchored:alpha
+| memex: not found: anchored:alpha (find refs with memex search <words>)

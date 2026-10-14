@@ -109,3 +109,30 @@
   design §3.6 exit codes and §4.1 item 3. Run: memex log impl --json in a git repo with no `.memex/`, the setup of DISC-ROOT-04.
 - `CLI-EXIT-05` `io` exits 3, and names the io::ErrorKind, never the OS text.
   design §3.6 exit codes: 3 for an I/O failure that stops the verb (a show ref that fails on I/O is that ref's error, exit 1, §3.3); PLAN §1 fix 17. Run: memex log impl with .memex/logs a regular file. Pinned by the PORT family, which also pins the JSON form.
+
+## HINT
+
+- `CLI-HINT-01` A ref that names nothing prints `memex: not found: <ref> (find refs with memex search <words>)` on stderr, with the ref as typed, and exits 1.
+  design §3.5c Messages (not found names the next step). Run: memex show nope.rs.
+- `CLI-HINT-02` With `--json`, the not-found ref's message in `errors` carries the same hint, stdout is the show document, stderr is empty, and exit is 1.
+  design §3.5c Messages and §3.6 (the show document's errors). Run: memex show nope.rs --json.
+- `CLI-HINT-03` An unknown `--in` name prints `memex: unknown collection '<name>'; collections: <names>` on stderr, then the usage line, and exits 2. The names are readmes, headers, cases, the manifests in name order, logs, then the streams in name order.
+  design §3.5c Messages and §3.2 `--in` names. Fixture: a README, a markdown manifest `notes`, and a log entry in stream `impl`. Run: memex search widget --in nope.
+- `CLI-HINT-04` With `--json`, the unknown-collection message is the usage envelope on stdout, with the same names, stderr is empty, and exit is 2.
+  design §3.5c Messages and §3.6 (usage errors are JSON with --json). Fixture as CLI-HINT-03. Run: memex search widget --in nope --json.
+- `CLI-HINT-05` A blank log body prints `memex: log body is empty: memex log <stream> <<'EOF' … EOF` on stderr, then the log usage line, writes nothing, and exits 2.
+  design §3.5c Messages and §3.4 Body. Run: memex log impl with stdin of blank lines.
+- `CLI-HINT-06` With `--json`, the blank-body message is the usage envelope on stdout, stderr is empty, and exit is 2.
+  design §3.5c Messages and §3.6. Run: memex log impl --json with stdin of blank lines.
+- `CLI-HINT-07` A second word for `log` prints `memex: unexpected argument '<word>': log reads its body from stdin: memex log <stream> <<'EOF' … EOF` on stderr, then the log usage line, and exits 2.
+  design §3.5c Messages (unexpected argument, with the log form). Run: memex log impl extra.
+- `CLI-HINT-08` With `--json`, the log form of the unexpected-argument message is the usage envelope on stdout, and exit is 2.
+  design §3.5c Messages and §3.6. Run: memex log impl extra --json.
+- `CLI-HINT-09` A second word for `info` prints `memex: unexpected argument 'extra'` with no log form added, then the info usage line, and exits 2.
+  design §3.5c Messages (the log form is for log alone). Run: memex info extra.
+- `CLI-HINT-10` An unknown verb prints `memex: unknown verb '<word>'; run memex --help` on stderr, then the grammar block, and exits 2.
+  design §3.5c Messages. Run: memex bogus.
+- `CLI-HINT-11` With `--json` before the verb, the unknown-verb message is the usage envelope on stdout, and exit is 2.
+  design §3.5c Messages and §3.6. Run: memex --json bogus.
+- `CLI-HINT-12` (planned) A name that another process takes between init's check and its write prints `memex: cannot create <path>: another process created it while init ran, or a name that differs only in case holds it` on stderr, leaves that file as it is, and exits 3.
+  design §3.5b (init race). Planned: a golden needs a concurrent writer or a case-insensitive file system, which no run can set up on every OS; the unit test in src/verbs/init/files.rs pins the text.

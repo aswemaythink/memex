@@ -2,4 +2,4 @@ $ memex show impl:20261013-120000-show-walks-hub-readmes
 exit 1
 stdout (empty)
 stderr
-| memex: not found: impl:20261013-120000-show-walks-hub-readmes
+| memex: not found: impl:20261013-120000-show-walks-hub-readmes (find refs with memex search <words>)

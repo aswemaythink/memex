@@ -33,4 +33,4 @@ $ memex show notes:alpha-slug
 exit 1
 stdout (empty)
 stderr
-| memex: not found: notes:alpha-slug
+| memex: not found: notes:alpha-slug (find refs with memex search <words>)

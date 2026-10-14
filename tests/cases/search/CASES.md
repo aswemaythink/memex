@@ -6,7 +6,7 @@
   design §3.2 Words; PLAN §4 BM25F. Run: memex search apples bananas (two READMEs, one with both words).
 - `SRCH-RANK-02` A rarer word counts for more: a doc that holds only a word few docs hold ranks above docs that hold only a common word, which tie and rank by label.
   design §3.2 Words (more matches rank higher); PLAN §4 BM25F idf. Run: memex search apples kiwi.
-- `SRCH-RANK-03` A query that matches nothing prints nothing and exits 0.
+- `SRCH-RANK-03` A query that matches nothing prints nothing on stdout and exits 0; its stderr hint is pinned by SRCH-NOHITS-01.
   design §3.2 Words; design §3.6 exit codes (0 includes zero hits). Run: memex search zzqq.
 
 ## WEIGHT
@@ -66,13 +66,13 @@
   design §3.2 Limits (with --in the default is 20). Run: memex search widget, then memex search widget --in cases.
 - `SRCH-IN-02` `--in logs` searches only the logs group, and `--in readmes,logs` searches those two groups in their usual order.
   design §3.2 (--in restricts the groups searched; logs means every stream). Run: memex search widget --in logs, then --in readmes,logs.
-- `SRCH-IN-03` A `--in` name that is no built-in collection, manifest or stream is a usage error: exit 2 with `unknown collection 'nope'` and the usage line, and nothing on stdout.
+- `SRCH-IN-03` A `--in` name that is no built-in collection, manifest or stream is a usage error: exit 2 with `unknown collection 'nope'`, the valid names (CLI-HINT-03), and the usage line, and nothing on stdout.
   design §3.2 `--in` names (an unknown name is a usage error, never a silently empty result) and §3.6 exit codes. Run: memex search widget --in nope, then --in readmes,nope.
-- `SRCH-IN-04` With `--json`, an unknown `--in` name gives the usage error envelope `{"error":{"code":"usage","message":"unknown collection 'nope'"}}`, exit 2.
+- `SRCH-IN-04` With `--json`, an unknown `--in` name gives the usage error envelope `{"error":{"code":"usage","message":"unknown collection 'nope'; collections: readmes, headers, cases, logs"}}`, exit 2.
   design §3.6 fatal errors (the JSON envelope) and §3.2 `--in` names. Run: memex search widget --in nope --json.
 - `SRCH-IN-05` A stream name in `--in` keeps only that stream's entries of the logs group: `--in impl` lists the impl entry and not the review entry, `--in review` the reverse, and `--in logs` lists both.
   design §3.2 `--in` names (a stream name is valid; logs means every stream). Run: memex search widget --in impl, then --in review, then --in logs.
-- `SRCH-IN-06` A manifest's name is a valid `--in` name even when the manifest holds no doc, so a search or a roster under it gives no output and exits 0.
+- `SRCH-IN-06` A manifest's name is a valid `--in` name even when the manifest holds no doc, so a search under it gives nothing on stdout and exits 0, and a roster under it gives no output at all.
   design §3.2 `--in` names (manifest names are valid) and §4.2 manifests. Run: memex search widget --in empty-set, then memex search --in empty-set.
 
 ## JSON
@@ -178,3 +178,13 @@
   design §3.2 Words (CJK runs are words; prefix matching reaches the start of a word only). Run: memex search 東京タワー, then memex search タワー.
 - `SRCH-UNICODE-04` Uppercase letters lowercase as Rust's `str::to_lowercase` gives: `CAFÉ` finds `café`, `STRAẞE` finds `Straße` (`ẞ` lowercases to `ß`), and `STRASSE` finds nothing, since it lowercases to `strasse`, two edits from `straße`, and lowercasing does not fold `ß` to `ss`.
   design §3.2 Words (a word is lowercased, and `Straße` is a word; one edit only for words of 5 or more). Run: memex search CAFÉ, then memex search STRAẞE, then memex search STRASSE.
+
+## NOHITS
+
+- `SRCH-NOHITS-01` A query whose words match nothing prints nothing on stdout, exits 0, and prints `memex: no hits for <words>; try fewer or other words, or memex info` on stderr, with the words as typed and the filters left out.
+  design §3.2 Zero hits. Fixture: a README. Run: memex search Zzqq tag:show.
+- `SRCH-NOHITS-02` A query with filters and no words that matches nothing prints nothing on stdout, exits 0, and prints `memex: no docs match <filters>; …` on stderr, with the filters as typed, both for a listing and for a roster narrowed by filters.
+  design §3.2 Zero hits (with filters only). The design writes the tail as `…`, and that is printed as it stands. Fixture: a README. Run: memex search tag:nope, then memex search --in readmes agent:cook-2.
+- `SRCH-NOHITS-03` With `--json`, a query with no hits keeps stdout one valid document with an empty groups list, and stderr carries the hint of SRCH-NOHITS-01 for words or of SRCH-NOHITS-02 for filters, exit 0.
+  design §3.2 Zero hits and §3.6 (the search document). Fixture: a README. Run: memex search Zzqq --json, then memex search tag:nope --json.
+>

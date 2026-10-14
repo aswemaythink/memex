@@ -1,5 +1,5 @@
 $ memex search widget --in nope --json
 exit 2
 stdout
-| {"error":{"code":"usage","message":"unknown collection 'nope'"}}
+| {"error":{"code":"usage","message":"unknown collection 'nope'; collections: readmes, headers, cases, logs"}}
 stderr (empty)

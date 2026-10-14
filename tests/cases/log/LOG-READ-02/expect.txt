@@ -27,6 +27,7 @@ exit 0
 stdout (empty)
 stderr
 | memex: warning: cannot read $SANDBOX/repo/.memex/logs/impl (PermissionDenied)
+| memex: no hits for earlier; try fewer or other words, or memex info
 
 $ memex info
 exit 0

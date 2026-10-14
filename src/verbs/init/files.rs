@@ -61,7 +61,7 @@ pub fn create_new(dir: &Path, name: &str, bytes: &[u8]) -> Result<(), Error> {
         Ok(Some(_)) => Ok(()),
         // A name taken since init's check is an error, never an overwrite: the file that holds it stays as it is (design §3.5b).
         Ok(None) => Err(Error::io_message(format!(
-            "cannot create {}: another process created it while init ran",
+            "cannot create {}: another process created it while init ran, or a name that differs only in case holds it",
             slash(&target)
         ))),
         Err(failed) => Err(failed.into_error(dir, name)),
@@ -211,7 +211,7 @@ mod tests {
         assert_eq!(
             error.message,
             format!(
-                "cannot create {}: another process created it while init ran",
+                "cannot create {}: another process created it while init ran, or a name that differs only in case holds it",
                 slash(&path)
             )
         );

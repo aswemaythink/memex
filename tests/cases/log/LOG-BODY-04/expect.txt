@@ -2,7 +2,7 @@ $ memex log impl
 exit 2
 stdout (empty)
 stderr
-| memex: log body is empty
+| memex: log body is empty: memex log <stream> <<'EOF' … EOF
 | usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
 == snapshot repo/.memex/logs
 (missing)

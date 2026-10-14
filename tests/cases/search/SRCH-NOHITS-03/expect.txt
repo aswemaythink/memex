@@ -1,0 +1,13 @@
+$ memex search Zzqq --json
+exit 0
+stdout
+| {"query":"Zzqq","filters":{},"groups":[]}
+stderr
+| memex: no hits for Zzqq; try fewer or other words, or memex info
+
+$ memex search tag:nope --json
+exit 0
+stdout
+| {"query":"tag:nope","filters":{"tag":["nope"]},"groups":[]}
+stderr
+| memex: no docs match tag:nope; …

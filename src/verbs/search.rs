@@ -1,5 +1,5 @@
 //! Carries out `memex search` (design §3.2 and §3.6): filters, then ranks, lists or rosters docs.
-//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-IN-01, SRCH-IN-02, SRCH-RANK-03, SRCH-TOKEN-03, SRCH-JSON-01, SRCH-JSON-02, SRCH-LINE-01, SRCH-JSON-03, SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01, SRCH-ORPHAN-02, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-IN-03, SRCH-IN-04, SRCH-IN-05, SRCH-IN-06, SRCH-TOKEN-04, HDR-CAP-03, MAN-LOAD-13
+//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-IN-01, SRCH-IN-02, SRCH-RANK-03, SRCH-TOKEN-03, SRCH-JSON-01, SRCH-JSON-02, SRCH-LINE-01, SRCH-JSON-03, SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01, SRCH-ORPHAN-02, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-IN-03, SRCH-IN-04, SRCH-IN-05, SRCH-IN-06, SRCH-TOKEN-04, HDR-CAP-03, MAN-LOAD-13, SRCH-NOHITS-01, SRCH-NOHITS-02, SRCH-NOHITS-03
 
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use crate::cli::Verb;
 use crate::clock::{self, Timestamp};
 use crate::corpus::{Corpus, Doc, CASES, HEADERS, LOGS, READMES};
-use crate::error::Error;
+use crate::error::{warn, Error};
 use crate::index::bm25;
 use crate::index::filter::{self, time_of, Filter};
 use crate::index::tokenize::query_tokens;
@@ -65,7 +65,7 @@ struct Plan {
 }
 
 /// Carries out a search and returns its stdout: the text of its groups, or the JSON document with `--json`. Zero hits give no
-/// text, and the exit status is 0 as usual.
+/// text, a hint on stderr (design §3.2), and the exit status is 0 as usual.
 pub fn run(request: &Request, now: Timestamp) -> Result<String, Error> {
     let corpus = here::load()?.corpus;
     if let Some(names) = &request.in_ {
@@ -76,6 +76,9 @@ pub fn run(request: &Request, now: Timestamp) -> Result<String, Error> {
     let (filters, literals) = filter::read(&request.terms, &fields)?;
     let plan = Plan::new(request, &literals, filters, now)?;
     let groups = rank_groups(&corpus, &plan, scope);
+    if groups.is_empty() {
+        warn(&render::no_hits(&request.terms, &literals));
+    }
     Ok(if request.json {
         let spelled: Vec<(&str, &str)> = plan.filters.iter().map(Filter::spelled).collect();
         render::document(&request.terms.join(" "), &spelled, &groups)

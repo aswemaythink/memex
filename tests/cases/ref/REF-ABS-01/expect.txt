@@ -2,4 +2,4 @@ $ memex show /memex-no-such-folder/nope.rs
 exit 1
 stdout (empty)
 stderr
-| memex: not found: /memex-no-such-folder/nope.rs
+| memex: not found: /memex-no-such-folder/nope.rs (find refs with memex search <words>)

@@ -14,4 +14,4 @@ stdout
 |   (none)
 |   showing 0 of 0
 stderr
-| memex: not found: hidden:draft
+| memex: not found: hidden:draft (find refs with memex search <words>)

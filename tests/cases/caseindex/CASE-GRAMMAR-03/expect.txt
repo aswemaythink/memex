@@ -2,6 +2,6 @@ $ memex show cases:NODASH cases:TRAILING- cases:DOUBLE--1
 exit 1
 stdout (empty)
 stderr
-| memex: not found: cases:NODASH
-| memex: not found: cases:TRAILING-
-| memex: not found: cases:DOUBLE--1
+| memex: not found: cases:NODASH (find refs with memex search <words>)
+| memex: not found: cases:TRAILING- (find refs with memex search <words>)
+| memex: not found: cases:DOUBLE--1 (find refs with memex search <words>)

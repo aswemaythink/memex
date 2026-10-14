@@ -2,19 +2,19 @@ $ memex show readme.md
 exit 1
 stdout (empty)
 stderr
-| memex: not found: readme.md
+| memex: not found: readme.md (find refs with memex search <words>)
 
 $ memex show SRC/A.RS
 exit 1
 stdout (empty)
 stderr
-| memex: not found: SRC/A.RS
+| memex: not found: SRC/A.RS (find refs with memex search <words>)
 
 $ memex show SRC/README.md
 exit 1
 stdout (empty)
 stderr
-| memex: not found: SRC/README.md
+| memex: not found: SRC/README.md (find refs with memex search <words>)
 
 $ memex show README.md
 exit 0

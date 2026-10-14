@@ -26,4 +26,4 @@ $ memex show src/cli.rs
 exit 1
 stdout (empty)
 stderr
-| memex: not found: src/cli.rs
+| memex: not found: src/cli.rs (find refs with memex search <words>)

@@ -1,6 +1,6 @@
 //! Reads one verb's arguments against its row of the grammar.
 //! Words, flags and their values, each checked as design §3 says.
-//! Cases: CLI-*, CLI-ARGS-01, CLI-ARGS-02, CLI-ARGS-03, CLI-ARGS-04, CLI-ARGS-05, CLI-BARE-02, CLI-FLAG-01, CLI-FLAG-02, CLI-FLAG-03, CLI-FLAG-04, CLI-FLAG-05, CLI-FLAG-07, CLI-FLAG-08, CLI-FLAG-09, CLI-FLAG-10, CLI-FLAG-11, CLI-FLAG-12, CLI-FLAG-13, CLI-HELP-02, CLI-HELP-03, CLI-HELP-04, CLI-HELP-05, CLI-HELP-06, CLI-HELP-07, CLI-HELP-08
+//! Cases: CLI-*, CLI-ARGS-01, CLI-ARGS-02, CLI-ARGS-03, CLI-ARGS-04, CLI-ARGS-05, CLI-BARE-02, CLI-FLAG-01, CLI-FLAG-02, CLI-FLAG-03, CLI-FLAG-04, CLI-FLAG-05, CLI-FLAG-07, CLI-FLAG-08, CLI-FLAG-09, CLI-FLAG-10, CLI-FLAG-11, CLI-FLAG-12, CLI-FLAG-13, CLI-HELP-02, CLI-HELP-03, CLI-HELP-04, CLI-HELP-05, CLI-HELP-06, CLI-HELP-07, CLI-HELP-08, CLI-HINT-07, CLI-HINT-08, CLI-HINT-09
 
 use std::iter::Peekable;
 use std::slice::Iter;
@@ -91,10 +91,22 @@ pub(crate) fn parse_verb(verb: Verb, words: &[String]) -> Result<Command, Error>
 /// Adds one word, unless the verb already has all the words it takes.
 fn add_word(verb: Verb, args: &mut Args, word: &str) -> Result<(), Error> {
     if spec(verb).max.is_some_and(|max| args.words.len() >= max) {
-        return Err(fail(verb, format!("unexpected argument '{word}'")));
+        return Err(fail(verb, unexpected(verb, word)));
     }
     args.words.push(word.to_string());
     Ok(())
+}
+
+/// The message for a word that the verb has no place for. `log` reads its body from stdin, so its message also names the
+/// command that does that (design §3.5c).
+fn unexpected(verb: Verb, word: &str) -> String {
+    let message = format!("unexpected argument '{word}'");
+    match verb {
+        Verb::Log => {
+            format!("{message}: log reads its body from stdin: memex log <stream> <<'EOF' … EOF")
+        }
+        _ => message,
+    }
 }
 
 /// Adds one flag and its value, after checking the verb takes it and it is not repeated.

@@ -1,0 +1,5 @@
+$ memex search Zzqq tag:show
+exit 0
+stdout (empty)
+stderr
+| memex: no hits for Zzqq; try fewer or other words, or memex info

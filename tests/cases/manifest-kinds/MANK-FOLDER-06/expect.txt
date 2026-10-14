@@ -1,6 +1,6 @@
 $ memex show byname:NAME-009 byfield:FIELD-1 byfield:two --json
 exit 1
 stdout
-| {"docs":[{"ref":"byname:NAME-009","collection":"byname","id":"NAME-009","path":null,"title":"","fields":{},"text":"","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]},{"ref":"byfield:FIELD-1","collection":"byfield","id":"FIELD-1","path":null,"title":"","fields":{"code":"FIELD-1","claim":"Has the field."},"text":"","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[{"arg":"byfield:two","code":"not_found","message":"not found: byfield:two"}]}
+| {"docs":[{"ref":"byname:NAME-009","collection":"byname","id":"NAME-009","path":null,"title":"","fields":{},"text":"","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]},{"ref":"byfield:FIELD-1","collection":"byfield","id":"FIELD-1","path":null,"title":"","fields":{"code":"FIELD-1","claim":"Has the field."},"text":"","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[{"arg":"byfield:two","code":"not_found","message":"not found: byfield:two (find refs with memex search <words>)"}]}
 stderr
 | memex: warning: $SANDBOX/repo/byfield/two/case.json: no 'code' field

@@ -1,4 +1,5 @@
 $ memex search wa
 exit 0
 stdout (empty)
-stderr (empty)
+stderr
+| memex: no hits for wa; try fewer or other words, or memex info

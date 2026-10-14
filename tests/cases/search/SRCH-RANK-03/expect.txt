@@ -1,4 +1,5 @@
 $ memex search zzqq
 exit 0
 stdout (empty)
-stderr (empty)
+stderr
+| memex: no hits for zzqq; try fewer or other words, or memex info

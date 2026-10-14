@@ -3,4 +3,4 @@ exit 1
 stdout (empty)
 stderr
 | memex: warning: $SANDBOX/repo/.memex/collections/notes.json: key 'at' does not apply to kind 'markdown'
-| memex: not found: notes:alpha
+| memex: not found: notes:alpha (find refs with memex search <words>)

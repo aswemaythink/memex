@@ -2,7 +2,7 @@ $ memex show ../../../repo/readme.md  [cwd repo/src/deep]
 exit 1
 stdout (empty)
 stderr
-| memex: not found: ../../../repo/readme.md
+| memex: not found: ../../../repo/readme.md (find refs with memex search <words>)
 
 $ memex show ../../../repo/README.md  [cwd repo/src/deep]
 exit 0

@@ -16,10 +16,10 @@ stdout
 |   (none)
 |   showing 0 of 0
 stderr
-| memex: not found: ids:
+| memex: not found: ids: (find refs with memex search <words>)
 
 $ memex show ids:OK-1 ids: --json
 exit 1
 stdout
-| {"docs":[{"ref":"ids:OK-1","collection":"ids","id":"OK-1","path":null,"title":"Has an id.","fields":{"claim":"Has an id.","id":"OK-1"},"text":"Has an id.\nOK-1","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[{"arg":"ids:","code":"not_found","message":"not found: ids:"}]}
+| {"docs":[{"ref":"ids:OK-1","collection":"ids","id":"OK-1","path":null,"title":"Has an id.","fields":{"claim":"Has an id.","id":"OK-1"},"text":"Has an id.\nOK-1","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[{"arg":"ids:","code":"not_found","message":"not found: ids: (find refs with memex search <words>)"}]}
 stderr (empty)

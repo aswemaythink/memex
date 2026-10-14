@@ -1,4 +1,5 @@
 $ memex search hasp
 exit 0
 stdout (empty)
-stderr (empty)
+stderr
+| memex: no hits for hasp; try fewer or other words, or memex info

@@ -2,13 +2,13 @@ $ memex show cases:CLOSE-002
 exit 1
 stdout (empty)
 stderr
-| memex: not found: cases:CLOSE-002
+| memex: not found: cases:CLOSE-002 (find refs with memex search <words>)
 
 $ memex show cases:CLOSE-004
 exit 1
 stdout (empty)
 stderr
-| memex: not found: cases:CLOSE-004
+| memex: not found: cases:CLOSE-004 (find refs with memex search <words>)
 
 $ memex show cases:CLOSE-005
 exit 0
@@ -34,7 +34,7 @@ $ memex show cases:CLOSE-007
 exit 1
 stdout (empty)
 stderr
-| memex: not found: cases:CLOSE-007
+| memex: not found: cases:CLOSE-007 (find refs with memex search <words>)
 
 $ memex show cases:CLOSE-008
 exit 0

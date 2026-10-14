@@ -2,4 +2,4 @@ $ memex show --up 1 nope.rs
 exit 1
 stdout (empty)
 stderr
-| memex: not found: nope.rs
+| memex: not found: nope.rs (find refs with memex search <words>)

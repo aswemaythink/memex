@@ -1,0 +1,5 @@
+$ memex --json bogus
+exit 2
+stdout
+| {"error":{"code":"usage","message":"unknown verb 'bogus'; run memex --help"}}
+stderr (empty)

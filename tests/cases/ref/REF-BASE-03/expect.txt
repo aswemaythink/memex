@@ -2,4 +2,4 @@ $ memex show deep
 exit 1
 stdout (empty)
 stderr
-| memex: not found: deep
+| memex: not found: deep (find refs with memex search <words>)

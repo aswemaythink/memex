@@ -1,6 +1,6 @@
 //! Parses the argv grammar of design §3 into a typed Command.
 //! Or into the usage error the grammar calls for.
-//! Cases: CLI-*, CLI-BARE-01, CLI-VERB-01, CLI-VERB-02, CLI-VERB-03, CLI-FLAG-06, CLI-HELP-01, CLI-JSON-03, CLI-JSON-04
+//! Cases: CLI-*, CLI-BARE-01, CLI-VERB-01, CLI-VERB-02, CLI-VERB-03, CLI-FLAG-06, CLI-HELP-01, CLI-JSON-03, CLI-JSON-04, CLI-HINT-10, CLI-HINT-11
 
 use std::ffi::OsString;
 
@@ -168,9 +168,12 @@ fn verb_candidate(words: &[String]) -> Option<&str> {
     None
 }
 
-/// A usage error for a word that names no verb: the message, then the whole grammar block.
+/// A usage error for a word that names no verb: the message names the next step (design §3.5c), then the whole grammar block.
 fn unknown_verb(word: &str) -> Error {
-    Error::usage(format!("unknown verb '{word}'"), help::usage_block())
+    Error::usage(
+        format!("unknown verb '{word}'; run memex --help"),
+        help::usage_block(),
+    )
 }
 
 /// The arguments as text. Non-UTF-8 bytes become replacement characters.

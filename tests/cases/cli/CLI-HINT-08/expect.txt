@@ -1,0 +1,5 @@
+$ memex log impl extra --json
+exit 2
+stdout
+| {"error":{"code":"usage","message":"unexpected argument 'extra': log reads its body from stdin: memex log <stream> <<'EOF' … EOF"}}
+stderr (empty)

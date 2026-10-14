@@ -2,5 +2,5 @@ $ memex log impl extra
 exit 2
 stdout (empty)
 stderr
-| memex: unexpected argument 'extra'
+| memex: unexpected argument 'extra': log reads its body from stdin: memex log <stream> <<'EOF' … EOF
 | usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body

@@ -10,4 +10,4 @@ $ memex show NAM-ITEM-01
 exit 1
 stdout (empty)
 stderr
-| memex: not found: NAM-ITEM-01
+| memex: not found: NAM-ITEM-01 (find refs with memex search <words>)

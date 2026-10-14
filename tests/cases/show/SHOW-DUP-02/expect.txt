@@ -22,4 +22,4 @@ stdout
 | 
 | The demo repo for show.
 stderr
-| memex: not found: nope.rs
+| memex: not found: nope.rs (find refs with memex search <words>)

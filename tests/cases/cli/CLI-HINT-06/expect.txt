@@ -1,0 +1,5 @@
+$ memex log impl --json
+exit 2
+stdout
+| {"error":{"code":"usage","message":"log body is empty: memex log <stream> <<'EOF' … EOF"}}
+stderr (empty)
