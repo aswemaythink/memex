@@ -1,8 +1,9 @@
 //! Loads the read model (design §3.1 and §3.6): the walked entries and the docs built from them.
 //! The docs are READMEs, headers, CASES.md, manifests and logs, with the label map and the folder index.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, INT-NAME-01, INT-NAME-02, INT-CHAIN-01, INT-BOM-01, MAN-LOAD-02, REF-AMBIG-02, REF-AMBIG-03, REF-RESERVED-03, REF-RESERVED-04
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, SHOW-IO-02, INT-NAME-01, INT-NAME-02, INT-CHAIN-01, INT-BOM-01, MAN-LOAD-02, REF-AMBIG-02, REF-AMBIG-03, REF-RESERVED-03, REF-RESERVED-04
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 use std::thread;
@@ -78,6 +79,8 @@ pub struct Corpus {
     /// Every doc by label, in load order. A label holds more than one doc when two files declare the same id.
     docs: BTreeMap<String, Vec<Doc>>,
     kinds: BTreeMap<String, Kind>,
+    /// The folders that the walk could not list, by root-relative path, with the kind of the failure (design §3.3).
+    unlistable: BTreeMap<String, io::ErrorKind>,
     /// The children of each folder, built the first time they are asked for.
     children: OnceLock<BTreeMap<String, Vec<Child>>>,
     /// The streams of the log store, which `logs:` reads across (design §3.1).
@@ -122,13 +125,14 @@ impl Corpus {
 
     /// The intent layer under `root`: every walked entry, the docs of its files, and the docs of its manifests, which are kept with
     /// their counts and warnings for `info` and `search`. The files are read on several threads, and their docs are added in the
-    /// walk's order. A file that cannot be read is skipped with its warning, and
-    /// the rest of the layer loads (design §4.2).
+    /// walk's order. A file that cannot be read is skipped with its warning, and a folder that cannot be listed is kept as
+    /// unlistable (design §3.3). The rest of the layer loads (design §4.2).
     fn intent(root: &Path) -> Corpus {
         let mut corpus = Corpus {
             root: root.to_path_buf(),
             docs: BTreeMap::new(),
             kinds: BTreeMap::from([(String::new(), Kind::Dir)]),
+            unlistable: BTreeMap::new(),
             children: OnceLock::new(),
             streams: BTreeSet::new(),
             citations: OnceLock::new(),
@@ -136,7 +140,7 @@ impl Corpus {
             manifests: Vec::new(),
             manifest_warnings: Vec::new(),
         };
-        let entries = walk::walk_warned(root, &mut corpus.read_warnings);
+        let entries = walk::walk_warned(root, &mut corpus.read_warnings, &mut corpus.unlistable);
         let read = par::map(&entries, read_entry);
         for (entry, docs) in entries.iter().zip(read) {
             let kind = if entry.is_dir { Kind::Dir } else { Kind::File };
@@ -236,6 +240,12 @@ impl Corpus {
     /// What the walk found at this root-relative path: a folder, a file, or nothing.
     pub fn kind(&self, rel: &str) -> Option<Kind> {
         self.kinds.get(rel).copied()
+    }
+
+    /// The kind of the io error that kept the walk from listing this folder, or None when the walk listed it or never found it
+    /// (design §3.3). A request for such a folder is that ref's io error.
+    pub fn unlistable(&self, rel: &str) -> Option<io::ErrorKind> {
+        self.unlistable.get(rel).copied()
     }
 
     /// The children of a folder, sorted by name. Empty for a file and for a path the walk did not find. The folder index is built

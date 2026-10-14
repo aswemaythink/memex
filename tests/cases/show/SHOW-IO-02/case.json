@@ -1,0 +1,1 @@
+{"chmod": [{"path": "repo/src/locked", "mode": "000"}], "platforms": ["unix"], "steps": [{"args": ["show", "src/cli.rs", "src/locked", "notes.txt"]}, {"args": ["show", "src/cli.rs", "src/locked", "notes.txt", "--json"]}]}

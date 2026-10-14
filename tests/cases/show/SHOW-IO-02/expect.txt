@@ -1,0 +1,49 @@
+$ memex show src/cli.rs src/locked notes.txt
+exit 1
+stdout
+| === src/cli.rs ===
+| Parses the demo arguments.
+| It has two lines so that the body shows both.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- src/README.md
+| # src
+| 
+| The source of the demo.
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+| 
+| === notes.txt ===
+| (no header)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr
+| memex: warning: cannot read $SANDBOX/repo/src/locked (PermissionDenied)
+| memex: cannot read src/locked (PermissionDenied)
+
+$ memex show src/cli.rs src/locked notes.txt --json
+exit 1
+stdout
+| {"docs":[{"ref":"src/cli.rs","collection":"headers","id":"src/cli.rs","path":"src/cli.rs","title":"Parses the demo arguments.","fields":{},"text":"Parses the demo arguments.\nIt has two lines so that the body shows both.","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[{"path":"src/README.md","text":"# src\n\nThe source of the demo.\n"},{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}]},{"ref":"notes.txt","collection":null,"id":"notes.txt","path":"notes.txt","title":null,"fields":{},"text":null,"cites":[],"cited_by":{"total":0,"refs":[]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}]}],"errors":[{"arg":"src/locked","code":"io","message":"cannot read src/locked (PermissionDenied)"}]}
+stderr
+| memex: warning: cannot read $SANDBOX/repo/src/locked (PermissionDenied)

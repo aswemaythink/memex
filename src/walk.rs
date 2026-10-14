@@ -1,6 +1,7 @@
 //! Walks the intent layer: the entries under the root that the ignore rules keep (design §4.1 item 2).
-//! Cases: INT-IGNORE-01, INT-IGNORE-02, INT-IGNORE-03, INT-SKIP-01, INT-SKIP-02, INT-NAME-03, SHOW-FILE-01, SHOW-DIR-01, SHOW-ROOT-01
+//! Cases: INT-IGNORE-01, INT-IGNORE-02, INT-IGNORE-03, INT-SKIP-01, INT-SKIP-02, INT-NAME-03, SHOW-FILE-01, SHOW-DIR-01, SHOW-ROOT-01, SHOW-IO-02
 
+use std::collections::BTreeMap;
 use std::io;
 use std::path::{Component, Path, PathBuf};
 use std::sync::mpsc;
@@ -20,17 +21,33 @@ pub struct Entry {
     pub is_dir: bool,
 }
 
+/// A walk failure that names a path: the path, the kind of its io error, and the warning it gives (design §4.2).
+struct Failure {
+    /// The path the failure names, as the walk joined it from the root.
+    path: PathBuf,
+    /// The kind of the io error under it.
+    kind: io::ErrorKind,
+    /// The `memex: warning:` line for it.
+    warning: String,
+}
+
 /// Every file and folder under `root` that the ignore rules keep, sorted by label. The walk honours `.gitignore` and
 /// `.ignore`, skips hidden entries, `node_modules` and `target` folders, symlinks and names that are not UTF-8, and does
 /// not list the root itself. A folder that cannot be listed gives no entries here; `walk_warned` says so.
 pub fn walk(root: &Path) -> Vec<Entry> {
-    walk_warned(root, &mut Vec::new())
+    walk_warned(root, &mut Vec::new(), &mut BTreeMap::new())
 }
 
 /// Like `walk`, and each folder under `root` that the walk cannot read adds its warning to `warnings`, `memex: warning: cannot
-/// read <path> (<ErrorKind>)` (design §4.2), in the order of a depth-first walk. The rest of the tree is still walked. The walk
-/// runs on several threads, so its items are collected, then ordered by path and by label.
-pub fn walk_warned(root: &Path, warnings: &mut Vec<String>) -> Vec<Entry> {
+/// read <path> (<ErrorKind>)` (design §4.2), in the order of a depth-first walk. The rest of the tree is still walked. A folder
+/// that the walk could not list is also recorded in `unlistable`, by its root-relative path with the kind of its failure, so
+/// that `show` can fail a request for it (design §3.3). The walk runs on several threads, so its items are collected, then
+/// ordered by path and by label.
+pub fn walk_warned(
+    root: &Path,
+    warnings: &mut Vec<String>,
+    unlistable: &mut BTreeMap<String, io::ErrorKind>,
+) -> Vec<Entry> {
     let (sender, items) = mpsc::channel();
     let mut builder = WalkBuilder::new(root);
     builder
@@ -56,29 +73,46 @@ pub fn walk_warned(root: &Path, warnings: &mut Vec<String>) -> Vec<Entry> {
         }
     }
     // A path orders its components, so this puts each warning where the depth-first walk gave it: a folder's before its children's.
-    failures.sort_by(|left, right| left.0.cmp(&right.0));
-    warnings.extend(failures.into_iter().map(|(_, text)| text));
+    failures.sort_by(|left, right| left.path.cmp(&right.path));
     entries.sort_by(|left, right| left.rel.cmp(&right.rel));
+    for failure in &failures {
+        if let Some(rel) = unlistable_rel(root, &entries, failure) {
+            unlistable.insert(rel, failure.kind);
+        }
+    }
+    warnings.extend(failures.into_iter().map(|failure| failure.warning));
     entries
 }
 
-/// What one walk item gives: its entry, or its warning with the path that it names. None for an item that is neither.
-fn found_of(
-    root: &Path,
-    item: Result<DirEntry, ignore::Error>,
-) -> Option<Result<Entry, (PathBuf, String)>> {
+/// The root-relative path of a failure that names a folder the walk could not list: the root itself, or a folder that the walk
+/// kept. None for any other failure, such as one that names an ignore file.
+fn unlistable_rel(root: &Path, entries: &[Entry], failure: &Failure) -> Option<String> {
+    let rel = rel_string(failure.path.strip_prefix(root).ok()?)?;
+    let is_folder = rel.is_empty()
+        || entries
+            .binary_search_by(|entry| entry.rel.cmp(&rel))
+            .is_ok_and(|at| entries[at].is_dir);
+    is_folder.then_some(rel)
+}
+
+/// What one walk item gives: its entry, or its failure. None for an item that is neither.
+fn found_of(root: &Path, item: Result<DirEntry, ignore::Error>) -> Option<Result<Entry, Failure>> {
     match item {
         Ok(entry) => to_entry(root, &entry).map(Ok),
         Err(error) => walk_warning(&error).map(Err),
     }
 }
 
-/// The path that a walk error names, with the warning for it (design §4.2). None for any other error, such as an ignore file
+/// The failure that a walk error names, with its warning (design §4.2). None for any other error, such as an ignore file
 /// that does not parse.
-fn walk_warning(error: &ignore::Error) -> Option<(PathBuf, String)> {
+fn walk_warning(error: &ignore::Error) -> Option<Failure> {
     let (path, failure) = named_failure(error)?;
     let message = Error::io_at("cannot read", path, failure).message;
-    Some((path.to_path_buf(), error::warning(&message)))
+    Some(Failure {
+        path: path.to_path_buf(),
+        kind: failure.kind(),
+        warning: error::warning(&message),
+    })
 }
 
 /// The path that a walk error names, and the io failure under it. The walk wraps a failure in its path and its depth, in
@@ -148,11 +182,14 @@ mod tests {
         assert_eq!(rel_string(&not_utf8()), None);
     }
 
-    /// A folder that cannot be listed is one warning, and the files beside it are still walked (design §4.2).
+    /// A folder that cannot be listed is one warning, and the files beside it are still walked (design §4.2). The folder is
+    /// also recorded as unlistable, so that `show` can fail a request for it (design §3.3, SHOW-IO-02).
     #[cfg(unix)]
     #[test]
     fn a_folder_that_cannot_be_listed_is_a_warning_and_the_rest_is_walked() {
+        use std::collections::BTreeMap;
         use std::fs;
+        use std::io;
         use std::os::unix::fs::PermissionsExt;
 
         use super::walk_warned;
@@ -167,8 +204,8 @@ mod tests {
             fs::set_permissions(&locked, open).expect("restored");
             return;
         }
-        let mut warnings = Vec::new();
-        let entries = walk_warned(dir.path(), &mut warnings);
+        let (mut warnings, mut unlistable) = (Vec::new(), BTreeMap::new());
+        let entries = walk_warned(dir.path(), &mut warnings, &mut unlistable);
         fs::set_permissions(&locked, open).expect("restored");
         assert!(entries.iter().any(|entry| entry.rel == "ok.rs"));
         assert_eq!(warnings.len(), 1, "{warnings:?}");
@@ -176,6 +213,11 @@ mod tests {
             warnings[0].starts_with("memex: warning: cannot read ")
                 && warnings[0].ends_with("locked (PermissionDenied)"),
             "{warnings:?}"
+        );
+        assert_eq!(unlistable.len(), 1, "{unlistable:?}");
+        assert_eq!(
+            unlistable.get("locked"),
+            Some(&io::ErrorKind::PermissionDenied)
         );
     }
 
