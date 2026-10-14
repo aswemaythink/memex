@@ -328,7 +328,7 @@ One codebase for Linux, macOS and Windows, using only cross-platform APIs. No ma
   - A linked worktree whose common dir is named `.git` maps to the main checkout, its parent, as with git.
   - A linked worktree whose common dir has another name (a worktree of a bare repo), or whose `gitdir:` or `commondir` cannot be read, cannot be placed: `log` exits 3 with `cannot find the main checkout's log store: git did not answer and this linked worktree's repository is not a .git folder; run memex log where git works` (JSON code `io`), since the worktree's own store would be lost with it. Read verbs are unchanged.
   - `branch` comes from `HEAD` when it reads `ref: refs/heads/<name>` and no part of `<name>` starts with `.` (reftable's placeholder is `refs/heads/.invalid`); `commit` is omitted, since it needs refs.
-  With git present and answering, every store and HEAD answer is git's.
+  With git present and answering, every store and HEAD answer is git's, with one bound: the store maps to a main checkout only when the toplevel's own `.git` is a file (a linked worktree), so a nested `.git` folder that git skips never sends `log` to a store other than the root's own. Layout files are read only when they are regular files of at most 16 KiB, and a `commondir` must name a folder.
 - **TTY.** `std::io::IsTerminal`. TTY stdin for `log` and INFO-CAP-02 are the behaviours with no fixture case (CI runners have no portable TTY; INFO-CAP-02's 3,000-byte boundary depends on the sandbox root's length, which differs by OS); unit tests pin them. Races and closed pipes are pinned by the opt-in stress suite (`tests/stress/`).
 - **Shell examples.** Docs use bash heredocs (Git Bash on Windows runs them); stdin piping works from any shell.
 
