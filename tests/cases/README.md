@@ -91,6 +91,13 @@ When any rule fails, the case trials are not created, and only the failing rules
 
 - [cli](cli/README.md): `CLI-*`, design §3 and §3.6.
 - [show](show/README.md): `SHOW-*`, design §3.3 and §3.6.
+- [discovery](discovery/README.md): `DISC-*`, design §4.1.
+- [log](log/README.md): `LOG-*`, design §3.4 and §4.3.
+- [header](header/README.md): `HDR-*`, design §2.1.
+- [intent](intent/README.md): `INT-*`, design §2 and §4.1.
+- [caseindex](caseindex/README.md): `CASE-*`, design §2.2.
+- [manifest](manifest/README.md): `MAN-*`, design §4.2 (loading and the markdown kind).
+- [manifest-kinds](manifest-kinds/README.md): `MANK-*`, design §4.2 (the folder and json kinds).
 
 ## Choices where PLAN §2 is silent
 
