@@ -1,0 +1,14 @@
+{
+  "name": "memex",
+  "description": "Marketplace for memex: the intent layer, for Claude Code sessions and sub-agents.",
+  "owner": {
+    "name": "rynwhite"
+  },
+  "plugins": [
+    {
+      "name": "memex",
+      "source": "./plugins/memex",
+      "description": "Reads the repo's intent layer: memex info at session start, and a memex id with memex info for each sub-agent."
+    }
+  ]
+}

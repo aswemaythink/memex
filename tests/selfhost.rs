@@ -104,6 +104,17 @@ fn agents_block_is_the_snippet_byte_for_byte() {
     );
 }
 
+/// The plugin's SKILL.md carries the same snippet, byte for byte (design §6: the skill is the snippet, plus §5 and §2).
+#[test]
+fn plugin_skill_carries_the_snippet_byte_for_byte() {
+    let skill = read_repo("plugins/memex/skills/memex/SKILL.md");
+    let snippet = read_repo("assets/agents-snippet.md");
+    assert!(
+        skill.contains(snippet.as_str()),
+        "plugins/memex/skills/memex/SKILL.md must contain assets/agents-snippet.md byte for byte; fix: paste the snippet into the skill unchanged"
+    );
+}
+
 /// The text of a file under the crate root. A file that cannot be read fails the check.
 fn read_repo(rel: &str) -> String {
     fs::read_to_string(manifest().join(rel)).unwrap_or_else(|e| panic!("cannot read {rel}: {e}"))

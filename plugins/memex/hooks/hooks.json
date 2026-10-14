@@ -1,0 +1,27 @@
+{
+  "description": "memex: memex info at session start; the memex id and memex info for each sub-agent.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/start.sh"]
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/start.sh"]
+          }
+        ]
+      }
+    ]
+  }
+}
