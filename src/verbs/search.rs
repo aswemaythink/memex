@@ -1,15 +1,17 @@
 //! Carries out `memex search` (design §3.2 and §3.6): filters, then ranks, lists or rosters docs.
 //! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-IN-01, SRCH-IN-02, SRCH-RANK-03, SRCH-TOKEN-03, SRCH-JSON-01, SRCH-JSON-02, SRCH-LINE-01, SRCH-JSON-03, SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01, SRCH-ORPHAN-02, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-IN-03, SRCH-IN-04, SRCH-IN-05, SRCH-IN-06, SRCH-TOKEN-04, HDR-CAP-03, MAN-LOAD-13, SRCH-NOHITS-01, SRCH-NOHITS-02, SRCH-NOHITS-03
 
-use std::cmp::Ordering;
+mod listing;
+
 use std::collections::BTreeMap;
 
+use self::listing::{age_of, list_group};
 use crate::cli::Verb;
-use crate::clock::{self, Timestamp};
+use crate::clock::Timestamp;
 use crate::corpus::{Corpus, Doc, CASES, HEADERS, LOGS, READMES};
 use crate::error::{warn, Error};
 use crate::index::bm25;
-use crate::index::filter::{self, time_of, Filter};
+use crate::index::filter::{self, Filter};
 use crate::index::tokenize::query_tokens;
 use crate::index::{Index, Source};
 use crate::intent::header;
@@ -194,13 +196,14 @@ fn rank_groups<'a>(
     if plan.mode == Mode::Nothing {
         return Vec::new();
     }
+    let roster = plan.mode == Mode::Roster;
     scope
         .into_iter()
         .filter_map(|(name, docs)| {
             let kept: Vec<&'a Doc> = docs.into_iter().filter(|doc| plan.keeps(doc)).collect();
             match plan.mode {
                 Mode::Words => search_group(corpus, name, &kept, plan),
-                _ => list_group(corpus, name, kept, plan),
+                _ => list_group(corpus, name, kept, plan.limit, plan.now, roster),
             }
         })
         .collect()
@@ -252,59 +255,6 @@ fn search_group<'a>(
     })
 }
 
-/// The listing of a group: the docs that the filters keep, in listing order, with the limit applied. A roster's hits carry the count
-/// of docs that cite each one. None when no doc is kept.
-fn list_group<'a>(
-    corpus: &Corpus,
-    name: String,
-    docs: Vec<&'a Doc>,
-    plan: &Plan,
-) -> Option<Group<'a>> {
-    if docs.is_empty() {
-        return None;
-    }
-    let total = docs.len();
-    let mut keyed: Vec<(Option<Timestamp>, &'a Doc)> = docs
-        .into_iter()
-        .map(|doc| (listed_time(corpus, doc), doc))
-        .collect();
-    keyed.sort_by(|left, right| {
-        compare_newest(left.0, right.0).then_with(|| left.1.label.cmp(&right.1.label))
-    });
-    let hits = keyed
-        .into_iter()
-        .take(plan.limit)
-        .map(|(_, doc)| Hit {
-            doc,
-            score: None,
-            fuzzy: Vec::new(),
-            age: age_of(&name, doc, plan.now),
-            cited_by: (plan.mode == Mode::Roster)
-                .then(|| corpus.citations().direct_count(&doc.label)),
-        })
-        .collect();
-    Some(Group { name, total, hits })
-}
-
-/// The time that orders a listed doc: a log's `time`. Every other doc has none, so the docs of a group are ordered by label.
-fn listed_time(corpus: &Corpus, doc: &Doc) -> Option<Timestamp> {
-    if corpus.is_log(doc) {
-        time_of(doc)
-    } else {
-        None
-    }
-}
-
-/// The order of two listed times, newest first: a later time comes before an earlier one, and a doc with no time comes last.
-fn compare_newest(left: Option<Timestamp>, right: Option<Timestamp>) -> Ordering {
-    match (left, right) {
-        (Some(left), Some(right)) => right.seconds_since(left).cmp(&0),
-        (Some(_), None) => Ordering::Less,
-        (None, Some(_)) => Ordering::Greater,
-        (None, None) => Ordering::Equal,
-    }
-}
-
 /// A doc as the index reads it. A header is read without its cut note and cut to its first `HEADER_LINES` lines; the text of every
 /// other doc is read whole.
 fn source_of(doc: &Doc) -> Source<'_> {
@@ -331,15 +281,6 @@ fn first_lines(text: &str, count: usize) -> &str {
         .nth(count - 1)
         .map_or(text.len(), |(at, _)| at);
     &text[..end]
-}
-
-/// The age of a log entry, from the stamp that starts its file name, which is the instant of its `time` field. Other docs have no
-/// age, and nor does a log whose name has no stamp.
-fn age_of(group: &str, doc: &Doc, now: Timestamp) -> Option<String> {
-    if group != LOGS {
-        return None;
-    }
-    clock::leading_stamp(&doc.id).map(|stamp| render::age(now.seconds_since(stamp)))
 }
 
 /// The words of a query: every token of every literal term in order, with no repeats. A term that holds no token adds none.
