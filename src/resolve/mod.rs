@@ -7,7 +7,6 @@ mod outside;
 use std::path::{Component, Path};
 
 use crate::corpus::{label_of, Corpus, Doc, Kind};
-use crate::error::Error;
 use crate::walk::rel_string;
 
 pub use outside::Elsewhere;
@@ -39,26 +38,18 @@ pub enum Outcome<'a> {
 }
 
 /// Resolves `arg` as typed from `cwd`, which is an absolute path inside the root of `corpus`. `store` is the log store, which
-/// a path in another root is read with (design §3.1). Errors only when another root cannot be read.
-pub fn resolve<'a>(
-    corpus: &'a Corpus,
-    cwd: &Path,
-    store: Option<&Path>,
-    arg: &str,
-) -> Result<Outcome<'a>, Error> {
+/// a path in another root is read with (design §3.1).
+pub fn resolve<'a>(corpus: &'a Corpus, cwd: &Path, store: Option<&Path>, arg: &str) -> Outcome<'a> {
     if arg.is_empty() {
-        return Ok(Outcome::NotFound);
+        return Outcome::NotFound;
     }
     if arg == "." {
-        return Ok(found_path(corpus, String::new()));
+        return found_path(corpus, String::new());
     }
     if Path::new(arg).is_absolute() {
         return outside::absolute(corpus, store, arg);
     }
-    match relative(corpus, cwd, store, arg)? {
-        Some(outcome) => Ok(outcome),
-        None => Ok(names::by_name(corpus, arg)),
-    }
+    relative(corpus, cwd, store, arg).unwrap_or_else(|| names::by_name(corpus, arg))
 }
 
 /// A relative path (design §3.1, step 2): the entry that the cwd or the root holds, when exactly one does, and an ambiguity
@@ -68,7 +59,7 @@ fn relative<'a>(
     cwd: &Path,
     store: Option<&Path>,
     arg: &str,
-) -> Result<Option<Outcome<'a>>, Error> {
+) -> Option<Outcome<'a>> {
     let cwd_rel = cwd
         .strip_prefix(&corpus.root)
         .ok()
@@ -85,13 +76,13 @@ fn relative<'a>(
         .collect();
     hits.sort();
     hits.dedup();
-    Ok(match hits.as_slice() {
+    match hits.as_slice() {
         [] => None,
         [only] => Some(found_path(corpus, only.clone())),
         _ => Some(Outcome::Ambiguous(
             hits.iter().map(|rel| label_of(rel)).collect(),
         )),
-    })
+    }
 }
 
 /// The outcome for a root-relative path: found when the walk holds an entry there, not found otherwise.
@@ -148,14 +139,13 @@ mod tests {
             "//! Parses the arguments.\n",
         )
         .expect("the file");
-        let corpus = Corpus::load(&root, None).expect("the corpus loads");
+        let corpus = Corpus::load(&root, None);
         let arg = root
             .join("src")
             .join("cli.rs")
             .to_string_lossy()
             .into_owned();
-        let Ok(Outcome::Found(Target::Path { rel, .. })) = resolve(&corpus, &root, None, &arg)
-        else {
+        let Outcome::Found(Target::Path { rel, .. }) = resolve(&corpus, &root, None, &arg) else {
             panic!("an absolute path to a walked file is found");
         };
         assert_eq!(rel, "src/cli.rs");

@@ -59,17 +59,12 @@ pub fn run(request: &Request) -> Result<Report, Error> {
         return Err(fail(Verb::Show, "empty ref".to_string()));
     }
     let here::Here { cwd, store, corpus } = here::load()?;
-    show_in(&corpus, &cwd, store.as_deref(), request)
+    Ok(show_in(&corpus, &cwd, store.as_deref(), request))
 }
 
 /// Shows the refs of `request` as typed from `cwd`, in the corpus of their root. `run` passes the cwd's own corpus; a test can
 /// pass one that it built.
-fn show_in(
-    corpus: &Corpus,
-    cwd: &Path,
-    store: Option<&Path>,
-    request: &Request,
-) -> Result<Report, Error> {
+fn show_in(corpus: &Corpus, cwd: &Path, store: Option<&Path>, request: &Request) -> Report {
     let options = Options {
         up: request.up,
         limit: request.limit.unwrap_or(DEFAULT_LIMIT),
@@ -81,7 +76,7 @@ fn show_in(
         if !seen.insert(arg.as_str()) {
             continue;
         }
-        let built = match resolve(corpus, cwd, store, arg)? {
+        let built = match resolve(corpus, cwd, store, arg) {
             Outcome::Found(target) => section_for(corpus, &target, &options),
             Outcome::Elsewhere(other) => elsewhere_section(&other, &options),
             Outcome::NotFound => {
@@ -101,17 +96,17 @@ fn show_in(
     let failed = !misses.is_empty();
     if request.json {
         let stdout = render::json::document(&sections, &misses);
-        return Ok(Report {
+        return Report {
             stdout,
             stderr: String::new(),
             failed,
-        });
+        };
     }
-    Ok(Report {
+    Report {
         stdout: render::text::sections(&sections),
         stderr: render::text::misses(&misses),
         failed,
-    })
+    }
 }
 
 /// The section of an entry in another root: built from that root's own corpus, and labelled by its absolute path, which
@@ -328,15 +323,15 @@ mod tests {
             // Running as root reads any file, so there is nothing to check.
             return;
         }
-        let corpus = Corpus::load(root, None).expect("the layer loads");
+        let corpus = Corpus::load(root, None);
         let request = |json: bool| Request {
             refs: vec!["README.md".to_string(), "notes.md".to_string()],
             up: None,
             limit: None,
             json,
         };
-        let text = show_in(&corpus, root, None, &request(false)).expect("show runs");
-        let json = show_in(&corpus, root, None, &request(true)).expect("show runs");
+        let text = show_in(&corpus, root, None, &request(false));
+        let json = show_in(&corpus, root, None, &request(true));
         fs::set_permissions(root.join("README.md"), fs::Permissions::from_mode(0o644))
             .expect("restored");
         assert!(text.failed);

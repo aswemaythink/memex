@@ -6,7 +6,6 @@ use std::fs;
 use std::path::{Component, Path, PathBuf};
 
 use crate::corpus::{self, Corpus, Kind};
-use crate::error::Error;
 use crate::root::slash;
 use crate::walk::rel_string;
 
@@ -26,14 +25,10 @@ pub struct Elsewhere {
 }
 
 /// An absolute path (design §3.1, step 1). A path that names no entry on the file system is not found.
-pub fn absolute<'a>(
-    corpus: &'a Corpus,
-    store: Option<&Path>,
-    arg: &str,
-) -> Result<Outcome<'a>, Error> {
+pub fn absolute<'a>(corpus: &'a Corpus, store: Option<&Path>, arg: &str) -> Outcome<'a> {
     match exact(Path::new(""), Path::new(arg)) {
         Some(full) => place(corpus, store, &full),
-        None => Ok(Outcome::NotFound),
+        None => Outcome::NotFound,
     }
 }
 
@@ -44,11 +39,8 @@ pub fn relative<'a>(
     cwd: &Path,
     store: Option<&Path>,
     arg: &str,
-) -> Result<Option<Outcome<'a>>, Error> {
-    match exact(cwd, Path::new(arg)) {
-        Some(full) => place(corpus, store, &full).map(Some),
-        None => Ok(None),
-    }
+) -> Option<Outcome<'a>> {
+    exact(cwd, Path::new(arg)).map(|full| place(corpus, store, &full))
 }
 
 /// The canonical path that `arg` names from `base`, when each part of `arg` is spelled the way its folder lists it, so that
@@ -83,9 +75,9 @@ fn listed(dir: &Path, name: &OsStr) -> bool {
 }
 
 /// The outcome for a canonical path: an entry of the current root when it lies inside it, else an entry of its own root.
-fn place<'a>(corpus: &'a Corpus, store: Option<&Path>, full: &Path) -> Result<Outcome<'a>, Error> {
+fn place<'a>(corpus: &'a Corpus, store: Option<&Path>, full: &Path) -> Outcome<'a> {
     match full.strip_prefix(&corpus.root).ok().and_then(rel_string) {
-        Some(rel) => Ok(found_path(corpus, rel)),
+        Some(rel) => found_path(corpus, rel),
         None => elsewhere(full, store),
     }
 }
@@ -94,7 +86,7 @@ fn place<'a>(corpus: &'a Corpus, store: Option<&Path>, full: &Path) -> Result<Ou
 /// §4.1 finds it for `show`, and it is read with the same log store. With no `.memex/` or git above the path, that root is the
 /// folder itself, or the file's parent, so the walk never climbs to the enclosing tree (REF-WT-04). A path that root's walk
 /// does not hold is not found.
-fn elsewhere<'a>(full: &Path, store: Option<&Path>) -> Result<Outcome<'a>, Error> {
+fn elsewhere<'a>(full: &Path, store: Option<&Path>) -> Outcome<'a> {
     let start = if full.is_dir() {
         full
     } else {
@@ -102,10 +94,10 @@ fn elsewhere<'a>(full: &Path, store: Option<&Path>) -> Result<Outcome<'a>, Error
     };
     let root = corpus::root_of(start);
     let Some(rel) = full.strip_prefix(&root).ok().and_then(rel_string) else {
-        return Ok(Outcome::NotFound);
+        return Outcome::NotFound;
     };
-    let corpus = Corpus::load(&root, store)?;
-    Ok(match corpus.kind(&rel) {
+    let corpus = Corpus::load(&root, store);
+    match corpus.kind(&rel) {
         Some(kind) => Outcome::Elsewhere(Box::new(Elsewhere {
             corpus,
             rel,
@@ -113,5 +105,5 @@ fn elsewhere<'a>(full: &Path, store: Option<&Path>) -> Result<Outcome<'a>, Error
             label: slash(full),
         })),
         None => Outcome::NotFound,
-    })
+    }
 }

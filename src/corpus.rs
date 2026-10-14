@@ -95,19 +95,19 @@ pub struct Corpus {
 
 impl Corpus {
     /// Reads the intent layer under `root` and, when there is a store, the logs in it. A missing store has no logs.
-    pub fn load(root: &Path, store: Option<&Path>) -> Result<Corpus, Error> {
-        let mut corpus = Corpus::intent(root)?;
-        corpus.finish(store)?;
-        Ok(corpus)
+    pub fn load(root: &Path, store: Option<&Path>) -> Corpus {
+        let mut corpus = Corpus::intent(root);
+        corpus.finish(store);
+        corpus
     }
 
     /// Like `load`, with the store found by `find_store`, which runs on its own thread while the intent layer is read, since
-    /// finding the store may run git. Returns the store too. An error in finding the store is reported before a read error.
+    /// finding the store may run git. Returns the store too, or the error in finding it.
     pub fn load_finding<F>(root: &Path, find_store: F) -> Result<(Corpus, Option<PathBuf>), Error>
     where
         F: FnOnce() -> Result<Option<PathBuf>, Error> + Send,
     {
-        let (intent, store) = thread::scope(|scope| {
+        let (mut corpus, store) = thread::scope(|scope| {
             let finder = scope.spawn(find_store);
             let intent = Corpus::intent(root);
             let store = finder
@@ -116,8 +116,7 @@ impl Corpus {
             (intent, store)
         });
         let store = store?;
-        let mut corpus = intent?;
-        corpus.finish(store.as_deref())?;
+        corpus.finish(store.as_deref());
         Ok((corpus, store))
     }
 
@@ -125,7 +124,7 @@ impl Corpus {
     /// their counts and warnings for `info` and `search`. The files are read on several threads, and their docs are added in the
     /// walk's order. A file that cannot be read is skipped with its warning, and
     /// the rest of the layer loads (design §4.2).
-    fn intent(root: &Path) -> Result<Corpus, Error> {
+    fn intent(root: &Path) -> Corpus {
         let mut corpus = Corpus {
             root: root.to_path_buf(),
             docs: BTreeMap::new(),
@@ -162,11 +161,11 @@ impl Corpus {
         for loaded in &corpus.manifests {
             error::warn(&loaded.warnings);
         }
-        Ok(corpus)
+        corpus
     }
 
     /// Adds the logs of the store, when there is one. The folder index and the citations wait until they are asked for.
-    fn finish(&mut self, store: Option<&Path>) -> Result<(), Error> {
+    fn finish(&mut self, store: Option<&Path>) {
         if let Some(store) = store {
             let before = self.read_warnings.len();
             let logs = load_logs(store, &mut self.read_warnings);
@@ -176,7 +175,6 @@ impl Corpus {
                 self.insert(doc);
             }
         }
-        Ok(())
     }
 
     /// The first doc with this label, which titles and text are read from. `labelled` gives every doc with it.
