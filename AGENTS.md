@@ -49,3 +49,10 @@ Golden policy (PLAN.md §2, Bless):
 - No `#[allow]` or `#[expect]` in src/: fix the code instead. tests/ may use `#[allow(dead_code)]` only.
 - Portable by construction: paths in labels and JSON go through one `/` normaliser, special names are matched against directory listings (never `exists()`), `cfg` code has both arms, and `cargo clippy --all-targets --locked --target x86_64-pc-windows-msvc -- -D warnings` is part of every done check.
 - CI enforces all of it: clippy with `-D warnings` (lints in Cargo.toml, thresholds in clippy.toml) and `tests/quality.rs`.
+
+### Parallel slices (lessons from the 2026-10-14 build)
+
+- Shared files belong to the orchestrator, not to parallel slices: `tests/cases/README.md` (the hub), `src/README.md`, `src/lib.rs` dispatch lines, and any family README or CASES.md that another running slice also touches. A brief names which of these, if any, the slice may edit.
+- A slice that adds cases to a family another slice is also extending adds them under its own new `## TOPIC` heading, never inside an existing topic.
+- Read-path slices (corpus, walk, index, cite, resolve, any verb) carry a timing budget in DONE: release `memex info` and `memex search <word>` in /Users/ryn/Developer/reference-ui (read-only) under 120 ms and 160 ms.
+- Rulings made where design.md was silent are listed in PLAN.md §13 as well as committed to design.md, so the user can review them in one place.

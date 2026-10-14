@@ -460,3 +460,19 @@ Open, for the S5.4 whole-crate refiner:
 - INFO-CAP-02: a unit test in src/render/info.rs.
 - tests/cases/cli/README.md: CLI-EXIT-04 is live.
 - Deferred, needs a design decision: out-of-root `show` sections print `(none)` for cites and cited by.
+
+## 13. Rulings to review (made where design.md was silent)
+Each line is a design.md commit since S0.1; `git show <hash> -- design.md` shows the exact wording. Rulings made from here on are added to this list.
+- `f289152` design: §3.4 punctuation; PLAN: Phase 0 tracked
+- `bebab8b` design: portability rulings from the cross-platform audit
+- `b1ff12e` design: `.` is always the root; children omit the folder's README
+- `c64e6a3` design: markup prologues are pragmas; license block ends at a blank line
+- `a64bab3` design: limits hint only when a list is cut; PLAN tracking
+- `47ba8f8` design: init ignores npx's node_modules\/.bin shim when checking PATH
+- `fe186e8` S5.1: PORT cases; CRLF text reads as LF (cherry-picked df1ace5)
+- `cb6e671` design: break-it rulings (S5.2)
+- `6429cac` design: lone CR in a frontmatter value exits 2; PLAN backlog
+- `e4a1323` design: repeated refs print once; a requested unreadable file is an io error
+- `ebbe4a0` design: settle the S5.4 audit's case/design contradictions (C1-C8)
+- `7829dd3` design: one fence definition everywhere; PLAN S5.4 done
+- `1e58663` design: fence closer rule, as fence.rs implements it
