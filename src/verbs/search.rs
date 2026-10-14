@@ -1,13 +1,15 @@
 //! Carries out `memex search` (design §3.2 and §3.6): filters, then ranks, lists or rosters docs.
-//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-IN-01, SRCH-IN-02, SRCH-RANK-03, SRCH-TOKEN-03, SRCH-JSON-01, SRCH-JSON-02, SRCH-LINE-01, SRCH-JSON-03, SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01, SRCH-ORPHAN-02, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-IN-03, SRCH-IN-04, SRCH-IN-05, SRCH-IN-06, SRCH-TOKEN-04, HDR-CAP-03
+//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-IN-01, SRCH-IN-02, SRCH-RANK-03, SRCH-TOKEN-03, SRCH-JSON-01, SRCH-JSON-02, SRCH-LINE-01, SRCH-JSON-03, SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01, SRCH-ORPHAN-02, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-IN-03, SRCH-IN-04, SRCH-IN-05, SRCH-IN-06, SRCH-TOKEN-04, HDR-CAP-03, MAN-LOAD-13
 
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
 use crate::cli::Verb;
 use crate::clock::{self, Timestamp};
+use crate::collections::manifest;
 use crate::corpus::{Corpus, Doc};
 use crate::error::Error;
+use crate::index::bm25;
 use crate::index::filter::{self, time_of, Filter};
 use crate::index::tokenize::query_tokens;
 use crate::index::{Index, Source};
@@ -206,17 +208,31 @@ fn rank_groups<'a>(
         .filter_map(|(name, docs)| {
             let kept: Vec<&'a Doc> = docs.into_iter().filter(|doc| plan.keeps(doc)).collect();
             match plan.mode {
-                Mode::Words => search_group(name, &kept, plan),
+                Mode::Words => search_group(corpus, name, &kept, plan),
                 _ => list_group(corpus, name, kept, plan),
             }
         })
         .collect()
 }
 
+/// The field weights of a group: its manifest's `weights`, or the defaults for a group with no manifest (design §4.2).
+fn weights_of(corpus: &Corpus, name: &str) -> [f64; 3] {
+    manifest::load(&corpus.root, &mut Vec::new())
+        .iter()
+        .find(|found| found.name == name)
+        .map_or(bm25::WEIGHTS, |found| bm25::field_weights(&found.weights))
+}
+
 /// The group of docs that the words rank: its total, and its hits within the limit. None when no doc matches.
-fn search_group<'a>(name: String, docs: &[&'a Doc], plan: &Plan) -> Option<Group<'a>> {
+fn search_group<'a>(
+    corpus: &Corpus,
+    name: String,
+    docs: &[&'a Doc],
+    plan: &Plan,
+) -> Option<Group<'a>> {
+    let weights = weights_of(corpus, &name);
     let sources: Vec<Source> = docs.iter().map(|doc| source_of(doc)).collect();
-    let hits = Index::build(&sources).search(&plan.words);
+    let hits = Index::build(&sources, weights).search(&plan.words);
     let total = hits.len();
     if total == 0 {
         return None;

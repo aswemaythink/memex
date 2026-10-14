@@ -1,0 +1,9 @@
+$ memex search --in cases
+exit 0
+stdout
+| cases  (showing 4 of 4)
+|   cases:ORD-ALPHA-02  The alpha case is declared second in this file.  <-0
+|   cases:ORD-BETA-01  The beta case lives in a folder that is walked after the root.  <-0
+|   cases:ORD-MID-03  The mid case is declared third in this file.  <-0
+|   cases:ORD-ZED-01  The zed case is declared first in this file.  <-0
+stderr (empty)

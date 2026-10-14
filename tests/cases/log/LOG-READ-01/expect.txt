@@ -1,0 +1,45 @@
+$ memex search widget
+exit 0
+stdout
+| logs  (showing 1 of 1)
+|   impl:20261013-115000-widget-one  10m · cook-2  Widget one
+stderr (empty)
+
+$ memex search --in impl
+exit 0
+stdout
+| logs  (showing 1 of 1)
+|   impl:20261013-115000-widget-one  10m · cook-2  Widget one  <-0
+stderr (empty)
+
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent   0 readmes · 0 headers · 0 cases
+| streams  impl 1 (1 new in 24h)
+| use      memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr (empty)
+
+$ memex show impl:.20261013-115500-widget-draft
+exit 1
+stdout (empty)
+stderr
+| memex: not found: impl:.20261013-115500-widget-draft
+== snapshot repo/.memex/logs
+-- impl/.20261013-115500-widget-draft.md
+| ---
+| stream: impl
+| time: 2026-10-13T11:55:00Z
+| agent: cook-2
+| ---
+| # Widget draft
+| The widget draft entry is hidden, because its name starts with a dot.
+-- impl/20261013-115000-widget-one.md
+| ---
+| stream: impl
+| time: 2026-10-13T11:50:00Z
+| agent: cook-2
+| ---
+| # Widget one
+| The widget one entry is visible.

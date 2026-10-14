@@ -1,0 +1,1 @@
+{"steps": [{"args": ["search", "widget"]}, {"args": ["show", "impl:20261009-110000-widget-old"]}, {"args": ["info"]}], "snapshot": ["repo/.memex/logs"]}

@@ -26,6 +26,8 @@
   design §4.2 Kinds column (`at` applies to json only) and Invalid manifests. Run: memex show notes:alpha.
 - `MAN-LOAD-12` A json manifest with no `id` gives a warning and is skipped, so its ref is not found, exit 1.
   design §4.2 `id` (json: entry field, required). Run: memex show rows:one.
+- `MAN-LOAD-13` A manifest's `weights` raise its fields' ranking, so with `title` at 12 a doc whose title holds the word ranks above a body-only match that ranks first under the default weights.
+  design §4.2 `weights` (a per-field ranking boost, with the defaults id 4, title 3, body 1). Run: memex search meridian --in plain, then memex search meridian --in raised.
 
 ## MD
 

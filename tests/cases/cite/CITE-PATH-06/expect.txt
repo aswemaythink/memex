@@ -1,0 +1,38 @@
+$ memex show README.md
+exit 0
+stdout
+| === README.md ===
+| # Demo
+| 
+| Build the tool with Makefile, then run it.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show Makefile
+exit 0
+stdout
+| === Makefile ===
+| Build rules for the demo.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| Build the tool with Makefile, then run it.
+stderr (empty)

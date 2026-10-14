@@ -1,0 +1,210 @@
+$ memex show slash
+exit 0
+stdout
+| === slash ===
+| (no README)
+| 
+| children
+|   sample.c  Header for c.
+|   sample.cc  Header for cc.
+|   sample.cjs  Header for cjs.
+|   sample.cpp  Header for cpp.
+|   sample.cs  Header for cs.
+|   sample.css  Header for css.
+|   sample.cts  Header for cts.
+|   sample.dart  Header for dart.
+|   sample.go  Header for go.
+|   sample.groovy  Header for groovy.
+|   sample.h  Header for h.
+|   sample.hpp  Header for hpp.
+|   sample.java  Header for java.
+|   sample.js  Header for js.
+|   sample.jsx  Header for jsx.
+|   sample.kt  Header for kt.
+|   sample.kts  Header for kts.
+|   sample.less  Header for less.
+|   sample.mjs  Header for mjs.
+|   sample.mts  Header for mts.
+|   sample.php  Header for php.
+|   sample.proto  Header for proto.
+|   sample.rs  Header for rs.
+|   sample.scala  Header for scala.
+|   sample.scss  Header for scss.
+|   sample.swift  Header for swift.
+|   sample.ts  Header for ts.
+|   sample.tsx  Header for tsx.
+|   sample.zig  Header for zig.
+|   showing 29 of 29
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show hash
+exit 0
+stdout
+| === hash ===
+| (no README)
+| 
+| children
+|   Dockerfile  Header for Dockerfile.
+|   Makefile  Header for Makefile.
+|   sample.bash  Header for bash.
+|   sample.cmake  Header for cmake.
+|   sample.ex  Header for ex.
+|   sample.exs  Header for exs.
+|   sample.fish  Header for fish.
+|   sample.jl  Header for jl.
+|   sample.mk  Header for mk.
+|   sample.nix  Header for nix.
+|   sample.pl  Header for pl.
+|   sample.ps1  Header for ps1.
+|   sample.py  Header for py.
+|   sample.r  Header for r.
+|   sample.rb  Header for rb.
+|   sample.sh  Header for sh.
+|   sample.tf  Header for tf.
+|   sample.toml  Header for toml.
+|   sample.yaml  Header for yaml.
+|   sample.yml  Header for yml.
+|   sample.zsh  Header for zsh.
+|   showing 21 of 21
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show dash
+exit 0
+stdout
+| === dash ===
+| (no README)
+| 
+| children
+|   sample.ada  Header for ada.
+|   sample.elm  Header for elm.
+|   sample.hs  Header for hs.
+|   sample.lua  Header for lua.
+|   sample.sql  Header for sql.
+|   showing 5 of 5
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show semi
+exit 0
+stdout
+| === semi ===
+| (no README)
+| 
+| children
+|   sample.asm  Header for asm.
+|   sample.clj  Header for clj.
+|   sample.cljs  Header for cljs.
+|   sample.el  Header for el.
+|   sample.lisp  Header for lisp.
+|   sample.scm  Header for scm.
+|   showing 6 of 6
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show percent
+exit 0
+stdout
+| === percent ===
+| (no README)
+| 
+| children
+|   sample.erl  Header for erl.
+|   sample.hrl  Header for hrl.
+|   sample.m  Header for m.
+|   sample.tex  Header for tex.
+|   showing 4 of 4
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show markup
+exit 0
+stdout
+| === markup ===
+| (no README)
+| 
+| children
+|   sample.html  Header for html.
+|   sample.svelte  Header for svelte.
+|   sample.vue  Header for vue.
+|   sample.xml  Header for xml.
+|   showing 4 of 4
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show paren
+exit 0
+stdout
+| === paren ===
+| (no README)
+| 
+| children
+|   sample.ml  Header for ml.
+|   sample.mli  Header for mli.
+|   showing 2 of 2
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)

@@ -1,5 +1,5 @@
 //! Builds the citation index once per load (design §2.3): each doc's cites and the backlinks they give.
-//! Cases: CITE-BARE-01, CITE-BARE-02, CITE-BARE-03, CITE-PREFIX-01, CITE-PREFIX-02, CITE-COLL-01, CITE-COLL-02, CITE-COLL-03, CITE-COLL-04, CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-04, CITE-PATH-05, CITE-LINK-01, CITE-LINK-02, CITE-LINK-03, CITE-UNRES-01, CITE-FOLDER-01, CITE-FOLDER-02, CITE-FENCE-01, CITE-SELF-01, CITE-BACK-01, CITE-BACK-02, CITE-BACK-03, CITE-BACK-04, SRCH-ORPHAN-01, SRCH-ORPHAN-02
+//! Cases: CITE-BARE-01, CITE-BARE-02, CITE-BARE-03, CITE-PREFIX-01, CITE-PREFIX-02, CITE-COLL-01, CITE-COLL-02, CITE-COLL-03, CITE-COLL-04, CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-04, CITE-PATH-05, CITE-PATH-06, CITE-LINK-01, CITE-LINK-02, CITE-LINK-03, CITE-LINK-05, CITE-MAN-01, CITE-UNRES-01, CITE-FOLDER-01, CITE-FOLDER-02, CITE-FENCE-01, CITE-SELF-01, CITE-BACK-01, CITE-BACK-02, CITE-BACK-03, CITE-BACK-04, CITE-BACK-05, SRCH-ORPHAN-01, SRCH-ORPHAN-02
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -21,6 +21,8 @@ pub struct Index {
     cites: BTreeMap<String, Vec<Cite>>,
     /// The docs that cite each target, by the target's label, sorted by the citing doc's label.
     citers: BTreeMap<String, Vec<Citer>>,
+    /// The label of each manifest doc, by its path: a link to that path cites the doc, not the bare path.
+    manifest: BTreeMap<String, String>,
 }
 
 /// The names that a scan resolves against: the bare-citable ids that docs declare, and the collections that exist.
@@ -29,6 +31,8 @@ struct Names {
     declared: BTreeMap<String, Vec<String>>,
     /// The collection names that a `collection:id` label may use.
     collections: BTreeSet<String>,
+    /// The label of each manifest doc, by its path, as `Index::manifest` holds it.
+    manifest: BTreeMap<String, String>,
 }
 
 /// What a token points at.
@@ -57,7 +61,10 @@ impl Index {
     pub fn build(corpus: &Corpus) -> Index {
         let docs: Vec<&Doc> = corpus.all_docs().collect();
         let names = Names::of(&docs);
-        let mut index = Index::default();
+        let mut index = Index {
+            manifest: names.manifest.clone(),
+            ..Index::default()
+        };
         for doc in docs {
             let hits = hits_of(corpus, doc, &names);
             index.record(corpus, doc, hits);
@@ -77,6 +84,12 @@ impl Index {
     /// `<-N` counts the entries with no prefix, since prefix citations are not counted there (design §2.3).
     pub fn cited_by(&self, label: &str) -> &[Citer] {
         self.citers.get(label).map_or(&[], Vec::as_slice)
+    }
+
+    /// The label of the manifest doc at this root-relative path, when one holds it. Its citations and backlinks are keyed by
+    /// that label, so `show <path>` reads them under it (design §2.3).
+    pub fn manifest_label(&self, rel: &str) -> Option<&str> {
+        self.manifest.get(rel).map(String::as_str)
     }
 
     /// The number of docs that cite a target directly: `cited_by` without its prefix citations, which is the `<-N` of a roster
@@ -110,10 +123,17 @@ impl Index {
 }
 
 impl Names {
-    /// The names of a scan: the ids that the docs declare with the case-id grammar, and the collections they belong to.
+    /// The names of a scan: the ids that the docs declare with the case-id grammar, the collections they belong to, and the
+    /// manifest docs by path.
     fn of(docs: &[&Doc]) -> Names {
         let mut declared: BTreeMap<String, Vec<String>> = BTreeMap::new();
         let mut collections: BTreeSet<String> = RESERVED.into_iter().map(str::to_string).collect();
+        let intent: BTreeSet<String> = docs
+            .iter()
+            .filter(|doc| INTENT.contains(&doc.collection.as_str()))
+            .filter_map(|doc| doc.path.clone())
+            .collect();
+        let mut manifest: BTreeMap<String, String> = BTreeMap::new();
         for doc in docs {
             collections.insert(doc.collection.clone());
             if tokens::is_case_id(&doc.id) {
@@ -122,11 +142,24 @@ impl Names {
                     .or_default()
                     .push(doc.label.clone());
             }
+            if let Some(path) = manifest_path(doc, &intent) {
+                manifest.entry(path).or_insert_with(|| doc.label.clone());
+            }
         }
         Names {
             declared,
             collections,
+            manifest,
         }
+    }
+
+    /// The label that a walked entry at `rel` is cited by: the `collection:id` of the manifest doc at that path, else the path
+    /// itself (design §2.3, §3.1).
+    fn label_at(&self, rel: &str) -> String {
+        self.manifest
+            .get(rel)
+            .cloned()
+            .unwrap_or_else(|| label_of(rel))
     }
 
     /// The labels of every declared id that starts with `prefix`, in id order.
@@ -158,7 +191,7 @@ fn hits_of(corpus: &Corpus, doc: &Doc, names: &Names) -> Vec<Hit> {
 fn token_hits(corpus: &Corpus, base: &str, names: &Names, token: Token, hits: &mut Vec<Hit>) {
     match token {
         Token::Link(raw) => match paths::locate(corpus, base, &raw) {
-            Named::Found(rel) => hits.push(Hit::Target(label_of(&rel))),
+            Named::Found(rel) => hits.push(Hit::Target(names.label_at(&rel))),
             Named::Missing => hits.push(Hit::Unresolved(raw)),
             Named::Escape => {}
         },
@@ -211,9 +244,17 @@ fn word_hits(corpus: &Corpus, base: &str, names: &Names, word: &str, hits: &mut 
         hits.extend(labels.iter().cloned().map(Hit::Target));
     } else if paths::is_path_token(word) {
         if let Named::Found(rel) = paths::locate(corpus, base, word) {
-            hits.push(Hit::Target(label_of(&rel)));
+            hits.push(Hit::Target(names.label_at(&rel)));
         }
     }
+}
+
+/// The path of a manifest doc: a doc of a collection that is not an intent collection, with a file that no intent doc holds. Its
+/// path is the file that a link or a path token names, so the link cites the doc (design §2.3).
+fn manifest_path(doc: &Doc, intent: &BTreeSet<String>) -> Option<String> {
+    let path = doc.path.as_ref()?;
+    let manifest = !INTENT.contains(&doc.collection.as_str());
+    (manifest && !intent.contains(path)).then(|| path.clone())
 }
 
 /// The folder that a doc's path tokens resolve from first: the folder of its file for an intent doc, and the root for any
@@ -279,5 +320,33 @@ fn add_citer(list: &mut Vec<Citer>, doc: &Doc, via: Option<String>) {
             title: doc.title.clone(),
             via,
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A doc with a path, as the names of a scan read it.
+    fn doc(label: &str, collection: &str, path: &str) -> Doc {
+        Doc {
+            label: label.to_string(),
+            collection: collection.to_string(),
+            id: label.rsplit(':').next().unwrap_or(label).to_string(),
+            path: Some(path.to_string()),
+            title: String::new(),
+            text: String::new(),
+            fields: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn a_manifest_doc_is_labelled_at_its_path_unless_an_intent_doc_holds_that_path() {
+        let readme = doc("README.md", "readmes", "README.md");
+        let copy = doc("docs:README", "docs", "README.md");
+        let guide = doc("docs:guide", "docs", "guide.md");
+        let names = Names::of(&[&readme, &copy, &guide]);
+        assert_eq!(names.label_at("guide.md"), "docs:guide");
+        assert_eq!(names.label_at("README.md"), "README.md");
     }
 }

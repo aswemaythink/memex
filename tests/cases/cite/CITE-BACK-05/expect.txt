@@ -1,0 +1,39 @@
+$ memex show impl:20261013-115000-first-finding
+exit 0
+stdout
+| === impl:20261013-115000-first-finding ===
+| # First finding
+| The first finding stands alone.
+| 
+| fields
+|   stream: impl
+|   time: 2026-10-13T11:50:00Z
+|   agent: cook-2
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   review:20261013-115500-second-finding  Second finding
+|   showing 1 of 1
+stderr (empty)
+
+$ memex show review:20261013-115500-second-finding
+exit 0
+stdout
+| === review:20261013-115500-second-finding ===
+| # Second finding
+| It builds on impl:20261013-115000-first-finding.
+| 
+| fields
+|   stream: review
+|   time: 2026-10-13T11:55:00Z
+|   agent: cook-3
+| 
+| cites
+|   impl:20261013-115000-first-finding  First finding
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

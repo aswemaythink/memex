@@ -1,5 +1,5 @@
 //! The in-memory BM25F index of one group of docs, with stems, prefixes and one-edit matches.
-//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02
+//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, MAN-LOAD-13
 
 pub mod bm25;
 pub mod filter;
@@ -48,14 +48,15 @@ pub struct Hit {
     pub fuzzy: Vec<String>,
 }
 
-/// The index of one group: the labels, the normalisers of each doc's fields, the postings of each term, and the plain terms of
-/// each stem.
+/// The index of one group: the labels, the normalisers of each doc's fields, the postings of each term, the plain terms of
+/// each stem, and the field weights that the group ranks with.
 pub struct Index {
     labels: Vec<String>,
     norms: Vec<[f64; 3]>,
     vocab: BTreeMap<String, Vec<Posting>>,
     stems: BTreeMap<String, Vec<String>>,
     stemmer: Stemmer,
+    weights: [f64; 3],
 }
 
 /// A doc that has a term, with the term's count in each field.
@@ -91,8 +92,9 @@ impl Totals {
 }
 
 impl Index {
-    /// Indexes the sources in order. Each doc's tokens are counted per field, and the field lengths give the normalisers.
-    pub fn build(sources: &[Source]) -> Index {
+    /// Indexes the sources in order. Each doc's tokens are counted per field, and the field lengths give the normalisers. The
+    /// group ranks with `weights`, the field weights of its manifest or the defaults (design §4.2).
+    pub fn build(sources: &[Source], weights: [f64; 3]) -> Index {
         let stemmer = Stemmer::create(Algorithm::English);
         let mut vocab: BTreeMap<String, Vec<Posting>> = BTreeMap::new();
         let mut lengths = Vec::with_capacity(sources.len());
@@ -108,6 +110,7 @@ impl Index {
             stems: stem_map(&vocab, &stemmer),
             vocab,
             stemmer,
+            weights,
         }
     }
 
@@ -160,7 +163,7 @@ impl Index {
                 continue;
             }
             known.tier = Some(tier);
-            known.weight += bm25::weight(posting.tf, self.norms[posting.doc]);
+            known.weight += bm25::weight(posting.tf, self.norms[posting.doc], self.weights);
             if tier == FUZZY {
                 known.fuzzy.push(term.to_string());
             }

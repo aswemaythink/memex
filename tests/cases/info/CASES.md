@@ -97,3 +97,6 @@
 
 - `INFO-NOW-01` An invalid `$MEMEX_NOW` exits 3 for info, with `invalid MEMEX_NOW:` and the value on stderr and nothing on stdout.
   Scenario: a root with a `.memex/`, run with MEMEX_NOW as `2026-10-13 12:00:00` (no `T` and no `Z`), then as `not-a-date`, both exit 3; then with the default value, which exits 0. design §3.6 Determinism: an invalid value exits 3, and `$MEMEX_NOW` replaces the clock.
+## NOTEXT
+- `INFO-NOTEXT-01` `info` prints no log title or body text: its text and its `--json` hold names, counts and times, and never the words of a log.
+  Scenario: a `quokka` log and a `zebra` log, each with its words in its title and its body; neither word appears in the text or the JSON output. design §3.5 (the atlas gives where things are, never their contents).

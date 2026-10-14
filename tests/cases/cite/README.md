@@ -14,4 +14,5 @@ Each case folder carries a small intent layer as its fixture: a root README, a `
 - A `collection:id` label resolves as `show` resolves a label (design §3.1). `readmes:` and `headers:` name a doc by its path, and `logs:` names the entry of every stream that holds the id. A label that names several docs cites each of them.
 - A path token that names nothing is silent. Only explicit refs (markdown links and known `collection:id`) can be unresolved (design §2.3).
 - A markdown link that climbs above the root is not a citation at all.
+- A link or path token that names a markdown manifest doc's file cites the doc by its `collection:id` label, as CITE-MAN-01 pins, since that doc is the one a reader is sent to. A file that an intent doc holds, such as a README that a manifest also covers, keeps its path label, so its citers do not move.
 - An entry of another root (an absolute path, or a path that climbs out of the cwd's root, as S3.2 resolves them) prints `(none)` for cites and for cited by. Its citations name labels of that root, which do not round-trip from the cwd (design §3.1), so printing them needs absolute refs first.

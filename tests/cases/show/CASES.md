@@ -52,6 +52,8 @@
   design §3.3 Limits: the children list uses --limit and always prints the limits line. Run: memex show src --limit 1.
 - `SHOW-LIMIT-02` `--limit 0` lists no children and still prints `showing 0 of 3 (--limit 3 for all)`, with no `(none)` line because the folder is not empty, exit 0.
   design §3.3 Limits: the limits line always prints. Run: memex show src --limit 0.
+- `SHOW-LIMIT-03` A folder with 51 children lists the first 50 and prints `showing 50 of 51 (--limit 51 for all)`, exit 0.
+  design §3.3 Limits: the children list uses --limit, default 50, and adds the hint only when it is cut. Run: memex show many.
 
 ## SEP
 

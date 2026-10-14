@@ -121,7 +121,9 @@ fn normalize(base: &str, arg: &str) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::normalize;
+    use super::{normalize, resolve, Outcome, Target};
+    use crate::corpus::Corpus;
+    use std::fs;
 
     #[test]
     fn dots_and_parents_stay_inside_the_root() {
@@ -132,5 +134,30 @@ mod tests {
         assert_eq!(normalize("", "./a/./b/"), Some("a/b".to_string()));
         assert_eq!(normalize("", "../x"), None);
         assert_eq!(normalize("a", "../../x"), None);
+    }
+
+    /// Pins REF-ABS-02 by a unit test: a case cannot name the sandbox's absolute path, so the path is built here.
+    #[test]
+    fn an_absolute_path_inside_the_root_names_its_root_relative_entry() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let root = dunce::canonicalize(dir.path()).expect("a canonical root");
+        fs::create_dir_all(root.join(".memex")).expect("the store folder");
+        fs::create_dir_all(root.join("src")).expect("the src folder");
+        fs::write(
+            root.join("src").join("cli.rs"),
+            "//! Parses the arguments.\n",
+        )
+        .expect("the file");
+        let corpus = Corpus::load(&root, None).expect("the corpus loads");
+        let arg = root
+            .join("src")
+            .join("cli.rs")
+            .to_string_lossy()
+            .into_owned();
+        let Ok(Outcome::Found(Target::Path { rel, .. })) = resolve(&corpus, &root, None, &arg)
+        else {
+            panic!("an absolute path to a walked file is found");
+        };
+        assert_eq!(rel, "src/cli.rs");
     }
 }

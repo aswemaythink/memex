@@ -87,3 +87,5 @@ The ref family pins design §3.1: how a ref becomes the file, folder or doc it n
 
 - `REF-TRIP-01` The label that show prints for a log entry, impl:ID, fed back to show, names the same entry as the bare id did, exit 0.
   Scenario: show 20261013-120000-show-walks-hub-readmes, then show impl:20261013-120000-show-walks-hub-readmes. design §3.1 labels round-trip.
+- `REF-TRIP-02` Each label that show prints for a folder, a file, a case, a collection doc and a log is accepted back by show, and names the same entry.
+  Scenario: show ./src/, then show src; show ./src/cli.rs, then show src/cli.rs; show TRIP-ONE-01, then cases:TRIP-ONE-01; show alpha, then notes:alpha; show a bare log id, then its impl label. design §3.1 labels round-trip.

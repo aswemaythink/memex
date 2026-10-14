@@ -39,6 +39,8 @@
   design §2.3: trailing .,:;) is stripped. Run: memex show src/README.md.
 - `CITE-PATH-05` A path that climbs above the root, or names no walked file, is neither a cite nor unresolved.
   design §2.3: a `..` that leaves the root is not a citation, and bare tokens never print as unresolved. Run: memex show README.md.
+- `CITE-PATH-06` A bare `Makefile` token in a README cites nothing, since a path token needs a `/` or a `.ext`, so the README's cites and the Makefile's cited by both say `(none)`.
+  design §2.3 path token: a maximal run that contains `/` or a `.ext`. Run: memex show README.md, then memex show Makefile.
 
 ## LINK
 
@@ -50,6 +52,13 @@
   design §2.3: a link that resolves to nothing is listed as unresolved. Run: memex show README.md.
 - `CITE-LINK-04` A markdown link whose destination is in angle brackets, `[t](<path with spaces.rs>)`, cites the walked file at that path, spaces and all.
   design §2.3 `[text](path)`: a file in the walked set, resolved from the citing doc's folder, then the root. Run: memex show README.md.
+- `CITE-LINK-05` A markdown link in a README outside src/ that names src/cli.rs cites that file, since the README's own folder holds no such path and the link resolves from the root.
+  design §2.3 `[text](path)`: resolved from the citing doc's folder, then the root. Run: memex show docs/README.md, then memex show src/cli.rs.
+
+## MAN
+
+- `CITE-MAN-01` A markdown manifest doc is cited like a file: a link to it lists the linking README under its cited by, and `notes:beta` in a README cites that doc, which lists the README under its cited by.
+  design §2.3 `[text](path)` and `collection:id` with a known collection, and §4.2 markdown manifests. Run: memex show notes:alpha, then memex show README.md, then memex show notes:beta.
 
 ## UNRES
 
@@ -87,8 +96,10 @@
   design §2.3: log docs are scanned; §3.3 Log or collection doc. Run: memex show src/cli.rs, then memex show impl:20261013-120000-x.
 - `CITE-BACK-03` A case that cites another case is a backlink on it, and the citing case's own section shows cited by with no cites block.
   design §2.3 and §3.3 Case. Run: memex show cases:NAME-001, then memex show cases:NAME-002.
-- `CITE-BACK-04` `--limit` cuts the cited by list, and its limits line gives the total only when the list was cut.
-  design §3.3 Limits: the cited-by list uses --limit and prints showing N of M. Run: memex show src/cli.rs --limit 2, then --limit 3.
+- `CITE-BACK-04` `--limit` cuts the cited by list, and its limits line always reads `showing N of M`, adding the `(--limit M for all)` hint only when the list was cut.
+  design §3.3 Limits: the cited-by list uses --limit and always prints showing N of M, with the hint only when N < M. Run: memex show src/cli.rs --limit 2, then --limit 3.
+- `CITE-BACK-05` A log that cites another log is listed under that log's cited by as `stream:id` with its title, and the citing log's cites lists the log it cites.
+  design §2.3 (log docs are scanned for citations) and §3.3 Log or collection doc. Run: memex show impl:20261013-115000-first-finding, then memex show review:20261013-115500-second-finding.
 
 ## JSON
 

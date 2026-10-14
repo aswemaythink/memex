@@ -1,5 +1,7 @@
 //! The BM25F arithmetic of PLAN §4: field weights, length normalisation, idf and saturation.
-//! Cases: SRCH-RANK-01, SRCH-WEIGHT-01
+//! Cases: SRCH-RANK-01, SRCH-WEIGHT-01, MAN-LOAD-13
+
+use std::collections::BTreeMap;
 
 /// The saturation constant k1 (PLAN §4).
 pub const K1: f64 = 1.2;
@@ -7,8 +9,21 @@ pub const K1: f64 = 1.2;
 /// The length normalisation constant b (PLAN §4).
 pub const B: f64 = 0.75;
 
-/// The weight of each field in the order id, title, body (PLAN §4).
+/// The weight of each field in the order id, title, body (PLAN §4): the defaults, which a manifest's `weights` replace.
 pub const WEIGHTS: [f64; 3] = [4.0, 3.0, 1.0];
+
+/// The names of the weighted fields, in the order of `WEIGHTS`: the keys that a manifest's `weights` may give (design §4.2).
+const FIELDS: [&str; 3] = ["id", "title", "body"];
+
+/// The field weights of a group: the weight its manifest gives each of id, title and body, and the default of each that it
+/// leaves out. A key that names no weighted field changes nothing.
+pub fn field_weights(given: &BTreeMap<String, u32>) -> [f64; 3] {
+    std::array::from_fn(|field| {
+        given
+            .get(FIELDS[field])
+            .map_or(WEIGHTS[field], |weight| f64::from(*weight))
+    })
+}
 
 /// The length normaliser of each field of each doc. `lengths` gives every doc's token count per field; the average of each field
 /// is taken over the docs. A field that is empty in every doc has a normaliser of 1, and no term can reach it.
@@ -35,9 +50,9 @@ fn normaliser(len: f64, average: f64) -> f64 {
     }
 }
 
-/// The weighted frequency of a term in one doc: each field's count times its weight and its normaliser, summed.
-pub fn weight(tf: [u32; 3], norm: [f64; 3]) -> f64 {
-    WEIGHTS
+/// The weighted frequency of a term in one doc: each field's count times its group's weight and its normaliser, summed.
+pub fn weight(tf: [u32; 3], norm: [f64; 3], weights: [f64; 3]) -> f64 {
+    weights
         .iter()
         .zip(tf)
         .zip(norm)
@@ -70,6 +85,13 @@ mod tests {
     fn a_longer_doc_has_a_smaller_weight_for_the_same_count() {
         let short = norms(&[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]);
         let long = norms(&[[1.0, 1.0, 9.0], [1.0, 1.0, 1.0]]);
-        assert!(weight([0, 0, 1], long[0]) < weight([0, 0, 1], short[0]));
+        assert!(weight([0, 0, 1], long[0], WEIGHTS) < weight([0, 0, 1], short[0], WEIGHTS));
+    }
+
+    #[test]
+    fn a_manifest_weight_replaces_its_field_default_and_the_rest_keep_theirs() {
+        let given = BTreeMap::from([("title".to_string(), 9), ("status".to_string(), 7)]);
+        assert_eq!(field_weights(&given), [4.0, 9.0, 1.0]);
+        assert_eq!(field_weights(&BTreeMap::new()), WEIGHTS);
     }
 }

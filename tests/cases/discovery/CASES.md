@@ -17,6 +17,8 @@
   design §4.1 item 3: every worktree shares the main checkout's store. Run: memex log impl --json from the linked worktree.
 - `DISC-WT-02` A root nested in a folder of a linked worktree maps to the same folder of the main checkout, so the store is that folder's `.memex/logs/`.
   design §4.1 item 3: the same root path in the main worktree. Run: memex log impl --json from wt/sub.
+- `DISC-WT-03` `keep_logs` comes from the main checkout's `config.json`, so a log written from a linked worktree prunes the main store's entries older than that setting.
+  design §4.1 item 4: the config is the store owner's, the main checkout's for a worktree. Run: memex log impl --json from the linked worktree, with 1d over a 2-day-old and a 1-hour-old entry, then the store snapshot.
 
 ## BARE
 

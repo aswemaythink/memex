@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "slash"]}, {"args": ["show", "hash"]}, {"args": ["show", "dash"]}, {"args": ["show", "semi"]}, {"args": ["show", "percent"]}, {"args": ["show", "markup"]}, {"args": ["show", "paren"]}]}

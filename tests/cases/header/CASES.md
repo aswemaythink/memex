@@ -81,6 +81,8 @@
   design §2.1, the header rule skips the markup prologues `<?xml …?>`, `<!DOCTYPE …>` and `<?php`. Run: memex show feed.xml --up 0, page.html, lower.html and open.php.
 - `HDR-SKIP-07` A license block ends at its first blank line: a blank line inside a `/* */` license ends it, and a header with no blank line after its license is part of that license, so neither file has a header.
   design §2.1, a license block ends at its first blank line, so a header must be separated from it by one. Run: memex show block.rs --up 0, and joined.rs.
+- `HDR-SKIP-08` A `# -*- coding: utf-8 -*-` line before the block is skipped, so the block after it is the header.
+  design §2.1, the header rule skips encoding and pragma lines such as `# -*-`. Run: memex show coded.py --up 0.
 
 ## BLOCK
 
@@ -147,3 +149,6 @@
 
 - `HDR-READ-01` A header file that cannot be read is one stderr warning, and its folder lists it as `(no header)`, while `show .`, `show sub`, `search` and `info` still exit 0.
   design §4.2 (an unreadable header is a warning that is skipped) and §2.1 Header detection. Run: memex show ., memex show sub, memex search demo and memex info, with sub/locked.rs at mode 000.
+## TABLE
+- `HDR-TABLE-01` Every extension in the comment table of design §2.1 reads its header with its own comment syntax, so each folder listing shows one sample's one-liner per extension.
+  design §2.1 table: one sample per extension, one folder per row family; the docstring row is HDR-DOC-01 to HDR-DOC-04. Run: memex show slash, then hash, dash, semi, percent, markup and paren.

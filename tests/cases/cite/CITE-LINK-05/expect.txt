@@ -1,0 +1,41 @@
+$ memex show docs/README.md
+exit 0
+stdout
+| === docs/README.md ===
+| # Docs
+| 
+| The docs point at the parser. Read [the parser](src/cli.rs) first.
+| 
+| cites
+|   src/cli.rs  Parses the arguments.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo.
+stderr (empty)
+
+$ memex show src/cli.rs
+exit 0
+stdout
+| === src/cli.rs ===
+| Parses the arguments.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   docs/README.md  The docs point at the parser.
+|   showing 1 of 1
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo.
+stderr (empty)

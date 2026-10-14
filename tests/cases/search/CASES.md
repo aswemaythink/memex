@@ -52,6 +52,8 @@
   design §3.2 Grouped output. Run: memex search widget, then memex search gizmo.
 - `SRCH-GROUP-02` All log streams form one logs group, and each log line shows its age, agent and branch, leaving out any part that is missing along with its separator.
   design §3.2 Grouped output (logs are one group) and the log line of design §3.2. Run: memex search widget.
+- `SRCH-GROUP-03` Two manifest groups come in name order, so the `alpha` group prints before the `zeta` group, though the zeta doc scores higher.
+  design §3.2 Grouped output (manifest collections, alphabetical). Run: memex search widget.
 
 ## LIMIT
 
@@ -135,6 +137,8 @@
   design §3.2 Roster (filters allowed). Run: memex search --in logs tag:show, then memex search --in logs to:cook-1.
 - `SRCH-ROSTER-04` The `--json` roster gives each hit `score: null` and `cited_by` with its direct count, and `--limit` sets how many hits each group shows.
   design §3.6 search shape (roster hits have score null and cited_by N). Run: memex search --in cases --limit 2 --json.
+- `SRCH-ROSTER-05` The roster of cases is in id order across files, so `ORD-ALPHA-02` lists before `ORD-ZED-01`, which its CASES.md declares first.
+  design §3.2 Roster (everything else by id). Run: memex search --in cases.
 
 ## ORPHAN
 
@@ -153,3 +157,8 @@
   design §3.2 (docs at or after the cutoff pass). Run: memex search since:1d.
 - `SRCH-SINCE-04` A `since:` value that is none of the forms is a usage error: exit 2, with the usage line, and with `--json` a JSON error on stdout.
   design §3.2 Reserved filters (invalid since: is a usage error, exit 2) and design §3.6 exit codes. Run: memex search since:yesterday, then memex search since:2026-02-30 --json.
+
+## AGE
+
+- `SRCH-AGE-01` A log's age prints as `59m` under an hour, `47h` under 48 hours, and `2d` from 48 hours on.
+  design §3.6 Ages (Nm below 60 minutes, Nh below 48 hours, else Nd), with MEMEX_NOW at 2026-10-13T12:00:00Z. Run: memex search ageword, then memex search --in impl.

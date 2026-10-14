@@ -105,7 +105,7 @@
   design §3.6 exit codes. Pinned by the REF family, where a ref does not resolve (design §3.1). Run: memex show nope.rs --json. The envelope is the show document of §3.6, whose errors entry has code not_found, since no verb prints a fatal not_found.
 - `CLI-EXIT-03` `ambiguous` exits 1, and with `--json` prints its envelope on stdout.
   design §3.6 exit codes. Pinned by the REF family, where several refs match (design §3.1). Run: memex show README.md --json with cwd repo/src. The envelope is the show document, whose errors entry has code ambiguous and its candidates.
-- `CLI-EXIT-04` (planned) `no_root` exits 3, and with `--json` prints its envelope on stdout.
-  design §3.6 exit codes. Pinned by the DISC family, where log finds no `.memex/` store (design §4.1).
+- `CLI-EXIT-04` `no_root` exits 3, and with `--json` prints its envelope on stdout.
+  design §3.6 exit codes and §4.1 item 3. Run: memex log impl --json in a git repo with no `.memex/`, the setup of DISC-ROOT-04.
 - `CLI-EXIT-05` `io` exits 3, and names the io::ErrorKind, never the OS text.
   design §3.6 exit codes: 3 for an I/O failure that stops the verb (a show ref that fails on I/O is that ref's error, exit 1, §3.3); PLAN §1 fix 17. Run: memex log impl with .memex/logs a regular file. Pinned by the PORT family, which also pins the JSON form.

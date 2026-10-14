@@ -1,0 +1,23 @@
+$ memex log impl --json  [cwd wt]
+exit 0
+stdout
+| {"ref":"impl:20261013-120000-from-the-worktree","path":"$SANDBOX/repo/.memex/logs/impl/20261013-120000-from-the-worktree.md"}
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20261013-115000-recent-finding.md
+| ---
+| stream: impl
+| time: 2026-10-13T11:50:00Z
+| agent: cook-2
+| ---
+| # Recent finding
+| One hour old, so the 1d keep_logs keeps it.
+-- impl/20261013-120000-from-the-worktree.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| branch: feat
+| worktree: $SANDBOX/wt
+| commit: c422268
+| ---
+| From the worktree

@@ -1,0 +1,57 @@
+$ memex show notes:alpha
+exit 0
+stdout
+| === notes:alpha ===
+| # Alpha note
+| 
+| The first note.
+| 
+| fields
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   README.md  The demo.
+|   showing 1 of 1
+stderr (empty)
+
+$ memex show README.md
+exit 0
+stdout
+| === README.md ===
+| # Demo
+| 
+| The demo. Read [alpha](notes/alpha.md) and notes:beta for the notes.
+| 
+| cites
+|   notes:alpha  Alpha note
+|   notes:beta  Beta note
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show notes:beta
+exit 0
+stdout
+| === notes:beta ===
+| # Beta note
+| 
+| The second note.
+| 
+| fields
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   README.md  The demo.
+|   showing 1 of 1
+stderr (empty)

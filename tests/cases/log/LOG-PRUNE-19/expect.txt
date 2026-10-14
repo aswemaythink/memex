@@ -1,0 +1,53 @@
+$ memex search widget
+exit 0
+stdout
+| logs  (showing 2 of 2)
+|   impl:20261013-115000-widget-new  10m · cook-2  Widget new
+|   impl:20261009-110000-widget-old  4d · cook-2  Widget old
+stderr (empty)
+
+$ memex show impl:20261009-110000-widget-old
+exit 0
+stdout
+| === impl:20261009-110000-widget-old ===
+| # Widget old
+| This entry is older than keep_logs, and reads leave it in place.
+| 
+| fields
+|   stream: impl
+|   time: 2026-10-09T11:00:00Z
+|   agent: cook-2
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent   0 readmes · 0 headers · 0 cases
+| streams  impl 2 (1 new in 24h)
+| use      memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20261009-110000-widget-old.md
+| ---
+| stream: impl
+| time: 2026-10-09T11:00:00Z
+| agent: cook-2
+| ---
+| # Widget old
+| This entry is older than keep_logs, and reads leave it in place.
+-- impl/20261013-115000-widget-new.md
+| ---
+| stream: impl
+| time: 2026-10-13T11:50:00Z
+| agent: cook-2
+| ---
+| # Widget new
+| This entry is inside keep_logs.

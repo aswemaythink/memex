@@ -1,0 +1,185 @@
+$ memex show ./src/ --up 0
+exit 0
+stdout
+| === src ===
+| # src
+| 
+| The source folder.
+| 
+| children
+|   cli.rs  Parses the arguments.
+|   showing 1 of 1
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show src --up 0
+exit 0
+stdout
+| === src ===
+| # src
+| 
+| The source folder.
+| 
+| children
+|   cli.rs  Parses the arguments.
+|   showing 1 of 1
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show ./src/cli.rs --up 0
+exit 0
+stdout
+| === src/cli.rs ===
+| Parses the arguments.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show src/cli.rs --up 0
+exit 0
+stdout
+| === src/cli.rs ===
+| Parses the arguments.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show TRIP-ONE-01
+exit 0
+stdout
+| === cases:TRIP-ONE-01 ===
+| A declared case, labelled by its collection when shown.
+| 
+| group
+|   TRIP
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show cases:TRIP-ONE-01
+exit 0
+stdout
+| === cases:TRIP-ONE-01 ===
+| A declared case, labelled by its collection when shown.
+| 
+| group
+|   TRIP
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show alpha
+exit 0
+stdout
+| === notes:alpha ===
+| # Alpha note
+| 
+| The first note.
+| 
+| fields
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show notes:alpha
+exit 0
+stdout
+| === notes:alpha ===
+| # Alpha note
+| 
+| The first note.
+| 
+| fields
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show 20261013-115000-trip-finding
+exit 0
+stdout
+| === impl:20261013-115000-trip-finding ===
+| # Trip finding
+| A log that the trip round trip reads back.
+| 
+| fields
+|   stream: impl
+|   time: 2026-10-13T11:50:00Z
+|   agent: cook-2
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show impl:20261013-115000-trip-finding
+exit 0
+stdout
+| === impl:20261013-115000-trip-finding ===
+| # Trip finding
+| A log that the trip round trip reads back.
+| 
+| fields
+|   stream: impl
+|   time: 2026-10-13T11:50:00Z
+|   agent: cook-2
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

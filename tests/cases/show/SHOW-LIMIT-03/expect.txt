@@ -1,0 +1,69 @@
+$ memex show many
+exit 0
+stdout
+| === many ===
+| (no README)
+| 
+| children
+|   item-01.txt  (no header)
+|   item-02.txt  (no header)
+|   item-03.txt  (no header)
+|   item-04.txt  (no header)
+|   item-05.txt  (no header)
+|   item-06.txt  (no header)
+|   item-07.txt  (no header)
+|   item-08.txt  (no header)
+|   item-09.txt  (no header)
+|   item-10.txt  (no header)
+|   item-11.txt  (no header)
+|   item-12.txt  (no header)
+|   item-13.txt  (no header)
+|   item-14.txt  (no header)
+|   item-15.txt  (no header)
+|   item-16.txt  (no header)
+|   item-17.txt  (no header)
+|   item-18.txt  (no header)
+|   item-19.txt  (no header)
+|   item-20.txt  (no header)
+|   item-21.txt  (no header)
+|   item-22.txt  (no header)
+|   item-23.txt  (no header)
+|   item-24.txt  (no header)
+|   item-25.txt  (no header)
+|   item-26.txt  (no header)
+|   item-27.txt  (no header)
+|   item-28.txt  (no header)
+|   item-29.txt  (no header)
+|   item-30.txt  (no header)
+|   item-31.txt  (no header)
+|   item-32.txt  (no header)
+|   item-33.txt  (no header)
+|   item-34.txt  (no header)
+|   item-35.txt  (no header)
+|   item-36.txt  (no header)
+|   item-37.txt  (no header)
+|   item-38.txt  (no header)
+|   item-39.txt  (no header)
+|   item-40.txt  (no header)
+|   item-41.txt  (no header)
+|   item-42.txt  (no header)
+|   item-43.txt  (no header)
+|   item-44.txt  (no header)
+|   item-45.txt  (no header)
+|   item-46.txt  (no header)
+|   item-47.txt  (no header)
+|   item-48.txt  (no header)
+|   item-49.txt  (no header)
+|   item-50.txt  (no header)
+|   showing 50 of 51 (--limit 51 for all)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)

@@ -1,0 +1,8 @@
+$ memex search widget
+exit 0
+stdout
+| alpha  (showing 1 of 1)
+|   alpha:alpha-note  Alpha note
+| zeta  (showing 1 of 1)
+|   zeta:zeta-note  Zeta widget
+stderr (empty)

@@ -1,6 +1,6 @@
 //! Carries out `memex show` (design §3.3 and §3.6).
 //! It resolves each ref, builds its section, and reports the sections, the misses and the exit status.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-SECT-01, CASE-JSON-01, REF-WT-01, REF-WT-02, CITE-PREFIX-01, CITE-PREFIX-02, CITE-UNRES-01, CITE-FOLDER-02, CITE-SELF-01, CITE-BACK-01, CITE-BACK-03, CITE-BACK-04, CITE-COLL-02, CITE-JSON-01, CITE-JSON-02, SHOW-ERR-03, SHOW-DUP-01, SHOW-DUP-02
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-SECT-01, CASE-JSON-01, REF-WT-01, REF-WT-02, CITE-PREFIX-01, CITE-PREFIX-02, CITE-UNRES-01, CITE-FOLDER-02, CITE-SELF-01, CITE-BACK-01, CITE-BACK-03, CITE-BACK-04, CITE-MAN-01, CITE-COLL-02, CITE-JSON-01, CITE-JSON-02, SHOW-ERR-03, SHOW-DUP-01, SHOW-DUP-02
 
 use std::collections::BTreeSet;
 use std::fs::File;
@@ -204,6 +204,8 @@ fn file_section(corpus: &Corpus, rel: &str, options: &Options) -> Result<Section
     } else {
         Some(folder)
     };
+    // A manifest doc's citations and backlinks are keyed by its label, not its path (design §2.3).
+    let key = corpus.citations().manifest_label(rel).unwrap_or(rel);
     Ok(Section {
         label: rel.to_string(),
         title: doc.map(|doc| doc.title.clone()),
@@ -216,8 +218,8 @@ fn file_section(corpus: &Corpus, rel: &str, options: &Options) -> Result<Section
         children: None,
         cites: doc
             .map(|doc| cites_of(corpus, &doc.label))
-            .unwrap_or_default(),
-        cited_by: cited_by(corpus, rel, options.limit),
+            .unwrap_or_else(|| cites_of(corpus, key)),
+        cited_by: cited_by(corpus, key, options.limit),
         chain: chain(corpus, start, options),
     })
 }

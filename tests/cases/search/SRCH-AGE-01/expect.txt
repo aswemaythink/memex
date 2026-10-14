@@ -1,0 +1,17 @@
+$ memex search ageword
+exit 0
+stdout
+| logs  (showing 3 of 3)
+|   impl:20261011-130000-ageword-hours  47h · cook-2  Ageword hours
+|   impl:20261013-110100-ageword-minutes  59m · cook-2  Ageword minutes
+|   impl:20261011-120000-ageword-days  2d · cook-2  Ageword days
+stderr (empty)
+
+$ memex search --in impl
+exit 0
+stdout
+| logs  (showing 3 of 3)
+|   impl:20261013-110100-ageword-minutes  59m · cook-2  Ageword minutes  <-0
+|   impl:20261011-130000-ageword-hours  47h · cook-2  Ageword hours  <-0
+|   impl:20261011-120000-ageword-days  2d · cook-2  Ageword days  <-0
+stderr (empty)

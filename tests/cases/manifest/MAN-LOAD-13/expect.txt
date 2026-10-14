@@ -1,0 +1,15 @@
+$ memex search meridian --in plain
+exit 0
+stdout
+| plain  (showing 2 of 2)
+|   plain:body-hit  Harbour log
+|   plain:title-hit  Meridian survey of the long coastal tide-marks and the old harbour walls, with notes on every single pier and breakwate…
+stderr (empty)
+
+$ memex search meridian --in raised
+exit 0
+stdout
+| raised  (showing 2 of 2)
+|   raised:title-hit  Meridian survey of the long coastal tide-marks and the old harbour walls, with notes on every single pier and breakwate…
+|   raised:body-hit  Harbour log
+stderr (empty)
