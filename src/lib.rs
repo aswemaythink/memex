@@ -137,14 +137,29 @@ fn finish_show(result: Result<verbs::show::Report, Error>, json: bool) -> i32 {
     }
 }
 
-/// Writes text to stdout. A failed write exits 3, with the io error named and not its OS text.
+/// Writes text to stdout and returns the exit status. A closed stdout is silent and exits 0 (design §3.6). Any other failed
+/// write exits 3, with the io error named and not its OS text.
 fn print_out(text: &str) -> i32 {
     let mut out = io::stdout().lock();
-    let written = out.write_all(text.as_bytes());
-    let written = written.and_then(|()| out.flush());
+    match stdout_error(write_text(&mut out, text)) {
+        None => 0,
+        Some(error) => error::report(&error, false),
+    }
+}
+
+/// Writes `text` and flushes it, and the result is the first io error of either step.
+fn write_text(out: &mut impl Write, text: &str) -> io::Result<()> {
+    out.write_all(text.as_bytes())?;
+    out.flush()
+}
+
+/// The error that a stdout write reports, or none. A BrokenPipe means the reader closed stdout early, which is not an error:
+/// memex stops writing and says nothing more.
+fn stdout_error(written: io::Result<()>) -> Option<Error> {
     match written {
-        Ok(()) => 0,
-        Err(failure) => error::report(&Error::io("cannot write to stdout", &failure), false),
+        Ok(()) => None,
+        Err(failure) if failure.kind() == io::ErrorKind::BrokenPipe => None,
+        Err(failure) => Some(Error::io("cannot write to stdout", &failure)),
     }
 }
 
@@ -158,5 +173,45 @@ fn finish_init(now: Timestamp) -> i32 {
     match result {
         Ok(()) => code,
         Err(error) => error::report(&error, false),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A writer whose every call fails with one kind, as a stdout that is closed or refused does.
+    struct Failing(io::ErrorKind);
+
+    impl Write for Failing {
+        fn write(&mut self, _buf: &[u8]) -> io::Result<usize> {
+            Err(io::Error::from(self.0))
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Err(io::Error::from(self.0))
+        }
+    }
+
+    #[test]
+    fn a_closed_stdout_is_not_an_error() {
+        let written = write_text(&mut Failing(io::ErrorKind::BrokenPipe), "text\n");
+        assert!(stdout_error(written).is_none());
+    }
+
+    #[test]
+    fn any_other_stdout_failure_is_named_by_its_kind() {
+        let written = write_text(&mut Failing(io::ErrorKind::PermissionDenied), "text\n");
+        let error = stdout_error(written).expect("a refused write is an error");
+        assert_eq!(error.code, error::Code::Io);
+        assert_eq!(error.message, "cannot write to stdout (PermissionDenied)");
+    }
+
+    #[test]
+    fn a_write_that_succeeds_leaves_its_text_and_no_error() {
+        let mut sink = Vec::new();
+        let written = write_text(&mut sink, "text\n");
+        assert!(stdout_error(written).is_none());
+        assert_eq!(sink, b"text\n");
     }
 }
