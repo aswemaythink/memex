@@ -110,3 +110,8 @@
 
 - `SHOW-OTHER-01` A file in another root, a sibling folder with its own `.memex/`, prints `cites` and `cited by` as `(in another root: run show from <root>)` in place of their lists, with no limits line, and its chain comes from that root; with `--json` its `cites` and `cited_by` are null, exit 0.
   design §3.1 Other worktrees and §3.6 show: cites and cited_by are null for an entry in another root. Run: memex show ../other/src/cli.rs from repo/, then the same with --json.
+
+## ORDER
+
+- `SHOW-ORDER-01` A folder lists its children sorted by name, files and folders together, and no sibling whose name starts with the folder's name leaks in: `show .` lists exactly a, a!, a-b, a.b and a0 in that order, `show a` lists only f.rs and x/, and `show a-b` lists only g.rs, in text and with `--json`, exit 0.
+  design §3.3 Folder: the children are the folder's own entries, with its README.md left out; design §3.6 Determinism: lists are sorted, ties broken by ref. Run: memex show ., memex show a and memex show a-b, each with and without --json.

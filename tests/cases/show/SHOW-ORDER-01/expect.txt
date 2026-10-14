@@ -1,0 +1,97 @@
+$ memex show .
+exit 0
+stdout
+| === . ===
+| # Order
+| 
+| The order fixture for show.
+| 
+| children
+|   a/  The folder a, with one file and one subfolder.
+|   a!/  A sibling of a, named with a bang.
+|   a-b/  A sibling of a, holding one file.
+|   a.b/  A sibling of a, holding one Markdown file.
+|   a0/  A sibling of a, named with a zero.
+|   showing 5 of 5
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show a
+exit 0
+stdout
+| === a ===
+| # a
+| 
+| The folder a, with one file and one subfolder.
+| 
+| children
+|   f.rs  The first file of the a folder.
+|   x/  A subfolder of a, listed after its file.
+|   showing 2 of 2
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Order
+| 
+| The order fixture for show.
+stderr (empty)
+
+$ memex show a-b
+exit 0
+stdout
+| === a-b ===
+| # Dashed
+| 
+| A sibling of a, holding one file.
+| 
+| children
+|   g.rs  A file in a sibling folder, which show a never lists.
+|   showing 1 of 1
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Order
+| 
+| The order fixture for show.
+stderr (empty)
+
+$ memex show . --json
+exit 0
+stdout
+| {"docs":[{"ref":".","collection":null,"id":null,"path":".","title":"The order fixture for show.","fields":{},"text":"# Order\n\nThe order fixture for show.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[],"children":{"total":5,"items":[{"path":"a","kind":"dir","title":"The folder a, with one file and one subfolder."},{"path":"a!","kind":"dir","title":"A sibling of a, named with a bang."},{"path":"a-b","kind":"dir","title":"A sibling of a, holding one file."},{"path":"a.b","kind":"dir","title":"A sibling of a, holding one Markdown file."},{"path":"a0","kind":"dir","title":"A sibling of a, named with a zero."}]}}],"errors":[]}
+stderr (empty)
+
+$ memex show a --json
+exit 0
+stdout
+| {"docs":[{"ref":"a","collection":null,"id":null,"path":"a","title":"The folder a, with one file and one subfolder.","fields":{},"text":"# a\n\nThe folder a, with one file and one subfolder.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[{"path":"README.md","text":"# Order\n\nThe order fixture for show.\n"}],"children":{"total":2,"items":[{"path":"a/f.rs","kind":"file","title":"The first file of the a folder."},{"path":"a/x","kind":"dir","title":"A subfolder of a, listed after its file."}]}}],"errors":[]}
+stderr (empty)
+
+$ memex show a-b --json
+exit 0
+stdout
+| {"docs":[{"ref":"a-b","collection":null,"id":null,"path":"a-b","title":"A sibling of a, holding one file.","fields":{},"text":"# Dashed\n\nA sibling of a, holding one file.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[{"path":"README.md","text":"# Order\n\nThe order fixture for show.\n"}],"children":{"total":1,"items":[{"path":"a-b/g.rs","kind":"file","title":"A file in a sibling folder, which show a never lists."}]}}],"errors":[]}
+stderr (empty)
