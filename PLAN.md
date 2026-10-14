@@ -460,3 +460,6 @@ Open:
 - design §6.1: the install id is `/plugin install memex@memex` (marketplace form); fix the line.
 - src/collections/manifest.rs probes `.memex/collections` by path: match it by listing (design §4.4).
 - The ordinary-mode temp-file writer exists twice (src/logs/write.rs and src/verbs/init/files.rs): one shared helper.
+- Fence scanning exists twice (src/cite/tokens.rs and src/verbs/init/fence.rs): one shared scanner with the design §2.3 definition.
+- tests/harness/env.rs scrubs only `memex.exe` from PATH on Windows; also scrub `memex.cmd`.
+- corpus.rs doesn't keep the loaded Manifest list and warnings, so info reads manifests twice: keep them in the corpus.
