@@ -483,3 +483,4 @@ Each line is a design.md commit since S0.1; `git show <hash> -- design.md` shows
 - (round 2, B5 notes) without git a submodule's `.git` file also counts as a linked worktree for log's refusal; a symlinked `.git` is not treated as a file; info without git still names the worktree's own store as log_store (DISC-NOGIT-02).
 - (round 2, P2) the index's term shards split by DefaultHasher with fixed keys (work split only, output order unchanged).
 - (round 2, orchestrator, after onboarding playtest 2) info's `to` line shows at zero, as §3.5 already said (code diverged); usage and info's `use` line show the heredoc form, not `< body`; two more messages name their next step (§3.5c); §3.2's fuzzy example is naïve/naive (café is under the 5-character floor).
+- (round 2) lists sort by byte (code point) order, never locale (§3.6), pinned by SHOW-ORDER-01.
