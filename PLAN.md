@@ -424,8 +424,8 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [x] S2.1
 - [x] S2.2
 - [x] S2.3
-- [ ] S2.4
-- [x] S2.5
+- [x] S2.4
+- [x] S2.5 (+ S2.6 live MANK cases)
 - [ ] S3.1
 - [ ] S3.2
 - [ ] S3.3
@@ -455,3 +455,7 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - A README with no H1 and no prose has an empty one-liner, which text output prints as `(no README)`; that misreports a README that exists. Print nothing after the name instead.
 - Header: implement the design §2.1 additions (markup prologues `<?xml`, `<!DOCTYPE`, `<?php` skipped as pragmas; a license block ends at its first blank line), each with an HDR case.
 - Header 60-line index cut: lands with the search index (S3.3).
+- JSON key order: enable serde_json `preserve_order`, delete the hand-rolled order-keeping `Tree` visitor in src/collections/json.rs, re-bless the goldens it moves (SHOW-JSON-*, MAN-MD-*, CASE-JSON-01, INT-NAME-01, INT-LINE-05, MAN-MD-09 sidecar order). Fields then follow source order everywhere.
+- Unparseable collection data files (a folder marker, a json data file) are skipped silently: warn like an invalid manifest (MANK-FOLDER-09, MANK-JSON-07). A folder whose marker lacks the id field: warn too (MANK-FOLDER-06).
+- A json entry's default one-liner is its first string field, often its id: skip the id field when choosing the title (MANK-JSON-02).
+- Stale "waits for S2.5" comments: src/README.md, src/collections/mod.rs.
