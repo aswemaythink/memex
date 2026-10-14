@@ -1,0 +1,1 @@
+{"chmod": [{"path": "repo/.memex/collections/locked.json", "mode": "000"}], "platforms": ["unix"], "steps": [{"args": ["info"]}, {"args": ["show", "notes:alpha"]}]}

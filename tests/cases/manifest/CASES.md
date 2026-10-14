@@ -63,3 +63,8 @@
   design §2.3 (the fence definition and an unclosed fence), applied to markdown docs. Run: memex show notes:closers notes:unclosed --json.
 
 The folder and json kinds of design §4.2 are cased as `MANK-*` in the [manifest-kinds](../manifest-kinds/CASES.md) family.
+
+## IO
+
+- `MAN-IO-01` A manifest that cannot be read is one stderr warning, `memex: warning: cannot read <path> (PermissionDenied)`, its collection is left out of `info`, and the other collection still loads, so `info` and `show notes:alpha` exit 0.
+  design §4.2 Unreadable files (the form, applied to a manifest file). Run: memex info, then memex show notes:alpha. The fixture's `locked.json` is chmod 000 beside `notes.json`, which still loads.

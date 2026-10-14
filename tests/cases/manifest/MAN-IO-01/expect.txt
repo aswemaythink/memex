@@ -1,0 +1,29 @@
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent       0 readmes · 0 headers · 0 cases
+| collections  notes 1
+| use          memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr
+| memex: warning: cannot read $SANDBOX/repo/.memex/collections/locked.json (PermissionDenied)
+
+$ memex show notes:alpha
+exit 0
+stdout
+| === notes:alpha ===
+| # Alpha
+| 
+| The note that still loads.
+| 
+| fields
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr
+| memex: warning: cannot read $SANDBOX/repo/.memex/collections/locked.json (PermissionDenied)
