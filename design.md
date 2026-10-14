@@ -94,7 +94,7 @@ A prefix citation (`NAME-*`) is listed in **cited by** marked `via NAME-*`, but 
 ```
 memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]
 memex show   <path|ref>... [--up N] [--limit N] [--json]
-memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
 memex info   [--agent <id>] [--json]
 memex init
 memex --help | --version
@@ -121,7 +121,7 @@ memex --help | --version
 ### 3.2 `search`
 
 - **No arguments.** Usage error (exit 2) pointing to `memex info`, which is the one overview.
-- **Words.** Ranked BM25 with field weights, English stemming and prefix matching. Fuzzy matching allows one edit for words of 5 or more characters, and those hits are marked `[~variant]`. A word is a run of Unicode letters and digits, lowercased, so `naïve`, `café`, `Straße` and CJK runs are words. Word lengths and edits count characters (Unicode scalar values), not bytes, so `café` is one edit from `cafe`. Ids and paths are also kept as whole tokens, so `NAME-001` matches exactly. Any word may match; more matches rank higher. Scores are only comparable within one group. Ranking compares scores quantized to `1e-9`, then by ref, so libm differences across OSes cannot reorder results.
+- **Words.** Ranked BM25 with field weights, English stemming and prefix matching. Fuzzy matching allows one edit for words of 5 or more characters, and those hits are marked `[~variant]`. A word is a run of Unicode letters and digits, lowercased, so `naïve`, `café`, `Straße` and CJK runs are words. Word lengths and edits count characters (Unicode scalar values), not bytes, so `naïve` is one edit from `naive` (a word under 5 characters, like `café`, gets prefix matches but no fuzzy ones). Ids and paths are also kept as whole tokens, so `NAME-001` matches exactly. Any word may match; more matches rank higher. Scores are only comparable within one group. Ranking compares scores quantized to `1e-9`, then by ref, so libm differences across OSes cannot reorder results.
 - **Filters `field:value`.** Exact and case-insensitive, combined with AND. Reserved: `agent:`, `to:`, `tag:`, `branch:`, `worktree:` (basename or path), and `since:` (`30m`, `6h`, `2d`, `1w` or `2026-10-13`; it keeps only docs that have a `time`). Any other `x:` is a filter only if some doc in scope has field `x`; otherwise it is a literal word. That keeps `std::io` and refs searchable.
 - **Grouped output, always.** Each collection with hits is one group. The fixed order is `readmes`, `headers`, `cases`, manifest collections (alphabetical), then `logs` as one group. Empty groups are omitted.
   - **Limits.** Without `--in`, `--limit` applies per group (default 5). With `--in`, the default is 20.
@@ -175,13 +175,13 @@ collections  doom 41 · neo-cases 294 · perf 212
 streams      impl 12 (3 new in 24h) · review 3 (1 new) · drift 5
 to cook-2    2 messages → memex search to:cook-2
 here         crates/namer — Namer: turns atoms into stable class names
-use          memex show <path|ref> · memex search <words> · memex log <stream> < body
+use          memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 ```
 
 - **Header.** The root, then the log store: root-relative when the store is inside the root, else absolute.
 - **Collections.** Name and doc count, alphabetical; `--json` adds kind, description and owner. Invalid manifests and duplicate case ids are listed as warnings.
 - **Streams.** Total entries and how many are new in the last 24 hours, ordered by most recent activity.
-- **`to` line.** A count only: every entry in the store addressed to the id. Shown when an agent id is known (`--agent`, `$MEMEX_AGENT`).
+- **`to` line.** A count only: every entry in the store addressed to the id. Shown when an agent id is known (`--agent`, `$MEMEX_AGENT`), including at zero (`to cook-2    0 messages → memex search to:cook-2`), so an agent can tell that it is wired up; JSON `to` is then always present.
 - **`here` line.** Shown only when the cwd is not the root: the nearest README's one-liner.
 
 ### 3.5b `init`
@@ -212,6 +212,8 @@ Agents are memex's main readers, so every error that leaves the user stuck names
 - `log body is empty: memex log <stream> <<'EOF' … EOF`
 - `unexpected argument '<word>'` for `log` adds `: log reads its body from stdin: memex log <stream> <<'EOF' … EOF`
 - `unknown verb '<word>'` adds `; run memex --help`
+- `log needs a stream name` adds `: memex log <stream> <<'EOF' … EOF`
+- `stream name '<name>' is reserved` adds `; pick another name, such as impl`
 
 Exit codes and JSON codes are unchanged.
 
