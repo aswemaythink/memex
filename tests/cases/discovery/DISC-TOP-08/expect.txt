@@ -1,0 +1,16 @@
+$ memex log impl  [cwd wt/sub]
+exit 3
+stdout (empty)
+stderr
+| memex: no .memex/ here: run `memex init`
+
+$ memex log impl --json  [cwd wt/sub]
+exit 3
+stdout
+| {"error":{"code":"no_root","message":"no .memex/ here: run `memex init`"}}
+stderr (empty)
+== snapshot repo/.memex
+-- config.json
+| {"keep_logs": "3d"}
+== snapshot wt/sub/.memex
+(missing)

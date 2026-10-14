@@ -87,6 +87,8 @@
   design §4.1 item 1: a `.git` entry git would reject still marks a toplevel. Run: memex info, text and then --json, from repo/sub, where repo/.git is a file whose gitdir line names a folder that does not exist.
 - `DISC-TOP-07` With git present, `log` inside the DISC-TOP-04 subfolder exits 3 with the no_root message and writes nothing to the repo's `.memex/` above it, in text and with `--json`.
   design §4.1 items 1 and 3: git answers for the outer repo's main checkout, whose store is the root's own, so a `.memex/` above the bound does not capture it. Run: memex log impl, text and then --json, from repo/sub of the DISC-TOP-04 layout; snapshot of repo/.memex.
+- `DISC-TOP-08` With git present, `log` from a subfolder of a linked worktree whose `.git` is a folder that holds no repository exits 3 with the no_root message, in text and with `--json`, and the main checkout's `.memex/` gains nothing.
+  design §4.1 items 1 and 3: the store maps to a main checkout only when the toplevel's own `.git` is a file, so the bounded subfolder keeps its own store, as DISC-TOP-07 does in a main checkout. Run: memex log impl, text and then --json, from wt/sub, where wt is a linked worktree of repo (repo/.memex/ exists) and wt/sub/.git is a folder holding only a nested `.git` (made by `git init ../wt/sub/.git`, which git skips as no repository); snapshots of repo/.memex and wt/sub/.memex.
 
 ## IGNORE
 

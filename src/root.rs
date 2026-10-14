@@ -1,7 +1,7 @@
 //! Finds where `log` writes, per design §4.1: the root, the folder that owns the store, and the store.
 //! The root is the nearest `.memex/` above the cwd, bounded by its toplevel, which the listing finds (layout.rs); else the toplevel, else the cwd. The read verbs use the same root.
 //! git answers for the store's place and HEAD while it works; when it gives no answer, the layout (layout.rs) answers from plain files (design §4.4 git).
-//! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-ROOT-05, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-GIT-01, DISC-GIT-02, DISC-GIT-03, DISC-NOGIT-01, DISC-NOGIT-02, DISC-NOGIT-03, DISC-NOGIT-04, DISC-NOGIT-05, DISC-NOGIT-06, DISC-NOGIT-07, DISC-TOP-01, DISC-TOP-02, DISC-TOP-03, DISC-TOP-04, DISC-TOP-05, DISC-TOP-06, DISC-TOP-07, LOG-WRITE-06, LOG-WRITE-10
+//! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-ROOT-05, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-GIT-01, DISC-GIT-02, DISC-GIT-03, DISC-NOGIT-01, DISC-NOGIT-02, DISC-NOGIT-03, DISC-NOGIT-04, DISC-NOGIT-05, DISC-NOGIT-06, DISC-NOGIT-07, DISC-TOP-01, DISC-TOP-02, DISC-TOP-03, DISC-TOP-04, DISC-TOP-05, DISC-TOP-06, DISC-TOP-07, DISC-TOP-08, LOG-WRITE-06, LOG-WRITE-10
 
 use std::ffi::OsStr;
 use std::io;
@@ -9,7 +9,9 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 use crate::error::Error;
-use crate::layout::{head_branch, holds_memex, layout_of, nearest_within, toplevel, Layout};
+use crate::layout::{
+    git_entry_is_file, head_branch, holds_memex, layout_of, nearest_within, toplevel, Layout,
+};
 
 pub use crate::layout::lists;
 
@@ -190,8 +192,11 @@ fn resolution_of(cwd: &Path) -> Result<Resolution, Error> {
 
 /// Who places the store for the repository at `canonical`: git while it answers. Without git's answer the layout decides: a linked
 /// worktree whose common dir is a `.git` folder maps to its main checkout, and one it cannot place is `Unplaced` (design §4.4 git).
+/// git's answer counts as linked only when the toplevel's own `.git` is a file: a `.git` folder git skips, inside a linked worktree,
+/// keeps the root's own store (DISC-TOP-08).
 fn source_of(canonical: &Path, top: Option<&Path>) -> Source {
-    if let Some(git) = Git::probe(canonical) {
+    if let Some(mut git) = Git::probe(canonical) {
+        git.linked &= top.is_some_and(git_entry_is_file);
         return Source::Repo(git);
     }
     match top.map(layout_of) {

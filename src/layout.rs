@@ -1,6 +1,6 @@
 //! Finds a repository's toplevel by listing, and reads its layout as plain files, never by asking git.
 //! The toplevel bounds the walk for `.memex/` (design §4.1 item 1). The layout (design §4.4 git) is the `.git` entry, its `gitdir:` line, the git dir's `commondir` and its `HEAD`, each read only as a small regular file, so a hostile layout cannot block or flood the read; the listing helpers that match special names against a folder's listing (design §4.4 Name matching) live here too.
-//! Cases: DISC-TOP-01, DISC-TOP-02, DISC-TOP-03, DISC-TOP-04, DISC-TOP-05, DISC-TOP-06, DISC-ROOT-05, DISC-GIT-01, DISC-GIT-02, DISC-GIT-03, DISC-NOGIT-04, DISC-NOGIT-05, DISC-NOGIT-06, DISC-NOGIT-07, INIT-NOGIT-01
+//! Cases: DISC-TOP-01, DISC-TOP-02, DISC-TOP-03, DISC-TOP-04, DISC-TOP-05, DISC-TOP-06, DISC-TOP-08, DISC-ROOT-05, DISC-GIT-01, DISC-GIT-02, DISC-GIT-03, DISC-NOGIT-04, DISC-NOGIT-05, DISC-NOGIT-06, DISC-NOGIT-07, INIT-NOGIT-01
 
 use std::ffi::OsStr;
 use std::fs;
@@ -101,6 +101,15 @@ fn git_entry_is_folder(top: &Path) -> bool {
         .ok()
         .flatten()
         .is_some_and(|entry| entry.path().is_dir())
+}
+
+/// True when the `.git` entry of `top` is a file, as a linked worktree's is. Only then does the store map to a main checkout, so a
+/// `.git` folder that git skips keeps its root's own store (DISC-TOP-08).
+pub fn git_entry_is_file(top: &Path) -> bool {
+    entry_named(top, ".git")
+        .ok()
+        .flatten()
+        .is_some_and(|entry| entry.path().is_file())
 }
 
 /// The git dir of the repository whose toplevel is `top`: its `.git` folder, or the folder that a `.git` file's `gitdir:` line names,
