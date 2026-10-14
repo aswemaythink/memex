@@ -1,5 +1,5 @@
 //! The in-memory BM25F index of one group of docs, with stems, prefixes and one-edit matches.
-//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, MAN-LOAD-13
+//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, MAN-LOAD-13, SRCH-UNICODE-01, SRCH-UNICODE-02, SRCH-UNICODE-03
 
 pub mod bm25;
 pub mod filter;
@@ -187,7 +187,7 @@ impl Index {
 
     /// The plain terms that start with a query word of `PREFIX_MIN` characters or more.
     fn prefixed(&self, word: &str) -> Vec<&str> {
-        if word.len() < PREFIX_MIN {
+        if shorter_than(word, PREFIX_MIN) {
             return Vec::new();
         }
         self.vocab
@@ -201,7 +201,7 @@ impl Index {
     /// The plain terms one edit away from a query word of `FUZZY_MIN` characters or more. This scans the vocabulary once for the
     /// word, not once per doc.
     fn one_edit(&self, word: &str) -> Vec<&str> {
-        if word.len() < FUZZY_MIN {
+        if shorter_than(word, FUZZY_MIN) {
             return Vec::new();
         }
         self.vocab
@@ -302,4 +302,9 @@ fn sorted(mut terms: Vec<String>) -> Vec<String> {
     terms.sort();
     terms.dedup();
     terms
+}
+
+/// True when a word has fewer than `min` characters. Lengths count characters, not bytes, so `café` has 4 (design §3.2).
+fn shorter_than(word: &str, min: usize) -> bool {
+    word.chars().take(min).count() < min
 }

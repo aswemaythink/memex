@@ -1,0 +1,23 @@
+$ memex search 'café'
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   a/README.md  The café menu is open.
+stderr (empty)
+
+$ memex search cafe
+exit 0
+stdout (empty)
+stderr (empty)
+
+$ memex search 'cafè'
+exit 0
+stdout (empty)
+stderr (empty)
+
+$ memex search caf
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   a/README.md  The café menu is open.
+stderr (empty)

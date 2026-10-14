@@ -1,0 +1,18 @@
+$ memex search 'CAFÉ'
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   a/README.md  The Straße and the café.
+stderr (empty)
+
+$ memex search 'STRAẞE'
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   a/README.md  The Straße and the café.
+stderr (empty)
+
+$ memex search STRASSE
+exit 0
+stdout (empty)
+stderr (empty)

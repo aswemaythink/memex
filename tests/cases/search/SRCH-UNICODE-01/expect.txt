@@ -1,0 +1,13 @@
+$ memex search 'naïve'
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   a/README.md  The naïve rules apply.
+stderr (empty)
+
+$ memex search naive
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   a/README.md  The naïve rules apply.  [~naïve]
+stderr (empty)

@@ -1,10 +1,10 @@
 //! Splits text into the tokens that the index and the query share: words, ids and paths.
-//! Cases: SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-TOKEN-03
+//! Cases: SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-TOKEN-03, SRCH-UNICODE-01, SRCH-UNICODE-02, SRCH-UNICODE-03, SRCH-UNICODE-04
 
 /// True when a term is a whole id or path, such as `name-001` or `crates/x/hash.rs`: it holds a character that is not a letter or a
 /// digit. Every other term is a plain word, and only plain words are stemmed or matched by prefix or by one edit.
 pub fn is_whole(term: &str) -> bool {
-    term.bytes().any(|byte| !byte.is_ascii_alphanumeric())
+    term.chars().any(|ch| !is_word_char(ch))
 }
 
 /// Hands each token of a doc's text to `emit`, in order: for each run of letters, digits, dashes, dots and slashes, the whole run
@@ -41,34 +41,46 @@ fn visit(text: &str, with_words: bool, emit: &mut dyn FnMut(&str)) {
     }
 }
 
-/// Hands `token` to `emit` in lowercase: as it is when it has no capital, else as a lowercase copy made in `lower`.
+/// Hands `token` to `emit` lowercased, as `str::to_lowercase` lowercases it. A token that no character changes is handed over as
+/// it is. Any other is lowercased into `lower`, which is reused, one character at a time; a token with a capital sigma goes
+/// through `str::to_lowercase` instead, since the final sigma depends on the rest of the word.
 fn emit_lowercase(token: &str, lower: &mut String, emit: &mut dyn FnMut(&str)) {
-    if token.bytes().any(|byte| byte.is_ascii_uppercase()) {
-        lower.clear();
-        lower.extend(token.chars().map(|ch| ch.to_ascii_lowercase()));
-        emit(lower.as_str());
-    } else {
+    if token.chars().all(|ch| ch.to_lowercase().eq([ch])) {
         emit(token);
+    } else {
+        lower.clear();
+        if token.contains('Σ') {
+            lower.push_str(&token.to_lowercase());
+        } else {
+            lower.extend(token.chars().flat_map(char::to_lowercase));
+        }
+        emit(lower.as_str());
     }
 }
 
-/// The characters that can make up a run: letters, digits, and the dash, dot and slash of ids and paths.
+/// The characters that can make up a run: the characters of words, and the dash, dot and slash of ids and paths.
 fn is_run_char(ch: char) -> bool {
-    ch.is_ascii_alphanumeric() || matches!(ch, '-' | '/' | '.')
+    is_word_char(ch) || matches!(ch, '-' | '/' | '.')
+}
+
+/// A character of a word: a letter or a digit of any script (design §3.2). It is `char::is_alphanumeric`, so the other numbers,
+/// such as `½`, count as well.
+fn is_word_char(ch: char) -> bool {
+    ch.is_alphanumeric()
 }
 
 /// True for a run that names an id or a path: it has a dash or a slash, or a dot followed by a letter, as in `hash.rs`.
 fn is_id_or_path(run: &str) -> bool {
     run.contains(['-', '/'])
         || run
-            .as_bytes()
-            .windows(2)
-            .any(|pair| pair[0] == b'.' && pair[1].is_ascii_alphabetic())
+            .split('.')
+            .skip(1)
+            .any(|after| after.starts_with(char::is_alphabetic))
 }
 
 /// The words of a run, as written: its maximal runs of letters and digits.
 fn words(run: &str) -> impl Iterator<Item = &str> + '_ {
-    run.split(|ch: char| !ch.is_ascii_alphanumeric())
+    run.split(|ch: char| !is_word_char(ch))
         .filter(|word| !word.is_empty())
 }
 
@@ -99,5 +111,20 @@ mod tests {
     fn version_numbers_and_colons_split_into_plain_words() {
         assert_eq!(query_tokens("std::io"), ["std", "io"]);
         assert_eq!(query_tokens("v1.2"), ["v1", "2"]);
+    }
+
+    #[test]
+    fn a_word_keeps_its_unicode_letters_and_a_cjk_run_is_one_word() {
+        assert_eq!(tokens("naïve"), ["naïve"]);
+        assert_eq!(tokens("東京タワー"), ["東京タワー"]);
+        assert!(!is_whole("naïve"));
+        assert!(is_whole("naïve-001"));
+    }
+
+    #[test]
+    fn capitals_lowercase_as_str_to_lowercase_gives_them() {
+        assert_eq!(tokens("CAFÉ STRAẞE"), ["café", "straße"]);
+        assert_eq!(tokens("STRASSE"), ["strasse"]);
+        assert_eq!(tokens("ΟΔΟΣ"), ["ΟΔΟΣ".to_lowercase()]);
     }
 }

@@ -167,3 +167,14 @@
 
 - `SRCH-NOW-01` An invalid `$MEMEX_NOW` exits 3 for search before it reads anything: `invalid MEMEX_NOW:` and the value on stderr, or the `io` envelope on stdout with `--json`.
   design §3.6 Determinism: `$MEMEX_NOW` replaces the clock everywhere, and an invalid value exits 3. Run: memex search demo with MEMEX_NOW as `2026-10-13T12:00:00+01:00`, then memex search demo --json with `not-a-date`, then memex search demo with the default value, which exits 0.
+
+## UNICODE
+
+- `SRCH-UNICODE-01` A word keeps its Unicode letters: `naïve` finds the doc that says `naïve`, and `naive` finds it as a one-edit match marked `[~naïve]`, since the two words are 5 characters each and differ by one substitution.
+  design §3.2 Words (a word is a run of Unicode letters; lengths and edits count characters; one edit for words of 5 or more, marked `[~variant]`). Run: memex search naïve, then memex search naive.
+- `SRCH-UNICODE-02` `café` is one word, so `café` finds the doc that says it. `cafe` finds nothing, since it is 4 characters and gets no edit, and `cafè` finds nothing either, since it is 4 characters though 5 bytes; `caf` finds the doc by prefix.
+  design §3.2 Words (`café` is one edit from `cafe`; lengths and edits count characters, not bytes; one edit only for words of 5 or more; prefix matching). Run: memex search café, then cafe, then cafè, then caf.
+- `SRCH-UNICODE-03` A run of CJK characters is one word: `東京タワー` finds the doc that holds it, and `タワー`, the end of that run, finds nothing.
+  design §3.2 Words (CJK runs are words; prefix matching reaches the start of a word only). Run: memex search 東京タワー, then memex search タワー.
+- `SRCH-UNICODE-04` Uppercase letters lowercase as Rust's `str::to_lowercase` gives: `CAFÉ` finds `café`, `STRAẞE` finds `Straße` (`ẞ` lowercases to `ß`), and `STRASSE` finds nothing, since it lowercases to `strasse`, two edits from `straße`, and lowercasing does not fold `ß` to `ss`.
+  design §3.2 Words (a word is lowercased, and `Straße` is a word; one edit only for words of 5 or more). Run: memex search CAFÉ, then memex search STRAẞE, then memex search STRASSE.

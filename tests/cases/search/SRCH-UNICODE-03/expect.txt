@@ -1,0 +1,11 @@
+$ memex search '東京タワー'
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   a/README.md  See 東京タワー today.
+stderr (empty)
+
+$ memex search 'タワー'
+exit 0
+stdout (empty)
+stderr (empty)
