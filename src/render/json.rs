@@ -1,9 +1,9 @@
 //! Builds the `--json` document of `show` (design §3.6): `{"docs":[...],"errors":[...]}`, with each doc's fields, cites, cited_by, children and chain.
-//! Cases: SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05
+//! Cases: SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-JSON-01
 
 use serde_json::{json, Map, Value as Json};
 
-use super::{Link, Listing, Miss, Ref, Section};
+use super::{CaseParts, Fields, Link, Listing, Miss, Ref, Section};
 use crate::cite::Cite;
 use crate::collections::frontmatter::Value;
 use crate::corpus::{Child, Kind};
@@ -23,7 +23,7 @@ fn doc(section: &Section) -> Json {
         "id": section.id,
         "path": section.path,
         "title": section.title,
-        "fields": fields(section.fields.as_deref().unwrap_or(&[])),
+        "fields": fields(section.fields.as_ref()),
         "text": section.text,
         "cites": section.cites.iter().map(cite).collect::<Vec<Json>>(),
         "cited_by": cited_by(&section.cited_by),
@@ -35,8 +35,17 @@ fn doc(section: &Section) -> Json {
     value
 }
 
+/// The fields object of a doc: none for a file or a folder, the frontmatter of a log, or a case's group and evidence.
+fn fields(section_fields: Option<&Fields>) -> Json {
+    match section_fields {
+        None => json!({}),
+        Some(Fields::Pairs(list)) => pairs(list),
+        Some(Fields::Case(case)) => case_fields(case),
+    }
+}
+
 /// The frontmatter fields as a JSON object; a list is an array of strings.
-fn fields(list: &[(String, Value)]) -> Json {
+fn pairs(list: &[(String, Value)]) -> Json {
     let mut map = Map::new();
     for (key, value) in list {
         let item = match value {
@@ -45,6 +54,16 @@ fn fields(list: &[(String, Value)]) -> Json {
         };
         map.insert(key.clone(), item);
     }
+    Json::Object(map)
+}
+
+/// A case's fields: its group when a heading is above it, and its evidence as an array of paths, empty when it has none.
+fn case_fields(case: &CaseParts) -> Json {
+    let mut map = Map::new();
+    if let Some(group) = &case.group {
+        map.insert("group".to_string(), Json::String(group.clone()));
+    }
+    map.insert("evidence".to_string(), json!(case.evidence));
     Json::Object(map)
 }
 

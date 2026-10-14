@@ -1,0 +1,20 @@
+$ memex show cases:ENDS-001
+exit 0
+stdout
+| === cases:ENDS-001 ===
+| The item ends at a column-0 line.
+| Its detail is this indented line.
+| 
+| group
+|   Detail cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

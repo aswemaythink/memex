@@ -1,0 +1,19 @@
+$ memex show cases:FENCE-003
+exit 0
+stdout
+| === cases:FENCE-003 ===
+| A heading inside a fence does not set the group.
+| 
+| group
+|   Real group
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

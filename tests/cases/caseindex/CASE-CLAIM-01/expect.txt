@@ -1,0 +1,19 @@
+$ memex show cases:CLAIM-001
+exit 0
+stdout
+| === cases:CLAIM-001 ===
+| The claim is the rest of the first line after the id.
+| 
+| group
+|   Claim cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

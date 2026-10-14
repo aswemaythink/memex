@@ -1,0 +1,20 @@
+$ memex show cases:CRLF-001
+exit 0
+stdout
+| === cases:CRLF-001 ===
+| A CRLF claim.
+| A CRLF detail line.
+| 
+| group
+|   CRLF cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

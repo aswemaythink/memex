@@ -1,0 +1,20 @@
+$ memex show cases:EVID-005
+exit 0
+stdout
+| === cases:EVID-005 ===
+| Words and commands are not paths.
+| Run `memex show README` to see `cases` or `UTF-8`.
+| 
+| group
+|   Evidence cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

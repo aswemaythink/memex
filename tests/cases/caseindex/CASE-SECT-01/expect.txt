@@ -1,0 +1,21 @@
+$ memex show cases:SECT-001
+exit 0
+stdout
+| === cases:SECT-001 ===
+| Class names are stable across runs and platforms.
+| Hash input is the canonical atom string, never object identity.
+| Evidence: `src/hash.rs`
+| 
+| group
+|   Stability
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   src/hash.rs
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

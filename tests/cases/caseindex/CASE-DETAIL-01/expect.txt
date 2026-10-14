@@ -1,0 +1,21 @@
+$ memex show cases:DETAIL-001
+exit 0
+stdout
+| === cases:DETAIL-001 ===
+| The claim comes first.
+| The first detail line.
+| The second detail line.
+| 
+| group
+|   Detail cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

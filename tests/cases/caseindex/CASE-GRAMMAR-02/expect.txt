@@ -1,0 +1,51 @@
+$ memex show cases:STT-WRAP-06 cases:LIB-MEASURE-001 cases:A-1
+exit 0
+stdout
+| === cases:STT-WRAP-06 ===
+| Several dash-separated parts and a digit suffix.
+| 
+| group
+|   Grammar cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| === cases:LIB-MEASURE-001 ===
+| Three parts with three digits.
+| 
+| group
+|   Grammar cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| === cases:A-1 ===
+| One letter and one digit.
+| 
+| group
+|   Grammar cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

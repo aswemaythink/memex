@@ -1,7 +1,7 @@
 //! Prints `show`'s sections and misses as text (design §3.3): each section under its `===` line, then its blocks in order, with a limits line after the children and cited-by lists.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-MD-01, SHOW-MD-02, SHOW-LOG-01, SHOW-UP-01, SHOW-ROOT-01, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-MD-01, SHOW-MD-02, SHOW-LOG-01, SHOW-UP-01, SHOW-ROOT-01, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, CASE-SECT-01
 
-use super::{Link, Listing, Miss, Ref, Section};
+use super::{CaseParts, Fields, Link, Listing, Miss, Ref, Section};
 use crate::cite::Cite;
 use crate::collections::frontmatter::Value;
 use crate::corpus::{Child, Kind};
@@ -31,8 +31,14 @@ pub fn misses(misses: &[Miss]) -> String {
 fn section(section: &Section) -> String {
     let mut out = format!("=== {} ===\n", section.label);
     body(&mut out, section);
-    if let Some(fields) = &section.fields {
-        fields_block(&mut out, fields);
+    if let Some(Fields::Case(case)) = &section.fields {
+        // A case has no cites block: design §3.3 lists its claim, detail, group, defining CASES.md, evidence and cited by.
+        case_blocks(&mut out, section.path.as_deref(), case);
+        cited_by_block(&mut out, &section.cited_by);
+        return out;
+    }
+    if let Some(Fields::Pairs(pairs)) = &section.fields {
+        fields_block(&mut out, pairs);
     }
     if let Some(children) = &section.children {
         children_block(&mut out, children);
@@ -61,6 +67,25 @@ fn fields_block(out: &mut String, fields: &[(String, Value)]) {
     }
     for (key, value) in fields {
         out.push_str(&format!("  {key}: {}\n", value_text(value)));
+    }
+}
+
+/// The blocks of a case after its claim and detail: its group, the CASES.md that defines it, and its evidence. Each shows
+/// `(none)` when it has nothing.
+fn case_blocks(out: &mut String, defined_in: Option<&str>, case: &CaseParts) {
+    start(out, "group");
+    out.push_str(&format!(
+        "  {}\n",
+        case.group.as_deref().unwrap_or("(none)")
+    ));
+    start(out, "defined in");
+    out.push_str(&format!("  {}\n", defined_in.unwrap_or("(none)")));
+    start(out, "evidence");
+    if case.evidence.is_empty() {
+        out.push_str("  (none)\n");
+    }
+    for path in &case.evidence {
+        out.push_str(&format!("  {path}\n"));
     }
 }
 

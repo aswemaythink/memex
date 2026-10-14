@@ -1,0 +1,20 @@
+$ memex show cases:EVID-004
+exit 0
+stdout
+| === cases:EVID-004 ===
+| A missing file is not evidence.
+| Evidence: `missing/gone.rs`.
+| 
+| group
+|   Evidence cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

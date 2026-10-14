@@ -1,0 +1,26 @@
+$ memex show cases:INDENT-001
+exit 1
+stdout (empty)
+stderr
+| memex: not found: cases:INDENT-001
+
+$ memex show cases:PARENT-001
+exit 0
+stdout
+| === cases:PARENT-001 ===
+| The parent item.
+| - `INDENT-001` An indented item is detail, not a case.
+| 
+| group
+|   Item cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

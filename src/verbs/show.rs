@@ -1,5 +1,5 @@
 //! Carries out `memex show` (design §3.3 and §3.6): resolves each ref, builds its section, and reports the sections, the misses and the exit status.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-SECT-01, CASE-JSON-01
 
 use std::env;
 use std::fs;
@@ -8,7 +8,8 @@ use std::path::{Path, PathBuf};
 use crate::cite;
 use crate::corpus::{self, parent_of, readme_label, Child, Corpus, Doc, Kind};
 use crate::error::{Code, Error};
-use crate::render::{self, Link, Listing, Miss, Ref, Section};
+use crate::intent::cases;
+use crate::render::{self, CaseParts, Fields, Link, Listing, Miss, Ref, Section};
 use crate::resolve::{resolve, Outcome, Target};
 use crate::root::{self, slash};
 use crate::walk::rel_string;
@@ -184,7 +185,7 @@ fn file_section(corpus: &Corpus, rel: &str, options: &Options) -> Result<Section
     })
 }
 
-/// The section of a doc, such as a log: its text, its fields and its citations, with no chain.
+/// The section of a doc, such as a log or a case: its text, its fields, and its citations, with no chain.
 fn doc_section(corpus: &Corpus, doc: &Doc, options: &Options) -> Section {
     Section {
         label: doc.label.clone(),
@@ -194,11 +195,24 @@ fn doc_section(corpus: &Corpus, doc: &Doc, options: &Options) -> Section {
         path: doc.path.clone(),
         text: Some(doc.text.clone()),
         missing: "(no text)",
-        fields: Some(doc.fields.clone()),
+        fields: Some(doc_fields(corpus, doc)),
         children: None,
         cites: cite::cites(doc),
         cited_by: cited_by(corpus, &doc.label, options.limit),
         chain: None,
+    }
+}
+
+/// The fields of a doc: a case's group and the evidence its text names that the walk holds (design §2.2), or the
+/// frontmatter of any other doc.
+fn doc_fields(corpus: &Corpus, doc: &Doc) -> Fields {
+    if doc.collection == cases::COLLECTION {
+        Fields::Case(CaseParts {
+            group: cases::group_of(doc),
+            evidence: cases::evidence(doc, |rel| corpus.kind(rel) == Some(Kind::File)),
+        })
+    } else {
+        Fields::Pairs(doc.fields.clone())
     }
 }
 

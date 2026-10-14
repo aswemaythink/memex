@@ -1,0 +1,19 @@
+$ memex show cases:NAME-001
+exit 0
+stdout
+| === cases:NAME-001 ===
+| Class names are stable across runs and platforms.
+| 
+| group
+|   Naming
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

@@ -1,0 +1,20 @@
+$ memex show cases:EVID-002
+exit 0
+stdout
+| === cases:EVID-002 ===
+| The file beside this CASES.md wins.
+| Evidence: `hash.rs`.
+| 
+| group
+|   Evidence cases
+| 
+| defined in
+|   tests/CASES.md
+| 
+| evidence
+|   tests/hash.rs
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

@@ -1,0 +1,21 @@
+$ memex show cases:EVID-007
+exit 0
+stdout
+| === cases:EVID-007 ===
+| Each evidence file is listed once.
+| Evidence: `src/hash.rs`, then `src/cli.rs`, then `src/hash.rs` again.
+| 
+| group
+|   Evidence cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   src/hash.rs
+|   src/cli.rs
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

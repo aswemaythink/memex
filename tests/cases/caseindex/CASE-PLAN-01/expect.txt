@@ -1,0 +1,19 @@
+$ memex show cases:PLAN-001
+exit 0
+stdout
+| === cases:PLAN-001 ===
+| (planned) Hashes are stable once the hash exists.
+| 
+| group
+|   Plan cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

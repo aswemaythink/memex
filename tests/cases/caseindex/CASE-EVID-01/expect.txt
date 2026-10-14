@@ -1,0 +1,20 @@
+$ memex show cases:EVID-001
+exit 0
+stdout
+| === cases:EVID-001 ===
+| The hash matches its evidence.
+| Evidence: `src/hash.rs`
+| 
+| group
+|   Evidence cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   src/hash.rs
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

@@ -1,0 +1,5 @@
+$ memex show cases:JSON-001 --json
+exit 0
+stdout
+| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"cases","fields":{"evidence":["src/hash.rs"],"group":"Naming"},"id":"JSON-001","path":"CASES.md","ref":"cases:JSON-001","text":"The JSON doc names its group and evidence.\nEvidence: `src/hash.rs`","title":"The JSON doc names its group and evidence."}],"errors":[]}
+stderr (empty)

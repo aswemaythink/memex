@@ -1,0 +1,22 @@
+$ memex show cases:BLANK-001
+exit 0
+stdout
+| === cases:BLANK-001 ===
+| The claim, then detail after a blank line.
+| First detail line.
+| 
+| Second detail line after a blank line.
+| 
+| group
+|   Detail cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)
