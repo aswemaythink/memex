@@ -1,0 +1,40 @@
+$ memex show .
+exit 0
+stdout
+| === . ===
+| # Demo
+| 
+| The demo repo for case reads.
+| 
+| children
+|   alpha/  The alpha folder.
+|   showing 1 of 1
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr
+| memex: warning: cannot read $SANDBOX/repo/alpha/CASES.md (PermissionDenied)
+
+$ memex search alpha
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   alpha/README.md  The alpha folder.
+stderr
+| memex: warning: cannot read $SANDBOX/repo/alpha/CASES.md (PermissionDenied)
+
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store none (run memex init)
+| intent  2 readmes · 0 headers · 0 cases
+| use     memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr
+| memex: warning: cannot read $SANDBOX/repo/alpha/CASES.md (PermissionDenied)

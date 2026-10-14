@@ -1,6 +1,6 @@
 //! Writes one log entry to the store (design §3.4 and §4.3).
 //! memex's frontmatter with the agent's lines merged into it, the body verbatim, a file name from the title's slug, and never an overwrite. The store itself may be a symlink, which is followed; a symlinked stream folder is refused.
-//! Cases: LOG-WRITE-01, LOG-WRITE-02, LOG-WRITE-03, LOG-WRITE-04, LOG-WRITE-05, LOG-WRITE-06, LOG-WRITE-08, LOG-WRITE-14, LOG-WRITE-15, LOG-FRONT-01, LOG-BODY-02, DISC-STORE-01, DISC-STORE-02
+//! Cases: LOG-WRITE-01, LOG-WRITE-02, LOG-WRITE-03, LOG-WRITE-04, LOG-WRITE-05, LOG-WRITE-06, LOG-WRITE-08, LOG-WRITE-14, LOG-WRITE-15, LOG-FRONT-01, LOG-BODY-02, DISC-STORE-01, DISC-STORE-02, PORT-MODE-01
 
 use std::fs;
 use std::io::{self, Write};
@@ -205,11 +205,11 @@ fn temp_in(dir: &Path) -> Result<NamedTempFile, Error> {
     temp.map_err(|failure| io_error("cannot create a temporary file in", dir, &failure))
 }
 
-/// The mode a new file gets before the umask: 0o666 on unix, as `File::create` gives it, not tempfile's private 0o600.
+/// The mode a new file gets before the umask: 0o644 on unix (design §4.4 File modes), not tempfile's private 0o600.
 #[cfg(unix)]
 fn new_file_mode() -> Option<fs::Permissions> {
     use std::os::unix::fs::PermissionsExt;
-    Some(fs::Permissions::from_mode(0o666))
+    Some(fs::Permissions::from_mode(0o644))
 }
 
 /// Windows has no mode to set: a temporary file is an ordinary writable file already.
@@ -298,7 +298,7 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
-    fn an_entry_gets_the_ordinary_mode_and_not_the_private_one() {
+    fn an_entry_gets_0644_before_the_umask_and_not_the_private_one() {
         use std::os::unix::fs::PermissionsExt;
         let root = tempfile::tempdir().expect("a temporary folder");
         let dir = root.path().join("impl");
@@ -308,7 +308,9 @@ mod tests {
             .expect("the entry");
         fs::write(root.path().join("plain"), b"x\n").expect("a plain file");
         let mode = |path: &Path| fs::metadata(path).expect("metadata").permissions().mode() & 0o777;
-        assert_eq!(mode(&entry), mode(&root.path().join("plain")));
+        // A file that File::create makes gets 0o666 less the umask, which recovers the umask of this run.
+        let umask = 0o666 & !mode(&root.path().join("plain"));
+        assert_eq!(mode(&entry), 0o644 & !umask);
     }
 
     #[test]

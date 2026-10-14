@@ -123,7 +123,7 @@ pub fn read_text(path: &Path, target: &Path) -> Result<String, Error> {
     })
 }
 
-/// A temp file in `dir` that holds `bytes`, made with `permissions`, else with those of any new file (on unix 0o666 less the
+/// A temp file in `dir` that holds `bytes`, made with `permissions`, else with those of any new file (on unix 0o644 less the
 /// umask, not tempfile's 0o600). It is removed when dropped, unless it is persisted.
 pub fn write_temp(
     dir: &Path,
@@ -143,11 +143,11 @@ pub fn write_temp(
     Ok(temp)
 }
 
-/// The mode a new file gets on unix before the umask, as `File::create` gives it.
+/// The mode a new file gets on unix before the umask: 0o644, as design §4.4 File modes says.
 #[cfg(unix)]
 fn new_file_permissions() -> Option<fs::Permissions> {
     use std::os::unix::fs::PermissionsExt;
-    Some(fs::Permissions::from_mode(0o666))
+    Some(fs::Permissions::from_mode(0o644))
 }
 
 /// Windows has no mode to give: a temp file is an ordinary writable file already.
@@ -222,7 +222,7 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
-    fn a_replaced_file_keeps_its_mode_and_a_new_file_gets_the_usual_one() {
+    fn a_replaced_file_keeps_its_mode_and_a_new_file_gets_0644_before_the_umask() {
         use std::os::unix::fs::PermissionsExt;
         let dir = tempfile::tempdir().expect("a temporary folder");
         let path = dir.path().join("AGENTS.md");
@@ -233,10 +233,9 @@ mod tests {
         assert_eq!(mode(&path), 0o640);
         assert_eq!(fs::read(&path).expect("the file"), b"new");
         create_new(dir.path(), "CLAUDE.md", b"x").expect("a new file");
+        // A file that File::create makes gets 0o666 less the umask, which recovers the umask of this run.
         fs::write(dir.path().join("plain"), b"x").expect("a plain file");
-        assert_eq!(
-            mode(&dir.path().join("CLAUDE.md")),
-            mode(&dir.path().join("plain"))
-        );
+        let umask = 0o666 & !mode(&dir.path().join("plain"));
+        assert_eq!(mode(&dir.path().join("CLAUDE.md")), 0o644 & !umask);
     }
 }

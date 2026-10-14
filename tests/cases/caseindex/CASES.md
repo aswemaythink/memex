@@ -104,3 +104,8 @@ The caseindex family pins design §2.2, how a CASES.md becomes case docs, and th
 
 - `CASE-BARE-01` A bare case id, as in memex show NAME-001, shows the same section as cases:NAME-001.
   Scenario: memex show NAME-001 with the item for NAME-001 in the fixture. design §3.1 step 4, built with REF in S3.2.
+
+## READ
+
+- `CASE-READ-01` A CASES.md that cannot be read is one stderr warning, and its cases are not loaded, while `show .`, `search` and `info` still exit 0.
+  design §4.2 (an unreadable CASES.md is a warning that is skipped) and §2.2 case index. Run: memex show ., memex search alpha and memex info, with alpha/CASES.md at mode 000.

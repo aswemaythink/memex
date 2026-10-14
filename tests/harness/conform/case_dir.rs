@@ -6,7 +6,8 @@ use std::fs;
 use std::path::Path;
 
 use super::super::discover::{list, Item};
-use super::super::{load_spec, CaseSpec};
+use super::super::perms::parse_mode;
+use super::super::{load_spec, CaseSpec, Platform};
 use super::{has_file, placeholder_problems, Report};
 
 /// Rules 4 and 5 for one case folder: its files, its case.json and its golden.
@@ -112,7 +113,7 @@ fn check_golden(path: &Path, at: &str, r: &mut Report) {
     }
 }
 
-/// The schema checks that serde cannot make: steps, stdin, paths, setup argv and platforms.
+/// The schema checks that serde cannot make: steps, stdin, paths, setup argv, chmod and platforms.
 /// Also collects the plain stdin_file names, which the folder may hold.
 fn check_spec(spec: &CaseSpec, at: &str, r: &mut Report, stdin_names: &mut Vec<String>) {
     if spec.steps.is_empty() {
@@ -150,6 +151,7 @@ fn check_spec(spec: &CaseSpec, at: &str, r: &mut Report, stdin_names: &mut Vec<S
         check_inside(&format!("snapshot {path:?}"), path, at, r);
     }
     check_setup(spec, at, r);
+    check_chmod(spec, at, r);
     if spec.platforms.as_ref().is_some_and(|list| list.is_empty()) {
         r.add(
             4,
@@ -179,6 +181,37 @@ fn check_setup(spec: &CaseSpec, at: &str, r: &mut Report) {
             ),
             Some(_) => {}
         }
+    }
+}
+
+/// Rule 4 for chmod: each path stays inside the sandbox and each mode is octal, and a case that changes modes says it is
+/// unix-only, since windows has no modes to change.
+fn check_chmod(spec: &CaseSpec, at: &str, r: &mut Report) {
+    for (index, change) in spec.chmod.iter().enumerate() {
+        let number = index + 1;
+        check_inside(
+            &format!("chmod {number} path {:?}", change.path),
+            &change.path,
+            at,
+            r,
+        );
+        if parse_mode(&change.mode).is_none() {
+            r.add(
+                4,
+                &format!("chmod {number} mode {:?} is not octal", change.mode),
+                at,
+                "write the mode as one to four octal digits, such as \"000\" or \"555\"",
+            );
+        }
+    }
+    let unix_only = spec.platforms.as_deref() == Some(&[Platform::Unix][..]);
+    if spec.uses_chmod() && !unix_only {
+        r.add(
+            4,
+            "chmod needs platforms [\"unix\"]",
+            at,
+            "add \"platforms\": [\"unix\"], since modes exist only on unix",
+        );
     }
 }
 

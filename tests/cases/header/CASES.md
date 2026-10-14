@@ -142,3 +142,8 @@
   design §4.4 Text: a leading UTF-8 BOM is dropped on read. Run: memex show bom.rs --up 0.
 - `HDR-BOM-02` A UTF-8 byte order mark before a shebang is dropped, so the shebang is skipped and the `#` block after it is the header.
   design §4.4 Text: the BOM is dropped before the header is read, and design §2.1 skips the shebang. Run: memex show bom-run.sh --up 0.
+
+## READ
+
+- `HDR-READ-01` A header file that cannot be read is one stderr warning, and its folder lists it as `(no header)`, while `show .`, `show sub`, `search` and `info` still exit 0.
+  design §4.2 (an unreadable header is a warning that is skipped) and §2.1 Header detection. Run: memex show ., memex show sub, memex search demo and memex info, with sub/locked.rs at mode 000.

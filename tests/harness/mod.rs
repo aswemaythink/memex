@@ -6,6 +6,7 @@ pub mod bless;
 pub mod conform;
 pub mod discover;
 pub mod env;
+pub mod perms;
 pub mod sandbox;
 pub mod transcript;
 
@@ -33,6 +34,19 @@ pub struct CaseSpec {
     /// Absent means every OS.
     #[serde(default)]
     pub platforms: Option<Vec<Platform>>,
+    /// Permission changes made after setup and before the steps. Unix only (PLAN §2).
+    #[serde(default)]
+    pub chmod: Vec<ChmodStep>,
+}
+
+/// One `chmod` entry: an octal mode for a sandbox path, such as `{"path": "repo/x", "mode": "000"}`.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ChmodStep {
+    /// Relative to the sandbox, such as repo/x.
+    pub path: String,
+    /// Octal digits, such as `000` or `555`.
+    pub mode: String,
 }
 
 /// How the fixture becomes repo/.
@@ -76,6 +90,11 @@ pub struct Step {
 }
 
 impl CaseSpec {
+    /// True when the case changes permissions, which only unix can do (PLAN §2).
+    pub fn uses_chmod(&self) -> bool {
+        !self.chmod.is_empty()
+    }
+
     /// True when the case runs on the OS this test binary was built for.
     pub fn runs_on_this_os(&self) -> bool {
         let here = if cfg!(windows) {

@@ -1,0 +1,1 @@
+{"chmod": [{"path": "repo/.memex/logs/impl", "mode": "000"}], "platforms": ["unix"], "steps": [{"args": ["show", "."]}, {"args": ["search", "earlier"]}, {"args": ["info"]}]}

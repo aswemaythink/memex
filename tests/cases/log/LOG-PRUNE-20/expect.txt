@@ -1,0 +1,19 @@
+$ memex log impl
+exit 0
+stdout
+| impl:20261013-120000-fresh-entry
+stderr
+| memex: warning: prune: cannot delete the entry (PermissionDenied) $SANDBOX/repo/.memex/logs/old/20261009-120000-expired.md
+== snapshot repo/.memex/logs
+-- impl/20261013-120000-fresh-entry.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| ---
+| # Fresh entry
+| 
+| Body of the fresh entry.
+-- old/20261009-120000-expired.md
+| # Expired entry
+| 
+| An old entry in a folder the prune cannot write to.

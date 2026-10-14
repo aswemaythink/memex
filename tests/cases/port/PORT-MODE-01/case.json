@@ -1,0 +1,1 @@
+{"snapshot": ["repo/.memex/logs"], "steps": [{"args": ["log", "impl"], "stdin": "# Mode check\n\nBody of the mode check.\n"}]}

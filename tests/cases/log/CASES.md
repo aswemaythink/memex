@@ -158,3 +158,10 @@
   design §4.3 is silent on symlinks; the S1.3 review ruling as in LOG-WRITE-14. Run: memex log impl with .memex/logs a symlink to a sibling folder that holds a 4-day-old and a 2-day-old entry.
 - `LOG-PRUNE-18` A config.json that is a JSON array, `["1h"]`, prints one warning that it is not a JSON object and deletes nothing, so the array is not read by position.
   design §4.1 item 4 and §4.3 (never delete on config it can't read). Run: memex log impl with config.json `["1h"]` over a 4-day-old entry.
+- `LOG-PRUNE-20` A prune delete that the OS refuses, an expired entry in a stream folder at mode 555 while `log` writes to another stream, prints one warning that names the entry, leaves it in place, and the `log` exits 0.
+  design §4.4 Atomic writes (a delete the OS refuses is a warning, never an error) and §4.3 Cleanup. Run: memex log impl with a fresh body, over a 4-day-old entry in stream old at mode 555.
+
+## READ
+
+- `LOG-READ-02` A stream folder that cannot be read is one stderr warning, `memex: warning: cannot read <path> (PermissionDenied)`, and its entries are not loaded, while `show .`, `search` and `info` still exit 0.
+  design §4.2 (an unreadable stream folder is a warning that is skipped) and §4.4 Errors. Run: memex show ., memex search earlier and memex info, with .memex/logs/impl at mode 000.

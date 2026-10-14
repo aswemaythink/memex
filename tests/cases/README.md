@@ -49,6 +49,7 @@ Unknown keys are an error. Every field is optional except `steps`, which needs a
 - `snapshot` lists sandbox paths whose files are dumped after the last step.
 - `memex_on_path` prepends the built binary's folder to PATH.
 - `platforms` is a list of `unix` and/or `windows`. A case that excludes this OS is an ignored trial.
+- `chmod` is a list of `{"path": "repo/x", "mode": "000"}`: an octal mode of one to four digits for a path inside the sandbox. The modes are set after `setup` and before the steps. Modes exist only on unix, so a case with `chmod` must say `"platforms": ["unix"]`. After the case the runner gives the owner back rwx on each folder that a change touched, and rw on each file, so the sandbox is always removed. Root reads any file whatever its mode, so when the runner is root every case with `chmod` is an ignored trial. Root is detected by making a mode-000 probe file and reading it.
 
 ## Sandbox
 
@@ -75,7 +76,7 @@ Six rules run before any case, and each is its own trial, `conformity::rule1` to
 1. Every entry under `tests/cases/` is `README.md` or a family folder. A family folder holds `README.md`, `CASES.md` and case folders only.
 2. Every CASES.md parses. Ids match the pattern, share one prefix per family, the prefix is unique across families, ids are unique, and the topic matches its `## ` heading.
 3. Every case folder has exactly one entry, and every entry without `(planned)` has a folder.
-4. A case folder holds only `case.json` (valid), `expect.txt`, `fixture/` and named stdin files.
+4. A case folder holds only `case.json` (valid), `expect.txt`, `fixture/` and named stdin files. Its `chmod` entries stay inside the sandbox and have octal modes, and a case with `chmod` says `"platforms": ["unix"]`.
 5. Goldens use only `$SANDBOX` and `$VERSION` as placeholders.
 6. At least one case exists.
 
@@ -112,6 +113,8 @@ When any rule fails, the case trials are not created, and only the failing rules
 - Rule 4 also checks `steps` is not empty, `stdin` and `stdin_file` are not both set, a stdin_file is a plain file name that exists, setup argv starts with `git` or `memex`, every step `cwd` and `snapshot` path stays inside the sandbox (relative, no `..`, no leading separator, no drive or `:`), and `platforms` is not empty. `expect.txt` is optional, and a missing one fails its case.
 - Rule 5 looks for `$` followed by `[A-Z_]` and the run of `[A-Za-z0-9_]` after it. A `$ ` prompt is never a token. Bless also refuses a golden that rule 5 would reject.
 - Platform `unix` covers every OS that is not Windows.
+- Rule 4 also checks each `chmod` path stays inside the sandbox, each mode is octal, and a case with `chmod` is `platforms: ["unix"]`. Its messages are `chmod N path ...`, `chmod N mode ...` and `chmod needs platforms ["unix"]`.
+- The runner's `chmod` restore adds rwx to a folder and rw to a file, rather than setting exact modes, and it never follows a symlink.
 - `git: commit` passes `--allow-empty`, so an empty fixture still commits. Runner git runs, including `git` setup runs, use the sandbox environment plus the fixed identity and dates, so setup commits have stable hashes too. A case's `env` overrides them.
 - Setup runs use the case environment, not a step's.
 - `XDG_CONFIG_HOME` is `home/.config`, where PLAN §2 says "under `home`".

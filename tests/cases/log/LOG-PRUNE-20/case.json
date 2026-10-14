@@ -1,0 +1,1 @@
+{"chmod": [{"path": "repo/.memex/logs/old", "mode": "555"}], "platforms": ["unix"], "snapshot": ["repo/.memex/logs"], "steps": [{"args": ["log", "impl"], "stdin": "# Fresh entry\n\nBody of the fresh entry.\n"}]}

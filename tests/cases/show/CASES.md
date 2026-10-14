@@ -67,6 +67,11 @@
 - `SHOW-ERR-03` An empty ref is a usage error: `show ''` prints `memex: empty ref` and the show usage line on stderr, prints nothing on stdout and exits 2, and with `--json` it prints the usage envelope, exit 2.
   design §3.3 (refs are paths or refs) and §3.6 exit codes: 2 is a usage error. Run: memex show '' and memex show '' --json.
 
+## IO
+
+- `SHOW-IO-01` A requested file that cannot be read is an io error for its own ref, `memex: cannot read <arg> (PermissionDenied)`, while the other refs still print and the exit code is 1; with `--json` the same error is in `errors` with code `io`, and the exit code is 1.
+  design §3.3 (a requested unreadable file is that ref's io error, so show exits 1), §4.2 (the same file met while loading the corpus is also one warning on stderr) and §3.6 exit codes. Run: memex show src/cli.rs src/locked.rs notes.txt, then the same with --json, where src/locked.rs has mode 000.
+
 ## DUP
 
 - `SHOW-DUP-01` A ref given twice prints its section once, at the position of its first use, so `show src/cli.rs notes.txt src/cli.rs` prints two sections in that order, exit 0.

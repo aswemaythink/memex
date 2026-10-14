@@ -56,3 +56,8 @@
 
 - `INT-BOM-01` A README that starts with a UTF-8 byte order mark has its one-liner and its text read without the mark, exit 0.
   design §4.4 Text: a leading UTF-8 BOM is dropped on every read, READMEs included. Run: memex show . and memex show bom.
+
+## READ
+
+- `INT-READ-01` A README that cannot be read is one stderr warning, `memex: warning: cannot read <path> (PermissionDenied)`, its folder lists as `(no README)`, and `show .`, `search` and `info` still exit 0.
+  design §4.2 (an unreadable README is a warning that is skipped, and never fails a read verb) and §4.4 Errors. Run: memex show ., memex search demo and memex info, with sub/README.md at mode 000.

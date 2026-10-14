@@ -2,12 +2,14 @@
 //! Each broken tree under tests/runner-selftest trips exactly one rule, and each message is asserted in full.
 //! Cases: all (runner)
 
-#[allow(dead_code)] // this binary uses only conform::check; conformance.rs uses the rest
+#[allow(dead_code)]
+// this binary uses only conform::check and the chmod parser; conformance.rs uses the rest
 mod harness;
 
 use std::path::{Path, PathBuf};
 
 use harness::conform::check;
+use harness::perms::parse_mode;
 
 fn tree(name: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -131,6 +133,25 @@ fn rule4_path_escape() {
             "rule4: snapshot \"\" is not a path inside the sandbox at cli/CLI-VERSION-01/case.json: write it relative to the sandbox, such as repo/sub, with no .., no leading / and no drive",
         ]
     );
+}
+
+#[test]
+fn rule4_chmod() {
+    assert_eq!(
+        check(&tree("rule4-chmod")),
+        ["rule4: chmod needs platforms [\"unix\"] at cli/CLI-VERSION-01/case.json: add \"platforms\": [\"unix\"], since modes exist only on unix"]
+    );
+}
+
+#[test]
+fn chmod_modes_are_one_to_four_octal_digits() {
+    for mode in ["0", "000", "555", "7777"] {
+        assert!(parse_mode(mode).is_some(), "{mode} is an octal mode");
+    }
+    assert_eq!(parse_mode("555"), Some(0o555));
+    for mode in ["", "8", "0o755", "00000", "rwx", "-1"] {
+        assert_eq!(parse_mode(mode), None, "{mode:?} is not an octal mode");
+    }
 }
 
 #[test]

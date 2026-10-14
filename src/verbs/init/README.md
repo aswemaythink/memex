@@ -19,7 +19,7 @@ Choices where design §3.5b is silent:
 - A PATH folder whose path has `node_modules` directly followed by `.bin` is npx's temporary shim, so a memex in it is not an install and init installs its own copy (INIT-PATH-03, and a unit test for the scan).
 - An empty or relative `$HOME` or `%LOCALAPPDATA%` is the same error as a missing one, so the binary never lands under the cwd (INIT-INSTALL-04).
 - A replaced binary that cannot be replaced, as on Windows while it runs, is left whole: init exits 3, and the error says it may be running.
-- Written files get the mode of any new file (0o666 less the umask on unix), a replaced file keeps its own mode, and a read-only AGENTS.md or CLAUDE.md is refused (exit 3), never replaced. The binary is 0o755 on unix.
+- Written files get the mode of any new file (0o644 less the umask on unix), a replaced file keeps its own mode, and a read-only AGENTS.md or CLAUDE.md is refused (exit 3), never replaced. The binary is 0o755 on unix.
 - An empty AGENTS.md gets the block alone, with no blank line above it.
 - The atlas is `info::text_in` of the target, so the process cwd never changes. It ignores `$MEMEX_AGENT`: init has no `--agent`, and an invalid value must not exit 2 after the files are written (INIT-INFO-03).
 - The `.gitignore` bytes are written here, as `logs/write.rs` writes them there; the two copies are the same design §4.1 text.

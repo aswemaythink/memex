@@ -1,0 +1,16 @@
+$ memex log impl
+exit 3
+stdout (empty)
+stderr
+| memex: cannot create a temporary file in $SANDBOX/repo/.memex/logs/impl (PermissionDenied)
+
+$ memex log impl --json
+exit 3
+stdout
+| {"error":{"code":"io","message":"cannot create a temporary file in $SANDBOX/repo/.memex/logs/impl (PermissionDenied)"}}
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20261013-110000-earlier-entry.md
+| # Earlier entry
+| 
+| An entry that was written before the stream folder was locked.

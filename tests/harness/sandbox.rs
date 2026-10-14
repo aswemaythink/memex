@@ -1,4 +1,4 @@
-//! Builds a case's sandbox (fixture copy, git setup, scrubbed environment) and runs its steps in it.
+//! Builds a case's sandbox (fixture, git setup, chmod, environment) and runs its steps in it.
 //! Cases: all (runner)
 
 use std::ffi::OsStr;
@@ -8,8 +8,9 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 use super::env::{base_env, set, with_git_identity, Env};
+use super::perms::{parse_mode, restore_owner, set_mode};
 use super::transcript::StepRecord;
-use super::{CaseSpec, GitMode, SetupStep, Step};
+use super::{CaseSpec, ChmodStep, GitMode, SetupStep, Step};
 
 /// A case's sandbox: a fresh temp dir with repo/ and home/. It is deleted when dropped.
 pub struct Sandbox {
@@ -18,6 +19,17 @@ pub struct Sandbox {
     bin: PathBuf,
     /// The defaults plus the case's env: the environment of every step.
     case_env: Env,
+    /// Each path a chmod entry changed, so that Drop can give its owner back the rights to delete it.
+    touched: Vec<PathBuf>,
+}
+
+impl Drop for Sandbox {
+    /// Gives the owner back the rights that chmod entries took away, so the temp folder can always be removed (PLAN §2).
+    fn drop(&mut self) {
+        for path in &self.touched {
+            restore_owner(&self.root, path);
+        }
+    }
 }
 
 impl Sandbox {
@@ -49,12 +61,32 @@ impl Sandbox {
         for (index, setup) in spec.setup.iter().enumerate() {
             run_setup(index + 1, setup, &repo, bin, &setup_env)?;
         }
-        Ok(Sandbox {
+        let mut sandbox = Sandbox {
             _dir: dir,
             root,
             bin: bin.to_path_buf(),
             case_env: with_overrides(base, &spec.env),
-        })
+            touched: Vec::new(),
+        };
+        // The modes are set after setup and before the steps (PLAN §2). The sandbox exists before the first entry, so a
+        // failed entry still gives back what the earlier ones took, when the sandbox is dropped.
+        for change in &spec.chmod {
+            sandbox.chmod(change)?;
+        }
+        Ok(sandbox)
+    }
+
+    /// Applies one chmod entry, and records its path so that Drop can restore it.
+    fn chmod(&mut self, change: &ChmodStep) -> Result<(), String> {
+        let mode = parse_mode(&change.mode).ok_or_else(|| {
+            format!(
+                "chmod {} has mode {:?}, which is not octal",
+                change.path, change.mode
+            )
+        })?;
+        let path = self.root.join(&change.path);
+        self.touched.push(path.clone());
+        set_mode(&path, mode).map_err(|e| io_failure(&format!("cannot chmod {}", change.path), &e))
     }
 
     /// Runs one step: memex with its args, in repo/ unless it names a cwd, with its stdin and env.

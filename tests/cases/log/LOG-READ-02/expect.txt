@@ -1,0 +1,38 @@
+$ memex show .
+exit 0
+stdout
+| === . ===
+| # Demo
+| 
+| The demo repo for log reads.
+| 
+| children
+|   (none)
+|   showing 0 of 0
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr
+| memex: warning: cannot read $SANDBOX/repo/.memex/logs/impl (PermissionDenied)
+
+$ memex search earlier
+exit 0
+stdout (empty)
+stderr
+| memex: warning: cannot read $SANDBOX/repo/.memex/logs/impl (PermissionDenied)
+
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent  1 readme · 0 headers · 0 cases
+| use     memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr
+| memex: warning: cannot read $SANDBOX/repo/.memex/logs/impl (PermissionDenied)

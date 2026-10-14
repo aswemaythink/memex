@@ -1,0 +1,1 @@
+{"chmod": [{"path": "repo/sub/locked.rs", "mode": "000"}], "platforms": ["unix"], "steps": [{"args": ["show", "."]}, {"args": ["show", "sub"]}, {"args": ["search", "demo"]}, {"args": ["info"]}]}

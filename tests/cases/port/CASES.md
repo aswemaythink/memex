@@ -64,3 +64,13 @@
   design §4.4 Name matching (`config.json` is matched against the listing) and §4.1 item 4. Run: memex log impl over a 4-day-old entry, with .memex/Config.json holding keep_logs forever.
 - `PORT-NAME-05` A `.memex/Collections/` folder is not the collections folder on any OS: `memex log notes` ignores the `notes.json` inside it and exits 0.
   design §4.4 Name matching (`collections/` is matched against the listing) and §3.4 Stream name. Run: memex log notes, with .memex/Collections/notes.json present.
+
+## MODE
+
+- `PORT-MODE-01` A new log entry is 0644 before the umask, so 0644 under the runner's umask; a golden cannot show a mode, so tests/entry_mode.rs pins it under several umasks, and this case pins the ref and the stored text.
+  design §4.4 File modes (0644 before umask, not tempfile's private 0600). Run: memex log impl with a short body, then the store snapshot.
+
+## EXIT
+
+- `PORT-EXIT-01` `log` into a stream folder at mode 555 exits 3 with an io error that names the folder, on stderr in text and in `--json` on stdout, and writes nothing into the folder.
+  design §3.6 exit codes (3 for an I/O failure that stops the verb) and §4.4 Errors (the failing path, never the OS text). Run: memex log impl, then memex log impl --json, with .memex/logs/impl at mode 555.
