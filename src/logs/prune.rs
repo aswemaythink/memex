@@ -1,5 +1,5 @@
 //! Prunes the log store after every write (design §4.3).
-//! It deletes each entry older than keep_logs by its filename stamp, and removes the stream folders that its deletions empty. The store itself may be a symlink, which is followed; no symlink below it is, and hidden names and anything that is not a log entry are never touched.
+//! It deletes each entry older than keep_logs by its filename stamp, and removes the stream folders that its deletions empty. The store itself may be a symlink, which is followed; no symlink below it is, and hidden names and anything that is not a log entry are never touched. A path that is already gone (NotFound) is skipped without a warning (design §4.3 Vanished entries).
 //! Cases: LOG-PRUNE-01, LOG-PRUNE-02, LOG-PRUNE-03, LOG-PRUNE-04, LOG-PRUNE-05, LOG-PRUNE-06, LOG-PRUNE-07, LOG-PRUNE-08, LOG-PRUNE-09, LOG-PRUNE-10, LOG-PRUNE-11, LOG-PRUNE-12, LOG-PRUNE-13, LOG-PRUNE-14, LOG-PRUNE-15, LOG-PRUNE-17
 
 use std::ffi::OsStr;
@@ -136,14 +136,35 @@ fn remove_if_empty(dir: &Path) {
     }
 }
 
-/// Prints one warning line on stderr: `memex: warning: prune: <message> (<ErrorKind>) <path>`. A failed write is ignored, as there is nowhere left to report it.
+/// Prints one warning line on stderr: `memex: warning: prune: <message> (<ErrorKind>) <path>`. A NotFound is never printed: the
+/// path is already gone, as a concurrent prune leaves it (design §4.3 Vanished entries). A failed write is ignored, as there is
+/// nowhere left to report it.
 fn warn(message: &str, path: &Path, failure: &io::Error) {
-    let line = error::warning(&format!(
+    if failure.kind() == io::ErrorKind::NotFound {
+        return;
+    }
+    emit(error::warning(&format!(
         "prune: {message} ({:?}) {}",
         failure.kind(),
         slash(path)
-    ));
-    error::warn(std::slice::from_ref(&line));
+    )));
+}
+
+/// Puts one warning line on stderr. The tests keep the lines in `PRINTED` instead.
+#[cfg(not(test))]
+fn emit(line: String) {
+    error::warn(&[line]);
+}
+
+#[cfg(test)]
+fn emit(line: String) {
+    PRINTED.with(|printed| printed.borrow_mut().push(line));
+}
+
+#[cfg(test)]
+thread_local! {
+    /// The warning lines that `emit` kept on this thread, so a test can check which paths warn.
+    static PRINTED: std::cell::RefCell<Vec<String>> = const { std::cell::RefCell::new(Vec::new()) };
 }
 
 #[cfg(test)]
@@ -201,6 +222,41 @@ mod tests {
         assert!(
             entry.is_file(),
             "a failed delete must leave the entry in place"
+        );
+    }
+
+    #[test]
+    fn a_vanished_stream_folder_or_entry_warns_nothing() {
+        PRINTED.with(|printed| printed.borrow_mut().clear());
+        let root = tempfile::tempdir().expect("a temporary folder");
+        let stream = root.path().join("impl");
+        let entry = stream.join("20261009-120000-old.md");
+        let now = clock::parse_stamp("20261013-120000").expect("a stamp");
+        let keep = 3 * 86_400;
+        assert!(names(&stream).is_empty());
+        assert!(!delete(&entry));
+        remove_if_empty(&stream);
+        prune_stream(&stream, keep, now);
+        run(&root.path().join("no-store"), keep, now);
+        // The NotFound that a remove of a path another prune took would give.
+        let gone = io::Error::from(io::ErrorKind::NotFound);
+        warn("cannot delete the entry", &entry, &gone);
+        warn("cannot remove the empty folder", &stream, &gone);
+        let printed = PRINTED.with(|printed| printed.borrow().clone());
+        assert!(printed.is_empty(), "{printed:?}");
+    }
+
+    #[test]
+    fn any_other_failure_still_warns() {
+        PRINTED.with(|printed| printed.borrow_mut().clear());
+        let entry = Path::new("impl/20261009-120000-old.md");
+        let refused = io::Error::from(io::ErrorKind::PermissionDenied);
+        warn("cannot delete the entry", entry, &refused);
+        let printed = PRINTED.with(|printed| printed.borrow().clone());
+        assert_eq!(printed.len(), 1, "{printed:?}");
+        assert!(
+            printed[0].contains("prune: cannot delete the entry (PermissionDenied)"),
+            "{printed:?}"
         );
     }
 }

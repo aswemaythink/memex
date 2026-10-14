@@ -1,5 +1,5 @@
 //! Reads the log store's entries as docs for `show` (design §3.1 and §4.3).
-//! Every non-dot `.md` file one folder below the store is one doc, labelled `stream:id`, with its frontmatter as fields and its title from its first line. A stream folder or an entry that cannot be read is a warning, and is skipped (design §4.2).
+//! Every non-dot `.md` file one folder below the store is one doc, labelled `stream:id`, with its frontmatter as fields and its title from its first line. A stream folder or an entry that cannot be read is a warning, and is skipped (design §4.2); one that is already gone (NotFound) is skipped without a warning (design §4.3 Vanished entries).
 //! Cases: SHOW-LOG-01, SHOW-LOG-02, SHOW-JSON-03
 
 use std::fs;
@@ -29,7 +29,8 @@ pub fn load(store: &Path, warnings: &mut Vec<String>) -> Vec<Doc> {
     for (stream, folder) in entries(store, true, warnings) {
         for (file, path) in entries(&folder, false, warnings) {
             match entry_doc(&stream, &file, &path) {
-                Ok(doc) => docs.push(doc),
+                Ok(Some(doc)) => docs.push(doc),
+                Ok(None) => {}
                 Err(error) => warnings.push(error::warning(&error.message)),
             }
         }
@@ -53,7 +54,7 @@ fn entries(dir: &Path, folders: bool, warnings: &mut Vec<String>) -> Vec<(String
         let item = match item {
             Ok(item) => item,
             Err(failure) => {
-                warnings.push(warning(dir, &failure));
+                note(warnings, dir, &failure);
                 continue;
             }
         };
@@ -63,7 +64,7 @@ fn entries(dir: &Path, folders: bool, warnings: &mut Vec<String>) -> Vec<(String
         let kind = match item.file_type() {
             Ok(kind) => kind,
             Err(failure) => {
-                warnings.push(warning(&item.path(), &failure));
+                note(warnings, &item.path(), &failure);
                 continue;
             }
         };
@@ -80,13 +81,17 @@ fn entries(dir: &Path, folders: bool, warnings: &mut Vec<String>) -> Vec<(String
     found
 }
 
-/// One log entry as a doc: its frontmatter fields, its body as the text, and its title line.
-fn entry_doc(stream: &str, file: &str, path: &Path) -> Result<Doc, Error> {
-    let contents =
-        text::read(path).map_err(|failure| Error::io_at("cannot read", path, &failure))?;
+/// One log entry as a doc: its frontmatter fields, its body as the text, and its title line. An entry that is gone by the time
+/// it is read is None, as a concurrent prune leaves it (design §4.3 Vanished entries).
+fn entry_doc(stream: &str, file: &str, path: &Path) -> Result<Option<Doc>, Error> {
+    let contents = match text::read(path) {
+        Ok(contents) => contents,
+        Err(failure) if failure.kind() == io::ErrorKind::NotFound => return Ok(None),
+        Err(failure) => return Err(Error::io_at("cannot read", path, &failure)),
+    };
     let document = split(&contents);
     let id = file.strip_suffix(".md").unwrap_or(file).to_string();
-    Ok(Doc {
+    Ok(Some(Doc {
         label: format!("{stream}:{id}"),
         collection: stream.to_string(),
         id,
@@ -94,7 +99,7 @@ fn entry_doc(stream: &str, file: &str, path: &Path) -> Result<Doc, Error> {
         title: title_of(&document.body),
         text: document.body,
         fields: document.fields,
-    })
+    }))
 }
 
 /// The warning for a path that cannot be read: memex's words, the io kind and the path (design §4.2 and §4.4).
@@ -102,15 +107,42 @@ fn warning(path: &Path, failure: &io::Error) -> String {
     error::warning(&Error::io_at("cannot read", path, failure).message)
 }
 
-#[cfg(all(test, unix))]
+/// Adds the warning for `path` to `warnings`, unless the failure is NotFound: the path is already gone, as a concurrent prune
+/// leaves it (design §4.3 Vanished entries).
+fn note(warnings: &mut Vec<String>, path: &Path, failure: &io::Error) {
+    if failure.kind() != io::ErrorKind::NotFound {
+        warnings.push(warning(path, failure));
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use std::fs;
-    use std::os::unix::fs::PermissionsExt;
 
     use super::*;
 
     #[test]
+    fn an_entry_or_folder_gone_before_it_is_read_warns_nothing() {
+        let dir = tempfile::tempdir().expect("a temp folder");
+        let stream = dir.path().join("impl");
+        let entry = stream.join("20261014-120000-a.md");
+        let mut warnings = Vec::new();
+        assert!(entries(&stream, false, &mut warnings).is_empty());
+        assert!(matches!(
+            entry_doc("impl", "20261014-120000-a.md", &entry),
+            Ok(None)
+        ));
+        assert!(warnings.is_empty(), "{warnings:?}");
+        // Any other failure to read an entry is still an error, so NotFound is the only silent one.
+        fs::create_dir_all(&entry).expect("a folder where the entry should be");
+        assert!(entry_doc("impl", "20261014-120000-a.md", &entry).is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
     fn an_unreadable_stream_folder_or_entry_is_a_warning_and_the_rest_loads() {
+        use std::os::unix::fs::PermissionsExt;
+
         let dir = tempfile::tempdir().expect("a temp folder");
         let store = dir.path();
         fs::create_dir_all(store.join("impl")).expect("a stream");
