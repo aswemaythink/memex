@@ -76,6 +76,9 @@ pub struct Corpus {
     streams: BTreeSet<String>,
     /// The citations of every doc and the backlinks they give, built once when the corpus loads (design §2.3).
     citations: cite::Index,
+    /// The warnings of the files, folders and log entries that could not be read as the corpus loaded (design §4.2). `info` lists
+    /// them in its JSON.
+    pub read_warnings: Vec<String>,
 }
 
 impl Corpus {
@@ -116,23 +119,27 @@ impl Corpus {
             children: BTreeMap::new(),
             streams: BTreeSet::new(),
             citations: cite::Index::default(),
+            read_warnings: Vec::new(),
         };
-        let mut warnings = Vec::new();
-        for entry in walk::walk_warned(root, &mut warnings) {
+        for entry in walk::walk_warned(root, &mut corpus.read_warnings) {
             let kind = if entry.is_dir { Kind::Dir } else { Kind::File };
             corpus.kinds.insert(entry.rel.clone(), kind);
             if !entry.is_dir {
                 match file_docs(&entry) {
                     Ok(docs) => docs.into_iter().for_each(|doc| corpus.insert(doc)),
-                    Err(error) => warnings.push(format!("memex: warning: {}", error.message)),
+                    Err(error) => corpus
+                        .read_warnings
+                        .push(format!("memex: warning: {}", error.message)),
                 }
             }
         }
+        let mut warnings = Vec::new();
         for found in manifest::load(root, &mut warnings) {
             for doc in manifest::docs(&found, root, &mut warnings) {
                 corpus.insert(doc);
             }
         }
+        warn(&corpus.read_warnings);
         warn(&warnings);
         Ok(corpus)
     }
@@ -140,9 +147,9 @@ impl Corpus {
     /// Adds the logs of the store, when there is one, then builds the folder index and the citations.
     fn finish(&mut self, store: Option<&Path>) -> Result<(), Error> {
         if let Some(store) = store {
-            let mut warnings = Vec::new();
-            let logs = load_logs(store, &mut warnings);
-            warn(&warnings);
+            let before = self.read_warnings.len();
+            let logs = load_logs(store, &mut self.read_warnings);
+            warn(&self.read_warnings[before..]);
             self.streams = logs.iter().map(|doc| doc.collection.clone()).collect();
             for doc in logs {
                 self.insert(doc);
@@ -269,7 +276,7 @@ pub fn readme_label(dir: &str) -> String {
 
 /// Prints each warning on its own stderr line, once per run: a line that a second load of the same tree repeats, as an
 /// `elsewhere` ref loads a root again, is not printed again. A failed write is ignored, as there is nowhere left to report it.
-pub fn warn(lines: &[String]) {
+fn warn(lines: &[String]) {
     static PRINTED: Mutex<BTreeSet<String>> = Mutex::new(BTreeSet::new());
     let mut printed = PRINTED.lock().unwrap_or_else(PoisonError::into_inner);
     let mut stderr = io::stderr().lock();

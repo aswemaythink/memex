@@ -14,7 +14,6 @@ use crate::error::Error;
 use crate::intent::cases;
 use crate::render::{self, CaseParts, Fields, Link, Listing, Miss, Ref, Section};
 use crate::resolve::{resolve, Elsewhere, Outcome, Target};
-use crate::root::slash;
 use crate::scan::fail;
 use crate::text;
 use crate::verbs::here;
@@ -53,13 +52,24 @@ struct Options {
 }
 
 /// Shows each ref in the order given. A ref that fails is reported and the others still print. An empty ref is a usage error,
-/// and a ref given twice prints once, at its first position (design §3.3). A fatal problem, such as an unreadable cwd, is an
-/// error. A requested file that cannot be read is warned about and gives no section, so the verb still succeeds (design §4.2).
+/// and a ref given twice prints once, at its first position (design §3.3). A requested file that cannot be read is that ref's
+/// `io` error, so the verb exits 1 like any failed ref. A fatal problem, such as an unreadable cwd, is an error.
 pub fn run(request: &Request) -> Result<Report, Error> {
     if request.refs.iter().any(String::is_empty) {
         return Err(fail(Verb::Show, "empty ref".to_string()));
     }
     let here::Here { cwd, store, corpus } = here::load()?;
+    show_in(&corpus, &cwd, store.as_deref(), request)
+}
+
+/// Shows the refs of `request` as typed from `cwd`, in the corpus of their root. `run` passes the cwd's own corpus; a test can
+/// pass one that it built.
+fn show_in(
+    corpus: &Corpus,
+    cwd: &Path,
+    store: Option<&Path>,
+    request: &Request,
+) -> Result<Report, Error> {
     let options = Options {
         up: request.up,
         limit: request.limit.unwrap_or(DEFAULT_LIMIT),
@@ -71,11 +81,21 @@ pub fn run(request: &Request) -> Result<Report, Error> {
         if !seen.insert(arg.as_str()) {
             continue;
         }
-        match resolve(&corpus, &cwd, store.as_deref(), arg)? {
-            Outcome::Found(target) => sections.extend(section_for(&corpus, &target, &options)),
-            Outcome::Elsewhere(other) => sections.extend(elsewhere_section(&other, &options)),
-            Outcome::NotFound => misses.push(Miss::not_found(arg)),
-            Outcome::Ambiguous(candidates) => misses.push(Miss::ambiguous(arg, candidates)),
+        let built = match resolve(corpus, cwd, store, arg)? {
+            Outcome::Found(target) => section_for(corpus, &target, &options),
+            Outcome::Elsewhere(other) => elsewhere_section(&other, &options),
+            Outcome::NotFound => {
+                misses.push(Miss::not_found(arg));
+                continue;
+            }
+            Outcome::Ambiguous(candidates) => {
+                misses.push(Miss::ambiguous(arg, candidates));
+                continue;
+            }
+        };
+        match built {
+            Ok(section) => sections.push(section),
+            Err(failure) => misses.push(Miss::unreadable(arg, &failure)),
         }
     }
     let failed = !misses.is_empty();
@@ -97,7 +117,7 @@ pub fn run(request: &Request) -> Result<Report, Error> {
 /// The section of an entry in another root: built from that root's own corpus, and labelled by its absolute path, which
 /// round-trips from anywhere (design §3.1). Its cites and cited by name labels of that root, which do not round-trip from
 /// the cwd, so they print as none until absolute refs are designed for them.
-fn elsewhere_section(other: &Elsewhere, options: &Options) -> Option<Section> {
+fn elsewhere_section(other: &Elsewhere, options: &Options) -> Result<Section, io::Error> {
     let target = Target::Path {
         rel: other.rel.clone(),
         kind: other.kind,
@@ -109,21 +129,25 @@ fn elsewhere_section(other: &Elsewhere, options: &Options) -> Option<Section> {
         total: 0,
         items: Vec::new(),
     };
-    Some(section)
+    Ok(section)
 }
 
-/// The section of one resolved target, or None for a requested file that cannot be read.
-fn section_for(corpus: &Corpus, target: &Target<'_>, options: &Options) -> Option<Section> {
+/// The section of one resolved target. A file that cannot be read gives its io error (design §3.3).
+fn section_for(
+    corpus: &Corpus,
+    target: &Target<'_>,
+    options: &Options,
+) -> Result<Section, io::Error> {
     match target {
         Target::Path {
             rel,
             kind: Kind::Dir,
-        } => Some(folder_section(corpus, rel, options)),
+        } => Ok(folder_section(corpus, rel, options)),
         Target::Path {
             rel,
             kind: Kind::File,
         } => file_section(corpus, rel, options),
-        Target::Doc(doc) => Some(doc_section(corpus, doc, options)),
+        Target::Doc(doc) => Ok(doc_section(corpus, doc, options)),
     }
 }
 
@@ -164,14 +188,14 @@ fn listed_children(corpus: &Corpus, rel: &str) -> Vec<Child> {
 }
 
 /// The section of a file: its header, or its whole text for a Markdown file, and the chain above its folder. A README
-/// starts its chain one folder higher, since its own text is the body. None when the file cannot be read.
-fn file_section(corpus: &Corpus, rel: &str, options: &Options) -> Option<Section> {
+/// starts its chain one folder higher, since its own text is the body. A file that cannot be read gives its io error.
+fn file_section(corpus: &Corpus, rel: &str, options: &Options) -> Result<Section, io::Error> {
     let doc = corpus.doc(rel);
     let path = corpus.root.join(rel);
     let text = if rel.ends_with(".md") {
-        Some(requested(&path, text::read)?)
+        Some(text::read(&path)?)
     } else {
-        requested(&path, |path| File::open(path))?;
+        File::open(&path)?;
         doc.map(|doc| doc.text.clone())
     };
     let folder = parent_of(rel).unwrap_or("");
@@ -180,7 +204,7 @@ fn file_section(corpus: &Corpus, rel: &str, options: &Options) -> Option<Section
     } else {
         Some(folder)
     };
-    Some(Section {
+    Ok(Section {
         label: rel.to_string(),
         title: doc.map(|doc| doc.title.clone()),
         collection: doc.map(|doc| doc.collection.clone()),
@@ -276,18 +300,49 @@ fn cites_of(corpus: &Corpus, label: &str) -> Vec<Cite> {
     corpus.citations().cites(label).to_vec()
 }
 
-/// Reads a requested file with `read`. A file that cannot be read is warned about, once per run, and gives None, so its
-/// section is skipped (design §4.2): the warning is the same line the corpus prints for an unreadable intent file.
-fn requested<T>(path: &Path, read: impl FnOnce(&Path) -> io::Result<T>) -> Option<T> {
-    read(path)
-        .map_err(|failure| {
-            let message = Error::io(&format!("cannot read {}", slash(path)), &failure).message;
-            corpus::warn(&[format!("memex: warning: {message}")]);
-        })
-        .ok()
-}
-
 /// True for a README.md, at the root or in a folder.
 fn is_readme(rel: &str) -> bool {
     rel == "README.md" || rel.ends_with("/README.md")
+}
+
+#[cfg(all(test, unix))]
+mod tests {
+    use std::fs;
+    use std::os::unix::fs::PermissionsExt;
+
+    use super::*;
+
+    /// A requested file that cannot be read fails its ref with an `io` error, in text and in JSON, and the other refs still print
+    /// (design §3.3). Setup cannot chmod, so the test does.
+    #[test]
+    fn a_requested_file_that_cannot_be_read_is_its_refs_io_error() {
+        let dir = tempfile::tempdir().expect("a temp folder");
+        let root = dir.path();
+        fs::write(root.join("README.md"), "# Demo\n\nThe demo.\n").expect("a file");
+        fs::write(root.join("notes.md"), "# Notes\n\nNotes.\n").expect("a file");
+        fs::set_permissions(root.join("README.md"), fs::Permissions::from_mode(0o000))
+            .expect("a mode");
+        if fs::read(root.join("README.md")).is_ok() {
+            // Running as root reads any file, so there is nothing to check.
+            return;
+        }
+        let corpus = Corpus::load(root, None).expect("the layer loads");
+        let request = |json: bool| Request {
+            refs: vec!["README.md".to_string(), "notes.md".to_string()],
+            up: None,
+            limit: None,
+            json,
+        };
+        let text = show_in(&corpus, root, None, &request(false)).expect("show runs");
+        let json = show_in(&corpus, root, None, &request(true)).expect("show runs");
+        fs::set_permissions(root.join("README.md"), fs::Permissions::from_mode(0o644))
+            .expect("restored");
+        assert!(text.failed);
+        assert_eq!(
+            text.stderr,
+            "memex: cannot read README.md (PermissionDenied)\n"
+        );
+        assert!(text.stdout.contains("=== notes.md ==="), "{}", text.stdout);
+        assert!(json.stdout.contains(r#""code":"io""#), "{}", json.stdout);
+    }
 }

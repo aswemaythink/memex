@@ -7,6 +7,8 @@ pub mod json;
 pub mod search;
 pub mod text;
 
+use std::io;
+
 use crate::cite::Cite;
 use crate::collections::frontmatter::Value;
 use crate::corpus::Child;
@@ -93,11 +95,12 @@ impl<T: Clone> Listing<T> {
     }
 }
 
-/// A ref that `show` could not print: not found, or ambiguous with its candidates (design §3.1 and §3.6).
+/// A ref that `show` could not print: not found, ambiguous with its candidates, or a requested file that cannot be read
+/// (design §3.1, §3.3 and §3.6).
 pub struct Miss {
     /// The ref as typed.
     pub arg: String,
-    /// `not_found` or `ambiguous`.
+    /// `not_found`, `ambiguous` or `io`.
     pub code: Code,
     /// The message after `memex: `, such as `not found: nope.rs`.
     pub message: String,
@@ -123,6 +126,16 @@ impl Miss {
             code: Code::Ambiguous,
             message: format!("ambiguous: {arg}"),
             candidates,
+        }
+    }
+
+    /// A requested file that cannot be read: an `io` error for its ref, which names the ref as typed (design §3.3).
+    pub fn unreadable(arg: &str, failure: &io::Error) -> Miss {
+        Miss {
+            arg: arg.to_string(),
+            code: Code::Io,
+            message: format!("cannot read {arg} ({:?})", failure.kind()),
+            candidates: Vec::new(),
         }
     }
 }

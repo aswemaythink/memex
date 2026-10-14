@@ -29,8 +29,9 @@ pub enum Target<'a> {
 pub enum Outcome<'a> {
     /// The ref names exactly one target of the current root.
     Found(Target<'a>),
-    /// The ref names an entry of another root, which resolves against that root's own corpus (design §3.1).
-    Elsewhere(Elsewhere),
+    /// The ref names an entry of another root, which resolves against that root's own corpus (design §3.1). Boxed, as its corpus
+    /// is large next to the other outcomes.
+    Elsewhere(Box<Elsewhere>),
     /// Nothing matches the ref.
     NotFound,
     /// Several targets match: their labels, sorted. Memex never guesses between them.

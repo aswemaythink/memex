@@ -106,12 +106,12 @@ fn elsewhere<'a>(full: &Path, store: Option<&Path>) -> Result<Outcome<'a>, Error
     };
     let corpus = Corpus::load(&root, store)?;
     Ok(match corpus.kind(&rel) {
-        Some(kind) => Outcome::Elsewhere(Elsewhere {
+        Some(kind) => Outcome::Elsewhere(Box::new(Elsewhere {
             corpus,
             rel,
             kind,
             label: slash(full),
-        }),
+        })),
         None => Outcome::NotFound,
     })
 }

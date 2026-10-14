@@ -32,7 +32,8 @@ pub struct Atlas {
     pub to: Option<ToCount>,
     /// The nearest README at or above the cwd, when the cwd is below the root and such a README exists.
     pub here: Option<HereLine>,
-    /// The warnings of the run: the manifests that did not load, then the duplicate case ids. Only JSON lists them.
+    /// The warnings of the run: the manifests that did not load, the duplicate case ids, then the files that could not be read.
+    /// Only JSON lists them.
     pub warnings: Vec<String>,
 }
 

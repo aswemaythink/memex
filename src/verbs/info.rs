@@ -77,11 +77,12 @@ fn env_agent() -> Option<String> {
 }
 
 /// The atlas of a run: the root and the store, the counts, the collections and streams, the `to` count, the `here` line, and the
-/// warnings of the manifests and the duplicate case ids.
+/// warnings of the manifests, the duplicate case ids and the files that could not be read.
 fn atlas(here: &Here, agent: Option<String>, now: Timestamp, duplicates: &[String]) -> Atlas {
     let corpus = &here.corpus;
     let (collections, mut warnings) = manifest_collections(&corpus.root);
     warnings.extend(duplicates.iter().cloned());
+    warnings.extend(corpus.read_warnings.iter().cloned());
     let store = here.store.as_deref();
     Atlas {
         root: slash(&corpus.root),
