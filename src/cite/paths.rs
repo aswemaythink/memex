@@ -3,7 +3,7 @@
 //! Cases: CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-05, CITE-LINK-01, CITE-LINK-03, CITE-FOLDER-01
 
 use crate::corpus::{readme_label, Corpus, Kind};
-use crate::refs::{has_extension, join};
+use crate::refs::{candidates, has_extension};
 
 /// Where a path names the walk.
 pub enum Named {
@@ -49,15 +49,4 @@ pub fn title_of(corpus: &Corpus, label: &str) -> String {
         .doc(&key)
         .map(|doc| doc.title.clone())
         .unwrap_or_default()
-}
-
-/// The root-relative paths that `raw` can name, in the order they are tried. Empty when every one climbs above the root.
-fn candidates(base: &str, raw: &str) -> Vec<String> {
-    match raw.strip_prefix('/') {
-        Some(from_root) => join("", from_root).into_iter().collect(),
-        None => [join(base, raw), join("", raw)]
-            .into_iter()
-            .flatten()
-            .collect(),
-    }
 }

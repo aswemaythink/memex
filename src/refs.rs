@@ -1,6 +1,6 @@
-//! The spellings that refs in docs use (design §2.2, §2.3): case ids, path tokens and the path join.
+//! The spellings that refs in docs use (design §2.2, §2.3): case ids, path tokens and path resolution.
 //! The CASES.md reader and the citation scanner both read them, so each rule has one copy.
-//! Cases: CASE-GRAMMAR-01, CASE-GRAMMAR-02, CASE-GRAMMAR-03, CASE-EVID-05, CITE-BARE-01, CITE-BARE-02, CITE-PATH-05, CITE-PATH-06
+//! Cases: CASE-GRAMMAR-01, CASE-GRAMMAR-02, CASE-GRAMMAR-03, CASE-EVID-02, CASE-EVID-03, CASE-EVID-05, CASE-EVID-06, CITE-BARE-01, CITE-BARE-02, CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-05, CITE-PATH-06
 
 /// True for an id body (design §2.2): a capital first, then dash-separated parts of capitals and digits, none of them empty.
 /// A family prefix such as `NAME-` is an id body followed by a dash (design §2.3).
@@ -35,6 +35,18 @@ pub fn join(base: &str, token: &str) -> Option<String> {
         }
     }
     Some(parts.join("/"))
+}
+
+/// The root-relative paths that `token` can name from the folder `base`, in the order they are tried: from `base` and then from
+/// the root, or from the root alone when `token` begins with `/`. Empty when every one climbs above the root (design §2.3).
+pub fn candidates(base: &str, token: &str) -> Vec<String> {
+    match token.strip_prefix('/') {
+        Some(from_root) => join("", from_root).into_iter().collect(),
+        None => [join(base, token), join("", token)]
+            .into_iter()
+            .flatten()
+            .collect(),
+    }
 }
 
 /// True for a non-empty run of upper-case ASCII letters and digits.
@@ -80,5 +92,15 @@ mod tests {
         assert_eq!(join("", "./a/./b/").as_deref(), Some("a/b"));
         assert_eq!(join("", "../x"), None);
         assert_eq!(join("a", "../../x"), None);
+    }
+
+    #[test]
+    fn candidates_try_the_folder_then_the_root_and_never_climb_above_it() {
+        assert_eq!(
+            candidates("src/deep", "cli.rs"),
+            ["src/deep/cli.rs", "cli.rs"]
+        );
+        assert_eq!(candidates("src/deep", "/cli.rs"), ["cli.rs"]);
+        assert!(candidates("a", "../../x").is_empty());
     }
 }

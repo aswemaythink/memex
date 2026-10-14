@@ -7,7 +7,7 @@ use crate::collections::frontmatter::Value;
 use crate::corpus::{parent_of, Doc, CASES};
 use crate::error::Error;
 use crate::fence;
-use crate::refs::{has_extension, is_case_id, join};
+use crate::refs::{candidates, has_extension, is_case_id};
 use crate::text;
 
 /// The case docs of the CASES.md at `rel`, whose text is `text` as the one text reader gives it, with its byte order mark
@@ -232,11 +232,9 @@ fn path_token(span: &str) -> Option<&str> {
 /// The root-relative file that a path token names (design §2.2): from `folder` and then from the root. A token that begins
 /// with `/` names a file from the root only (design §2.3).
 fn resolve(folder: &str, token: &str, is_file: &impl Fn(&str) -> bool) -> Option<String> {
-    let candidates: Vec<Option<String>> = match token.strip_prefix('/') {
-        Some(from_root) => vec![join("", from_root)],
-        None => vec![join(folder, token), join("", token)],
-    };
-    candidates.into_iter().flatten().find(|rel| is_file(rel))
+    candidates(folder, token)
+        .into_iter()
+        .find(|rel| is_file(rel))
 }
 
 #[cfg(test)]
