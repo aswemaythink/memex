@@ -13,3 +13,9 @@ stdout
 |   cases:WID-ONE-01  Widget case 01.
 |   cases:WID-ONE-02  Widget case 02.
 stderr (empty)
+
+$ memex search --in cases --limit 0
+exit 0
+stdout
+| cases  (showing 0 of 52)
+stderr (empty)

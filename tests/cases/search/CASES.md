@@ -197,7 +197,7 @@
 
 ## LEGEND
 
-- `SRCH-LEGEND-01` A roster group's heading names its `<-N` marker, so `cases  (showing 2 of 52; <-N cited by N)`, while a search group's heading names no marker and reads `(showing N of M)`.
-  design §3.2 Markers (a roster group reads `cases  (showing 50 of 214; <-N cited by N)`). Fixture: the widget cases of SRCH-ORPHAN-01. Run: memex search --in cases --limit 2, then memex search widget --in cases --limit 2.
+- `SRCH-LEGEND-01` A roster group's heading names its `<-N` marker, so `cases  (showing 2 of 52; <-N cited by N)`, while a search group's heading names no marker and reads `(showing N of M)`, and a roster with no line shown, `--limit 0`, names none, since its lines use none.
+  design §3.2 Markers (a roster group reads `cases  (showing 50 of 214; <-N cited by N)`, and the heading names the markers its lines use). Fixture: the widget cases of SRCH-ORPHAN-01. Run: memex search --in cases --limit 2, then memex search widget --in cases --limit 2, then memex search --in cases --limit 0.
 - `SRCH-LEGEND-02` A group heading names each fuzzy variant its lines use, once each in alphabetical order as `[~w] fuzzy match on w`, and a group whose hits are all exact has no legend, so `readmes` names `grammer` and `grammir` while `cases` names nothing.
   design §3.2 Markers (a group with a fuzzy hit adds `; [~w] fuzzy match on w`). Fixture: three READMEs holding `grammir`, `grammar` and `grammer`, and a CASES.md entry that says `grammar`. Run: memex search grammar.
