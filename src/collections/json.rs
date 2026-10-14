@@ -1,13 +1,13 @@
 //! Reads a `json` manifest's docs: each object of the array at `at` is one doc (design §4.2).
-//! It also holds the helpers that the folder kind shares with it: fields, one-liners, docs and glob matches.
+//! It also holds the helpers that the folder kind shares with it: fields, one-liners and docs.
 //! Cases: MANK-JSON-01, MANK-JSON-02, MANK-JSON-03, MANK-JSON-04, MANK-JSON-05, MANK-JSON-06, MANK-JSON-07, MANK-JSON-08
 
 use std::path::Path;
 
-use ignore::overrides::OverrideBuilder;
 use serde_json::{Map, Value as Json};
 
 use super::frontmatter::Value;
+use super::globs;
 use super::manifest::{self, Manifest};
 use crate::corpus::Doc;
 use crate::intent::sentence;
@@ -26,7 +26,7 @@ pub fn docs(manifest: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Vec
         let base = root.join(dir);
         let entries = walk::walk(&base);
         let files: Vec<&Entry> = entries.iter().filter(|entry| !entry.is_dir).collect();
-        for file in glob_hits(&base, &manifest.include, &files) {
+        for file in globs::hits(&base, &manifest.include, &files) {
             for item in items_at(&file.path, at, warnings) {
                 docs.extend(entry_doc(manifest, key, &item));
             }
@@ -84,24 +84,6 @@ fn text_of(members: &Map<String, Json>, skip: Option<&str>) -> String {
         .filter_map(|(_, value)| value.as_str())
         .collect::<Vec<&str>>()
         .join("\n")
-}
-
-/// The files among `files` that one of `globs` matches, read relative to `root` with the gitignore rules, so `*.md` matches a
-/// name and `**/*.json` matches at any depth. A glob that does not parse matches nothing.
-pub(super) fn glob_hits<'a>(root: &Path, globs: &[String], files: &[&'a Entry]) -> Vec<&'a Entry> {
-    let mut builder = OverrideBuilder::new(root);
-    for glob in globs {
-        // A glob that does not parse is skipped, so it matches nothing.
-        let _ = builder.add(glob);
-    }
-    let Ok(overrides) = builder.build() else {
-        return Vec::new();
-    };
-    files
-        .iter()
-        .copied()
-        .filter(|file| overrides.matched(&file.path, false).is_whitelist())
-        .collect()
 }
 
 /// The fields that an object's top-level scalars give, in source order: strings, numbers and booleans as text. Nulls, arrays

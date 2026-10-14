@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use crate::cli::Verb;
 use crate::clock::{self, Timestamp};
 use crate::collections::frontmatter::Value;
-use crate::collections::manifest::{self, Kind, Manifest};
+use crate::collections::manifest::{Kind, Loaded};
 use crate::corpus::{label_of, parent_of, readme_label, Corpus, Doc};
 use crate::error::Error;
 use crate::intent::cases::COLLECTION as CASES;
@@ -80,7 +80,7 @@ fn env_agent() -> Option<String> {
 /// warnings of the manifests, the duplicate case ids and the files that could not be read.
 fn atlas(here: &Here, agent: Option<String>, now: Timestamp, duplicates: &[String]) -> Atlas {
     let corpus = &here.corpus;
-    let (collections, mut warnings) = manifest_collections(&corpus.root);
+    let (collections, mut warnings) = manifest_collections(corpus);
     warnings.extend(duplicates.iter().cloned());
     warnings.extend(corpus.read_warnings.iter().cloned());
     let store = here.store.as_deref();
@@ -109,28 +109,31 @@ fn store_label(root: &Path, store: Option<&Path>) -> String {
     }
 }
 
-/// The manifests that load, sorted by name, each with its doc count (design §3.5 Collections), and the warnings of their reads.
-/// The corpus already read these files and printed their warnings; this reads them again, so that the counts and the JSON
-/// warnings come from the manifest readers themselves, at the cost of a second read of each manifest's files.
-fn manifest_collections(root: &Path) -> (Vec<Collection>, Vec<String>) {
-    let mut warnings = Vec::new();
-    let mut manifests: Vec<Manifest> = manifest::load(root, &mut warnings);
-    manifests.sort_by(|left, right| left.name.cmp(&right.name));
-    let collections: Vec<Collection> = manifests
-        .iter()
-        .map(|found| collection_of(found, root, &mut warnings))
+/// The manifests that loaded, sorted by name, each with its doc count (design §3.5 Collections), and the warnings of the manifest
+/// reads: the files that did not load, then each collection's in name order. The corpus read them once and keeps them.
+fn manifest_collections(corpus: &Corpus) -> (Vec<Collection>, Vec<String>) {
+    let mut loaded: Vec<&Loaded> = corpus.manifests.iter().collect();
+    loaded.sort_by(|left, right| left.manifest.name.cmp(&right.manifest.name));
+    let mut warnings = corpus.manifest_warnings.clone();
+    let collections = loaded
+        .into_iter()
+        .map(|found| {
+            warnings.extend(found.warnings.iter().cloned());
+            collection_of(found)
+        })
         .collect();
     (collections, warnings)
 }
 
-/// One manifest as a collection: its name, kind, description and owner, and the number of docs its reader gives.
-fn collection_of(found: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Collection {
+/// One loaded manifest as a collection: its name, kind, description and owner, and the number of docs its reader gave.
+fn collection_of(found: &Loaded) -> Collection {
+    let manifest = &found.manifest;
     Collection {
-        name: found.name.clone(),
-        kind: kind_word(found.kind),
-        count: manifest::docs(found, root, warnings).len(),
-        description: found.description.clone(),
-        owner: found.owner.clone(),
+        name: manifest.name.clone(),
+        kind: kind_word(manifest.kind),
+        count: found.count,
+        description: manifest.description.clone(),
+        owner: manifest.owner.clone(),
     }
 }
 

@@ -2,12 +2,10 @@
 //! Cases: SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-07, SRCH-FILTER-08, SRCH-IN-03, SRCH-IN-04, SRCH-IN-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-JSON-03
 
 use std::collections::BTreeSet;
-use std::path::Path;
 
 use crate::cli::Verb;
 use crate::clock::{self, Timestamp};
 use crate::collections::frontmatter::Value;
-use crate::collections::manifest;
 use crate::corpus::{Corpus, Doc};
 use crate::error::Error;
 use crate::scan::fail;
@@ -114,19 +112,12 @@ pub fn check_in(corpus: &Corpus, names: &[String]) -> Result<(), Error> {
         .collect();
     for name in names {
         let builtin = ["readmes", "headers", "cases", "logs"].contains(&name.as_str());
-        if !(builtin || held.contains(name.as_str()) || manifest_named(&corpus.root, name)) {
+        let manifest = corpus.manifests.iter().any(|found| found.manifest.name == *name);
+        if !(builtin || held.contains(name.as_str()) || manifest) {
             return Err(fail(Verb::Search, format!("unknown collection '{name}'")));
         }
     }
     Ok(())
-}
-
-/// True when a manifest that loads has this name. A manifest with no doc holds no doc, so only its file names it; its warnings
-/// were printed when the corpus loaded.
-fn manifest_named(root: &Path, name: &str) -> bool {
-    manifest::load(root, &mut Vec::new())
-        .iter()
-        .any(|found| found.name == name)
 }
 
 /// The instant of a doc's `time` field, which is written as `YYYY-MM-DDTHH:MM:SSZ` (design §3.6). None for a doc with no time, and
@@ -136,33 +127,7 @@ pub fn time_of(doc: &Doc) -> Option<Timestamp> {
         Value::Str(text) if name.as_str() == "time" => Some(text.as_str()),
         _ => None,
     })?;
-    let separators = [
-        (4, b'-'),
-        (7, b'-'),
-        (10, b'T'),
-        (13, b':'),
-        (16, b':'),
-        (19, b'Z'),
-    ];
-    let shaped = text.is_ascii()
-        && text.len() == 20
-        && separators
-            .iter()
-            .all(|&(at, byte)| text.as_bytes()[at] == byte);
-    if !shaped {
-        return None;
-    }
-    // The digits of the UTC form are the digits of a log stamp, so the stamp reader checks the date and the time.
-    let stamp = format!(
-        "{}{}{}-{}{}{}",
-        &text[..4],
-        &text[5..7],
-        &text[8..10],
-        &text[11..13],
-        &text[14..16],
-        &text[17..19]
-    );
-    clock::parse_stamp(&stamp)
+    clock::parse_rfc3339(text)
 }
 
 /// The name and the value of a term that reads `name:value`: split at the first colon, with a non-empty name of letters, digits,

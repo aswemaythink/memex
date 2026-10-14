@@ -6,7 +6,8 @@ use std::path::Path;
 use serde_json::Value as Json;
 
 use super::frontmatter::{split, Value};
-use super::manifest::{self, Manifest, Matched};
+use super::globs::{self, Matched};
+use super::manifest::{self, Manifest};
 use crate::corpus::Doc;
 use crate::text;
 
@@ -23,7 +24,7 @@ pub fn docs(manifest: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Vec
         &manifest.include
     };
     let mut docs = Vec::new();
-    for file in manifest::matched(manifest, root, globs) {
+    for file in globs::matched(manifest, root, globs) {
         match read_doc(manifest, &file) {
             Ok(doc) => docs.push(doc),
             Err(reason) => warnings.push(manifest::warning(&file.path, &reason)),

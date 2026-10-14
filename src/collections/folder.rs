@@ -8,7 +8,8 @@ use std::io::Read;
 use std::path::Path;
 
 use super::frontmatter::{self, Value};
-use super::json::{doc, field_text, glob_hits, read_json, scalar_fields, warn};
+use super::globs;
+use super::json::{doc, field_text, read_json, scalar_fields, warn};
 use super::manifest::{self, Manifest};
 use crate::corpus::{parent_of, Doc};
 use crate::intent::header;
@@ -110,7 +111,7 @@ fn merge_pieces(manifest: &Manifest, marker: &Entry, siblings: &[&Entry]) -> Vec
         .copied()
         .filter(|entry| entry.rel != marker.rel)
         .collect();
-    glob_hits(folder, &manifest.merge, &others)
+    globs::hits(folder, &manifest.merge, &others)
         .into_iter()
         .filter_map(|entry| merge_piece(&entry.path))
         .collect()

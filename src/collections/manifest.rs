@@ -1,18 +1,18 @@
-//! Loads and validates the manifests of design §4.2 and matches the files under their roots. Each manifest's docs come from its kind's reader.
-//! Cases: MAN-LOAD-01, MAN-LOAD-02, MAN-LOAD-03, MAN-LOAD-04, MAN-LOAD-05, MAN-LOAD-06, MAN-LOAD-07, MAN-LOAD-08, MAN-LOAD-09, MAN-LOAD-10, MAN-LOAD-11, MAN-LOAD-12, MAN-MD-11, MAN-MD-13, MANK-JSON-06
+//! Loads and validates the manifests of design §4.2.
+//! Each manifest's docs come from the reader of its kind.
+//! Cases: MAN-LOAD-01, MAN-LOAD-02, MAN-LOAD-03, MAN-LOAD-04, MAN-LOAD-05, MAN-LOAD-06, MAN-LOAD-07, MAN-LOAD-08, MAN-LOAD-09, MAN-LOAD-10, MAN-LOAD-11, MAN-LOAD-12
 
 use std::collections::BTreeMap;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use ignore::overrides::{Override, OverrideBuilder};
-use ignore::{DirEntry, WalkBuilder};
+use ignore::overrides::OverrideBuilder;
 use serde_json::{Map, Value as Json};
 
 use super::{folder, json, markdown};
 use crate::corpus::Doc;
-use crate::root::slash;
+use crate::root::{lists, slash};
 use crate::text;
 use crate::walk::rel_string;
 
@@ -59,19 +59,21 @@ pub struct Manifest {
     pub at: Option<String>,
 }
 
-/// A file that a manifest's globs matched: its path from the root, and the path it is read from.
+/// A manifest that loaded, with the number of docs its reader gave and the warnings of that read, as the corpus keeps it.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Matched {
-    /// The path from the root, with `/` separators.
-    pub rel: String,
-    /// The path to read the file from.
-    pub path: PathBuf,
+pub struct Loaded {
+    /// The manifest itself.
+    pub manifest: Manifest,
+    /// The docs its reader gave.
+    pub count: usize,
+    /// The warnings of the files its reader could not use.
+    pub warnings: Vec<String>,
 }
 
 /// The manifests under `<root>/.memex/collections/` by file name; a file that cannot be used adds a warning and is skipped.
 pub fn load(root: &Path, warnings: &mut Vec<String>) -> Vec<Manifest> {
     let dir = root.join(".memex").join("collections");
-    let files = listing(&dir).unwrap_or_else(|reason| {
+    let files = listing(root, &dir).unwrap_or_else(|reason| {
         warnings.push(warning(&dir, &reason));
         Vec::new()
     });
@@ -94,25 +96,21 @@ pub fn docs(manifest: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Vec
     }
 }
 
-/// The files under each root of `manifest` that `globs` match, sorted by path from the root, each listed once.
-pub fn matched(manifest: &Manifest, root: &Path, globs: &[String]) -> Vec<Matched> {
-    let mut found: Vec<Matched> = manifest
-        .roots
-        .iter()
-        .flat_map(|rel_root| walk_root(root, rel_root, globs))
-        .collect();
-    found.sort_by(|left, right| left.rel.cmp(&right.rel));
-    found.dedup_by(|left, right| left.rel == right.rel);
-    found
-}
-
 /// The warning line for a file that cannot be used: `memex: warning: <path>: <reason>` (design §4.2).
 pub fn warning(path: &Path, reason: &str) -> String {
     format!("memex: warning: {}: {reason}", slash(path))
 }
 
-/// The `.json` files of a collections folder by name: dot-named, non-UTF-8, symlink and folder entries are skipped.
-fn listing(dir: &Path) -> Result<Vec<(String, PathBuf)>, String> {
+/// The `.json` files of the collections folder `dir` by name: dot-named, non-UTF-8, symlink and folder entries are skipped. The
+/// names `.memex` and `collections` are matched against the listings of the root and of `.memex/`, never probed on a guessed
+/// path, so `.memex/Collections/` is not the folder on a case-insensitive file system (design §4.4 Name matching).
+fn listing(root: &Path, dir: &Path) -> Result<Vec<(String, PathBuf)>, String> {
+    let listed = lists(root, ".memex").and_then(|found| {
+        Ok(found && lists(&root.join(".memex"), "collections")?)
+    });
+    if !listed.map_err(|failure| unreadable(&failure))? {
+        return Ok(Vec::new());
+    }
     let reader = match fs::read_dir(dir) {
         Ok(reader) => reader,
         Err(failure) if failure.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
@@ -301,51 +299,27 @@ fn check_globs(globs: &[String]) -> Result<(), String> {
     })
 }
 
-/// The files under one root that match `globs`. The walk starts at the root itself, so a hidden root is read, while hidden
-/// entries below it, ignored files, `node_modules` and `target` are skipped as in the intent layer (design §4.1 item 2).
-fn walk_root(root: &Path, rel_root: &str, globs: &[String]) -> Vec<Matched> {
-    let base = root.join(rel_root);
-    let Ok(matcher) = build_matcher(&base, globs) else {
-        return Vec::new();
-    };
-    WalkBuilder::new(&base)
-        .require_git(false)
-        .filter_entry(|entry| !is_skipped(entry))
-        .build()
-        .filter_map(Result::ok)
-        .filter(|entry| entry.depth() > 0 && entry.file_type().is_some_and(|kind| kind.is_file()))
-        .filter(|entry| matcher.matched(entry.path(), false).is_whitelist())
-        .filter_map(|entry| matched_file(&base, rel_root, entry.path()))
-        .collect()
-}
-
-/// True for a folder below the root that the walk must not enter: `node_modules` or `target`.
-fn is_skipped(entry: &DirEntry) -> bool {
-    entry.depth() > 0
-        && entry.file_type().is_some_and(|kind| kind.is_dir())
-        && matches!(entry.file_name().to_str(), Some("node_modules" | "target"))
-}
-
-/// The match for one walked file: its path from the root, and the path to read it from.
-fn matched_file(base: &Path, rel_root: &str, path: &Path) -> Option<Matched> {
-    let inner = path.strip_prefix(base).ok()?;
-    let rel = rel_string(&Path::new(rel_root).join(inner))?;
-    Some(Matched {
-        rel,
-        path: path.to_path_buf(),
-    })
-}
-
-/// The override matcher for `globs` under `base`. Its globs follow the override rules of `ignore`, which use its globset.
-fn build_matcher(base: &Path, globs: &[String]) -> Result<Override, ignore::Error> {
-    let mut builder = OverrideBuilder::new(base);
-    for glob in globs {
-        builder.add(glob)?;
-    }
-    builder.build()
-}
-
 /// The reason for a file that cannot be read: the io kind, never the OS text (design §4.4).
 pub fn unreadable(failure: &io::Error) -> String {
     format!("cannot read it ({:?})", failure.kind())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_collections_folder_in_another_case_is_not_the_folder() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let other = dir.path().join(".memex").join("Collections");
+        fs::create_dir_all(&other).expect("a folder");
+        let manifest = r#"{"name": "notes", "kind": "markdown", "roots": ["."]}"#;
+        fs::write(other.join("notes.json"), manifest).expect("a manifest");
+        let mut warnings = Vec::new();
+        assert!(load(dir.path(), &mut warnings).is_empty());
+        assert!(warnings.is_empty(), "{warnings:?}");
+        let exact = dir.path().join(".memex").join("collections");
+        fs::rename(&other, &exact).expect("renamed");
+        assert_eq!(load(dir.path(), &mut warnings).len(), 1, "{warnings:?}");
+    }
 }

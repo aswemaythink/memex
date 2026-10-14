@@ -6,7 +6,6 @@ use std::collections::BTreeMap;
 
 use crate::cli::Verb;
 use crate::clock::{self, Timestamp};
-use crate::collections::manifest;
 use crate::corpus::{Corpus, Doc};
 use crate::error::Error;
 use crate::index::bm25;
@@ -217,10 +216,13 @@ fn rank_groups<'a>(
 
 /// The field weights of a group: its manifest's `weights`, or the defaults for a group with no manifest (design §4.2).
 fn weights_of(corpus: &Corpus, name: &str) -> [f64; 3] {
-    manifest::load(&corpus.root, &mut Vec::new())
+    corpus
+        .manifests
         .iter()
-        .find(|found| found.name == name)
-        .map_or(bm25::WEIGHTS, |found| bm25::field_weights(&found.weights))
+        .find(|found| found.manifest.name == name)
+        .map_or(bm25::WEIGHTS, |found| {
+            bm25::field_weights(&found.manifest.weights)
+        })
 }
 
 /// The group of docs that the words rank: its total, and its hits within the limit. None when no doc matches.

@@ -51,7 +51,7 @@ pub fn now() -> Result<Timestamp, Error> {
         return Ok(system_now());
     };
     let text = raw.to_string_lossy();
-    parse(&text).ok_or_else(|| Error::io_message(format!("invalid MEMEX_NOW: {text}")))
+    parse_rfc3339(&text).ok_or_else(|| Error::io_message(format!("invalid MEMEX_NOW: {text}")))
 }
 
 /// The system clock. A clock set before 1970 gives a negative instant rather than a failure.
@@ -62,8 +62,9 @@ fn system_now() -> Timestamp {
     }
 }
 
-/// Parses exactly the UTC form `YYYY-MM-DDTHH:MM:SSZ`. An offset, a fraction or any other spelling is refused.
-fn parse(text: &str) -> Option<Timestamp> {
+/// Parses exactly the UTC form `YYYY-MM-DDTHH:MM:SSZ`, as `MEMEX_NOW` and a log's `time` field are written. An offset, a
+/// fraction, any other spelling, and a date or time that does not exist are refused.
+pub fn parse_rfc3339(text: &str) -> Option<Timestamp> {
     let separators = [
         (4, b'-'),
         (7, b'-'),
@@ -202,7 +203,7 @@ mod tests {
         assert_eq!(days_from_civil(1970, 1, 1), 0);
         assert_eq!(days_from_civil(2000, 3, 1) * DAY, 951_868_800);
         assert_eq!(
-            parse("2026-10-13T12:00:00Z"),
+            parse_rfc3339("2026-10-13T12:00:00Z"),
             Some(Timestamp(1_791_892_800))
         );
         assert_eq!(civil_from_days(-719_468), (0, 3, 1));
@@ -222,9 +223,9 @@ mod tests {
             "",
         ];
         for text in refused {
-            assert_eq!(parse(text), None, "{text}");
+            assert_eq!(parse_rfc3339(text), None, "{text}");
         }
-        assert!(parse("2024-02-29T23:59:59Z").is_some());
+        assert!(parse_rfc3339("2024-02-29T23:59:59Z").is_some());
     }
 
     #[test]
@@ -236,7 +237,7 @@ mod tests {
 
     #[test]
     fn instants_before_1970_round_trip() {
-        let at = parse("1969-12-31T23:59:59Z").expect("a valid instant");
+        let at = parse_rfc3339("1969-12-31T23:59:59Z").expect("a valid instant");
         assert_eq!(at, Timestamp(-1));
         assert_eq!(at.rfc3339(), "1969-12-31T23:59:59Z");
     }

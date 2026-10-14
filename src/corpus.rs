@@ -76,6 +76,10 @@ pub struct Corpus {
     /// The warnings of the files, folders and log entries that could not be read as the corpus loaded (design §4.2). `info` lists
     /// them in its JSON.
     pub read_warnings: Vec<String>,
+    /// The manifests that loaded, in file-name order, each with its doc count and the warnings of its read (design §4.2).
+    pub manifests: Vec<manifest::Loaded>,
+    /// The warnings of the manifest files that did not load, in file-name order.
+    pub manifest_warnings: Vec<String>,
 }
 
 impl Corpus {
@@ -106,8 +110,9 @@ impl Corpus {
         Ok((corpus, store))
     }
 
-    /// The intent layer under `root`: every walked entry, the docs of its files, and the docs of its manifests. The files are read on
-    /// several threads, and their docs are added in the walk's order. A file that cannot be read is skipped with its warning, and
+    /// The intent layer under `root`: every walked entry, the docs of its files, and the docs of its manifests, which are kept with
+    /// their counts and warnings for `info` and `search`. The files are read on several threads, and their docs are added in the
+    /// walk's order. A file that cannot be read is skipped with its warning, and
     /// the rest of the layer loads (design §4.2).
     fn intent(root: &Path) -> Result<Corpus, Error> {
         let mut corpus = Corpus {
@@ -118,6 +123,8 @@ impl Corpus {
             streams: BTreeSet::new(),
             citations: OnceLock::new(),
             read_warnings: Vec::new(),
+            manifests: Vec::new(),
+            manifest_warnings: Vec::new(),
         };
         let entries = walk::walk_warned(root, &mut corpus.read_warnings);
         let read = par::map(&entries, read_entry);
@@ -131,14 +138,21 @@ impl Corpus {
                     .push(format!("memex: warning: {}", error.message)),
             }
         }
-        let mut warnings = Vec::new();
-        for found in manifest::load(root, &mut warnings) {
-            for doc in manifest::docs(&found, root, &mut warnings) {
-                corpus.insert(doc);
-            }
+        for found in manifest::load(root, &mut corpus.manifest_warnings) {
+            let mut warnings = Vec::new();
+            let docs = manifest::docs(&found, root, &mut warnings);
+            corpus.manifests.push(manifest::Loaded {
+                manifest: found,
+                count: docs.len(),
+                warnings,
+            });
+            docs.into_iter().for_each(|doc| corpus.insert(doc));
         }
         warn(&corpus.read_warnings);
-        warn(&warnings);
+        warn(&corpus.manifest_warnings);
+        for loaded in &corpus.manifests {
+            warn(&loaded.warnings);
+        }
         Ok(corpus)
     }
 
