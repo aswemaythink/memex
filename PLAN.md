@@ -449,21 +449,14 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 
 ## 12. Tidy backlog
 Cleared by T1 (2026-10-14): header first sentences of 100 chars or fewer, gated; one BOM-dropping text reader; listing-based `.memex` discovery; one root discovery; header prologue and license rules; `preserve_order` JSON fields; collection warnings; stale comments.
-Open:
-- info reads manifests a second time for counts and JSON warnings: use the corpus (corpus.rs is now 338 lines).
-- Out-of-root `show` sections print `(none)` for cites and cited by; needs absolute refs decided first.
-- Perf leftovers from the S3.3 refiner: `tokenize::tokens` allocates a String per token (about 14ms); `Git::probe` runs `git rev-parse` twice (about 15ms). S5.3 decides.
-- init PATH check: implement the design §3.5b ruling (ignore `*/node_modules/.bin`; on Windows count `memex.exe` or `memex.cmd`), with INIT cases. Batch it with the S5.2 fixes.
-- Name matching inside `.memex/` (design §4.4): `config.json`, `collections/` and `logs/` are matched by listing, so `.memex/Config.json` is ignored on macOS as on Linux. PORT case.
-- Log entry file mode (design §4.4 File modes): entries are 0600 today (tempfile default); make them 0644 before umask, sharing init's helper. PORT or LOG case.
-- tests/cases/cli/README.md still says exit 3 is planned for PORT.
-- Plugin hook: cd to the hook input's `cwd` before `memex info`, so a worktree sub-agent sees its own worktree's atlas (`here`). Test in tests/plugin_hook.rs.
-- design §6.1: the install id is `/plugin install memex@memex` (marketplace form); fix the line.
+Cleared by F1-F4, G-A to G-C and S5.3: init PATH rule; `.memex` inner names by listing; 0644 file modes; plugin hook cwd; §6.1 plugin id; the stale cli README exit-3 note; perf leftovers.
+Open, for the S5.4 whole-crate refiner:
+- Corpus keeps the loaded manifests and their warnings, so info stops reading manifests twice.
 - src/collections/manifest.rs probes `.memex/collections` by path: match it by listing (design §4.4).
-- The ordinary-mode temp-file writer exists twice (src/logs/write.rs and src/verbs/init/files.rs): one shared helper.
-- Fence scanning exists twice (src/cite/tokens.rs and src/verbs/init/fence.rs): one shared scanner with the design §2.3 definition.
-- tests/harness/env.rs scrubs only `memex.exe` from PATH on Windows; also scrub `memex.cmd`.
-- corpus.rs doesn't keep the loaded Manifest list and warnings, so info reads manifests twice: keep them in the corpus.
-- `$MEMEX_NOW` validation: design §3.6 says an invalid value exits 3 everywhere, but `show` ignores it. Validate it once at startup for every verb. Add SRCH-NOW-01 and SHOW-NOW-01.
-- INFO-CAP-02 (exactly 3,000 bytes) is planned: pin it with a unit test in src/render/info.rs, since the sandbox root length varies by OS.
-- tests/cases/cli/README.md still calls CLI-EXIT-04 planned; it is live now.
+- One ordinary-mode temp-file writer (src/logs/write.rs and src/verbs/init/files.rs both have one).
+- One fence scanner (src/cite/tokens.rs and src/verbs/init/fence.rs both have one).
+- tests/harness/env.rs: on Windows, also scrub `memex.cmd` from PATH.
+- `$MEMEX_NOW` is validated once at startup for every verb (design §3.6); add SRCH-NOW-01 and SHOW-NOW-01.
+- INFO-CAP-02: a unit test in src/render/info.rs.
+- tests/cases/cli/README.md: CLI-EXIT-04 is live.
+- Deferred, needs a design decision: out-of-root `show` sections print `(none)` for cites and cited by.
