@@ -1,4 +1,5 @@
-//! Runs the built memex on this repo and checks its intent layer (PLAN §3): cases, headers, READMEs and links.
+//! Runs the built memex on this repo and checks its intent layer (PLAN §3).
+//! It checks the cases, the headers, the READMEs and the links.
 //! Cases: none (a self-check of this repo, not a conformance case)
 
 use std::fs;

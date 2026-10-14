@@ -1,4 +1,5 @@
-//! Loads what a reading verb works on: the canonical cwd, the log store found from it, and the corpus of its root.
+//! Loads what a reading verb works on: the canonical cwd, its log store, and the corpus of its root.
+//! The store is found from the cwd, and the root is the one that `root_of` names (design §4.1 item 1).
 //! Cases: none (shared loading; show and search cite their own cases)
 
 use std::env;

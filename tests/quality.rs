@@ -17,15 +17,6 @@ const ROOTS: [&str; 2] = ["src", "tests"];
 /// The only lint attribute tests/ may use.
 const TEST_ALLOW: &str = "#[allow(dead_code)]";
 
-/// Path prefixes whose headers the sentence limit does not judge yet: the refiner's files, which keep their headers.
-// T1: refiner owns these; remove once shortened
-const SENTENCE_EXEMPT: [&str; 4] = [
-    "src/index/",
-    "src/verbs/search.rs",
-    "src/render/search.rs",
-    "src/corpus.rs",
-];
-
 /// One file or folder under a root.
 struct Node {
     /// The path from the crate root, with `/` on every OS.
@@ -110,12 +101,6 @@ fn header_first_sentences_are_at_most_100_chars() {
     let nodes = tree();
     let mut problems = Vec::new();
     for node in rust_files(&nodes) {
-        if SENTENCE_EXEMPT
-            .iter()
-            .any(|exempt| node.rel.starts_with(exempt))
-        {
-            continue;
-        }
         let sentence = first_sentence(&header_of(&read(&node.path)));
         let length = sentence.chars().count();
         if length > MAX_SENTENCE {
