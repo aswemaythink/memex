@@ -1,5 +1,5 @@
 //! The comment families of design §2.1: the comment markers of each extension or file name.
-//! Cases: HDR-SLASH-01, HDR-SLASH-02, HDR-SLASH-03, HDR-SLASH-04, HDR-SLASH-05, HDR-HASH-01, HDR-DOC-01, HDR-DOC-02, HDR-DOC-03, HDR-DOC-04, HDR-MAKE-01, HDR-MAKE-02, HDR-DASH-01, HDR-DASH-02, HDR-DASH-03, HDR-SEMI-01, HDR-PERCENT-01, HDR-MARKUP-01, HDR-PAREN-01, HDR-EXT-01
+//! Cases: HDR-SLASH-01, HDR-SLASH-02, HDR-SLASH-03, HDR-SLASH-04, HDR-SLASH-05, HDR-HASH-01, HDR-DOC-01, HDR-DOC-02, HDR-DOC-03, HDR-DOC-04, HDR-MAKE-01, HDR-MAKE-02, HDR-DASH-01, HDR-DASH-02, HDR-DASH-03, HDR-SEMI-01, HDR-PERCENT-01, HDR-MARKUP-01, HDR-PAREN-01, HDR-SKIP-06, HDR-EXT-01
 
 use std::path::Path;
 
@@ -98,7 +98,8 @@ static BY_EXTENSION: &[(&Family, &[&str])] = &[
 static BY_NAME: &[(&Family, &[&str])] = &[(&HASH, &["Makefile", "Dockerfile"])];
 
 /// The lines skipped before a header (design §2.1): a shebang, encoding and mode lines, Docker parser directives, Go and
-/// Haskell pragmas, and a JavaScript directive such as `"use client"`. Each is matched at the start of the trimmed line.
+/// Haskell pragmas, a JavaScript directive such as `"use client"`, and a markup prologue (`<?xml`, `<!DOCTYPE`, `<?php`).
+/// Each is matched at the start of the trimmed line. The DOCTYPE keyword is matched in both of its usual cases.
 pub static PRAGMAS: &[&str] = &[
     "#!",
     "# -*-",
@@ -111,6 +112,10 @@ pub static PRAGMAS: &[&str] = &[
     "{-#",
     "\"use ",
     "'use ",
+    "<?xml",
+    "<!DOCTYPE",
+    "<!doctype",
+    "<?php",
 ];
 
 /// The comment family of the file at `path`: by its file name first, then by its extension. None when neither is listed,

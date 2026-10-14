@@ -1,5 +1,5 @@
 //! Finds a file's header block in its first lines (design §2.1), past the skipped lines.
-//! Cases: HDR-SLASH-01, HDR-SLASH-02, HDR-SLASH-03, HDR-SLASH-04, HDR-SLASH-05, HDR-HASH-01, HDR-DOC-01, HDR-DOC-02, HDR-DOC-03, HDR-DOC-04, HDR-DASH-01, HDR-DASH-02, HDR-DASH-03, HDR-SEMI-01, HDR-PERCENT-01, HDR-MARKUP-01, HDR-PAREN-01, HDR-SKIP-01, HDR-SKIP-02, HDR-SKIP-03, HDR-SKIP-04, HDR-SKIP-05, HDR-BLOCK-01, HDR-BLOCK-02, HDR-NONE-01
+//! Cases: HDR-SLASH-01, HDR-SLASH-02, HDR-SLASH-03, HDR-SLASH-04, HDR-SLASH-05, HDR-HASH-01, HDR-DOC-01, HDR-DOC-02, HDR-DOC-03, HDR-DOC-04, HDR-DASH-01, HDR-DASH-02, HDR-DASH-03, HDR-SEMI-01, HDR-PERCENT-01, HDR-MARKUP-01, HDR-PAREN-01, HDR-SKIP-01, HDR-SKIP-02, HDR-SKIP-03, HDR-SKIP-04, HDR-SKIP-05, HDR-SKIP-06, HDR-SKIP-07, HDR-BLOCK-01, HDR-BLOCK-02, HDR-NONE-01
 
 use super::families::{Family, PRAGMAS};
 
@@ -44,12 +44,18 @@ fn skip_leading(family: &Family, lines: &[&str]) -> usize {
     at
 }
 
-/// The index just past the license block at `at`, when one opens there. The block is the run of comments from `at` with no
-/// blank line in it, and it is a license when it holds `SPDX-License-Identifier` or its first text starts with `Copyright`.
+/// The index just past the license block at `at`, when one opens there. The block is the comments from `at` up to the first
+/// blank line, so a blank line inside a `/* */` block ends it too, unlike a header block (design §2.1). It is a license when it
+/// holds `SPDX-License-Identifier` or its first text starts with `Copyright`.
 fn license_end(family: &Family, lines: &[&str], at: usize) -> Option<usize> {
+    let blank = lines[at..]
+        .iter()
+        .position(|line| line.trim().is_empty())
+        .map_or(lines.len(), |offset| at + offset);
+    let scope = &lines[..blank];
     let mut texts: Vec<String> = Vec::new();
     let mut next = at;
-    while let Some((body, end)) = comment_at(family, lines, next) {
+    while let Some((body, end)) = comment_at(family, scope, next) {
         texts.extend(body);
         next = end;
     }

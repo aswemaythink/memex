@@ -1,0 +1,27 @@
+$ memex show block.rs --up 0
+exit 0
+stdout
+| === block.rs ===
+| (no header)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show joined.rs --up 0
+exit 0
+stdout
+| === joined.rs ===
+| (no header)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

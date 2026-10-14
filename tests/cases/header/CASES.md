@@ -77,6 +77,10 @@
   design §2.1, the header rule skips one leading license block. Run: memex show lib.rs --up 0.
 - `HDR-SKIP-05` A file whose only comment block is a license has no header, so it shows `(no header)`.
   design §2.1, the header is the next comment block, and none follows the license. Run: memex show only.rs --up 0.
+- `HDR-SKIP-06` An XML declaration, a `<!DOCTYPE` or `<!doctype` line, and a `<?php` open tag before the first block are skipped as pragmas, so the block after each is the header.
+  design §2.1, the header rule skips the markup prologues `<?xml …?>`, `<!DOCTYPE …>` and `<?php`. Run: memex show feed.xml --up 0, page.html, lower.html and open.php.
+- `HDR-SKIP-07` A license block ends at its first blank line: a blank line inside a `/* */` license ends it, and a header with no blank line after its license is part of that license, so neither file has a header.
+  design §2.1, a license block ends at its first blank line, so a header must be separated from it by one. Run: memex show block.rs --up 0, and joined.rs.
 
 ## BLOCK
 
