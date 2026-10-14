@@ -1,5 +1,5 @@
 //! Prunes the log store after every write (design §4.3).
-//! It deletes each entry older than keep_logs by its filename stamp, and removes the stream folders that its deletions empty. The store itself may be a symlink, which is followed; no symlink below it is, and hidden names and anything that is not a log entry are never touched. A path that is already gone (NotFound) is skipped without a warning (design §4.3 Vanished entries).
+//! It deletes each entry older than keep_logs by its filename stamp, and removes the stream folders that its deletions empty. The store itself may be a symlink, which is followed; no symlink below it is, and hidden names and anything that is not a log entry are never touched. A path that is already gone (NotFound), and a stream folder a writer has landed in since the check (DirectoryNotEmpty), are skipped without a warning (design §4.3 Vanished entries).
 //! Cases: LOG-PRUNE-01, LOG-PRUNE-02, LOG-PRUNE-03, LOG-PRUNE-04, LOG-PRUNE-05, LOG-PRUNE-06, LOG-PRUNE-07, LOG-PRUNE-08, LOG-PRUNE-09, LOG-PRUNE-10, LOG-PRUNE-11, LOG-PRUNE-12, LOG-PRUNE-13, LOG-PRUNE-14, LOG-PRUNE-15, LOG-PRUNE-17
 
 use std::ffi::OsStr;
@@ -135,7 +135,7 @@ fn remove_if_empty(dir: &Path) {
 }
 
 /// Reports a failed removal of a stream folder that was empty when it was checked. DirectoryNotEmpty is silent: a writer has
-/// landed a file in the folder since, so the folder is in use and stays. This is a ruling, not yet in design §4.3.
+/// landed a file in the folder since, so the folder is in use and stays (design §4.3 Vanished entries).
 fn settle_removal(dir: &Path, outcome: io::Result<()>) {
     match outcome {
         Ok(()) => {}
