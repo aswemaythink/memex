@@ -1,0 +1,29 @@
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store none (run memex init)
+| intent  0 readmes · 0 headers · 0 cases
+| use     memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr (empty)
+
+$ memex info --json
+exit 0
+stdout
+| {"root":"$SANDBOX/repo","log_store":null,"collections":[{"name":"readmes","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"cases","kind":null,"builtin":true,"count":0,"description":null,"owner":null}],"warnings":[]}
+stderr (empty)
+
+$ memex log impl
+exit 3
+stdout (empty)
+stderr
+| memex: no .memex/ here: run `memex init`
+
+$ memex log impl --json
+exit 3
+stdout
+| {"error":{"code":"no_root","message":"no .memex/ here: run `memex init`"}}
+stderr (empty)
+== snapshot repo/.memex
+(missing)
+== snapshot .memex/logs
+(missing)

@@ -1,6 +1,6 @@
 //! Finds where `log` writes, per design §4.1: the root, the folder that owns the store, and the store.
-//! The root is the nearest `.memex/`, else the git toplevel, else the cwd, and the read verbs use the same root; git is asked through subprocesses.
-//! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-GIT-01, LOG-WRITE-06, LOG-WRITE-10
+//! The root is the nearest `.memex/` inside the cwd's git worktree (the walk stops at its toplevel), else the toplevel, else the cwd; the read verbs use the same root, and git is asked through subprocesses.
+//! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-ROOT-05, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-GIT-01, LOG-WRITE-06, LOG-WRITE-10
 
 use std::ffi::OsStr;
 use std::fs;
@@ -45,9 +45,10 @@ struct Git {
 pub fn locate(cwd: &Path) -> Result<Place, Error> {
     let canonical = dunce::canonicalize(cwd)
         .map_err(|failure| Error::io_at("cannot resolve", cwd, &failure))?;
-    let found = nearest_memex(&canonical);
     let git = Git::probe(&canonical);
     let toplevel = git.as_ref().and_then(|git| git.toplevel.clone());
+    // The toplevel that git just reported bounds the walk, so the walk costs no git call of its own (design §4.1 item 1).
+    let found = nearest_within(&canonical, toplevel.as_deref());
     let worktree = git
         .as_ref()
         .filter(|git| git.linked)
@@ -135,19 +136,30 @@ fn main_checkout(git: &Git) -> Option<PathBuf> {
     }
 }
 
-/// The nearest folder, from `cwd` upward, that holds a `.memex/` directory.
+/// The nearest folder, from `cwd` upward, that holds a `.memex/` and is not above the worktree that holds `cwd` (design §4.1
+/// item 1). Outside git the walk is unbounded. Git is asked only when a `.git` lies between `cwd` and the folder found.
 pub fn nearest_memex(cwd: &Path) -> Option<PathBuf> {
-    cwd.ancestors()
-        .find(|dir| holds_memex(dir))
-        .map(Path::to_path_buf)
+    let cwd = resolved(cwd);
+    let found = nearest_within(&cwd, None)?;
+    if git_entry_between(&cwd, &found) {
+        nearest_within(&cwd, toplevel_of(&cwd).as_deref())
+    } else {
+        Some(found)
+    }
 }
 
-/// The root that the read verbs, `show` and `search`, use for `cwd` (design §4.1 item 1): the nearest folder with a `.memex/`,
-/// else the git toplevel, else `cwd` itself.
+/// The root that the read verbs, `show` and `search`, use for `cwd` (design §4.1 item 1): the nearest folder with a `.memex/`
+/// inside its worktree, else the git toplevel, else `cwd` itself. Git is asked at most once.
 pub fn root_of(cwd: &Path) -> PathBuf {
-    nearest_memex(cwd)
-        .or_else(|| toplevel_of(cwd))
-        .unwrap_or_else(|| cwd.to_path_buf())
+    let cwd = resolved(cwd);
+    match nearest_within(&cwd, None) {
+        None => toplevel_of(&cwd).unwrap_or(cwd),
+        Some(found) if !git_entry_between(&cwd, &found) => found,
+        Some(_) => {
+            let top = toplevel_of(&cwd);
+            nearest_within(&cwd, top.as_deref()).or(top).unwrap_or(cwd)
+        }
+    }
 }
 
 /// The toplevel of the worktree that holds `cwd`, as git reports it, canonical. None when git is missing, or `cwd` is not in a
@@ -156,14 +168,39 @@ pub fn toplevel_of(cwd: &Path) -> Option<PathBuf> {
     git_line(cwd, &["rev-parse", "--show-toplevel"]).and_then(|top| resolve(cwd, &top))
 }
 
+/// `cwd` as the filesystem spells it, so that its ancestors compare equal with git's canonical toplevel. A `cwd` that cannot be
+/// resolved is kept as it was given.
+fn resolved(cwd: &Path) -> PathBuf {
+    dunce::canonicalize(cwd).unwrap_or_else(|_| cwd.to_path_buf())
+}
+
+/// The nearest folder from `cwd` up to `bound`, inclusive, that holds a `.memex/`. With no `bound` the walk runs to the
+/// filesystem root. For the bound to be reached, `cwd` and `bound` must both be canonical.
+fn nearest_within(cwd: &Path, bound: Option<&Path>) -> Option<PathBuf> {
+    for dir in cwd.ancestors() {
+        if holds_memex(dir) {
+            return Some(dir.to_path_buf());
+        }
+        if Some(dir) == bound {
+            break;
+        }
+    }
+    None
+}
+
+/// True when a folder from `cwd` up to `found`, not including `found`, lists a `.git` of any kind (a linked worktree's file, a
+/// submodule's file or a main checkout's folder). Such an entry may end the worktree below `found`, so git must say where it
+/// ends (design §4.1 item 1). A listing that fails counts as a `.git`, so git decides.
+fn git_entry_between(cwd: &Path, found: &Path) -> bool {
+    cwd.ancestors()
+        .take_while(|dir| *dir != found)
+        .any(|dir| lists(dir, ".git").unwrap_or(true))
+}
+
 /// True when `dir` lists a folder named exactly `.memex`. The name is matched against the listing, never probed on a guessed
 /// path, so a case-insensitive file system does not match another spelling (design §4.4 Name matching).
 fn holds_memex(dir: &Path) -> bool {
-    fs::read_dir(dir).is_ok_and(|entries| {
-        entries
-            .flatten()
-            .any(|entry| entry.file_name().to_str() == Some(".memex") && entry.path().is_dir())
-    })
+    lists(dir, ".memex").unwrap_or(false) && dir.join(".memex").is_dir()
 }
 
 /// True when `dir` lists an entry named exactly `name`, of any kind. A folder that does not exist lists nothing. Names inside
@@ -260,5 +297,22 @@ mod tests {
         assert!(!store_listed(&store).expect("a listing"));
         fs::create_dir_all(&store).expect("a store");
         assert!(store_listed(&store).expect("a listing"));
+    }
+
+    #[test]
+    fn the_walk_stops_at_its_bound_and_a_git_entry_between_asks_git() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let top = resolved(dir.path());
+        let repo = top.join("repo");
+        let cwd = repo.join("sub");
+        fs::create_dir_all(top.join(".memex")).expect("a folder above the repo");
+        fs::create_dir_all(&cwd).expect("a folder inside the repo");
+        fs::create_dir_all(repo.join(".git")).expect("a git entry");
+        assert!(git_entry_between(&cwd, &top));
+        assert!(!git_entry_between(&repo, &repo));
+        assert_eq!(nearest_within(&cwd, None), Some(top.clone()));
+        assert_eq!(nearest_within(&cwd, Some(repo.as_path())), None);
+        fs::create_dir_all(repo.join(".memex")).expect("a store in the repo");
+        assert_eq!(nearest_within(&cwd, Some(repo.as_path())), Some(repo));
     }
 }

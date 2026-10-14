@@ -10,6 +10,8 @@
   design §4.1 item 1: outside git the root is the cwd. Run: memex log impl from a folder outside any repo.
 - `DISC-ROOT-04` With `--json`, the no_root error is the JSON envelope with code `no_root` on stdout, exit 3.
   design §3.6 fatal errors and §4.1 item 3. Run: memex log impl --json in a git repo with no `.memex/`.
+- `DISC-ROOT-05` Inside a git worktree the search for `.memex/` stops at its toplevel, so a `.memex/` above the repo does not capture it: `info` names the repo as the root, and `log` exits 3 with the no_root message and writes nothing.
+  design §4.1 item 1: inside a git worktree the walk stops at the toplevel. Run: memex info and memex log impl, text and --json, from repo, with a .memex/ in the folder above repo.
 
 ## WT
 
