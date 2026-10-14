@@ -233,7 +233,7 @@ With `--json`, stdout is always one JSON document, including errors. Without it,
   - 2: usage error.
   - 3: environment error: no `.memex/` for `log` (§4.1), store not writable, or an I/O failure that stops the verb.
 - **Closed stdout.** If the reader closes stdout early (`memex search … | head -1`), memex stops writing, prints nothing on stderr and exits with the code it would otherwise have (0 on success); a closed stdout is never itself an error. A `show` ref that fails on I/O is that ref's error and exits 1 (§3.3).
-- **Determinism.** Lists are sorted (ties broken by ref) unless a rule gives another order: cites and evidence keep the order they are written in. `$MEMEX_NOW` is RFC 3339 UTC with `Z`, and it replaces the clock everywhere: log time, prune, `since:`, ages and `new_24h`. An invalid value exits 3. That lets fixtures compare stdout byte for byte.
+- **Determinism.** Lists are sorted by byte (code point) order of their labels, never by locale (ties broken by ref) unless a rule gives another order: cites and evidence keep the order they are written in. `$MEMEX_NOW` is RFC 3339 UTC with `Z`, and it replaces the clock everywhere: log time, prune, `since:`, ages and `new_24h`. An invalid value exits 3. That lets fixtures compare stdout byte for byte.
 - **Ages.** Ages print as `Nm` below 60 minutes (`<60m`), `Nh` below 48 hours (`<48h`), else `Nd`.
 
 ## 4. Storage
