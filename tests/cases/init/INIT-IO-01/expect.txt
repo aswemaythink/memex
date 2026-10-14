@@ -1,0 +1,8 @@
+$ memex init
+exit 3
+stdout
+| created .memex/.gitignore
+| created .memex/config.json
+| created .memex/collections/.gitkeep
+stderr
+| memex: cannot read $SANDBOX/repo/AGENTS.md (IsADirectory)

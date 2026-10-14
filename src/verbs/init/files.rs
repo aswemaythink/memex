@@ -1,5 +1,5 @@
 //! Writes the `.memex/` files (design §3.5b item 1) and holds the file helpers the init modules share.
-//! Cases: INIT-FRESH-01, INIT-KEEP-01, INIT-KEEP-02, INIT-RERUN-01
+//! Cases: INIT-FRESH-01, INIT-KEEP-01, INIT-KEEP-02, INIT-RERUN-01, INIT-IO-01
 
 use std::fs;
 use std::io::{self, Write};

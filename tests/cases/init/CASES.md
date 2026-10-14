@@ -69,6 +69,11 @@
 - `INIT-RERUN-01` A second init in the same folder reports every file `kept` and writes none of them, exit 0.
   Scenario: two runs in a git repo that has a CLAUDE.md holding `@AGENTS.md`. design §3.5b (idempotent) and PLAN §3 (init on this repo reports everything unchanged).
 
+## IO
+
+- `INIT-IO-01` When AGENTS.md is a folder, init prints the `.memex/` lines it made, then names the file and its io::ErrorKind on stderr, and exits 3 with no atlas, unix only.
+  Scenario: `repo/AGENTS.md` is a folder holding one file, so reading it fails with IsADirectory. design §3.5b (exit 3 on an I/O failure) and PLAN §1 fix 17 (memex's message, the kind and the path, never the OS text).
+
 ## DAMAGE
 
 - `INIT-DAMAGE-01` A begin marker with no end marker changes nothing: AGENTS.md is reported `kept`, the warning goes to stderr, and exit is 0.
