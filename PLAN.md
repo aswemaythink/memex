@@ -432,11 +432,11 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [x] S3.4 (selfhost gate live)
 - [x] S4.1
 - [x] S4.2 (self-init: all kept; refined 76addfe)
-- [ ] S5.1
+- [x] S5.1
 - [ ] S5.2
 - [ ] S5.3
 - [ ] S5.4
-- [ ] S6.1
+- [x] S6.1 (enabling it for this repo needs user approval)
 - [ ] S6.2
 - [ ] S6.3
 - [ ] Playtest 2: A
@@ -456,3 +456,5 @@ Open:
 - Name matching inside `.memex/` (design §4.4): `config.json`, `collections/` and `logs/` are matched by listing, so `.memex/Config.json` is ignored on macOS as on Linux. PORT case.
 - Log entry file mode (design §4.4 File modes): entries are 0600 today (tempfile default); make them 0644 before umask, sharing init's helper. PORT or LOG case.
 - tests/cases/cli/README.md still says exit 3 is planned for PORT.
+- Plugin hook: cd to the hook input's `cwd` before `memex info`, so a worktree sub-agent sees its own worktree's atlas (`here`). Test in tests/plugin_hook.rs.
+- design §6.1: the install id is `/plugin install memex@memex` (marketplace form); fix the line.
