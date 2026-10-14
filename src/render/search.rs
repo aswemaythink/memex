@@ -54,7 +54,10 @@ pub fn no_hits(terms: &[String], words: &[String]) -> Vec<String> {
     if terms.is_empty() {
         return Vec::new();
     }
-    vec![format!("memex: no docs match {}; …", terms.join(" "))]
+    vec![format!(
+        "memex: no docs match {}; try fewer filters, or memex info",
+        terms.join(" ")
+    )]
 }
 
 /// The age of an entry in the short form of design §3.6: `Nm` below an hour, `Nh` below 48 hours, else `Nd`. A negative age
@@ -211,7 +214,7 @@ mod tests {
         );
         assert_eq!(
             no_hits(&terms(&["tag:x"]), &[]),
-            vec!["memex: no docs match tag:x; …"]
+            vec!["memex: no docs match tag:x; try fewer filters, or memex info"]
         );
         assert!(no_hits(&[], &[]).is_empty());
     }

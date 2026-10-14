@@ -183,8 +183,8 @@
 
 - `SRCH-NOHITS-01` A query whose words match nothing prints nothing on stdout, exits 0, and prints `memex: no hits for <words>; try fewer or other words, or memex info` on stderr, with the words as typed and the filters left out.
   design §3.2 Zero hits. Fixture: a README. Run: memex search Zzqq tag:show.
-- `SRCH-NOHITS-02` A query with filters and no words that matches nothing prints nothing on stdout, exits 0, and prints `memex: no docs match <filters>; …` on stderr, with the filters as typed, both for a listing and for a roster narrowed by filters.
-  design §3.2 Zero hits (with filters only). The design writes the tail as `…`, and that is printed as it stands. Fixture: a README. Run: memex search tag:nope, then memex search --in readmes agent:cook-2.
+- `SRCH-NOHITS-02` A query with filters and no words that matches nothing prints nothing on stdout, exits 0, and prints `memex: no docs match <filters>; try fewer filters, or memex info` on stderr, with the filters as typed, both for a listing and for a roster narrowed by filters.
+  design §3.2 Zero hits (with filters only, whose tail design §3.2 gives as `try fewer filters, or memex info`, cdd8786). Fixture: a README. Run: memex search tag:nope, then memex search --in readmes agent:cook-2.
 - `SRCH-NOHITS-03` With `--json`, a query with no hits keeps stdout one valid document with an empty groups list, and stderr carries the hint of SRCH-NOHITS-01 for words or of SRCH-NOHITS-02 for filters, exit 0.
   design §3.2 Zero hits and §3.6 (the search document). Fixture: a README. Run: memex search Zzqq --json, then memex search tag:nope --json.
 

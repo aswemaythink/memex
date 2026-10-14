@@ -62,7 +62,7 @@
 
 ## ERR
 
-- `SHOW-ERR-01` A ref that is not found prints `memex: not found: <ref>` on stderr while the other refs still print, and the exit code is 1.
+- `SHOW-ERR-01` A ref that is not found prints `memex: not found: <ref> (find refs with memex search <words>)` on stderr while the other refs still print, and the exit code is 1.
   design §3.3 Exit code: the others still print and the exit code is 1. Run: memex show nope.rs src/cli.rs.
 - `SHOW-ERR-02` A relative path that the cwd and the root both hold, and that differ, is ambiguous: stdout is empty, stderr names the ref and lists both candidates, and the exit code is 1.
   design §3.1 Resolution order, step 2: if both exist and differ, the result is ambiguous. Run: memex show README.md with cwd repo/src.

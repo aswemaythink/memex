@@ -16,4 +16,4 @@ $ memex search tag:CAFE
 exit 0
 stdout (empty)
 stderr
-| memex: no docs match tag:CAFE; …
+| memex: no docs match tag:CAFE; try fewer filters, or memex info
