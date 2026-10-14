@@ -8,7 +8,8 @@
 - `help.rs`: the help texts and the grammar block of design §3, with the usage lines that usage errors print.
 - `error.rs`: the fatal error of design §3.6, its codes and exit codes, and its text and JSON renderings; and the warning line of §4.2 with the stderr printer that prints each warning once per run.
 - `clock.rs`: `MEMEX_NOW` or the system clock, in UTC, and the RFC 3339 and log-stamp formats of design §3.6.
-- `root.rs`: where `log` writes (design §4.1): the nearest `.memex/` (bounded by the git toplevel), the git toplevel and main checkout, and the store path, found through git subprocesses.
+- `root.rs`: where `log` writes (design §4.1): the nearest `.memex/` (bounded by the toplevel), the main checkout, and the store path, asked of git subprocesses.
+- `layout.rs`: the repository layout read as plain files (design §4.1 item 1, §4.4 git): the toplevel as the nearest folder listing a `.git` entry, found without git.
 - `atomic.rs`: the temp file that every atomic write goes through, dot-prefixed and with an ordinary file's mode (design §4.4).
 - `config.rs`: `.memex/config.json` (design §4.1 item 4): the `keep_logs` value and its warning.
 - `logs/`: the log store: writing an entry, pruning old ones and reading them as docs (design §3.4, §4.3).
