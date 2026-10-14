@@ -1,5 +1,5 @@
 $ memex show src --json
 exit 0
 stdout
-| {"docs":[{"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}],"children":{"items":[{"kind":"file","path":"src/README.md","title":"The source of the demo."},{"kind":"file","path":"src/cli.rs","title":"Parses the demo arguments."},{"kind":"dir","path":"src/deep","title":null},{"kind":"file","path":"src/empty.rs","title":null}],"total":4},"cited_by":{"refs":[],"total":0},"cites":[],"collection":null,"fields":{},"id":null,"path":"src","ref":"src","text":"# src\n\nThe source of the demo.\n","title":"The source of the demo."}],"errors":[]}
+| {"docs":[{"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}],"children":{"items":[{"kind":"file","path":"src/cli.rs","title":"Parses the demo arguments."},{"kind":"dir","path":"src/deep","title":null},{"kind":"file","path":"src/empty.rs","title":null}],"total":3},"cited_by":{"refs":[],"total":0},"cites":[],"collection":null,"fields":{},"id":null,"path":"src","ref":"src","text":"# src\n\nThe source of the demo.\n","title":"The source of the demo."}],"errors":[]}
 stderr (empty)

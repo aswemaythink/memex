@@ -18,17 +18,19 @@
 
 ## DIR
 
-- `SHOW-DIR-01` A folder with a README shows the README as its body, then its children, each subfolder with its README one-liner or `(no README)` and each file with its header one-liner or `(no header)`, then cites, cited by and the chain, exit 0.
-  design §3.3 Folder. Run: memex show src.
+- `SHOW-DIR-01` A folder with a README shows the README as its body, then its children without that README.md, each subfolder with its README one-liner or `(no README)` and each file with its header one-liner or `(no header)`, then cites, cited by and the chain, exit 0.
+  design §3.3 Folder: the folder's own README.md is left out of its children. Run: memex show src.
 - `SHOW-DIR-02` A folder without a README shows `(no README)` as its body and still lists its children, which is not an error, exit 0.
   design §3.3 Folder: a folder without a README lists its children and is not an error. Run: memex show plain.
 
 ## ROOT
 
-- `SHOW-ROOT-01` `show .` shows the root README and the root's children, and its chain is `(none)` because nothing lies above the root, exit 0.
+- `SHOW-ROOT-01` `show .` shows the root README as its body, then the root's children other than that README, and its chain is `(none)` because nothing lies above the root, exit 0.
   design §3.3: show . is the map of the root; design §3.1 and PLAN §6 S2.0: `.` is the root. Run: memex show . in the root.
 - `SHOW-ROOT-02` Without a `.memex/` folder, show still reads the intent layer from the cwd and prints the same root section, exit 0.
   design §4.1 item 1 and §3.5b: reads work without init. Run: memex show . in a repo with no .memex/.
+- `SHOW-ROOT-03` `show .` run from the subfolder `repo/sub` prints the root map under its `=== . ===` line, not the subfolder's, exit 0.
+  design §3.1 Resolution order, step 2: `.` is the root's own label, so it always means the root. Run: memex show . with cwd repo/sub.
 
 ## LOG
 
@@ -46,9 +48,9 @@
 
 ## LIMIT
 
-- `SHOW-LIMIT-01` `--limit 1` lists one child and prints `showing 1 of 4 (--limit 4 for all)`, exit 0.
+- `SHOW-LIMIT-01` `--limit 1` lists one child, `cli.rs`, and prints `showing 1 of 3 (--limit 3 for all)`, exit 0.
   design §3.3 Limits: the children list uses --limit and always prints the limits line. Run: memex show src --limit 1.
-- `SHOW-LIMIT-02` `--limit 0` lists no children and still prints `showing 0 of 4 (--limit 4 for all)`, with no `(none)` line because the folder is not empty, exit 0.
+- `SHOW-LIMIT-02` `--limit 0` lists no children and still prints `showing 0 of 3 (--limit 3 for all)`, with no `(none)` line because the folder is not empty, exit 0.
   design §3.3 Limits: the limits line always prints. Run: memex show src --limit 0.
 
 ## SEP
@@ -72,7 +74,7 @@
 
 - `SHOW-JSON-01` `--json` on a file prints one document, `{"docs":[...],"errors":[]}`, whose doc has its ref, collection, id, path, title, text, empty fields, cites, cited_by and chain, exit 0.
   design §3.6 show shape. Run: memex show src/cli.rs --json.
-- `SHOW-JSON-02` `--json` on a folder adds a `children` object with `total` and `items`, where each item has its `path`, its `kind` (`dir` or `file`) and its `title`, or null when it has none, exit 0.
+- `SHOW-JSON-02` `--json` on a folder adds a `children` object with `total` and `items`, not counting the folder's own README.md, where each item has its `path`, its `kind` (`dir` or `file`) and its `title`, or null when it has none, exit 0.
   design §3.6 show: children. Run: memex show src --json.
 - `SHOW-JSON-03` `--json` on a log ref gives a null `path`, the frontmatter as `fields` with lists as JSON arrays, and an empty `chain`, exit 0.
   design §3.6 Doc and show: logs add their frontmatter fields. Run: memex show impl:20261013-120000-show-walks-hub-readmes --json.

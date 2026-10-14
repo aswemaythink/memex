@@ -1,5 +1,5 @@
 //! Resolves a ref to what it names (design §3.1, steps 1 to 3): an absolute path, a path that the cwd or the root holds, or an exact `collection:id` label.
-//! Cases: SHOW-FILE-01, SHOW-FILE-03, SHOW-DIR-01, SHOW-ROOT-01, SHOW-LOG-01, SHOW-LOG-02, SHOW-ERR-01, SHOW-ERR-02, SHOW-JSON-05
+//! Cases: SHOW-FILE-01, SHOW-FILE-03, SHOW-DIR-01, SHOW-ROOT-01, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-ERR-01, SHOW-ERR-02, SHOW-JSON-05
 
 use std::path::{Component, Path};
 
@@ -30,10 +30,14 @@ pub enum Outcome<'a> {
 }
 
 /// Resolves `arg` as typed from the cwd, which is `cwd_rel` relative to the root (empty at the root). A relative path that
-/// the cwd or the root holds wins when it is the only one; when both hold different entries it is ambiguous.
+/// the cwd or the root holds wins when it is the only one; when both hold different entries it is ambiguous. `.` is the
+/// root's own label, so it always names the root, whatever the cwd (design §3.1, step 2).
 pub fn resolve<'a>(corpus: &'a Corpus, cwd_rel: &str, arg: &str) -> Outcome<'a> {
     if arg.is_empty() {
         return Outcome::NotFound;
+    }
+    if arg == "." {
+        return found_path(corpus, String::new());
     }
     if Path::new(arg).is_absolute() {
         return absolute(corpus, arg);

@@ -7,11 +7,10 @@ stdout
 | The source of the demo.
 | 
 | children
-|   README.md  The source of the demo.
 |   cli.rs  Parses the demo arguments.
 |   deep/  (no README)
 |   empty.rs  (no header)
-|   showing 4 of 4 (--limit 4 for all)
+|   showing 3 of 3 (--limit 3 for all)
 | 
 | cites
 |   (none)

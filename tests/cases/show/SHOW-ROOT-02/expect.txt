@@ -7,11 +7,10 @@ stdout
 | The demo repo for show.
 | 
 | children
-|   README.md  The demo repo for show.
 |   notes.txt  (no header)
 |   plain/  (no README)
 |   src/  The source of the demo.
-|   showing 4 of 4 (--limit 4 for all)
+|   showing 3 of 3 (--limit 3 for all)
 | 
 | cites
 |   (none)

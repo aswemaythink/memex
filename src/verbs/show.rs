@@ -1,12 +1,12 @@
 //! Carries out `memex show` (design §3.3 and §3.6): resolves each ref, builds its section, and reports the sections, the misses and the exit status.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05
 
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::cite;
-use crate::corpus::{self, parent_of, readme_label, Corpus, Doc, Kind};
+use crate::corpus::{self, parent_of, readme_label, Child, Corpus, Doc, Kind};
 use crate::error::{Code, Error};
 use crate::render::{self, Link, Listing, Miss, Ref, Section};
 use crate::resolve::{resolve, Outcome, Target};
@@ -119,10 +119,12 @@ fn section_for(corpus: &Corpus, target: &Target<'_>, options: &Options) -> Resul
     }
 }
 
-/// The section of a folder: its README or `(no README)`, its children, its citations, and the chain above it.
+/// The section of a folder: its README or `(no README)`, its children other than that README, its citations, and the chain
+/// above it.
 fn folder_section(corpus: &Corpus, rel: &str, options: &Options) -> Section {
     let label = corpus::label_of(rel);
     let readme = corpus.doc(&readme_label(rel));
+    let children = listed_children(corpus, rel);
     Section {
         label: label.clone(),
         title: readme.map(|doc| doc.title.clone()),
@@ -132,11 +134,23 @@ fn folder_section(corpus: &Corpus, rel: &str, options: &Options) -> Section {
         text: readme.map(|doc| doc.text.clone()),
         missing: "(no README)",
         fields: None,
-        children: Some(Listing::of(corpus.children(rel), options.limit)),
+        children: Some(Listing::of(&children, options.limit)),
         cites: readme.map(cite::cites).unwrap_or_default(),
         cited_by: cited_by(corpus, &label, options.limit),
         chain: chain(corpus, parent_of(rel), options),
     }
+}
+
+/// The children that a folder's section lists: all of them but its own README.md, which the body has already printed
+/// (design §3.3).
+fn listed_children(corpus: &Corpus, rel: &str) -> Vec<Child> {
+    let own = readme_label(rel);
+    corpus
+        .children(rel)
+        .iter()
+        .filter(|child| !(child.kind == Kind::File && child.rel == own))
+        .cloned()
+        .collect()
 }
 
 /// The section of a file: its header, or its whole text for a Markdown file, and the chain above its folder. A README

@@ -7,8 +7,8 @@ stdout
 | The source of the demo.
 | 
 | children
-|   README.md  The source of the demo.
-|   showing 1 of 4 (--limit 4 for all)
+|   cli.rs  Parses the demo arguments.
+|   showing 1 of 3 (--limit 3 for all)
 | 
 | cites
 |   (none)
