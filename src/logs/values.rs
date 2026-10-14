@@ -1,4 +1,5 @@
-//! Checks the values of `--to`, `--tag` and the agent id (design §3.4): each value matches one grammar, and a list drops its repeats, keeping the first place of each.
+//! Checks the values of `--to`, `--tag` and the agent id (design §3.4).
+//! Each value matches one grammar, and a list drops its repeats, keeping the first place of each.
 //! Cases: LOG-FLAG-01, LOG-FLAG-02, LOG-FLAG-03, LOG-FLAG-04, LOG-FLAG-05, LOG-FLAG-06
 
 use crate::cli::Verb;

@@ -1,4 +1,5 @@
-//! Checks a stream name before it names a folder (design §3.1 and §3.4): its grammar, the built-in and Windows device names that are reserved, and the manifests that already own a name.
+//! Checks a stream name before it names a folder (design §3.1 and §3.4).
+//! It checks the grammar, the built-in and Windows device names that are reserved, and the manifests that already own a name.
 //! Cases: LOG-WRITE-13, LOG-STREAM-01, LOG-STREAM-02, LOG-STREAM-03, LOG-STREAM-04, LOG-STREAM-05
 
 use std::fs;

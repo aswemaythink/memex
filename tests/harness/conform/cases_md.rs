@@ -1,4 +1,5 @@
-//! Rules 2 and 3 of PLAN.md §2: each CASES.md parses with one prefix, ids and prefixes are unique, and entries match case folders one to one.
+//! Rules 2 and 3 of PLAN.md §2: each CASES.md parses, and its entries match the case folders.
+//! Each CASES.md parses with one prefix, ids and prefixes are unique, and entries match case folders one to one.
 //! Cases: all (runner)
 
 use std::collections::{BTreeMap, BTreeSet};

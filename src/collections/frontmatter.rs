@@ -1,4 +1,5 @@
-//! Splits a document's flat-YAML frontmatter from its body and reads the fields (design §4.2 Frontmatter and §4.3): `key: scalar`, `key: [a, b]`, `- item` lists, and nested text kept as written.
+//! Splits a document's flat-YAML frontmatter from its body (design §4.2 and §4.3).
+//! It reads the fields: `key: scalar`, `key: [a, b]`, `- item` lists, and nested text kept as written.
 //! Cases: SHOW-LOG-01, SHOW-JSON-03
 
 /// One frontmatter value: a scalar, or nested text kept as written, or a list.

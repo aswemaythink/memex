@@ -1,4 +1,5 @@
-//! Reads the log store's entries as docs for `show` (design §3.1 and §4.3): every non-dot `.md` file one folder below the store, labelled `stream:id`, with its frontmatter as fields and its title from its first line.
+//! Reads the log store's entries as docs for `show` (design §3.1 and §4.3).
+//! Every non-dot `.md` file one folder below the store is one doc, labelled `stream:id`, with its frontmatter as fields and its title from its first line.
 //! Cases: SHOW-LOG-01, SHOW-LOG-02, SHOW-JSON-03
 
 use std::fs;

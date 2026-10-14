@@ -1,4 +1,5 @@
-//! Repo quality gate: source files stay short and open with a purpose header, every folder has a README.md, and no lint is silenced under src/ (tests/ may allow only dead_code).
+//! Repo quality gate: short files, purpose headers, folder READMEs, and no silenced lints in src/.
+//! It also holds tests/ to dead_code as its only allow, and each header's first sentence to 100 characters.
 //! Cases: none (repo quality gate)
 
 use std::fs;
@@ -7,11 +8,23 @@ use std::path::{Path, PathBuf};
 /// The most lines a source file may have.
 const MAX_LINES: usize = 365;
 
+/// The most characters a header's first sentence may have: the limit of a one-liner that a folder listing shows whole.
+const MAX_SENTENCE: usize = 100;
+
 /// The trees the gate walks, relative to the crate root.
 const ROOTS: [&str; 2] = ["src", "tests"];
 
 /// The only lint attribute tests/ may use.
 const TEST_ALLOW: &str = "#[allow(dead_code)]";
+
+/// Path prefixes whose headers the sentence limit does not judge yet: the refiner's files, which keep their headers.
+// T1: refiner owns these; remove once shortened
+const SENTENCE_EXEMPT: [&str; 4] = [
+    "src/index/",
+    "src/verbs/search.rs",
+    "src/render/search.rs",
+    "src/corpus.rs",
+];
 
 /// One file or folder under a root.
 struct Node {
@@ -89,6 +102,32 @@ fn source_files_cite_their_cases() {
     report(
         &problems,
         "add `//! Cases: <ids>` to the header, or `//! Cases: none (<why>)` when no case pins the file",
+    );
+}
+
+#[test]
+fn header_first_sentences_are_at_most_100_chars() {
+    let nodes = tree();
+    let mut problems = Vec::new();
+    for node in rust_files(&nodes) {
+        if SENTENCE_EXEMPT
+            .iter()
+            .any(|exempt| node.rel.starts_with(exempt))
+        {
+            continue;
+        }
+        let sentence = first_sentence(&header_of(&read(&node.path)));
+        let length = sentence.chars().count();
+        if length > MAX_SENTENCE {
+            problems.push(format!(
+                "{}: the first sentence of its header is {length} characters, the limit is {MAX_SENTENCE}",
+                node.rel
+            ));
+        }
+    }
+    report(
+        &problems,
+        "shorten the first sentence to one line, and move the rest of the header into the `//!` lines after it",
     );
 }
 
@@ -221,6 +260,33 @@ fn header_of(text: &str) -> Vec<&str> {
         .skip_while(|line| line.trim().is_empty())
         .take_while(|line| line.starts_with("//!"))
         .collect()
+}
+
+/// The first sentence of a header, read as design §2.1 reads a one-liner: the text of its first paragraph, with the `//!`
+/// markers and runs of spaces made into single spaces, cut after the first `.`, `!` or `?` that is followed by whitespace or
+/// the end of the paragraph. A paragraph with no such mark is one sentence.
+fn first_sentence(header: &[&str]) -> String {
+    let paragraph: Vec<&str> = header
+        .iter()
+        .map(|line| line.strip_prefix("//!").unwrap_or(*line).trim())
+        .take_while(|line| !line.is_empty())
+        .collect();
+    let flat = paragraph
+        .join(" ")
+        .split_whitespace()
+        .collect::<Vec<&str>>()
+        .join(" ");
+    let end = flat
+        .char_indices()
+        .find(|&(at, mark)| {
+            matches!(mark, '.' | '!' | '?')
+                && flat[at + 1..]
+                    .chars()
+                    .next()
+                    .is_none_or(char::is_whitespace)
+        })
+        .map_or(flat.len(), |(at, _)| at + 1);
+    flat[..end].to_string()
 }
 
 /// True when a line opens a lint attribute that allows or expects a lint, such as `#[allow(unused)]`.

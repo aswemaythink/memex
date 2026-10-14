@@ -1,4 +1,5 @@
-//! The log store: how an entry is checked and written (body, front, stream, values, write), how old entries are pruned (prune), and how the entries are read as docs (read), per design §3.4 and §4.3.
+//! The log store: how an entry is checked, written, pruned and read, per design §3.4 and §4.3.
+//! Checks: body, front, stream and values. Writes: write. Prunes: prune. Reads docs: read.
 //! Cases: none (module map only; each module cites its own cases)
 
 pub mod body;

@@ -1,4 +1,5 @@
-//! Reads the log body from stdin and checks it (design §3.4 Body and §4.4 Text): a terminal is refused, the read stops one byte past 16 KiB, a leading UTF-8 BOM is dropped, a blank body is refused, and the body needs a title line.
+//! Reads the log body from stdin and checks it (design §3.4 Body and §4.4 Text).
+//! A terminal is refused, the read stops one byte past 16 KiB, a leading UTF-8 BOM is dropped, a blank body is refused, and the body needs a title line.
 //! Cases: LOG-WRITE-12, LOG-BODY-01, LOG-BODY-02, LOG-BODY-03, LOG-BODY-04, LOG-BODY-05, LOG-BODY-06; the terminal refusal has a unit test only (design §4.4)
 
 use std::io::{self, IsTerminal, Read};

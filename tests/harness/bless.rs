@@ -1,4 +1,5 @@
-//! Compares a case's rendered transcript with its expect.txt, and under MEMEX_BLESS=1 writes the golden instead of failing.
+//! Compares a case's rendered transcript with its expect.txt.
+//! Under MEMEX_BLESS=1 it writes the golden instead of failing.
 //! Cases: all (runner)
 
 use std::fs;

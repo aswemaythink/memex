@@ -1,4 +1,5 @@
-//! The readers of the intent layer and the one-liner rule they share (design §2): paragraphs, the first sentence, and the one-liner of a block.
+//! The readers of the intent layer and the one-liner rule they share (design §2).
+//! Paragraphs, the first sentence, and the one-liner of a block.
 //! Cases: SHOW-DIR-01, SHOW-FILE-01, SHOW-LINE-01
 
 pub mod cases;

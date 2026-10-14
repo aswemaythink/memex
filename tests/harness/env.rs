@@ -1,4 +1,5 @@
-//! The environment every sandboxed run gets: the inherited one scrubbed of memex, git and agent variables and of PATH entries holding a memex, plus the sandbox defaults of PLAN.md §2.
+//! The environment every sandboxed run gets, with the sandbox defaults of PLAN.md §2.
+//! The inherited environment, scrubbed of memex, git and agent variables and of PATH entries holding a memex.
 //! Cases: all (runner)
 
 use std::collections::BTreeMap;

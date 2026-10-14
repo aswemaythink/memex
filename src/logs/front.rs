@@ -1,4 +1,5 @@
-//! Splits an agent's own frontmatter off the top of a body and checks its keys (design §3.4 Extra fields and §4.2 flat YAML): a memex key or a repeated key is refused, and every other line is kept as the agent wrote it.
+//! Splits an agent's frontmatter off the top of a body and checks its keys (design §3.4 and §4.2).
+//! A memex key or a repeated key is refused, and every other line is kept as the agent wrote it.
 //! Cases: LOG-FRONT-01, LOG-FRONT-02, LOG-FRONT-03, LOG-FRONT-04, LOG-FRONT-05, LOG-FRONT-06
 
 use crate::cli::Verb;

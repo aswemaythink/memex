@@ -1,4 +1,5 @@
-//! Prints `show`'s sections and misses as text (design §3.3): each section under its `===` line, then its blocks in order, with a limits line after the children and cited-by lists.
+//! Prints `show`'s sections and misses as text (design §3.3).
+//! Each section sits under its `===` line, then its blocks in order, with a limits line after the children and cited-by lists.
 //! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-MD-01, SHOW-MD-02, SHOW-LOG-01, SHOW-UP-01, SHOW-ROOT-01, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, INT-NOHEAD-03, CASE-SECT-01, CITE-PREFIX-01, CITE-UNRES-01, CITE-BACK-01, CITE-BACK-04, CITE-LINK-03
 
 use super::{CaseParts, Fields, Link, Listing, Miss, Ref, Section};

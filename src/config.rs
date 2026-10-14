@@ -1,4 +1,5 @@
-//! Reads the store owner's `.memex/config.json` (design §4.1 item 4) and parses its keep_logs value (design §4.3). A missing file means the default `3d`. A file that cannot be used, or a value outside the grammar, means nothing is pruned, and one warning says why.
+//! Reads the store owner's `.memex/config.json` (design §4.1 item 4).
+//! It parses the keep_logs value (design §4.3). A missing file means the default `3d`. A file that cannot be used, or a value outside the grammar, means nothing is pruned, and one warning says why.
 //! Cases: DISC-CONFIG-01, DISC-CONFIG-02, LOG-PRUNE-01, LOG-PRUNE-02, LOG-PRUNE-06, LOG-PRUNE-07, LOG-PRUNE-08, LOG-PRUNE-09, LOG-PRUNE-16
 
 use std::fs;

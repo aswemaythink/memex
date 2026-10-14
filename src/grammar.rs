@@ -1,4 +1,5 @@
-//! The tables of design §3's grammar: which flags each verb takes, what each flag takes after it, and how many words each verb takes.
+//! The tables of design §3's grammar.
+//! Which flags each verb takes, what each flag takes after it, and how many words each verb takes.
 //! Cases: CLI-*
 
 use crate::cli::Verb;

@@ -1,4 +1,5 @@
-//! Finds where `log` writes, per design §4.1: the root (the nearest `.memex/`, else the git toplevel, else the cwd), the folder whose `.memex/` owns the store, and the store, found through git subprocesses.
+//! Finds where `log` writes, per design §4.1: the root, the folder that owns the store, and the store.
+//! The root is the nearest `.memex/`, else the git toplevel, else the cwd; the store is found through git subprocesses.
 //! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-GIT-01, LOG-WRITE-06, LOG-WRITE-10
 
 use std::ffi::OsStr;

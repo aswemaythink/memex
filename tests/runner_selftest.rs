@@ -1,4 +1,5 @@
-//! Self-tests for the conformity rules: each broken tree under tests/runner-selftest trips exactly one rule, and each message is asserted in full.
+//! Self-tests for the conformity rules.
+//! Each broken tree under tests/runner-selftest trips exactly one rule, and each message is asserted in full.
 //! Cases: all (runner)
 
 #[allow(dead_code)] // this binary uses only conform::check; conformance.rs uses the rest

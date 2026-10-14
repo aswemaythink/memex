@@ -1,4 +1,5 @@
-//! Parses the argv grammar of design §3 into a typed Command, or into the usage error the grammar calls for.
+//! Parses the argv grammar of design §3 into a typed Command.
+//! Or into the usage error the grammar calls for.
 //! Cases: CLI-*, CLI-BARE-01, CLI-VERB-01, CLI-VERB-02, CLI-VERB-03, CLI-FLAG-06, CLI-HELP-01, CLI-JSON-03, CLI-JSON-04
 
 use std::ffi::OsString;

@@ -1,4 +1,5 @@
-//! Shared runner code for the conformance suite and its self-tests: the case.json schema, and the modules that check, discover, run and bless cases.
+//! Shared runner code for the conformance suite and its self-tests.
+//! It holds the case.json schema, and the modules that check, discover, run and bless cases.
 //! Cases: all (runner)
 
 pub mod bless;

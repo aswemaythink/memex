@@ -1,4 +1,5 @@
-//! Renders a case run as the golden transcript of PLAN.md §2, and redacts the sandbox path and the crate version.
+//! Renders a case run as the golden transcript of PLAN.md §2.
+//! It redacts the sandbox path and the crate version.
 //! Cases: all (runner)
 
 use std::collections::BTreeMap;

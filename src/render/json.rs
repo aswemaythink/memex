@@ -1,4 +1,5 @@
-//! Builds the `--json` document of `show` (design §3.6): `{"docs":[...],"errors":[...]}`, with each doc's fields, cites, cited_by, children and chain.
+//! Builds the `--json` document of `show` (design §3.6).
+//! Its shape is `{"docs":[...],"errors":[...]}`, with each doc's fields, cites, cited_by, children and chain.
 //! Cases: SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-JSON-01, CITE-JSON-01, CITE-JSON-02
 
 use serde_json::{json, Map, Value as Json};
