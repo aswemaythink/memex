@@ -1,0 +1,19 @@
+$ memex show README.md
+exit 0
+stdout
+| === README.md ===
+| # Demo
+| 
+| See [the spaced file](<src/path with spaces.rs>) and [the plain file](src/cli.rs).
+| 
+| cites
+|   src/path with spaces.rs  Spaced file.
+|   src/cli.rs  Parses the arguments.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)

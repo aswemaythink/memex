@@ -1,0 +1,3 @@
+//! Spaced file.
+
+fn spaced() {}

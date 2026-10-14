@@ -1,0 +1,26 @@
+$ memex search to:
+exit 2
+stdout (empty)
+stderr
+| memex: empty filter value 'to:'
+| usage: memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]
+
+$ memex search agent: --json
+exit 2
+stdout
+| {"error":{"code":"usage","message":"empty filter value 'agent:'"}}
+stderr (empty)
+
+$ memex search branch:
+exit 2
+stdout (empty)
+stderr
+| memex: empty filter value 'branch:'
+| usage: memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]
+
+$ memex search worktree:
+exit 2
+stdout (empty)
+stderr
+| memex: empty filter value 'worktree:'
+| usage: memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]

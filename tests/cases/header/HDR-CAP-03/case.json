@@ -1,0 +1,1 @@
+{"steps": [{"args": ["search", "kib"]}, {"args": ["search", "--in", "headers", "--json"]}]}

@@ -48,6 +48,8 @@
   design §2.3: URLs and #anchors are not refs. Run: memex show README.md.
 - `CITE-LINK-03` A markdown link to a missing file is an unresolved cite, printed with its target as written.
   design §2.3: a link that resolves to nothing is listed as unresolved. Run: memex show README.md.
+- `CITE-LINK-04` A markdown link whose destination is in angle brackets, `[t](<path with spaces.rs>)`, cites the walked file at that path, spaces and all.
+  design §2.3 `[text](path)`: a file in the walked set, resolved from the citing doc's folder, then the root. Run: memex show README.md.
 
 ## UNRES
 
@@ -65,6 +67,12 @@
 
 - `CITE-FENCE-01` Text inside a fence of backticks or of tildes is not read, while the same ids outside the fence are cited.
   design §2.3: citations are never extracted from fenced code blocks. Run: memex show README.md.
+- `CITE-FENCE-02` A line indented four spaces before ``` is not a fence, so the lines after it are read, and the id in the indented line is cited.
+  design §2.3: a fence line is indented at most three spaces. Run: memex show README.md.
+- `CITE-FENCE-03` A fence indented up to three spaces opens and closes like any fence, and a closing line indented four spaces does not close it, so the text after that line stays hidden until the real closer.
+  design §2.3: a fence line is indented at most three spaces, for the opener and the closer alike. Run: memex show README.md.
+- `CITE-FENCE-04` A fence that is never closed runs to the end of the doc, so the ids and paths after its opening line are not cited, while the id before it is.
+  design §2.3: an unclosed fence runs to the end of the doc. Run: memex show README.md.
 
 ## SELF
 

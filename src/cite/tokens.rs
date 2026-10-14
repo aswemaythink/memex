@@ -1,5 +1,5 @@
 //! Splits a doc's text into the tokens that citations are made of (design §2.3), skipping fenced code.
-//! Cases: CITE-BARE-01, CITE-BARE-02, CITE-PREFIX-01, CITE-COLL-01, CITE-COLL-03, CITE-PATH-04, CITE-LINK-01, CITE-LINK-02, CITE-FENCE-01
+//! Cases: CITE-BARE-01, CITE-BARE-02, CITE-PREFIX-01, CITE-COLL-01, CITE-COLL-03, CITE-PATH-04, CITE-LINK-01, CITE-LINK-02, CITE-LINK-04, CITE-FENCE-01, CITE-FENCE-02, CITE-FENCE-03, CITE-FENCE-04
 
 /// One token of a line. Its kind fixes how it resolves, in the precedence of design §2.3.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,8 +14,9 @@ pub enum Token {
     Word(String),
 }
 
-/// The lines of a text outside its fenced code blocks (design §2.3). A fence opens with three or more backticks or tildes,
-/// and closes at a line of the same mark that is at least as long and holds nothing else. A fence left open hides the rest.
+/// The lines of a text outside its fenced code blocks (design §2.3). A fence line is three or more backticks or tildes indented at
+/// most three spaces. A fence opens with one, and closes at a fence line of the same mark that is at least as long and holds
+/// nothing else. A fence left open hides the rest.
 pub fn live_lines(text: &str) -> Vec<&str> {
     let mut open: Option<(u8, usize)> = None;
     let mut lines = Vec::new();
@@ -65,7 +66,7 @@ pub fn is_family_prefix(text: &str) -> bool {
 
 /// The mark and length of a line that opens a fence. A backtick fence's info string may not hold a backtick.
 fn opens(line: &str) -> Option<(u8, usize)> {
-    let text = line.trim_start();
+    let text = fence_text(line)?;
     let mark = *text.as_bytes().first()?;
     if mark != b'`' && mark != b'~' {
         return None;
@@ -75,11 +76,21 @@ fn opens(line: &str) -> Option<(u8, usize)> {
     (len >= 3 && !(mark == b'`' && info.contains('`'))).then_some((mark, len))
 }
 
-/// True for a line that closes a fence of `len` marks of `mark`: the same mark, at least `len` of them, and nothing else.
+/// True for a line that closes a fence of `len` marks of `mark`: a fence line of the same mark, at least `len` of them, and
+/// nothing else after them.
 fn closes(line: &str, mark: u8, len: usize) -> bool {
-    let text = line.trim();
+    let Some(text) = fence_text(line).map(str::trim_end) else {
+        return false;
+    };
     let run = text.bytes().take_while(|byte| *byte == mark).count();
     run >= len && run == text.len()
+}
+
+/// The line without its indentation, when the indentation is at most three spaces (design §2.3). A line indented further, or
+/// indented with a tab, is code and never a fence line.
+fn fence_text(line: &str) -> Option<&str> {
+    let text = line.trim_start_matches(' ');
+    (line.len() - text.len() <= 3).then_some(text)
 }
 
 /// The markdown link whose `](` is at `at`: its destination runs to the next `)`. Returns where scanning resumes.
@@ -239,5 +250,14 @@ mod tests {
     fn a_fence_hides_its_lines_until_a_closing_fence() {
         assert_eq!(live_lines("a\n```\nb\n```\nc"), vec!["a", "c"]);
         assert_eq!(live_lines("a\n~~~\nb\n```\nc"), vec!["a"]);
+    }
+
+    #[test]
+    fn a_fence_indented_four_spaces_is_not_a_fence() {
+        assert_eq!(
+            live_lines("a\n    ```\nb\n    ```\nc"),
+            vec!["a", "    ```", "b", "    ```", "c"]
+        );
+        assert_eq!(live_lines("a\n   ```\nb\n   ```\nc"), vec!["a", "c"]);
     }
 }

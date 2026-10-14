@@ -1,0 +1,12 @@
+$ memex search :
+exit 2
+stdout (empty)
+stderr
+| memex: no searchable words
+| usage: memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]
+
+$ memex search :: --json
+exit 2
+stdout
+| {"error":{"code":"usage","message":"no searchable words"}}
+stderr (empty)

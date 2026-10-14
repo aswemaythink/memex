@@ -1,0 +1,23 @@
+$ memex show README.md
+exit 0
+stdout
+| === README.md ===
+| # Demo
+| 
+| Before the fence: NAME-001.
+| 
+| ```
+| NAME-002 is in a fence that is never closed.
+| 
+| Later prose: src/cli.rs and NAME-002.
+| 
+| cites
+|   cases:NAME-001  Names are stable across runs.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)

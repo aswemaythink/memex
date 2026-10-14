@@ -1,0 +1,9 @@
+$ memex search widget --in empty-set
+exit 0
+stdout (empty)
+stderr (empty)
+
+$ memex search --in empty-set
+exit 0
+stdout (empty)
+stderr (empty)

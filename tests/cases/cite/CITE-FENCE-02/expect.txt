@@ -1,0 +1,23 @@
+$ memex show README.md
+exit 0
+stdout
+| === README.md ===
+| # Demo
+| 
+|     ```
+|     NAME-002 sits in an indented line
+|     ```
+| 
+| Prose after it cites NAME-001.
+| 
+| cites
+|   cases:NAME-002  Names differ for different atoms.
+|   cases:NAME-001  Names are stable across runs.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)

@@ -107,8 +107,14 @@
 
 - `HDR-CAP-01` A header that starts after the first 8 KiB of a file is not read, so the file shows `(no header)`.
   design §2.1 files read: only the first 8 KiB of each file is read. Run: memex show late.rs --up 0.
-- `HDR-CAP-02` A header that runs past 8 KiB shows only the lines inside the first 8 KiB, and the line that starts at byte 8192 is not shown.
-  design §2.1 files read: only the first 8 KiB of each file is read. Run: memex show cut.rs --up 0.
+- `HDR-CAP-02` A header that runs past 8 KiB shows the lines inside the first 8 KiB, then a blank line and the final line `… (header cut at 8 KiB)`, and the line that starts at byte 8192 is not shown.
+  design §2.1 files read: a header still open at the 8 KiB cut is shown with the cut line, never silently. Run: memex show cut.rs --up 0.
+- `HDR-CAP-03` The cut line is shown by `show` only: the index leaves it out, so `kib` finds no header, and a header's JSON one-liner is its first paragraph's first sentence without the line.
+  design §2.1 files read and the one-liner rule of design §2 (the index and one-liners never carry the cut line). Run: memex search kib, then memex search --in headers --json.
+- `HDR-CAP-04` A header that ends inside the read limit has no cut line, even in a file longer than 8 KiB, so the line marks only a header still open at the cut.
+  design §2.1 files read (the cut line marks a header still open at the cut). Run: memex show ends.rs --up 0.
+- `HDR-CAP-05` A file of exactly 8 KiB whose header runs to its last byte has no cut line, since nothing lies past the read limit.
+  design §2.1 files read (only the first 8 KiB is read, and the cut line is for a header that goes on past it). Run: memex show exact.rs --up 0.
 
 ## BIN
 

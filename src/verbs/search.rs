@@ -1,16 +1,19 @@
 //! Carries out `memex search` (design §3.2 and §3.6): filters, then ranks, lists or rosters docs.
-//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-IN-01, SRCH-IN-02, SRCH-RANK-03, SRCH-TOKEN-03, SRCH-JSON-01, SRCH-JSON-02, SRCH-LINE-01, SRCH-JSON-03, SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01, SRCH-ORPHAN-02, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04
+//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-IN-01, SRCH-IN-02, SRCH-RANK-03, SRCH-TOKEN-03, SRCH-JSON-01, SRCH-JSON-02, SRCH-LINE-01, SRCH-JSON-03, SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01, SRCH-ORPHAN-02, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-IN-03, SRCH-IN-04, SRCH-IN-05, SRCH-IN-06, SRCH-TOKEN-04, HDR-CAP-03
 
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
+use crate::cli::Verb;
 use crate::clock::{self, Timestamp};
 use crate::corpus::{Corpus, Doc};
 use crate::error::Error;
 use crate::index::filter::{self, time_of, Filter};
 use crate::index::tokenize::query_tokens;
 use crate::index::{Index, Source};
+use crate::intent::header;
 use crate::render::search::{self as render, Group, Hit};
+use crate::scan::fail;
 use crate::verbs::here;
 
 /// The `--limit` of each group when `--in` is not given (design §3.2).
@@ -75,10 +78,13 @@ struct Plan {
 /// text, and the exit status is 0 as usual.
 pub fn run(request: &Request) -> Result<String, Error> {
     let corpus = here::load()?.corpus;
+    if let Some(names) = &request.in_ {
+        filter::check_in(&corpus, names)?;
+    }
     let scope = scope_of(&corpus, request.in_.as_deref());
     let fields = filter::fields_of(scope.iter().flat_map(|(_, docs)| docs.iter().copied()));
     let (filters, literals) = filter::read(&request.terms, &fields)?;
-    let plan = Plan::new(request, &literals, filters, clock::now()?);
+    let plan = Plan::new(request, &literals, filters, clock::now()?)?;
     let groups = rank_groups(&corpus, &plan, scope);
     Ok(if request.json {
         let spelled: Vec<(&str, &str)> = plan.filters.iter().map(Filter::spelled).collect();
@@ -90,9 +96,17 @@ pub fn run(request: &Request) -> Result<String, Error> {
 
 impl Plan {
     /// The plan of a request: its words are the tokens of its literal terms, its mode follows from what is given, and its limit is
-    /// the `--limit`, else the default of the mode.
-    fn new(request: &Request, literals: &[String], filters: Vec<Filter>, now: Timestamp) -> Plan {
+    /// the `--limit`, else the default of the mode. Literal terms that hold no token are a usage error, not an empty search.
+    fn new(
+        request: &Request,
+        literals: &[String],
+        filters: Vec<Filter>,
+        now: Timestamp,
+    ) -> Result<Plan, Error> {
         let words = words_of(literals);
+        if words.is_empty() && !literals.is_empty() {
+            return Err(fail(Verb::Search, "no searchable words".to_string()));
+        }
         let mode = mode_of(
             !words.is_empty(),
             request.in_.is_some(),
@@ -103,13 +117,13 @@ impl Plan {
             Mode::Roster => ROSTER_LIMIT,
             _ => DEFAULT_LIMIT,
         };
-        Plan {
+        Ok(Plan {
             mode,
             words,
             filters,
             limit: request.limit.unwrap_or(default),
             now,
-        }
+        })
     }
 
     /// True when the doc passes every filter of the query.
@@ -140,15 +154,13 @@ fn group_of(corpus: &Corpus, doc: &Doc) -> String {
     }
 }
 
-/// The groups that the search reads, each with its docs, in the order of design §3.2. `--in` leaves out the groups that it does not
+/// The groups that the search reads, each with its docs, in the order of design §3.2. `--in` leaves out the docs that it does not
 /// name, and a group with no doc is left out.
 fn scope_of<'a>(corpus: &'a Corpus, in_: Option<&[String]>) -> Vec<(String, Vec<&'a Doc>)> {
     let mut groups: BTreeMap<(u8, String), Vec<&'a Doc>> = BTreeMap::new();
-    for doc in corpus.first_docs() {
+    for doc in corpus.first_docs().filter(|doc| wanted(corpus, in_, doc)) {
         let name = group_of(corpus, doc);
-        if wanted(in_, &name) {
-            groups.entry((rank(&name), name)).or_default().push(doc);
-        }
+        groups.entry((rank(&name), name)).or_default().push(doc);
     }
     groups
         .into_iter()
@@ -156,9 +168,16 @@ fn scope_of<'a>(corpus: &'a Corpus, in_: Option<&[String]>) -> Vec<(String, Vec<
         .collect()
 }
 
-/// True when there is no `--in` list, or when the list names the group.
-fn wanted(in_: Option<&[String]>, name: &str) -> bool {
-    in_.is_none_or(|names| names.iter().any(|named| named.as_str() == name))
+/// True when there is no `--in` list, or when the list names the doc's group. A log entry's group is `logs`, which `logs` names, and
+/// its stream, which a stream name names: so `--in impl` keeps only the entries of stream `impl` (design §3.2).
+fn wanted(corpus: &Corpus, in_: Option<&[String]>, doc: &Doc) -> bool {
+    let Some(names) = in_ else {
+        return true;
+    };
+    let group = group_of(corpus, doc);
+    names
+        .iter()
+        .any(|named| *named == group || (group == LOGS && *named == doc.collection))
 }
 
 /// The place of a group in the output: 0 for readmes, 1 for headers, 2 for cases, 3 for a manifest's collection and 4 for logs.
@@ -276,10 +295,11 @@ fn compare_newest(left: Option<Timestamp>, right: Option<Timestamp>) -> Ordering
     }
 }
 
-/// A doc as the index reads it. A header is cut to its first `HEADER_LINES` lines; the text of every other doc is read whole.
+/// A doc as the index reads it. A header is read without its cut note and cut to its first `HEADER_LINES` lines; the text of every
+/// other doc is read whole.
 fn source_of(doc: &Doc) -> Source<'_> {
     let body = if doc.collection == HEADERS {
-        first_lines(&doc.text, HEADER_LINES)
+        first_lines(header::without_note(&doc.text), HEADER_LINES)
     } else {
         &doc.text
     };

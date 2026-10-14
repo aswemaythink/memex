@@ -1,12 +1,14 @@
-//! Reads and matches the `field:value` and `since:` filters of a search (design §3.2).
-//! Cases: SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-JSON-03
+//! Reads and matches a search's filters, and checks its `--in` names (design §3.2).
+//! Cases: SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-07, SRCH-FILTER-08, SRCH-IN-03, SRCH-IN-04, SRCH-IN-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-JSON-03
 
 use std::collections::BTreeSet;
+use std::path::Path;
 
 use crate::cli::Verb;
 use crate::clock::{self, Timestamp};
 use crate::collections::frontmatter::Value;
-use crate::corpus::Doc;
+use crate::collections::manifest;
+use crate::corpus::{Corpus, Doc};
 use crate::error::Error;
 use crate::scan::fail;
 
@@ -74,9 +76,10 @@ impl Bound {
     }
 }
 
-/// Splits the query terms into filters and literal terms (design §3.2). A term is a filter when it reads `name:value`, with both
-/// parts non-empty, and `name` is reserved or some doc in scope holds that field. Every other term is returned as written, for
-/// its words. A `since:` value that is none of its forms is a usage error.
+/// Splits the query terms into filters and literal terms (design §3.2). A term is a filter when it reads `name:value`, with a
+/// non-empty value, and `name` is reserved or some doc in scope holds that field. A reserved name with no value, such as `tag:`,
+/// is a usage error, and every other term is returned as written, for its words. A `since:` value that is none of its forms is
+/// a usage error too.
 pub fn read(
     terms: &[String],
     scope: &BTreeSet<String>,
@@ -85,7 +88,10 @@ pub fn read(
     let mut literals = Vec::new();
     for term in terms {
         match split(term) {
-            Some((name, value)) if is_filter(name, scope) => filters.push(filter_of(name, value)?),
+            Some((name, "")) if is_reserved(name) => return Err(empty_value(name)),
+            Some((name, value)) if !value.is_empty() && is_filter(name, scope) => {
+                filters.push(filter_of(name, value)?);
+            }
             _ => literals.push(term.clone()),
         }
     }
@@ -96,6 +102,31 @@ pub fn read(
 pub fn fields_of<'a>(docs: impl Iterator<Item = &'a Doc>) -> BTreeSet<String> {
     docs.flat_map(|doc| doc.fields.iter().map(|(name, _)| name.clone()))
         .collect()
+}
+
+/// Checks the names given to `--in` (design §3.2): each is a built-in collection (`readmes`, `headers`, `cases` or `logs`), a
+/// collection or stream that a doc of the corpus holds, or a manifest that loads. The first name that is none of these is a usage
+/// error, so an unknown name never gives an empty result.
+pub fn check_in(corpus: &Corpus, names: &[String]) -> Result<(), Error> {
+    let held: BTreeSet<&str> = corpus
+        .all_docs()
+        .map(|doc| doc.collection.as_str())
+        .collect();
+    for name in names {
+        let builtin = ["readmes", "headers", "cases", "logs"].contains(&name.as_str());
+        if !(builtin || held.contains(name.as_str()) || manifest_named(&corpus.root, name)) {
+            return Err(fail(Verb::Search, format!("unknown collection '{name}'")));
+        }
+    }
+    Ok(())
+}
+
+/// True when a manifest that loads has this name. A manifest with no doc holds no doc, so only its file names it; its warnings
+/// were printed when the corpus loaded.
+fn manifest_named(root: &Path, name: &str) -> bool {
+    manifest::load(root, &mut Vec::new())
+        .iter()
+        .any(|found| found.name == name)
 }
 
 /// The instant of a doc's `time` field, which is written as `YYYY-MM-DDTHH:MM:SSZ` (design §3.6). None for a doc with no time, and
@@ -134,23 +165,32 @@ pub fn time_of(doc: &Doc) -> Option<Timestamp> {
     clock::parse_stamp(&stamp)
 }
 
-/// The name and the value of a term that reads `name:value`: split at the first colon, with both parts non-empty and a name of
-/// letters, digits, dashes and underscores. None for any other term.
+/// The name and the value of a term that reads `name:value`: split at the first colon, with a non-empty name of letters, digits,
+/// dashes and underscores. The value may be empty. None for any other term.
 fn split(term: &str) -> Option<(&str, &str)> {
     let (name, value) = term.split_once(':')?;
     let name_ok = !name.is_empty()
         && name
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_');
-    (name_ok && !value.is_empty()).then_some((name, value))
+    name_ok.then_some((name, value))
+}
+
+/// True when a name is one of the reserved names, ignoring ASCII case.
+fn is_reserved(name: &str) -> bool {
+    RESERVED
+        .iter()
+        .any(|reserved| reserved.eq_ignore_ascii_case(name))
 }
 
 /// True when a name is reserved, or some doc in scope holds a field of that name. Names compare ignoring ASCII case.
 fn is_filter(name: &str, scope: &BTreeSet<String>) -> bool {
-    RESERVED
-        .iter()
-        .any(|reserved| reserved.eq_ignore_ascii_case(name))
-        || scope.iter().any(|field| field.eq_ignore_ascii_case(name))
+    is_reserved(name) || scope.iter().any(|field| field.eq_ignore_ascii_case(name))
+}
+
+/// The usage error of a reserved name with no value, such as `tag:`, which must not be searched as the word `tag` (design §3.2).
+fn empty_value(name: &str) -> Error {
+    fail(Verb::Search, format!("empty filter value '{name}:'"))
 }
 
 /// The filter that `name:value` names. `since:` reads its bound, `tag:` reads the `tags` field, and any other name reads the field
@@ -235,13 +275,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn a_term_reads_as_a_filter_only_with_both_parts() {
+    fn a_term_reads_as_a_name_and_a_value_only_with_a_name() {
         assert_eq!(split("tag:show"), Some(("tag", "show")));
         assert_eq!(split("std::io"), Some(("std", ":io")));
-        assert_eq!(split("tag:"), None);
+        assert_eq!(split("tag:"), Some(("tag", "")));
         assert_eq!(split(":show"), None);
         assert_eq!(split("no colon"), None);
         assert_eq!(split("a.b:c"), None);
+    }
+
+    #[test]
+    fn a_reserved_name_with_no_value_is_a_usage_error() {
+        let error = read(&["since:".to_string()], &BTreeSet::new()).unwrap_err();
+        assert_eq!(error.message, "empty filter value 'since:'");
+        let error = read(&["TAG:".to_string()], &BTreeSet::new()).unwrap_err();
+        assert_eq!(error.message, "empty filter value 'TAG:'");
     }
 
     #[test]

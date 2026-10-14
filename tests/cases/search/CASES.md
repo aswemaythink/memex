@@ -43,6 +43,8 @@
   design §3.2 Words (paths are kept as whole tokens). Run: memex search src/hash.rs, then memex search hash.
 - `SRCH-TOKEN-03` A term with `::` is searched as its words, so `std::io` finds the README that holds `std` and `io`.
   design §3.2 Filters (a `field:value` term that no doc in scope has a field for is searched as words). Run: memex search std::io.
+- `SRCH-TOKEN-04` A query whose terms hold no word, such as `:` or `::`, is a usage error, `no searchable words`, with exit 2 and not an empty success; with `--json` it is the JSON envelope.
+  design §3.2 Words and §3.6 (exit 2 is a usage error). The design does not name this query, so it follows the no-arguments rule. Run: memex search :, then memex search :: --json.
 
 ## GROUP
 
@@ -62,6 +64,14 @@
   design §3.2 Limits (with --in the default is 20). Run: memex search widget, then memex search widget --in cases.
 - `SRCH-IN-02` `--in logs` searches only the logs group, and `--in readmes,logs` searches those two groups in their usual order.
   design §3.2 (--in restricts the groups searched; logs means every stream). Run: memex search widget --in logs, then --in readmes,logs.
+- `SRCH-IN-03` A `--in` name that is no built-in collection, manifest or stream is a usage error: exit 2 with `unknown collection 'nope'` and the usage line, and nothing on stdout.
+  design §3.2 `--in` names (an unknown name is a usage error, never a silently empty result) and §3.6 exit codes. Run: memex search widget --in nope, then --in readmes,nope.
+- `SRCH-IN-04` With `--json`, an unknown `--in` name gives the usage error envelope `{"error":{"code":"usage","message":"unknown collection 'nope'"}}`, exit 2.
+  design §3.6 fatal errors (the JSON envelope) and §3.2 `--in` names. Run: memex search widget --in nope --json.
+- `SRCH-IN-05` A stream name in `--in` keeps only that stream's entries of the logs group: `--in impl` lists the impl entry and not the review entry, `--in review` the reverse, and `--in logs` lists both.
+  design §3.2 `--in` names (a stream name is valid; logs means every stream). Run: memex search widget --in impl, then --in review, then --in logs.
+- `SRCH-IN-06` A manifest's name is a valid `--in` name even when the manifest holds no doc, so a search or a roster under it gives no output and exits 0.
+  design §3.2 `--in` names (manifest names are valid) and §4.2 manifests. Run: memex search widget --in empty-set, then memex search --in empty-set.
 
 ## JSON
 
@@ -96,6 +106,10 @@
   design §3.2 Reserved filters (branch:, worktree: basename or path). Run: memex search branch:feat/show, then worktree:wt-cook-3, then worktree:/work/wt-cook-2.
 - `SRCH-FILTER-06` A filter with no words lists its docs in the same groups and with the same limit as a search: `--limit 1` shows one of the four `show` logs and says it is one of four.
   design §3.2 Filters without words (same grouping and limits). Run: memex search tag:show, then memex search tag:show --limit 1.
+- `SRCH-FILTER-07` A reserved name with no value, `since:` or `tag:`, is a usage error, `empty filter value 'since:'` with exit 2, so the word `since` or `tag` is never searched for.
+  design §3.2 Reserved filters: the design is silent on an empty value, and since: and tag: are reserved, so the error follows the reserved names. Run: memex search since:, then memex search tag: widget.
+- `SRCH-FILTER-08` Every reserved name with no value is the same usage error: `to:`, `agent:`, `branch:` and `worktree:` each exit 2, and with `--json` the error is the JSON envelope.
+  design §3.2 Reserved filters (reserved: agent:, to:, tag:, branch:, worktree:, since:) and §3.6 (fatal errors). Run: memex search to:, then agent: --json, then branch:, then worktree:.
 
 ## LITERAL
 

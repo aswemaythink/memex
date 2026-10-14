@@ -1,19 +1,28 @@
-//! Finds a file's header block in its first lines (design §2.1), past the skipped lines.
-//! Cases: HDR-SLASH-01, HDR-SLASH-02, HDR-SLASH-03, HDR-SLASH-04, HDR-SLASH-05, HDR-HASH-01, HDR-DOC-01, HDR-DOC-02, HDR-DOC-03, HDR-DOC-04, HDR-DASH-01, HDR-DASH-02, HDR-DASH-03, HDR-SEMI-01, HDR-PERCENT-01, HDR-MARKUP-01, HDR-PAREN-01, HDR-SKIP-01, HDR-SKIP-02, HDR-SKIP-03, HDR-SKIP-04, HDR-SKIP-05, HDR-SKIP-06, HDR-SKIP-07, HDR-BLOCK-01, HDR-BLOCK-02, HDR-NONE-01
+//! Finds a file's header block past its skipped lines (design §2.1), and tells whether it runs on.
+//! Cases: HDR-SLASH-01, HDR-SLASH-02, HDR-SLASH-03, HDR-SLASH-04, HDR-SLASH-05, HDR-HASH-01, HDR-DOC-01, HDR-DOC-02, HDR-DOC-03, HDR-DOC-04, HDR-DASH-01, HDR-DASH-02, HDR-DASH-03, HDR-SEMI-01, HDR-PERCENT-01, HDR-MARKUP-01, HDR-PAREN-01, HDR-SKIP-01, HDR-SKIP-02, HDR-SKIP-03, HDR-SKIP-04, HDR-SKIP-05, HDR-SKIP-06, HDR-SKIP-07, HDR-BLOCK-01, HDR-BLOCK-02, HDR-NONE-01, HDR-CAP-03, HDR-CAP-04, HDR-CAP-05
 
 use super::families::{Family, PRAGMAS};
 
-/// The header text of a file whose lines are `lines`, read with `family`: the comment markers removed and the blank lines at
-/// either end dropped. None when no header block leads the file.
-pub fn header_text(family: &Family, lines: &[&str]) -> Option<String> {
-    let start = skip_leading(family, lines);
-    let body = header_body(family, &lines[start..]);
-    let text = trim_blank_edges(body).join("\n");
-    (!text.is_empty()).then_some(text)
+/// A header as the lines of a file give it: its text, and whether its block was still open when the lines ran out. An open block
+/// goes on past them, so a file that is longer than the lines it was read from has a header cut at the read limit (design §2.1).
+pub struct Found {
+    /// The header text: the comment markers removed, and the blank lines at either end dropped.
+    pub text: String,
+    /// True when the block runs to the last line, with no line after it that ends it: a longer file would go on with it.
+    pub open: bool,
 }
 
-/// The body lines of the header that starts `lines`: a module docstring when the first line opens one, else the comment block.
-fn header_body(family: &Family, lines: &[&str]) -> Vec<String> {
+/// The header of a file whose lines are `lines`, read with `family`. None when no header block leads the file.
+pub fn header_text(family: &Family, lines: &[&str]) -> Option<Found> {
+    let start = skip_leading(family, lines);
+    let (body, open) = header_body(family, &lines[start..]);
+    let text = trim_blank_edges(body).join("\n");
+    (!text.is_empty()).then_some(Found { text, open })
+}
+
+/// The body lines of the header that starts `lines`, and whether it is open at their end: a module docstring when the first line
+/// opens one, else the comment block.
+fn header_body(family: &Family, lines: &[&str]) -> (Vec<String>, bool) {
     if let Some((first, tail)) = lines.split_first() {
         if let Some(delimiter) = docstring_at(family, first.trim_start()) {
             return docstring(first, tail, delimiter);
@@ -69,9 +78,9 @@ fn license_end(family: &Family, lines: &[&str], at: usize) -> Option<usize> {
     (next > at && (spdx || copyright)).then_some(next)
 }
 
-/// The body lines of the header block from the start of `lines`. A blank line is kept, and does not end the block; the block
-/// ends at the first line that is neither a comment nor blank (design §2.1).
-fn comment_block(family: &Family, lines: &[&str]) -> Vec<String> {
+/// The body lines of the header block from the start of `lines`, and whether the block runs to their end. A blank line is kept, and
+/// does not end the block; the block ends at the first line that is neither a comment nor blank (design §2.1).
+fn comment_block(family: &Family, lines: &[&str]) -> (Vec<String>, bool) {
     let mut body = Vec::new();
     let mut at = 0;
     while let Some(line) = lines.get(at) {
@@ -82,10 +91,10 @@ fn comment_block(family: &Family, lines: &[&str]) -> Vec<String> {
             body.extend(text);
             at = end;
         } else {
-            break;
+            return (body, false);
         }
     }
-    body
+    (body, true)
 }
 
 /// The body lines of the comment that opens on line `at`, and the index after it. A block runs to its close line, and a line
@@ -126,22 +135,22 @@ fn block_at(lines: &[&str], at: usize, open: &str, close: &str) -> (Vec<String>,
 }
 
 /// The lines of a module docstring that opens with `delimiter` on `first`: the text between its quotes, which runs over `tail`
-/// until the closing delimiter. A docstring with no close runs to the end of `tail`.
-fn docstring(first: &str, tail: &[&str], delimiter: &str) -> Vec<String> {
+/// until the closing delimiter, and whether it is open at the end of `tail`. A docstring with no close runs to the end of `tail`.
+fn docstring(first: &str, tail: &[&str], delimiter: &str) -> (Vec<String>, bool) {
     let opening = first.trim_start();
     let rest = &opening[delimiter.len()..];
     if let Some(end) = rest.find(delimiter) {
-        return vec![rest[..end].trim().to_string()];
+        return (vec![rest[..end].trim().to_string()], false);
     }
     let mut body = vec![rest.trim().to_string()];
     for line in tail {
         if let Some(end) = line.find(delimiter) {
             body.push(line[..end].trim_end().to_string());
-            return body;
+            return (body, false);
         }
         body.push(line.trim_end().to_string());
     }
-    body
+    (body, true)
 }
 
 /// The docstring delimiter that `trimmed` opens with, when the family has docstrings.

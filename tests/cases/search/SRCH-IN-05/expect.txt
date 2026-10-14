@@ -1,0 +1,21 @@
+$ memex search widget --in impl
+exit 0
+stdout
+| logs  (showing 1 of 1)
+|   impl:20261013-115000-widget-log  10m  Widget log
+stderr (empty)
+
+$ memex search widget --in review
+exit 0
+stdout
+| logs  (showing 1 of 1)
+|   review:20261013-110000-widget-review  1h  Widget review
+stderr (empty)
+
+$ memex search widget --in logs
+exit 0
+stdout
+| logs  (showing 2 of 2)
+|   impl:20261013-115000-widget-log  10m  Widget log
+|   review:20261013-110000-widget-review  1h  Widget review
+stderr (empty)
