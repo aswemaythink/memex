@@ -426,9 +426,9 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [x] S2.3
 - [x] S2.4
 - [x] S2.5 (+ S2.6 live MANK cases)
-- [ ] S3.1
-- [ ] S3.2
-- [ ] S3.3
+- [x] S3.1
+- [x] S3.2
+- [x] S3.3 (refiner pass running)
 - [ ] S3.4
 - [ ] S4.1
 - [ ] S4.2 (self-init)
