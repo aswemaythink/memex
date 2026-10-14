@@ -22,5 +22,5 @@ stderr (empty)
 $ memex show lower --json
 exit 0
 stdout
-| {"docs":[{"chain":[],"children":{"items":[{"kind":"file","path":"lower/readme.md","title":null}],"total":1},"cited_by":{"refs":[],"total":0},"cites":[],"collection":null,"fields":{},"id":null,"path":"lower","ref":"lower","text":null,"title":null}],"errors":[]}
+| {"docs":[{"ref":"lower","collection":null,"id":null,"path":"lower","title":null,"fields":{},"text":null,"cites":[],"cited_by":{"total":0,"refs":[]},"chain":[],"children":{"total":1,"items":[{"path":"lower/readme.md","kind":"file","title":null}]}}],"errors":[]}
 stderr (empty)

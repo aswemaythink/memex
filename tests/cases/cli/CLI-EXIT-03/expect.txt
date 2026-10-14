@@ -1,5 +1,5 @@
 $ memex show README.md --json  [cwd repo/src]
 exit 1
 stdout
-| {"docs":[],"errors":[{"arg":"README.md","candidates":["README.md","src/README.md"],"code":"ambiguous","message":"ambiguous: README.md"}]}
+| {"docs":[],"errors":[{"arg":"README.md","code":"ambiguous","message":"ambiguous: README.md","candidates":["README.md","src/README.md"]}]}
 stderr (empty)

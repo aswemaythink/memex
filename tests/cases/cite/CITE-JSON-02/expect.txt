@@ -1,5 +1,5 @@
 $ memex show cases:NAME-001 --json
 exit 0
 stdout
-| {"docs":[{"chain":[],"cited_by":{"refs":[{"ref":"README.md","title":"The demo.","via":"NAME-*"},{"ref":"src/README.md","title":"The source."}],"total":2},"cites":[],"collection":"cases","fields":{"evidence":[],"group":"NAME"},"id":"NAME-001","path":"CASES.md","ref":"cases:NAME-001","text":"Names are stable across runs.","title":"Names are stable across runs."}],"errors":[]}
+| {"docs":[{"ref":"cases:NAME-001","collection":"cases","id":"NAME-001","path":"CASES.md","title":"Names are stable across runs.","fields":{"group":"NAME","evidence":[]},"text":"Names are stable across runs.","cites":[],"cited_by":{"total":2,"refs":[{"ref":"README.md","title":"The demo.","via":"NAME-*"},{"ref":"src/README.md","title":"The source."}]},"chain":[]}],"errors":[]}
 stderr (empty)

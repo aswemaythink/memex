@@ -1,5 +1,5 @@
 $ memex show merged:MERGE-1 --json
 exit 0
 stdout
-| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"merged","fields":{},"id":"MERGE-1","path":null,"ref":"merged:MERGE-1","text":"Extra notes.\n\n# Case one\n\nThe claim.","title":"Case one"}],"errors":[]}
+| {"docs":[{"ref":"merged:MERGE-1","collection":"merged","id":"MERGE-1","path":null,"title":"Case one","fields":{},"text":"Extra notes.\n\n# Case one\n\nThe claim.","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
 stderr (empty)

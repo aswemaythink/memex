@@ -18,5 +18,5 @@ stderr (empty)
 $ memex show notes:beta --json
 exit 0
 stdout
-| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"notes","fields":{"owners":["ada","grace"]},"id":"beta","path":"notes/beta.md","ref":"notes:beta","text":"Beta body line.\n","title":"Beta body line."}],"errors":[]}
+| {"docs":[{"ref":"notes:beta","collection":"notes","id":"beta","path":"notes/beta.md","title":"Beta body line.","fields":{"owners":["ada","grace"]},"text":"Beta body line.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
 stderr (empty)

@@ -30,5 +30,5 @@ stderr
 $ memex show units:alpha units:beta units:gamma --json
 exit 1
 stdout
-| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"units","fields":{"claim":"Alpha holds."},"id":"alpha","path":null,"ref":"units:alpha","text":"","title":""},{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"units","fields":{"claim":"Beta holds."},"id":"beta","path":null,"ref":"units:beta","text":"","title":""}],"errors":[{"arg":"units:gamma","code":"not_found","message":"not found: units:gamma"}]}
+| {"docs":[{"ref":"units:alpha","collection":"units","id":"alpha","path":null,"title":"","fields":{"claim":"Alpha holds."},"text":"","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]},{"ref":"units:beta","collection":"units","id":"beta","path":null,"title":"","fields":{"claim":"Beta holds."},"text":"","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[{"arg":"units:gamma","code":"not_found","message":"not found: units:gamma"}]}
 stderr (empty)

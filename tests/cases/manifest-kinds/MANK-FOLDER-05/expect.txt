@@ -1,5 +1,5 @@
 $ memex show code:CODE-1 --json
 exit 0
 stdout
-| {"docs":[{"chain":[],"cited_by":{"refs":[{"ref":"code/CODE-1/spec.rs","title":"Checks the claim."}],"total":1},"cites":[],"collection":"code","fields":{},"id":"CODE-1","path":null,"ref":"code:CODE-1","text":"Checks the claim.\nCases: CODE-1","title":"Checks the claim."}],"errors":[]}
+| {"docs":[{"ref":"code:CODE-1","collection":"code","id":"CODE-1","path":null,"title":"Checks the claim.","fields":{},"text":"Checks the claim.\nCases: CODE-1","cites":[],"cited_by":{"total":1,"refs":[{"ref":"code/CODE-1/spec.rs","title":"Checks the claim."}]},"chain":[]}],"errors":[]}
 stderr (empty)

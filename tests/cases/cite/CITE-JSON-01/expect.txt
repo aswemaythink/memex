@@ -1,5 +1,5 @@
 $ memex show README.md --json
 exit 0
 stdout
-| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[{"ref":"cases:NAME-001","resolved":true,"title":"Names are stable across runs."},{"ref":"cases:NOPE-01","resolved":false,"title":""},{"ref":"nope.md","resolved":false,"title":""}],"collection":"readmes","fields":{},"id":"README.md","path":"README.md","ref":"README.md","text":"# Demo\n\nThe demo.\n\nSee cases:NAME-001, cases:NOPE-01 and [gone](nope.md).\n","title":"The demo."}],"errors":[]}
+| {"docs":[{"ref":"README.md","collection":"readmes","id":"README.md","path":"README.md","title":"The demo.","fields":{},"text":"# Demo\n\nThe demo.\n\nSee cases:NAME-001, cases:NOPE-01 and [gone](nope.md).\n","cites":[{"ref":"cases:NAME-001","title":"Names are stable across runs.","resolved":true},{"ref":"cases:NOPE-01","title":"","resolved":false},{"ref":"nope.md","title":"","resolved":false}],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
 stderr (empty)

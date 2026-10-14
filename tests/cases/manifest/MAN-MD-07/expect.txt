@@ -1,5 +1,5 @@
 $ memex show notes:fenced notes:plainline --json
 exit 0
 stdout
-| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"notes","fields":{},"id":"fenced","path":"notes/fenced.md","ref":"notes:fenced","text":"```text\n# not a heading\n```\n# Real title\nBody line.\n","title":"Real title"},{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"notes","fields":{},"id":"plainline","path":"notes/plainline.md","ref":"notes:plainline","text":"\nFirst line of plain.\nSecond line.\n","title":"First line of plain."}],"errors":[]}
+| {"docs":[{"ref":"notes:fenced","collection":"notes","id":"fenced","path":"notes/fenced.md","title":"Real title","fields":{},"text":"```text\n# not a heading\n```\n# Real title\nBody line.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]},{"ref":"notes:plainline","collection":"notes","id":"plainline","path":"notes/plainline.md","title":"First line of plain.","fields":{},"text":"\nFirst line of plain.\nSecond line.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
 stderr (empty)

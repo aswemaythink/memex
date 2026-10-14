@@ -2,24 +2,21 @@
 //! It also holds the helpers that the folder kind shares with it: fields, one-liners, docs and glob matches.
 //! Cases: MANK-JSON-01, MANK-JSON-02, MANK-JSON-03, MANK-JSON-04, MANK-JSON-05, MANK-JSON-06, MANK-JSON-07, MANK-JSON-08
 
-use std::fmt;
 use std::path::Path;
 
 use ignore::overrides::OverrideBuilder;
-use serde::de::{MapAccess, Visitor};
-use serde::{Deserialize, Deserializer};
-use serde_json::Value as Json;
+use serde_json::{Map, Value as Json};
 
 use super::frontmatter::Value;
-use super::manifest::Manifest;
+use super::manifest::{self, Manifest};
 use crate::corpus::Doc;
 use crate::intent::sentence;
 use crate::text;
 use crate::walk::{self, Entry};
 
 /// The docs of a json manifest: one per object, in each matched file, whose `id` field is text. A manifest with no `id` key
-/// gives none, since the id is required.
-pub fn docs(manifest: &Manifest, root: &Path) -> Vec<Doc> {
+/// gives none, since the id is required. A file that cannot be used adds its warning to `warnings`.
+pub fn docs(manifest: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Vec<Doc> {
     let Some(key) = manifest.id.as_deref() else {
         return Vec::new();
     };
@@ -30,7 +27,7 @@ pub fn docs(manifest: &Manifest, root: &Path) -> Vec<Doc> {
         let entries = walk::walk(&base);
         let files: Vec<&Entry> = entries.iter().filter(|entry| !entry.is_dir).collect();
         for file in glob_hits(&base, &manifest.include, &files) {
-            for item in items_at(&file.path, at) {
+            for item in items_at(&file.path, at, warnings) {
                 docs.extend(entry_doc(manifest, key, &item));
             }
         }
@@ -38,107 +35,53 @@ pub fn docs(manifest: &Manifest, root: &Path) -> Vec<Doc> {
     docs
 }
 
-/// A parsed JSON value whose objects keep their members in the order the file gives them, which serde_json's own map does
-/// not (design §4.2 fields). Nested values are kept, but only scalars become fields.
-#[derive(Clone, Deserialize)]
-#[serde(untagged)]
-pub(super) enum Tree {
-    /// An object, with its members in source order.
-    Object(#[serde(deserialize_with = "ordered_members")] Vec<(String, Tree)>),
-    /// An array, with its items in order.
-    Array(Vec<Tree>),
-    /// A string, number, boolean or null.
-    Leaf(Json),
-}
-
-/// Reads an object one member at a time, so that its members keep the order the file gives them.
-fn ordered_members<'de, D: Deserializer<'de>>(
-    deserializer: D,
-) -> Result<Vec<(String, Tree)>, D::Error> {
-    struct Members;
-
-    impl<'de> Visitor<'de> for Members {
-        type Value = Vec<(String, Tree)>;
-
-        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-            formatter.write_str("an object")
+/// The items of the array that `at` points to in the JSON file at `path`. A file that cannot be read or parsed adds its
+/// warning and gives none. A file whose `at` does not reach an array has none, and no warning.
+fn items_at(path: &Path, at: &str, warnings: &mut Vec<String>) -> Vec<Json> {
+    let document = match read_json(path) {
+        Ok(document) => document,
+        Err(reason) => {
+            warn(warnings, path, &reason);
+            return Vec::new();
         }
-
-        fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<Self::Value, A::Error> {
-            let mut members = Vec::new();
-            while let Some(member) = map.next_entry::<String, Tree>()? {
-                members.push(member);
-            }
-            Ok(members)
-        }
-    }
-
-    deserializer.deserialize_map(Members)
-}
-
-impl Tree {
-    /// The members of an object in source order, or none for any other value.
-    pub(super) fn members(&self) -> &[(String, Tree)] {
-        match self {
-            Tree::Object(members) => members.as_slice(),
-            Tree::Array(_) | Tree::Leaf(_) => &[],
-        }
-    }
-
-    /// The value that a JSON Pointer reaches (design §4.2 `at`); the empty pointer is the whole value.
-    fn pointer(&self, at: &str) -> Option<&Tree> {
-        if at.is_empty() {
-            return Some(self);
-        }
-        at.strip_prefix('/')?
-            .split('/')
-            .try_fold(self, |node, part| {
-                node.child(&part.replace("~1", "/").replace("~0", "~"))
-            })
-    }
-
-    /// The member or the item that one reference token of a JSON Pointer names.
-    fn child(&self, token: &str) -> Option<&Tree> {
-        match self {
-            Tree::Object(members) => members
-                .iter()
-                .find(|(name, _)| name == token)
-                .map(|(_, tree)| tree),
-            Tree::Array(items) => items.get(token.parse::<usize>().ok()?),
-            Tree::Leaf(_) => None,
-        }
-    }
-}
-
-/// The items of the array that `at` points to in the JSON file at `path`. A file that is not JSON, or whose `at` does not
-/// reach an array, has none.
-fn items_at(path: &Path, at: &str) -> Vec<Tree> {
-    let document = text::read(path)
-        .ok()
-        .and_then(|contents| serde_json::from_str::<Tree>(&contents).ok());
-    match document.as_ref().and_then(|tree| tree.pointer(at)) {
-        Some(Tree::Array(items)) => items.clone(),
+    };
+    match document.pointer(at) {
+        Some(Json::Array(items)) => items.clone(),
         _ => Vec::new(),
     }
 }
 
-/// The doc of one entry: its scalars as fields, its string scalars as the text, and its `id` field as the id. None when the
-/// entry is not an object, or its `id` is missing or empty.
-fn entry_doc(manifest: &Manifest, key: &str, item: &Tree) -> Option<Doc> {
-    let members = item.members();
-    let fields = scalar_fields(members);
-    let id = field_text(&fields, key).filter(|id| !id.is_empty())?;
-    Some(doc(manifest, id, text_of(members), fields))
+/// The JSON value of the file at `path`, or the reason it cannot be used: it cannot be read, or it is not JSON.
+pub(super) fn read_json(path: &Path) -> Result<Json, String> {
+    let contents = text::read(path).map_err(|failure| manifest::unreadable(&failure))?;
+    serde_json::from_str(&contents).map_err(|failure| format!("not valid JSON: {failure}"))
 }
 
-/// The text of an entry: its string scalars, one per line, in source order.
-fn text_of(members: &[(String, Tree)]) -> String {
+/// Adds the warning for a file that cannot be used to `warnings`, once: a line that is already there is not repeated.
+pub(super) fn warn(warnings: &mut Vec<String>, path: &Path, reason: &str) {
+    let line = manifest::warning(path, reason);
+    if !warnings.contains(&line) {
+        warnings.push(line);
+    }
+}
+
+/// The doc of one entry: its scalars as fields, its string scalars as the text, and its `id` field as the id. None when the
+/// entry is not an object, or its `id` is missing or empty. Its default one-liner is read without the id field.
+fn entry_doc(manifest: &Manifest, key: &str, item: &Json) -> Option<Doc> {
+    let members = item.as_object()?;
+    let fields = scalar_fields(members);
+    let id = field_text(&fields, key).filter(|id| !id.is_empty())?;
+    let lead = text_of(members, Some(key));
+    Some(doc(manifest, id, text_of(members, None), fields, &lead))
+}
+
+/// The text of an entry: its string scalars, one per line, in source order. The member named `skip`, when there is one, is
+/// left out.
+fn text_of(members: &Map<String, Json>, skip: Option<&str>) -> String {
     members
         .iter()
-        .filter_map(|(_, tree)| match tree {
-            Tree::Leaf(Json::String(text)) => Some(text.as_str()),
-            _ => None,
-        })
+        .filter(|(name, _)| Some(name.as_str()) != skip)
+        .filter_map(|(_, value)| value.as_str())
         .collect::<Vec<&str>>()
         .join("\n")
 }
@@ -163,13 +106,10 @@ pub(super) fn glob_hits<'a>(root: &Path, globs: &[String], files: &[&'a Entry]) 
 
 /// The fields that an object's top-level scalars give, in source order: strings, numbers and booleans as text. Nulls, arrays
 /// and nested objects give none.
-pub(super) fn scalar_fields(members: &[(String, Tree)]) -> Vec<(String, Value)> {
+pub(super) fn scalar_fields(members: &Map<String, Json>) -> Vec<(String, Value)> {
     members
         .iter()
-        .filter_map(|(key, tree)| match tree {
-            Tree::Leaf(value) => scalar_text(value).map(|text| (key.clone(), Value::Str(text))),
-            Tree::Object(_) | Tree::Array(_) => None,
-        })
+        .filter_map(|(key, value)| scalar_text(value).map(|text| (key.clone(), Value::Str(text))))
         .collect()
 }
 
@@ -194,14 +134,16 @@ pub(super) fn field_text(fields: &[(String, Value)], key: &str) -> Option<String
         })
 }
 
-/// The doc of a manifest: labelled `<name>:<id>`, with its one-liner from the `title` field or the text's default.
+/// The doc of a manifest: labelled `<name>:<id>`, with its one-liner from the `title` field, else from the first sentence of
+/// `lead`, the text that the default line is read from.
 pub(super) fn doc(
     manifest: &Manifest,
     id: String,
     text: String,
     fields: Vec<(String, Value)>,
+    lead: &str,
 ) -> Doc {
-    let title = one_liner(manifest.title.as_deref(), &fields, &text);
+    let title = one_liner(manifest.title.as_deref(), &fields, lead);
     Doc {
         label: format!("{}:{id}", manifest.name),
         collection: manifest.name.clone(),
@@ -213,11 +155,11 @@ pub(super) fn doc(
     }
 }
 
-/// The one-liner: the text of the field that the manifest's `title` names, else the text's default, as its first sentence.
-fn one_liner(title: Option<&str>, fields: &[(String, Value)], text: &str) -> String {
+/// The one-liner: the text of the field that the manifest's `title` names, else the default of `lead`, as its first sentence.
+fn one_liner(title: Option<&str>, fields: &[(String, Value)], lead: &str) -> String {
     let line = title
         .and_then(|key| field_text(fields, key))
-        .unwrap_or_else(|| default_title(text));
+        .unwrap_or_else(|| default_title(lead));
     sentence(&line)
 }
 
@@ -295,7 +237,7 @@ mod tests {
         found.include = vec!["*.json".to_string()];
         found.at = Some("/cases".to_string());
         found.title = Some("claim".to_string());
-        let found_docs = docs(&found, root.path());
+        let found_docs = docs(&found, root.path(), &mut Vec::new());
         assert_eq!(labels(&found_docs), ["cases:NAME-001", "cases:NAME-002"]);
         assert_eq!(found_docs[0].title, "Stable.");
     }
@@ -309,7 +251,7 @@ mod tests {
         )]);
         let mut found = manifest(&["data"]);
         found.include = vec!["one.json".to_string()];
-        let found_docs = docs(&found, root.path());
+        let found_docs = docs(&found, root.path(), &mut Vec::new());
         assert_eq!(found_docs[0].text, "X\nWords.");
         let fields: Vec<(&str, Value)> = found_docs[0]
             .fields
@@ -337,12 +279,16 @@ mod tests {
         ]);
         let mut found = manifest(&["data"]);
         found.include = vec!["**/*.json".to_string()];
-        assert_eq!(labels(&docs(&found, root.path())), ["cases:A", "cases:B"]);
+        assert_eq!(
+            labels(&docs(&found, root.path(), &mut Vec::new())),
+            ["cases:A", "cases:B"]
+        );
         found.include = Vec::new();
-        assert!(docs(&found, root.path()).is_empty());
+        assert!(docs(&found, root.path(), &mut Vec::new()).is_empty());
     }
 
-    /// MANK-JSON-07: a file that is not JSON, or whose `at` does not reach an array, gives no docs, and the others still do.
+    /// MANK-JSON-07: a file that is not JSON gives no docs and a warning, a file whose `at` does not reach an array gives no
+    /// docs and no warning, and the others still do.
     #[test]
     fn a_file_without_an_array_at_at_gives_no_docs_and_the_others_do() {
         let root = tree(&[
@@ -353,6 +299,26 @@ mod tests {
         let mut found = manifest(&["data"]);
         found.include = vec!["*.json".to_string()];
         found.at = Some("/cases".to_string());
-        assert_eq!(labels(&docs(&found, root.path())), ["cases:G"]);
+        let mut warnings = Vec::new();
+        assert_eq!(
+            labels(&docs(&found, root.path(), &mut warnings)),
+            ["cases:G"]
+        );
+        assert_eq!(warnings.len(), 1, "only the file that is not JSON warns");
+    }
+
+    /// MANK-JSON-02: with no `title` field, an entry's one-liner is read from its text without the id field.
+    #[test]
+    fn the_default_one_liner_skips_the_id_field() {
+        let root = tree(&[(
+            "data/cases.json",
+            r#"[{"name":"NAME-001","claim":"Stable."}]"#,
+        )]);
+        let mut found = manifest(&["data"]);
+        found.include = vec!["*.json".to_string()];
+        assert_eq!(
+            docs(&found, root.path(), &mut Vec::new())[0].title,
+            "Stable."
+        );
     }
 }

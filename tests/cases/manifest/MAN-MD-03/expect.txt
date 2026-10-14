@@ -20,5 +20,5 @@ stderr (empty)
 $ memex show notes:gamma --json
 exit 0
 stdout
-| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"notes","fields":{"kind":"note","meta":"  owner: ada\n  team: core"},"id":"gamma","path":"notes/gamma.md","ref":"notes:gamma","text":"Gamma body line.\n","title":"Gamma body line."}],"errors":[]}
+| {"docs":[{"ref":"notes:gamma","collection":"notes","id":"gamma","path":"notes/gamma.md","title":"Gamma body line.","fields":{"meta":"  owner: ada\n  team: core","kind":"note"},"text":"Gamma body line.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
 stderr (empty)

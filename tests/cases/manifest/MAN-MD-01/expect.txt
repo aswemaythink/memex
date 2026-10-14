@@ -19,5 +19,5 @@ stderr (empty)
 $ memex show notes:alpha --json
 exit 0
 stdout
-| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"notes","fields":{"tags":["parse","lists"],"title":"Alpha note"},"id":"alpha","path":"notes/alpha.md","ref":"notes:alpha","text":"Alpha body line.\n","title":"Alpha body line."}],"errors":[]}
+| {"docs":[{"ref":"notes:alpha","collection":"notes","id":"alpha","path":"notes/alpha.md","title":"Alpha body line.","fields":{"title":"Alpha note","tags":["parse","lists"]},"text":"Alpha body line.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
 stderr (empty)

@@ -89,8 +89,8 @@ pub fn load(root: &Path, warnings: &mut Vec<String>) -> Vec<Manifest> {
 pub fn docs(manifest: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Vec<Doc> {
     match manifest.kind {
         Kind::Markdown => markdown::docs(manifest, root, warnings),
-        Kind::Folder => folder::docs(manifest, root),
-        Kind::Json => json::docs(manifest, root),
+        Kind::Folder => folder::docs(manifest, root, warnings),
+        Kind::Json => json::docs(manifest, root, warnings),
     }
 }
 

@@ -8,5 +8,5 @@ stderr (empty)
 $ memex search widget --json
 exit 0
 stdout
-| {"filters":{},"groups":[{"collection":"readmes","hits":[{"collection":"readmes","fields":{},"fuzzy":[],"id":"a/README.md","path":"a/README.md","ref":"a/README.md","score":0.221,"snippet":"Widget zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.","title":"Widget zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz."}],"total":1}],"query":"widget"}
+| {"query":"widget","filters":{},"groups":[{"collection":"readmes","total":1,"hits":[{"ref":"a/README.md","collection":"readmes","id":"a/README.md","path":"a/README.md","title":"Widget zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.","fields":{},"score":0.221,"snippet":"Widget zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.","fuzzy":[]}]}]}
 stderr (empty)

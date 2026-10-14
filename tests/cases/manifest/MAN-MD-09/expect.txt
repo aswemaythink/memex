@@ -4,10 +4,10 @@ stdout
 | === sidecars:meta ===
 | 
 | fields
+|   status: draft
+|   priority: 2
 |   done: false
 |   label: Meta label
-|   priority: 2
-|   status: draft
 | 
 | cites
 |   (none)
@@ -20,5 +20,5 @@ stderr (empty)
 $ memex show sidecars:meta --json
 exit 0
 stdout
-| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"sidecars","fields":{"done":"false","label":"Meta label","priority":"2","status":"draft"},"id":"meta","path":"notes/meta.json","ref":"sidecars:meta","text":"","title":""}],"errors":[]}
+| {"docs":[{"ref":"sidecars:meta","collection":"sidecars","id":"meta","path":"notes/meta.json","title":"","fields":{"status":"draft","priority":"2","done":"false","label":"Meta label"},"text":"","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
 stderr (empty)

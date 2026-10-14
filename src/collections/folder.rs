@@ -8,8 +8,8 @@ use std::io::Read;
 use std::path::Path;
 
 use super::frontmatter::{self, Value};
-use super::json::{doc, field_text, glob_hits, scalar_fields, Tree};
-use super::manifest::Manifest;
+use super::json::{doc, field_text, glob_hits, read_json, scalar_fields, warn};
+use super::manifest::{self, Manifest};
 use crate::corpus::{parent_of, Doc};
 use crate::intent::header;
 use crate::text;
@@ -18,9 +18,9 @@ use crate::walk::{self, Entry};
 /// The most bytes of a code file that a merge reads, for its header (design §2.1).
 const HEAD_BYTES: u64 = 8 * 1024;
 
-/// The docs of a folder manifest: one per folder under its roots that holds the marker file. A folder whose marker cannot be
-/// read, or whose `id` field is missing, gives no doc.
-pub fn docs(manifest: &Manifest, root: &Path) -> Vec<Doc> {
+/// The docs of a folder manifest: one per folder under its roots that holds the marker file. A marker that cannot be read or
+/// parsed, or whose `id` field is missing or empty, adds its warning to `warnings` and gives no doc.
+pub fn docs(manifest: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Vec<Doc> {
     let Some(marker) = manifest.marker.as_deref() else {
         return Vec::new();
     };
@@ -32,44 +32,73 @@ pub fn docs(manifest: &Manifest, root: &Path) -> Vec<Doc> {
         for file in entries.iter().filter(|entry| is_marker(entry, marker)) {
             let folder = parent_of(&file.rel).unwrap_or_default();
             let siblings = files.get(folder).map_or(&[][..], |list| list.as_slice());
-            docs.extend(folder_doc(manifest, &base, file, siblings));
+            docs.extend(folder_doc(manifest, &base, file, siblings, warnings));
         }
     }
     docs
 }
 
-/// The doc of the folder that holds `marker`, or None when the marker cannot be read or the id is missing or empty.
+/// The doc of the folder that holds `marker`. A marker that cannot be read or parsed, or whose id is missing or empty, adds its
+/// warning to `warnings` and gives no doc.
 fn folder_doc(
     manifest: &Manifest,
     base: &Path,
     marker: &Entry,
     siblings: &[&Entry],
+    warnings: &mut Vec<String>,
 ) -> Option<Doc> {
-    let (fields, body) = marker_fields(&marker.path)?;
-    let id = match manifest.id.as_deref() {
-        Some(key) => field_text(&fields, key)?,
-        None => folder_name(base, parent_of(&marker.rel).unwrap_or_default()),
+    let parsed = marker_fields(&marker.path).and_then(|(fields, body)| {
+        let id = id_of(manifest, base, marker, &fields)?;
+        Ok((id, fields, body))
+    });
+    let (id, fields, body) = match parsed {
+        Ok(found) => found,
+        Err(reason) => {
+            warn(warnings, &marker.path, &reason);
+            return None;
+        }
     };
     if id.is_empty() {
         return None;
     }
     let text = joined(body, merge_pieces(manifest, marker, siblings));
-    Some(doc(manifest, id, text, fields))
+    Some(doc(manifest, id, text.clone(), fields, &text))
+}
+
+/// The id of a folder doc: the marker field that the manifest's `id` names, which must be present and not empty, or else the
+/// folder's own name.
+fn id_of(
+    manifest: &Manifest,
+    base: &Path,
+    marker: &Entry,
+    fields: &[(String, Value)],
+) -> Result<String, String> {
+    match manifest.id.as_deref() {
+        Some(key) => field_text(fields, key)
+            .filter(|id| !id.is_empty())
+            .ok_or_else(|| format!("no '{key}' field")),
+        None => Ok(folder_name(
+            base,
+            parent_of(&marker.rel).unwrap_or_default(),
+        )),
+    }
 }
 
 /// The fields and body that a marker gives: a JSON marker's top-level scalars and no body, or a Markdown marker's frontmatter
-/// and body. Any other marker gives neither. None when a JSON or Markdown marker cannot be read or parsed.
-fn marker_fields(path: &Path) -> Option<(Vec<(String, Value)>, String)> {
+/// and body. Any other marker gives neither. A JSON or Markdown marker that cannot be read or parsed gives its reason.
+fn marker_fields(path: &Path) -> Result<(Vec<(String, Value)>, String), String> {
     match extension(path) {
         Some("json") => {
-            let document: Tree = serde_json::from_str(&text::read(path).ok()?).ok()?;
-            Some((scalar_fields(document.members()), String::new()))
+            let document = read_json(path)?;
+            let fields = document.as_object().map_or_else(Vec::new, scalar_fields);
+            Ok((fields, String::new()))
         }
         Some("md") => {
-            let document = frontmatter::split(&read_text(path)?);
-            Some((document.fields, document.body))
+            let contents = text::read(path).map_err(|failure| manifest::unreadable(&failure))?;
+            let document = frontmatter::split(&contents);
+            Ok((document.fields, document.body))
         }
-        _ => Some((Vec::new(), String::new())),
+        _ => Ok((Vec::new(), String::new())),
     }
 }
 
@@ -216,7 +245,7 @@ mod tests {
         let mut found = manifest(&["cases"]);
         found.id = Some("id".to_string());
         found.title = Some("name".to_string());
-        let found_docs = docs(&found, root.path());
+        let found_docs = docs(&found, root.path(), &mut Vec::new());
         assert_eq!(labels(&found_docs), ["cases:NAME-001", "cases:NAME-002"]);
         let names: Vec<&str> = found_docs[0]
             .fields
@@ -239,7 +268,7 @@ mod tests {
         let mut found = manifest(&["cases"]);
         found.marker = Some("case.md".to_string());
         found.id = Some("id".to_string());
-        let found_docs = docs(&found, root.path());
+        let found_docs = docs(&found, root.path(), &mut Vec::new());
         assert_eq!(labels(&found_docs), ["cases:NOTE-1"]);
         assert_eq!(
             found_docs[0].fields,
@@ -271,7 +300,7 @@ mod tests {
         let mut found = manifest(&["cases"]);
         found.id = Some("id".to_string());
         found.merge = vec!["README.md".to_string(), "spec.rs".to_string()];
-        let found_docs = docs(&found, root.path());
+        let found_docs = docs(&found, root.path(), &mut Vec::new());
         assert_eq!(
             found_docs[0].text,
             "# Case one\n\nThe claim.\n\nChecks the claim.\nCases: NAME-001"
@@ -289,7 +318,7 @@ mod tests {
         ]);
         let mut found = manifest(&["cases"]);
         found.merge = vec!["README.md".to_string()];
-        let found_docs = docs(&found, root.path());
+        let found_docs = docs(&found, root.path(), &mut Vec::new());
         assert_eq!(labels(&found_docs), ["cases:NAME-009"]);
         assert_eq!(found_docs[0].title, "Plain first line.");
     }
@@ -300,7 +329,7 @@ mod tests {
         let root = tree(&[("cases/x/case.json", r#"{"name":"no id here"}"#)]);
         let mut found = manifest(&["cases"]);
         found.id = Some("id".to_string());
-        assert!(docs(&found, root.path()).is_empty());
+        assert!(docs(&found, root.path(), &mut Vec::new()).is_empty());
     }
 
     /// MANK-FOLDER-08: a root may sit in a hidden folder, and the hidden entries below it are skipped.
@@ -312,7 +341,10 @@ mod tests {
         ]);
         let mut found = manifest(&[".agents/cases"]);
         found.id = Some("id".to_string());
-        assert_eq!(labels(&docs(&found, root.path())), ["cases:HID-01"]);
+        assert_eq!(
+            labels(&docs(&found, root.path(), &mut Vec::new())),
+            ["cases:HID-01"]
+        );
     }
 
     /// MANK-FOLDER-09: a marker that is not JSON gives no doc, and the other folders still give theirs.
@@ -324,6 +356,9 @@ mod tests {
         ]);
         let mut found = manifest(&["cases"]);
         found.id = Some("id".to_string());
-        assert_eq!(labels(&docs(&found, root.path())), ["cases:GOOD-1"]);
+        assert_eq!(
+            labels(&docs(&found, root.path(), &mut Vec::new())),
+            ["cases:GOOD-1"]
+        );
     }
 }

@@ -1,5 +1,5 @@
 $ memex show titled:alpha titled:fenced --json
 exit 0
 stdout
-| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"titled","fields":{"name":"Alpha display"},"id":"alpha","path":"notes/alpha.md","ref":"titled:alpha","text":"Alpha body line.\n","title":"Alpha display"},{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"titled","fields":{},"id":"fenced","path":"notes/fenced.md","ref":"titled:fenced","text":"```text\n# not a heading\n```\n# Real title\nBody line.\n","title":"Real title"}],"errors":[]}
+| {"docs":[{"ref":"titled:alpha","collection":"titled","id":"alpha","path":"notes/alpha.md","title":"Alpha display","fields":{"name":"Alpha display"},"text":"Alpha body line.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]},{"ref":"titled:fenced","collection":"titled","id":"fenced","path":"notes/fenced.md","title":"Real title","fields":{},"text":"```text\n# not a heading\n```\n# Real title\nBody line.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
 stderr (empty)

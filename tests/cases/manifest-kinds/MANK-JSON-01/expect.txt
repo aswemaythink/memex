@@ -1,5 +1,5 @@
 $ memex show rows:ONE-1 rows:ONE-2 rows:TWO-1 --json
 exit 0
 stdout
-| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"rows","fields":{"claim":"First.","id":"ONE-1"},"id":"ONE-1","path":null,"ref":"rows:ONE-1","text":"First.\nONE-1","title":"First."},{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"rows","fields":{"claim":"Second.","id":"ONE-2"},"id":"ONE-2","path":null,"ref":"rows:ONE-2","text":"Second.\nONE-2","title":"Second."},{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"rows","fields":{"claim":"Nested.","id":"TWO-1"},"id":"TWO-1","path":null,"ref":"rows:TWO-1","text":"Nested.\nTWO-1","title":"Nested."}],"errors":[]}
+| {"docs":[{"ref":"rows:ONE-1","collection":"rows","id":"ONE-1","path":null,"title":"First.","fields":{"claim":"First.","id":"ONE-1"},"text":"First.\nONE-1","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]},{"ref":"rows:ONE-2","collection":"rows","id":"ONE-2","path":null,"title":"Second.","fields":{"claim":"Second.","id":"ONE-2"},"text":"Second.\nONE-2","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]},{"ref":"rows:TWO-1","collection":"rows","id":"TWO-1","path":null,"title":"Nested.","fields":{"claim":"Nested.","id":"TWO-1"},"text":"Nested.\nTWO-1","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
 stderr (empty)

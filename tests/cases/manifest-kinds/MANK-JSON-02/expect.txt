@@ -1,5 +1,5 @@
 $ memex show pointer:PTR-1 bare:BARE-1 bare:BARE-2 --json
 exit 0
 stdout
-| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"pointer","fields":{"id":"PTR-1"},"id":"PTR-1","path":null,"ref":"pointer:PTR-1","text":"PTR-1","title":"PTR-1"},{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"bare","fields":{"id":"BARE-1"},"id":"BARE-1","path":null,"ref":"bare:BARE-1","text":"BARE-1","title":"BARE-1"},{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"bare","fields":{"id":"BARE-2"},"id":"BARE-2","path":null,"ref":"bare:BARE-2","text":"BARE-2","title":"BARE-2"}],"errors":[]}
+| {"docs":[{"ref":"pointer:PTR-1","collection":"pointer","id":"PTR-1","path":null,"title":"","fields":{"id":"PTR-1"},"text":"PTR-1","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]},{"ref":"bare:BARE-1","collection":"bare","id":"BARE-1","path":null,"title":"","fields":{"id":"BARE-1"},"text":"BARE-1","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]},{"ref":"bare:BARE-2","collection":"bare","id":"BARE-2","path":null,"title":"","fields":{"id":"BARE-2"},"text":"BARE-2","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
 stderr (empty)

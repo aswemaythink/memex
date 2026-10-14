@@ -22,5 +22,5 @@ stderr (empty)
 $ memex show scalars:SCALAR-1 --json
 exit 0
 stdout
-| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"scalars","fields":{"n":"2","name":"SCALAR-1","note":"Words here.","ok":"false"},"id":"SCALAR-1","path":null,"ref":"scalars:SCALAR-1","text":"SCALAR-1\nWords here.","title":"SCALAR-1"}],"errors":[]}
+| {"docs":[{"ref":"scalars:SCALAR-1","collection":"scalars","id":"SCALAR-1","path":null,"title":"Words here.","fields":{"name":"SCALAR-1","n":"2","ok":"false","note":"Words here."},"text":"SCALAR-1\nWords here.","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
 stderr (empty)

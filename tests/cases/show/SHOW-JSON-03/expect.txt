@@ -1,5 +1,5 @@
 $ memex show impl:20261013-120000-show-walks-hub-readmes --json
 exit 0
 stdout
-| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"impl","fields":{"agent":"cook-2","branch":"feat/show","commit":"3f2a9c1","stream":"impl","tags":["show","namer"],"time":"2026-10-13T12:00:00Z","to":["orchestrator"]},"id":"20261013-120000-show-walks-hub-readmes","path":null,"ref":"impl:20261013-120000-show-walks-hub-readmes","text":"# Show walks hub READMEs\n`show <file>` now lists \"cited by\".\n","title":"Show walks hub READMEs"}],"errors":[]}
+| {"docs":[{"ref":"impl:20261013-120000-show-walks-hub-readmes","collection":"impl","id":"20261013-120000-show-walks-hub-readmes","path":null,"title":"Show walks hub READMEs","fields":{"stream":"impl","time":"2026-10-13T12:00:00Z","agent":"cook-2","to":["orchestrator"],"tags":["show","namer"],"branch":"feat/show","commit":"3f2a9c1"},"text":"# Show walks hub READMEs\n`show <file>` now lists \"cited by\".\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
 stderr (empty)

@@ -1,5 +1,5 @@
 $ memex search widget --json
 exit 0
 stdout
-| {"filters":{},"groups":[{"collection":"readmes","hits":[{"collection":"readmes","fields":{},"fuzzy":[],"id":"a/README.md","path":"a/README.md","ref":"a/README.md","score":0.221,"snippet":"The widget tool.","title":"The widget tool."}],"total":1},{"collection":"logs","hits":[{"collection":"impl","fields":{"agent":"cook-2","branch":"feat/a","stream":"impl","time":"2026-10-13T11:50:00Z"},"fuzzy":[],"id":"20261013-115000-widget-log","path":null,"ref":"impl:20261013-115000-widget-log","score":0.25,"snippet":"Widget log","title":"Widget log"}],"total":1}],"query":"widget"}
+| {"query":"widget","filters":{},"groups":[{"collection":"readmes","total":1,"hits":[{"ref":"a/README.md","collection":"readmes","id":"a/README.md","path":"a/README.md","title":"The widget tool.","fields":{},"score":0.221,"snippet":"The widget tool.","fuzzy":[]}]},{"collection":"logs","total":1,"hits":[{"ref":"impl:20261013-115000-widget-log","collection":"impl","id":"20261013-115000-widget-log","path":null,"title":"Widget log","fields":{"stream":"impl","time":"2026-10-13T11:50:00Z","agent":"cook-2","branch":"feat/a"},"score":0.25,"snippet":"Widget log","fuzzy":[]}]}]}
 stderr (empty)

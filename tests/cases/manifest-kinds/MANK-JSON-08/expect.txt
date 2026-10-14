@@ -1,5 +1,5 @@
 $ memex show hiddata:HID-1 --json
 exit 0
 stdout
-| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"hiddata","fields":{"id":"HID-1"},"id":"HID-1","path":null,"ref":"hiddata:HID-1","text":"HID-1","title":"HID-1"}],"errors":[]}
+| {"docs":[{"ref":"hiddata:HID-1","collection":"hiddata","id":"HID-1","path":null,"title":"","fields":{"id":"HID-1"},"text":"HID-1","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
 stderr (empty)
