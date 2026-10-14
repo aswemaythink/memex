@@ -1,0 +1,36 @@
+$ memex log con
+exit 2
+stdout (empty)
+stderr
+| memex: stream name 'con' is a Windows device name
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+
+$ memex log prn
+exit 2
+stdout (empty)
+stderr
+| memex: stream name 'prn' is a Windows device name
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+
+$ memex log aux
+exit 2
+stdout (empty)
+stderr
+| memex: stream name 'aux' is a Windows device name
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+
+$ memex log lpt0
+exit 2
+stdout (empty)
+stderr
+| memex: stream name 'lpt0' is a Windows device name
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+
+$ memex log com0
+exit 2
+stdout (empty)
+stderr
+| memex: stream name 'com0' is a Windows device name
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+== snapshot repo/.memex/logs
+(missing)

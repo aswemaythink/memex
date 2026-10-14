@@ -1,0 +1,1 @@
+{"platforms": ["windows"], "env": {"PATH": "bin"}, "steps": [{"args": ["init"]}], "snapshot": ["home/AppData/Local/Programs/memex"]}

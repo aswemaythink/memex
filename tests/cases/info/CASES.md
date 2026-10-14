@@ -19,7 +19,7 @@
 ## COLL
 
 - `INFO-COLL-01` The collections line lists each manifest with its doc count in alphabetical order by name, and a manifest with no docs counts 0.
-  Scenario: manifests `doom` (two docs), `perf` (one doc) and `alpha` (its root folder is missing, so 0 docs); the line reads `collections  alpha 0 · doom 2 · perf 1`. design §3.5 Collections and §3.6 Determinism; the design sample lists doom, perf, neo-cases, which is not alphabetical, so this case pins alphabetical order.
+  Scenario: manifests `doom` (two docs), `perf` (one doc) and `alpha` (its root folder is missing, so 0 docs); the line reads `collections  alpha 0 · doom 2 · perf 1`. design §3.5 Collections: alphabetical by name; §3.6 Determinism.
 - `INFO-COLL-02` With no manifest, the collections line is left out, and an empty `.memex/collections/` holding only `.gitkeep` prints none.
   Scenario: a root whose `.memex/collections/` holds only `.gitkeep`; the output has no collections line. design §3.5 Collections; the line is shown only when there are collections.
 
@@ -67,6 +67,8 @@
 
 - `INFO-CAP-01` Text over 3,000 bytes cuts the longest list line to its first items ending in `+N more`, until the whole output is under the cap.
   Scenario: 200 streams of one entry each, named 90 characters long so that the cut does not move with the length of the sandbox path (the header carries the root); the streams line shows its first 26 items and then `+174 more`, and the output is at most 3,000 bytes. design §3.5 Header and the cap (`+N more`).
+- `INFO-CAP-02` (planned) Text of exactly 3,000 bytes is not cut, and 3,001 bytes is.
+  Scenario: as CAP-01, with the stream names sized so the whole text is exactly 3,000 bytes. Not built yet: the header carries the sandbox root, whose length differs by OS, so the boundary cannot be golden'd on every OS until the root's length is fixed. design §3.5: text over 3,000 bytes is cut.
 
 ## WARN
 
@@ -90,3 +92,8 @@
   Scenario: the NOROOT-01 folder with `info --json`. design §3.6 info; `null` is a choice pinned here.
 - `INFO-JSON-03` The here one-liner in JSON is the whole text, not cut at 120 characters.
   Scenario: the HERE-03 folder with `info --json` from `src/`. design §2 One-liners (JSON keeps the full text).
+
+## NOW
+
+- `INFO-NOW-01` An invalid `$MEMEX_NOW` exits 3 for info, with `invalid MEMEX_NOW:` and the value on stderr and nothing on stdout.
+  Scenario: a root with a `.memex/`, run with MEMEX_NOW as `2026-10-13 12:00:00` (no `T` and no `Z`), then as `not-a-date`, both exit 3; then with the default value, which exits 0. design §3.6 Determinism: an invalid value exits 3, and `$MEMEX_NOW` replaces the clock.

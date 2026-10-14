@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "abcdefghijabcdefghijabcdefghijabcdefghij"], "stdin": "# Forty characters\nbody\n"}, {"args": ["log", "abcdefghijabcdefghijabcdefghijabcdefghijk"], "stdin": "# Forty-one characters\nbody\n"}], "snapshot": ["repo/.memex/logs"]}

@@ -4,6 +4,8 @@
 
 - `INIT-FRESH-01` In a fresh git repo, init creates `.memex/` with `.gitignore`, `config.json` and `collections/.gitkeep`, creates AGENTS.md with the marked block, and prints the four `created` lines, a blank line and the atlas, exit 0.
   Scenario: `repo/` is a git repo holding a README and no memex files. design §3.5b items 1, 2 and 4.
+- `INIT-FRESH-02` In a fresh git repo, init writes `.memex/config.json` as exactly `{"keep_logs": "3d"}` and one newline, exit 0.
+  Scenario: `repo/` is a git repo with no files; the snapshot shows the bytes, and a missing final newline would show as `\ no newline at end`. design §3.5b item 1 (`config.json` holds `{"keep_logs": "3d"}`).
 
 ## KEEP
 
@@ -23,7 +25,7 @@
 - `INIT-AGENTS-04` When the block already is the snippet, init reports `kept AGENTS.md` and leaves every byte of the file, exit 0.
   Scenario: AGENTS.md holds a heading, the current block and a last line. design §3.5b item 2 (identical content is kept).
 - `INIT-AGENTS-05` When AGENTS.md uses CRLF line endings, the appended block uses CRLF too, so the file keeps one convention, exit 0.
-  Scenario: AGENTS.md holds two CRLF lines and no markers. design §4.4 Text accepts CRLF; design §3.5b is silent on the endings of a block, so CRLF to match the file is a choice pinned here.
+  Scenario: AGENTS.md holds two CRLF lines and no markers. design §4.4 Text: a user file memex edits in place (AGENTS.md, CLAUDE.md) keeps its line endings, so the appended block is CRLF too.
 
 ## CLAUDE
 
@@ -59,7 +61,11 @@
 - `INIT-PATH-02` When a memex executable is on PATH, init installs nothing, reports nothing about the binary and prints no PATH hint, exit 0.
   Scenario: `memex_on_path` is true, and `home/.local` stays missing. design §3.5b item 3 (skip when memex is on PATH).
 - `INIT-PATH-03` A memex in a `node_modules/.bin` folder on PATH is npx's shim and does not count: init installs the binary, reports it `created`, and prints the PATH hint, exit 0, unix only.
-  Scenario: PATH is `node_modules/.bin:/usr/bin:/bin`, and a patch puts an executable `memex` in `repo/node_modules/.bin`. A case cannot name a sandbox path, so the entry is relative to the run's folder, `repo/`. design §3.5b item 3 (PATH entries inside a `node_modules/.bin` folder are ignored). The Windows rule, `memex.exe` or `memex.cmd` counts, has no case: it is pinned by a unit test in install.rs.
+  Scenario: PATH is `node_modules/.bin:/usr/bin:/bin`, and a patch puts an executable `memex` in `repo/node_modules/.bin`. A case cannot name a sandbox path, so the entry is relative to the run's folder, `repo/`. design §3.5b item 3 (PATH entries inside a `node_modules/.bin` folder are ignored). The Windows names are pinned by INIT-PATH-04 and INIT-PATH-05, which run on Windows only.
+- `INIT-PATH-04` On Windows, a `memex.cmd` in a folder on PATH counts as a memex, so init installs nothing, prints no PATH hint and exits 0.
+  Scenario: PATH is `bin`, a folder of the cwd `repo/` that the fixture gives a `memex.cmd`; the snapshot shows the install folder missing. design §3.5b item 3 (on Windows `memex.exe` or `memex.cmd` counts). The golden is derived by hand and is unverified until Windows CI runs.
+- `INIT-PATH-05` On Windows, a `memex.cmd` under `node_modules\.bin` on PATH does not count: init installs the binary, reports it `created` and prints the PATH hint, exit 0.
+  Scenario: PATH is `node_modules\.bin`, and the fixture gives `repo/node_modules/.bin/memex.cmd`; the snapshot shows the installed `memex.exe`. design §3.5b item 3 (npx's shim folder is ignored, and on Windows the match is the same). The golden is derived by hand and is unverified until Windows CI runs.
 
 ## INFO
 
@@ -68,7 +74,7 @@
 - `INIT-INFO-02` Run from a subfolder, init prints the atlas of the toplevel, so the `here` line is absent, exit 0.
   Scenario: the cwd `repo/src/deep` sits below a `src/README.md` that would give a here line if the atlas read the cwd. design §3.5b item 4 and §3.5 `here` line.
 - `INIT-INFO-03` The atlas of init ignores `$MEMEX_AGENT`: an invalid id neither fails init nor warns, and a valid id with messages gives no `to` line, exit 0 both times.
-  Scenario: two runs, with `MEMEX_AGENT` set to `bad id` and then to `cook-2`, which two logs address. init has no `--agent`, and an id that `info` would refuse must not exit 2 after the files are written; design §3.5b item 4 is silent, so ignoring the variable is a choice pinned here.
+  Scenario: two runs, with `MEMEX_AGENT` set to `bad id` and then to `cook-2`, which two logs address. init has no `--agent`, and an id that `info` would refuse must not exit 2 after the files are written; design §3.5b item 4: the atlas is printed without an agent id, so its output depends only on the repo.
 
 ## RERUN
 

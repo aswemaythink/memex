@@ -32,6 +32,10 @@
   design §4.3 is silent on symlinks; the S1.3 review ruling: the store may be a symlink, but no symlink below it is followed, by write or by prune (LOG-PRUNE-15, LOG-PRUNE-17). Run: memex log alias where .memex/logs/alias links to a sibling folder.
 - `LOG-WRITE-15` A folder already at an entry's target name counts as taken: the entry is written with the `-2` suffix, and the folder and its contents are left as they were.
   design §4.4 Atomic writes: a name that exists in any form is taken, since Windows reports a folder there differently. Run: memex log impl over a stream whose folder holds a folder named like the entry's file.
+- `LOG-WRITE-16` A stream name of 40 characters is accepted, and one of 41 exits 2 with `invalid stream name` and writes nothing.
+  design §3.4 Stream name: `[a-z0-9][a-z0-9-]{0,39}`, so 40 characters at most. Run: memex log with a 40-character stream, then with a 41-character one.
+- `LOG-WRITE-17` Plain stdout is exactly the ref and one newline, with nothing after it.
+  design §3.4 Output: stdout is exactly the ref on one line, so `ref=$(memex log …)` works. Run: memex log impl with a one-title body; the golden has no extra row and no `no newline at end` mark.
 
 ## FLAG
 
@@ -66,6 +70,13 @@
   design §3.4 Body: the limit is measured after CRLF becomes LF. Run: memex log impl with a stdin_file of 16549 CRLF bytes; the golden holds the ref only.
 - `LOG-BODY-08` A body of 16384 bytes that ends in the two bytes E2 82, which decode lossily to one U+FFFD and make the stored body 16385 bytes, exits 2 with `log body is over 16 KiB: logs are findings: cite artifacts by path` and writes nothing.
   design §3.4 Body: the limit is measured on the stored body, after lossy decoding. Run: memex log impl with a stdin_file of 16384 bytes that ends in E2 82.
+- `LOG-BODY-09` Leading blank lines are skipped before the title, so the ref takes its slug from the first line with text, and the stored file keeps the blank lines, exit 0.
+  design §3.4 Body: the title is the first non-blank line after any frontmatter; §4.3: the body is stored as given. Run: memex log impl with a body of two blank lines, then `# Title after blanks`.
+
+## SLUG
+
+- `LOG-SLUG-01` A title of only non-ASCII letters gets the slug `entry`, and a 100-character title gets a 60-character slug that does not end in a dash.
+  design §3.4 Body: the slug is lowercase ASCII alphanumerics, each run of other characters one dash, trimmed, at most 60 characters, or `entry` when empty; §4.3 Log files. Run: memex log impl with `# 日本語の題名`, then with `# Title` and 94 more capital letters, 100 characters in all.
 
 ## FRONT
 
@@ -106,6 +117,8 @@
   design §3.4 Stream name: the device names are refused on every OS so a store stays portable. Run: memex log nul, then memex log com1.
 - `LOG-STREAM-05` A manifest name is matched by its exact file name: with `Notes.json` present, `memex log notes` succeeds on every OS, and with `rs-notes.json` present, `memex log rs-notes` exits 2 with `stream name 'rs-notes' is a collection`.
   design §3.4 Stream name (matched against the listed file names, exactly, never by probing) and §4.4 Name matching. Run: memex log notes, then memex log rs-notes, with both manifests present.
+- `LOG-STREAM-06` The Windows device names `con`, `prn`, `aux`, `lpt0` and `com0` each exit 2 with `is a Windows device name` and write nothing, on every OS.
+  design §3.4 Stream name: the device names are refused on every OS so a store stays portable. Run: memex log con, prn, aux, lpt0 and com0, each with a body.
 
 ## PRUNE
 

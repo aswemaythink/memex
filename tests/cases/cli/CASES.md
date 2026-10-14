@@ -20,7 +20,7 @@
 - `CLI-HELP-06` `--help` after `init` prints the init help on stdout, exit 0.
   design §3 and §3.5b. Run: memex init --help.
 - `CLI-HELP-07` `--help` after a verb ignores the rest, so `show --help --bogus` prints the show help and never reports `--bogus`.
-  design §3 Flags: `--help` works after any verb. Run: memex show --help --bogus.
+  design §3 Flags: `--help` works after any verb and short-circuits: the arguments after it are not checked. Run: memex show --help --bogus.
 - `CLI-HELP-08` After `--`, `--help` is a word, so `info -- --help` is an unexpected argument, exit 2.
   design §3 Flags: `--` ends flag parsing. Run: memex info -- --help.
 
@@ -81,6 +81,8 @@
   design §3 grammar `[--json]`, which takes no value. Run: memex search words --json=yes. The flag is `--json`, so the error prints as JSON.
 - `CLI-FLAG-13` After `--`, `--tag` is a word, so `log -- --tag x` takes `--tag` as the stream and `x` is an unexpected argument, exit 2.
   design §3 Flags: `--` ends flag parsing. Run: memex log -- --tag x.
+- `CLI-FLAG-14` `show --up 1` with a ref that is not found is a not-found error, exit 1, and not a usage error.
+  design §3.3 (`--up N` limits the depth) and §3.6 exit codes: 1 is not found. Run: memex show --up 1 nope.rs.
 
 ## JSON
 
@@ -106,4 +108,4 @@
 - `CLI-EXIT-04` (planned) `no_root` exits 3, and with `--json` prints its envelope on stdout.
   design §3.6 exit codes. Pinned by the DISC family, where log finds no `.memex/` store (design §4.1).
 - `CLI-EXIT-05` `io` exits 3, and names the io::ErrorKind, never the OS text.
-  design §3.6 exit codes; PLAN §1 fix 17. Run: memex log impl with .memex/logs a regular file. Pinned by the PORT family, which also pins the JSON form.
+  design §3.6 exit codes: 3 for an I/O failure that stops the verb (a show ref that fails on I/O is that ref's error, exit 1, §3.3); PLAN §1 fix 17. Run: memex log impl with .memex/logs a regular file. Pinned by the PORT family, which also pins the JSON form.

@@ -1,0 +1,19 @@
+$ memex info  [env 'MEMEX_NOW=2026-10-13 12:00:00']
+exit 3
+stdout (empty)
+stderr
+| memex: invalid MEMEX_NOW: 2026-10-13 12:00:00
+
+$ memex info  [env MEMEX_NOW=not-a-date]
+exit 3
+stdout (empty)
+stderr
+| memex: invalid MEMEX_NOW: not-a-date
+
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent  0 readmes · 0 headers · 0 cases
+| use     memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr (empty)

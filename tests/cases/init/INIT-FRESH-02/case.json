@@ -1,0 +1,1 @@
+{"git": "init", "memex_on_path": true, "steps": [{"args": ["init"]}], "snapshot": ["repo/.memex/config.json"]}

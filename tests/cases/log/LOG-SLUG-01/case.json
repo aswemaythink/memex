@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "impl"], "stdin": "# 日本語の題名\nbody\n"}, {"args": ["log", "impl"], "stdin": "# Title ABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCD\nbody\n"}], "snapshot": ["repo/.memex/logs"]}

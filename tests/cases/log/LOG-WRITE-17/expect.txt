@@ -1,0 +1,5 @@
+$ memex log impl
+exit 0
+stdout
+| impl:20261013-120000-plain-stdout
+stderr (empty)
