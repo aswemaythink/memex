@@ -10,14 +10,14 @@ stdout
 |   cli.rs  Parses the demo arguments.
 |   deep/  (no README)
 |   empty.rs  (no header)
-|   showing 3 of 3 (--limit 3 for all)
+|   showing 3 of 3
 | 
 | cites
 |   (none)
 | 
 | cited by
 |   (none)
-|   showing 0 of 0 (--limit 0 for all)
+|   showing 0 of 0
 | 
 | chain
 | --- README.md

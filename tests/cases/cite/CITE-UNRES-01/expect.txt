@@ -1,0 +1,22 @@
+$ memex show README.md
+exit 0
+stdout
+| === README.md ===
+| # Demo
+| 
+| The demo.
+| 
+| First [gone](nope.md), then cases:NOPE-01, then NAME-001, then [again](nope.md) and cases:NOPE-01 once more.
+| 
+| cites
+|   nope.md  unresolved
+|   cases:NOPE-01  unresolved
+|   cases:NAME-001  Names are stable across runs.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)

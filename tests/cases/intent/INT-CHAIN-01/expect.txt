@@ -6,14 +6,14 @@ stdout
 | 
 | children
 |   c.txt  (no header)
-|   showing 1 of 1 (--limit 1 for all)
+|   showing 1 of 1
 | 
 | cites
 |   (none)
 | 
 | cited by
 |   (none)
-|   showing 0 of 0 (--limit 0 for all)
+|   showing 0 of 0
 | 
 | chain
 | --- a/README.md

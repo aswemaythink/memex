@@ -7,14 +7,14 @@ stdout
 | children
 |   sub/  (no README)
 |   top.txt  (no header)
-|   showing 2 of 2 (--limit 2 for all)
+|   showing 2 of 2
 | 
 | cites
 |   (none)
 | 
 | cited by
 |   (none)
-|   showing 0 of 0 (--limit 0 for all)
+|   showing 0 of 0
 | 
 | chain
 |   (none)
@@ -28,14 +28,14 @@ stdout
 | 
 | children
 |   keep.txt  (no header)
-|   showing 1 of 1 (--limit 1 for all)
+|   showing 1 of 1
 | 
 | cites
 |   (none)
 | 
 | cited by
 |   (none)
-|   showing 0 of 0 (--limit 0 for all)
+|   showing 0 of 0
 | 
 | chain
 |   (none)

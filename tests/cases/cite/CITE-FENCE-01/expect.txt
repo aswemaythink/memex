@@ -1,0 +1,28 @@
+$ memex show README.md
+exit 0
+stdout
+| === README.md ===
+| # Demo
+| 
+| The demo.
+| 
+| ```
+| NAME-002 and src/cli.rs in a block
+| ```
+| 
+| ~~~
+| NAME-002 again
+| ~~~
+| 
+| Outside the fences: NAME-001.
+| 
+| cites
+|   cases:NAME-001  Names are stable across runs.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)

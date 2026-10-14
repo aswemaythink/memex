@@ -1,0 +1,55 @@
+$ memex show README.md
+exit 0
+stdout
+| === README.md ===
+| # Demo
+| 
+| The demo.
+| 
+| Logs live in src/logs/.
+| 
+| cites
+|   src/logs  The log store.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show src/logs
+exit 0
+stdout
+| === src/logs ===
+| # logs
+| 
+| The log store.
+| 
+| children
+|   (none)
+|   showing 0 of 0
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   README.md  The demo.
+|   src/README.md  The source.
+|   showing 2 of 2
+| 
+| chain
+| --- src/README.md
+| # src
+| 
+| The source.
+| 
+| Logs too: src/logs.
+| --- README.md
+| # Demo
+| 
+| The demo.
+| 
+| Logs live in src/logs/.
+stderr (empty)

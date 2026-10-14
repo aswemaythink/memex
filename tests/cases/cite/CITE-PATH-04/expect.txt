@@ -1,0 +1,23 @@
+$ memex show src/README.md
+exit 0
+stdout
+| === src/README.md ===
+| # src
+| 
+| The source.
+| 
+| Read `cli.rs`, then (cli.rs), then cli.rs. Again: src/cli.rs, and cli.rs:
+| 
+| cites
+|   src/cli.rs  Parses the arguments.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo.
+stderr (empty)

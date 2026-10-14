@@ -1,0 +1,20 @@
+$ memex show README.md
+exit 0
+stdout
+| === README.md ===
+| # Demo
+| 
+| The demo.
+| 
+| See impl:20261013-120000-x.
+| 
+| cites
+|   impl:20261013-120000-x  Log note
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)

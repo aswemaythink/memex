@@ -1,0 +1,243 @@
+//! Splits a doc's text into the tokens that citations are made of (design §2.3), skipping fenced code.
+//! Cases: CITE-BARE-01, CITE-BARE-02, CITE-PREFIX-01, CITE-COLL-01, CITE-COLL-03, CITE-PATH-04, CITE-LINK-01, CITE-LINK-02, CITE-FENCE-01
+
+/// One token of a line. Its kind fixes how it resolves, in the precedence of design §2.3.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Token {
+    /// A markdown link destination that is not a URL or an anchor, with any `#fragment` removed.
+    Link(String),
+    /// A `collection:id` whose collection is known, as its label.
+    Label(String),
+    /// A family prefix: the `NAME-` of a `NAME-*` token.
+    Prefix(String),
+    /// A run of path characters, with trailing dots removed. It may be a bare id or a path.
+    Word(String),
+}
+
+/// The lines of a text outside its fenced code blocks (design §2.3). A fence opens with three or more backticks or tildes,
+/// and closes at a line of the same mark that is at least as long and holds nothing else. A fence left open hides the rest.
+pub fn live_lines(text: &str) -> Vec<&str> {
+    let mut open: Option<(u8, usize)> = None;
+    let mut lines = Vec::new();
+    for line in text.lines() {
+        match open {
+            Some((mark, len)) => {
+                if closes(line, mark, len) {
+                    open = None;
+                }
+            }
+            None => match opens(line) {
+                Some(fence) => open = Some(fence),
+                None => lines.push(line),
+            },
+        }
+    }
+    lines
+}
+
+/// The tokens of one line, in order. `known` says whether a word names a collection, which makes `word:id` a label.
+pub fn tokens(line: &str, known: &dyn Fn(&str) -> bool) -> Vec<Token> {
+    let bytes = line.as_bytes();
+    let mut found = Vec::new();
+    let mut at = 0;
+    while at < bytes.len() {
+        at = if bytes[at] == b']' && bytes.get(at + 1) == Some(&b'(') {
+            link(line, at, &mut found)
+        } else if is_run(bytes[at]) {
+            word(line, at, known, &mut found)
+        } else {
+            at + 1
+        };
+    }
+    found
+}
+
+/// True for a case id (design §2.2): a capital first, then capitals and digits in dash-separated parts, with at least two
+/// parts in all.
+pub fn is_case_id(id: &str) -> bool {
+    id.contains('-') && is_id_body(id)
+}
+
+/// True for a family prefix such as `NAME-` or `X-`: an id body followed by one dash (design §2.3).
+pub fn is_family_prefix(text: &str) -> bool {
+    text.strip_suffix('-').is_some_and(is_id_body)
+}
+
+/// The mark and length of a line that opens a fence. A backtick fence's info string may not hold a backtick.
+fn opens(line: &str) -> Option<(u8, usize)> {
+    let text = line.trim_start();
+    let mark = *text.as_bytes().first()?;
+    if mark != b'`' && mark != b'~' {
+        return None;
+    }
+    let len = text.bytes().take_while(|byte| *byte == mark).count();
+    let info = &text[len..];
+    (len >= 3 && !(mark == b'`' && info.contains('`'))).then_some((mark, len))
+}
+
+/// True for a line that closes a fence of `len` marks of `mark`: the same mark, at least `len` of them, and nothing else.
+fn closes(line: &str, mark: u8, len: usize) -> bool {
+    let text = line.trim();
+    let run = text.bytes().take_while(|byte| *byte == mark).count();
+    run >= len && run == text.len()
+}
+
+/// The markdown link whose `](` is at `at`: its destination runs to the next `)`. Returns where scanning resumes.
+fn link(line: &str, at: usize, found: &mut Vec<Token>) -> usize {
+    let open = at + 2;
+    let Some(gap) = line[open..].find(')') else {
+        return at + 1;
+    };
+    if let Some(token) = link_token(&line[open..open + gap]) {
+        found.push(token);
+    }
+    open + gap + 1
+}
+
+/// The token of a link's inside, or None for a URL, an in-page anchor or an empty target. A destination in `<...>` is read
+/// to its `>`, and a title after a space is dropped.
+fn link_token(inside: &str) -> Option<Token> {
+    let inside = inside.trim();
+    let dest = match inside.strip_prefix('<') {
+        Some(rest) => rest.split('>').next()?,
+        None => inside.split_whitespace().next()?,
+    };
+    if dest.starts_with('#') || dest.starts_with("//") || has_scheme(dest) {
+        return None;
+    }
+    let path = dest.split_once('#').map_or(dest, |(path, _)| path);
+    (!path.is_empty()).then(|| Token::Link(path.to_string()))
+}
+
+/// True for a destination that opens with a URL scheme, such as `https:` or `mailto:`.
+fn has_scheme(dest: &str) -> bool {
+    dest.split_once(':').is_some_and(|(scheme, _)| {
+        !scheme.is_empty()
+            && scheme
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || b"+-.".contains(&byte))
+    })
+}
+
+/// The word, label, prefix or URL that starts at `start`. Returns where scanning resumes.
+fn word(line: &str, start: usize, known: &dyn Fn(&str) -> bool, found: &mut Vec<Token>) -> usize {
+    let end = start + run_len(&line.as_bytes()[start..]);
+    if line[end..].starts_with("://") {
+        return line[end..]
+            .find(char::is_whitespace)
+            .map_or(line.len(), |gap| end + gap);
+    }
+    let run = &line[start..end];
+    if let Some((token, next)) = label_or_prefix(line, run, end, known) {
+        found.push(token);
+        return next;
+    }
+    let word = run.trim_end_matches('.');
+    if !word.is_empty() {
+        found.push(Token::Word(word.to_string()));
+    }
+    end
+}
+
+/// The `collection:id` label, when `run` is a known collection, or the `NAME-*` prefix, when `run` ends in a dash and a `*`
+/// follows it. `end` is the byte after the run. Returns the token and where scanning resumes after it.
+fn label_or_prefix(
+    line: &str,
+    run: &str,
+    end: usize,
+    known: &dyn Fn(&str) -> bool,
+) -> Option<(Token, usize)> {
+    let next = *line.as_bytes().get(end)?;
+    match next {
+        b':' if known(run) => {
+            let id_start = end + 1;
+            let id_len = run_len(&line.as_bytes()[id_start..]);
+            let id = line[id_start..id_start + id_len].trim_end_matches('.');
+            (!id.is_empty()).then(|| (Token::Label(format!("{run}:{id}")), id_start + id.len()))
+        }
+        b'*' if is_family_prefix(run) => Some((Token::Prefix(run.to_string()), end + 1)),
+        _ => None,
+    }
+}
+
+/// True for an id body: a capital first, then one or more dash-separated parts of capitals and digits.
+fn is_id_body(body: &str) -> bool {
+    body.starts_with(|c: char| c.is_ascii_uppercase())
+        && body.split('-').all(|part| {
+            !part.is_empty()
+                && part
+                    .bytes()
+                    .all(|byte| byte.is_ascii_uppercase() || byte.is_ascii_digit())
+        })
+}
+
+/// True for the bytes that a run is made of: ASCII letters and digits, and `._/@+-` (design §2.3).
+fn is_run(byte: u8) -> bool {
+    byte.is_ascii_alphanumeric() || b"._/@+-".contains(&byte)
+}
+
+/// The number of leading bytes of `bytes` that are run bytes.
+fn run_len(bytes: &[u8]) -> usize {
+    bytes.iter().take_while(|byte| is_run(**byte)).count()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn words(line: &str) -> Vec<Token> {
+        tokens(line, &|name: &str| name == "cases")
+    }
+
+    #[test]
+    fn a_case_id_has_capitals_and_digits_in_at_least_two_parts() {
+        assert!(is_case_id("NAME-001"));
+        assert!(is_case_id("LIB-MEASURE-001"));
+        assert!(!is_case_id("name-001"));
+        assert!(!is_case_id("NODASH"));
+        assert!(!is_case_id("TRAILING-"));
+    }
+
+    #[test]
+    fn a_trailing_dot_is_not_part_of_a_word() {
+        assert_eq!(
+            words("see NAME-001."),
+            vec![
+                Token::Word("see".to_string()),
+                Token::Word("NAME-001".to_string())
+            ]
+        );
+    }
+
+    #[test]
+    fn a_known_collection_makes_a_label_and_a_star_makes_a_prefix() {
+        assert_eq!(
+            words("cases:NAME-001 and NAME-*"),
+            vec![
+                Token::Label("cases:NAME-001".to_string()),
+                Token::Word("and".to_string()),
+                Token::Prefix("NAME-".to_string())
+            ]
+        );
+    }
+
+    #[test]
+    fn a_url_and_an_anchor_are_not_links() {
+        let links = |line: &str| {
+            words(line)
+                .into_iter()
+                .filter(|token| matches!(token, Token::Link(_)))
+                .count()
+        };
+        assert_eq!(links("[a](#top)"), 0);
+        assert_eq!(links("[a](https://x/y)"), 0);
+        assert_eq!(links("[a](src/cli.rs#top)"), 1);
+        assert_eq!(words("https://src/cli.rs"), Vec::new());
+    }
+
+    #[test]
+    fn a_fence_hides_its_lines_until_a_closing_fence() {
+        assert_eq!(live_lines("a\n```\nb\n```\nc"), vec!["a", "c"]);
+        assert_eq!(live_lines("a\n~~~\nb\n```\nc"), vec!["a"]);
+    }
+}

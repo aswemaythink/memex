@@ -1,5 +1,5 @@
 //! Prints `show`'s sections and misses as text (design §3.3): each section under its `===` line, then its blocks in order, with a limits line after the children and cited-by lists.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-MD-01, SHOW-MD-02, SHOW-LOG-01, SHOW-UP-01, SHOW-ROOT-01, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, CASE-SECT-01
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-MD-01, SHOW-MD-02, SHOW-LOG-01, SHOW-UP-01, SHOW-ROOT-01, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, CASE-SECT-01, CITE-PREFIX-01, CITE-UNRES-01, CITE-BACK-01, CITE-BACK-04, CITE-LINK-03
 
 use super::{CaseParts, Fields, Link, Listing, Miss, Ref, Section};
 use crate::cite::Cite;
@@ -108,16 +108,19 @@ fn cites_block(out: &mut String, cites: &[Cite]) {
         out.push_str("  (none)\n");
     }
     for cite in cites {
-        let flag = if cite.resolved { "" } else { "  (unresolved)" };
-        out.push_str(&format!(
-            "  {}{}{flag}\n",
-            cite.reference,
-            title_part(&cite.title)
-        ));
+        if cite.resolved {
+            out.push_str(&format!(
+                "  {}{}\n",
+                cite.reference,
+                title_part(&cite.title)
+            ));
+        } else {
+            out.push_str(&format!("  {}  unresolved\n", cite.reference));
+        }
     }
 }
 
-/// The cited-by block: one line per citing ref, then the limits line.
+/// The cited-by block: one line per citing ref, marked with the prefix it cites by, then the limits line.
 fn cited_by_block(out: &mut String, cited: &Listing<Ref>) {
     start(out, "cited by");
     if cited.total == 0 {
@@ -125,7 +128,11 @@ fn cited_by_block(out: &mut String, cited: &Listing<Ref>) {
     }
     for item in &cited.items {
         let title = item.title.as_deref().unwrap_or("");
-        out.push_str(&format!("  {}{}\n", item.label, title_part(title)));
+        let via = item
+            .via
+            .as_deref()
+            .map_or_else(String::new, |prefix| format!(" (via {prefix})"));
+        out.push_str(&format!("  {}{}{via}\n", item.label, title_part(title)));
     }
     limits(out, cited.items.len(), cited.total);
 }
@@ -155,11 +162,14 @@ fn child_line(child: &Child) -> String {
     format!("  {name}  {note}\n")
 }
 
-/// The limits line of a list: how many rows it shows, and the total with the flag that shows them all.
+/// The limits line of a list: how many rows it shows, and the total. The flag that shows them all is named only when the
+/// list was cut, so `shown` is less than `total` (design §3.3 Limits).
 fn limits(out: &mut String, shown: usize, total: usize) {
-    out.push_str(&format!(
-        "  showing {shown} of {total} (--limit {total} for all)\n"
-    ));
+    out.push_str(&format!("  showing {shown} of {total}"));
+    if shown < total {
+        out.push_str(&format!(" (--limit {total} for all)"));
+    }
+    out.push('\n');
 }
 
 /// A blank line and a block's heading, which sits alone on its line.

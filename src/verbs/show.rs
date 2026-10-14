@@ -1,11 +1,11 @@
 //! Carries out `memex show` (design §3.3 and §3.6): resolves each ref, builds its section, and reports the sections, the misses and the exit status.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-SECT-01, CASE-JSON-01, REF-WT-01, REF-WT-02
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-SECT-01, CASE-JSON-01, REF-WT-01, REF-WT-02, CITE-PREFIX-01, CITE-PREFIX-02, CITE-UNRES-01, CITE-FOLDER-02, CITE-SELF-01, CITE-BACK-01, CITE-BACK-03, CITE-BACK-04, CITE-COLL-02, CITE-JSON-01, CITE-JSON-02
 
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::cite;
+use crate::cite::Cite;
 use crate::corpus::{self, parent_of, readme_label, Child, Corpus, Doc, Kind};
 use crate::error::{Code, Error};
 use crate::intent::cases;
@@ -101,7 +101,8 @@ fn store_of(cwd: &Path) -> Result<Option<PathBuf>, Error> {
 }
 
 /// The section of an entry in another root: built from that root's own corpus, and labelled by its absolute path, which
-/// round-trips from anywhere (design §3.1).
+/// round-trips from anywhere (design §3.1). Its cites and cited by name labels of that root, which do not round-trip from
+/// the cwd, so they print as none until absolute refs are designed for them.
 fn elsewhere_section(other: &Elsewhere, options: &Options) -> Result<Section, Error> {
     let target = Target::Path {
         rel: other.rel.clone(),
@@ -109,6 +110,11 @@ fn elsewhere_section(other: &Elsewhere, options: &Options) -> Result<Section, Er
     };
     let mut section = section_for(&other.corpus, &target, options)?;
     section.label.clone_from(&other.label);
+    section.cites.clear();
+    section.cited_by = Listing {
+        total: 0,
+        items: Vec::new(),
+    };
     Ok(section)
 }
 
@@ -143,7 +149,9 @@ fn folder_section(corpus: &Corpus, rel: &str, options: &Options) -> Section {
         missing: "(no README)",
         fields: None,
         children: Some(Listing::of(&children, options.limit)),
-        cites: readme.map(cite::cites).unwrap_or_default(),
+        cites: readme
+            .map(|doc| cites_of(corpus, &doc.label))
+            .unwrap_or_default(),
         cited_by: cited_by(corpus, &label, options.limit),
         chain: chain(corpus, parent_of(rel), options),
     }
@@ -186,7 +194,9 @@ fn file_section(corpus: &Corpus, rel: &str, options: &Options) -> Result<Section
         missing: "(no header)",
         fields: None,
         children: None,
-        cites: doc.map(cite::cites).unwrap_or_default(),
+        cites: doc
+            .map(|doc| cites_of(corpus, &doc.label))
+            .unwrap_or_default(),
         cited_by: cited_by(corpus, rel, options.limit),
         chain: chain(corpus, start, options),
     })
@@ -204,7 +214,12 @@ fn doc_section(corpus: &Corpus, doc: &Doc, options: &Options) -> Section {
         missing: "(no text)",
         fields: Some(doc_fields(corpus, doc)),
         children: None,
-        cites: cite::cites(doc),
+        // A case shows cited by and no cites (design §3.3 Case), so its JSON cites list is empty too.
+        cites: if doc.collection == cases::COLLECTION {
+            Vec::new()
+        } else {
+            cites_of(corpus, &doc.label)
+        },
         cited_by: cited_by(corpus, &doc.label, options.limit),
         chain: None,
     }
@@ -245,16 +260,24 @@ fn chain(corpus: &Corpus, start: Option<&str>, options: &Options) -> Option<Vec<
     Some(links)
 }
 
-/// The refs that cite `label`, each with its one-liner when it resolves, with the limit applied.
+/// The docs that cite `label`, each with its one-liner and the prefix it cites by, with the limit applied.
 fn cited_by(corpus: &Corpus, label: &str, limit: usize) -> Listing<Ref> {
-    let refs: Vec<Ref> = cite::cited_by(label)
-        .into_iter()
-        .map(|cited| Ref {
-            title: corpus.doc(&cited).map(|doc| doc.title.clone()),
-            label: cited,
+    let refs: Vec<Ref> = corpus
+        .citations()
+        .cited_by(label)
+        .iter()
+        .map(|citer| Ref {
+            label: citer.label.clone(),
+            title: Some(citer.title.clone()),
+            via: citer.via.clone(),
         })
         .collect();
     Listing::of(&refs, limit)
+}
+
+/// The citations of the doc with this label, in the order the index holds them.
+fn cites_of(corpus: &Corpus, label: &str) -> Vec<Cite> {
+    corpus.citations().cites(label).to_vec()
 }
 
 /// The whole text of a file, decoded lossily. A read failure is an io error (exit 3).

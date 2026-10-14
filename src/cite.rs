@@ -1,25 +1,30 @@
-//! Finds the citations of a doc and the docs that cite a label (design §2.3). S3.1 fills it in; until then nothing is cited.
-//! Cases: none (stub; CITE-* in S3.1 pins it)
+//! Holds a doc's citations and backlinks (design §2.3): the Cite and Citer types and their index.
+//! Cases: CITE-BARE-01, CITE-BARE-02, CITE-PREFIX-01, CITE-PREFIX-02, CITE-COLL-01, CITE-COLL-02, CITE-COLL-03, CITE-COLL-04, CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-04, CITE-PATH-05, CITE-LINK-01, CITE-LINK-02, CITE-LINK-03, CITE-UNRES-01, CITE-FOLDER-01, CITE-FOLDER-02, CITE-FENCE-01, CITE-SELF-01, CITE-BACK-01, CITE-BACK-02, CITE-BACK-03, CITE-BACK-04, CITE-JSON-01, CITE-JSON-02
 
-use crate::corpus::Doc;
+mod index;
+mod paths;
+mod tokens;
 
-/// One citation found in a doc: its target, the target's one-liner, and whether the target exists.
+pub use index::Index;
+
+/// One citation a doc makes: its target, the target's one-liner, and whether the target exists (design §3.6).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Cite {
-    /// The label of the cited target.
+    /// The label of the cited target. For an unresolved explicit ref, the ref as it was written.
     pub reference: String,
-    /// The one-liner of the target; empty when it does not resolve.
+    /// The one-liner of the target; empty when it has none, and when it does not resolve.
     pub title: String,
     /// True when the target exists.
     pub resolved: bool,
 }
 
-/// The citations inside a doc. None are found yet.
-pub fn cites(_doc: &Doc) -> Vec<Cite> {
-    Vec::new()
-}
-
-/// The labels of the docs that cite `label`. None are found yet.
-pub fn cited_by(_label: &str) -> Vec<String> {
-    Vec::new()
+/// One doc that cites a target, as `cited by` lists it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Citer {
+    /// The label of the citing doc.
+    pub label: String,
+    /// The one-liner of the citing doc; empty when it has none.
+    pub title: String,
+    /// The prefix that the doc cites the target through, such as `NAME-*`. None when it cites the target directly.
+    pub via: Option<String>,
 }

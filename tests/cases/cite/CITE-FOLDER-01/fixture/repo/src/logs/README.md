@@ -1,0 +1,3 @@
+# logs
+
+The log store.

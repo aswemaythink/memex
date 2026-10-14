@@ -1,0 +1,25 @@
+$ memex show src/logs
+exit 0
+stdout
+| === src/logs ===
+| # logs
+| 
+| The log store. It reads src/cli.rs for its header.
+| 
+| children
+|   (none)
+|   showing 0 of 0
+| 
+| cites
+|   src/cli.rs  Parses the arguments.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo.
+stderr (empty)

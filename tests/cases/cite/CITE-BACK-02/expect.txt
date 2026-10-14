@@ -1,0 +1,39 @@
+$ memex show src/cli.rs
+exit 0
+stdout
+| === src/cli.rs ===
+| Parses the arguments.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   impl:20261013-120000-x  Log note
+|   showing 1 of 1
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo.
+stderr (empty)
+
+$ memex show impl:20261013-120000-x
+exit 0
+stdout
+| === impl:20261013-120000-x ===
+| # Log note
+| See src/cli.rs for the parser.
+| 
+| fields
+|   stream: impl
+|   time: 2026-10-13T12:00:00Z
+|   agent: cook-2
+| 
+| cites
+|   src/cli.rs  Parses the arguments.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

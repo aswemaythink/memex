@@ -13,7 +13,7 @@ stdout
 | 
 | cited by
 |   (none)
-|   showing 0 of 0 (--limit 0 for all)
+|   showing 0 of 0
 stderr (empty)
 
 $ memex show scalar:SCALAR-1 --json

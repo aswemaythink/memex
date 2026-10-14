@@ -15,7 +15,7 @@
 - `corpus.rs`: the read model (design §3.1, §3.6): every walked file and folder, the docs, the label map and the folder index, and the root that `show` reads from.
 - `resolve/`: resolves a ref to a file, a folder or a doc (design §3.1), a path in another root included, or reports it not found or ambiguous; see its README.md.
 - `render.rs` and `render/`: the sections and misses that `show` prints, as text and as the `--json` document (design §3.3, §3.6).
-- `cite.rs`: citations and cited-by lists (design §2.3); a stub until S3.1.
+- `cite.rs` and `cite/`: the citations a doc makes and the backlinks they give (design §2.3), built once when the corpus loads.
 - `intent/`: the readers of headers, READMEs and CASES.md, and the one-liner rule they share (design §2).
 - `collections/`: manifests, their flat-YAML frontmatter, and the three kinds; the frontmatter is used now, the kinds are stubs until S2.4 and S2.5 (design §4.2).
 - `verbs/`: the verbs that run; `log.rs` is `memex log`, `show.rs` is `memex show`.

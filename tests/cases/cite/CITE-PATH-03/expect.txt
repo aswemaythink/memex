@@ -1,0 +1,24 @@
+$ memex show src/deep/README.md
+exit 0
+stdout
+| === src/deep/README.md ===
+| # deep
+| 
+| The deep folder.
+| 
+| See /cli.rs, then cli.rs.
+| 
+| cites
+|   cli.rs  The root cli.
+|   src/deep/cli.rs  The deep cli.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo.
+stderr (empty)

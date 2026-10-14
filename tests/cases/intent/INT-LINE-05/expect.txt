@@ -6,14 +6,14 @@ stdout
 | 
 | children
 |   long/  This one-liner is deliberately long, so that text output has to cut it short at one hundred and twenty characters while…
-|   showing 1 of 1 (--limit 1 for all)
+|   showing 1 of 1
 | 
 | cites
 |   (none)
 | 
 | cited by
 |   (none)
-|   showing 0 of 0 (--limit 0 for all)
+|   showing 0 of 0
 | 
 | chain
 |   (none)

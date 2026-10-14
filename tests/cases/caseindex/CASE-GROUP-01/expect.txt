@@ -15,7 +15,7 @@ stdout
 | 
 | cited by
 |   (none)
-|   showing 0 of 0 (--limit 0 for all)
+|   showing 0 of 0
 | 
 | === cases:GROUP-002 ===
 | Under the level-three heading.
@@ -31,7 +31,7 @@ stdout
 | 
 | cited by
 |   (none)
-|   showing 0 of 0 (--limit 0 for all)
+|   showing 0 of 0
 | 
 | === cases:GROUP-003 ===
 | Under a later level-one heading.
@@ -47,5 +47,5 @@ stdout
 | 
 | cited by
 |   (none)
-|   showing 0 of 0 (--limit 0 for all)
+|   showing 0 of 0
 stderr (empty)

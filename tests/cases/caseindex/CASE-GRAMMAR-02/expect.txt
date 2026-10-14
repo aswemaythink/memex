@@ -15,7 +15,7 @@ stdout
 | 
 | cited by
 |   (none)
-|   showing 0 of 0 (--limit 0 for all)
+|   showing 0 of 0
 | 
 | === cases:LIB-MEASURE-001 ===
 | Three parts with three digits.
@@ -31,7 +31,7 @@ stdout
 | 
 | cited by
 |   (none)
-|   showing 0 of 0 (--limit 0 for all)
+|   showing 0 of 0
 | 
 | === cases:A-1 ===
 | One letter and one digit.
@@ -47,5 +47,5 @@ stdout
 | 
 | cited by
 |   (none)
-|   showing 0 of 0 (--limit 0 for all)
+|   showing 0 of 0
 stderr (empty)

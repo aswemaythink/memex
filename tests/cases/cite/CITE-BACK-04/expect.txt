@@ -1,0 +1,50 @@
+$ memex show src/cli.rs --limit 2
+exit 0
+stdout
+| === src/cli.rs ===
+| Parses the arguments.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   README.md  The demo.
+|   src/README.md  The source.
+|   showing 2 of 3 (--limit 3 for all)
+| 
+| chain
+| --- src/README.md
+| # src
+| 
+| The source. Entry is cli.rs.
+| --- README.md
+| # Demo
+| 
+| The demo. Entry is src/cli.rs.
+stderr (empty)
+
+$ memex show src/cli.rs --limit 3
+exit 0
+stdout
+| === src/cli.rs ===
+| Parses the arguments.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   README.md  The demo.
+|   src/README.md  The source.
+|   src/deep/README.md  The deep folder.
+|   showing 3 of 3
+| 
+| chain
+| --- src/README.md
+| # src
+| 
+| The source. Entry is cli.rs.
+| --- README.md
+| # Demo
+| 
+| The demo. Entry is src/cli.rs.
+stderr (empty)

@@ -1,0 +1,25 @@
+$ memex show src/cli.rs
+exit 0
+stdout
+| === src/cli.rs ===
+| Parses the arguments.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   README.md  The demo.
+|   cases:NAME-001  Names are stable across runs.
+|   src/README.md  The source.
+|   showing 3 of 3
+| 
+| chain
+| --- src/README.md
+| # src
+| 
+| The source. Its entry is cli.rs.
+| --- README.md
+| # Demo
+| 
+| The demo. Entry point is src/cli.rs.
+stderr (empty)

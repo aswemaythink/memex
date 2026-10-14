@@ -1,0 +1,39 @@
+$ memex show cases:NAME-001
+exit 0
+stdout
+| === cases:NAME-001 ===
+| Names are stable across runs.
+| 
+| group
+|   NAME
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   README.md  The demo.
+|   showing 1 of 1
+stderr (empty)
+
+$ memex show cases:NAME-002
+exit 0
+stdout
+| === cases:NAME-002 ===
+| Names differ for different atoms.
+| 
+| group
+|   NAME
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   README.md  The demo. (via NAME-*)
+|   showing 1 of 1
+stderr (empty)

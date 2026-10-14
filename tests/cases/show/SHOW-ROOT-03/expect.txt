@@ -11,14 +11,14 @@ stdout
 |   plain/  (no README)
 |   src/  The source of the demo.
 |   sub/  A subfolder of the demo repo, where the cwd of this case is.
-|   showing 4 of 4 (--limit 4 for all)
+|   showing 4 of 4
 | 
 | cites
 |   (none)
 | 
 | cited by
 |   (none)
-|   showing 0 of 0 (--limit 0 for all)
+|   showing 0 of 0
 | 
 | chain
 |   (none)

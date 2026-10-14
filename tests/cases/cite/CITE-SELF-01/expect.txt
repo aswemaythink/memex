@@ -1,0 +1,67 @@
+$ memex show cases:NAME-001
+exit 0
+stdout
+| === cases:NAME-001 ===
+| Names are stable across runs; NAME-001 says so.
+| 
+| group
+|   NAME
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show src/README.md
+exit 0
+stdout
+| === src/README.md ===
+| # src
+| 
+| The source. It is src/ and it names README.md.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo.
+stderr (empty)
+
+$ memex show src
+exit 0
+stdout
+| === src ===
+| # src
+| 
+| The source. It is src/ and it names README.md.
+| 
+| children
+|   cli.rs  Parses the arguments.
+|   showing 1 of 1
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo.
+stderr (empty)

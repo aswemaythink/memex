@@ -68,6 +68,8 @@ pub struct Ref {
     pub label: String,
     /// The one-liner of the citing doc, when there is one.
     pub title: Option<String>,
+    /// The prefix that the doc cites the target by, such as `NAME-*`; None when it cites the target directly.
+    pub via: Option<String>,
 }
 
 /// The first items of a list, with the total so that the limits line can say what was left out (design §3.3).

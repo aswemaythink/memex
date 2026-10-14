@@ -1,5 +1,5 @@
 //! Builds the `--json` document of `show` (design §3.6): `{"docs":[...],"errors":[...]}`, with each doc's fields, cites, cited_by, children and chain.
-//! Cases: SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-JSON-01
+//! Cases: SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-JSON-01, CITE-JSON-01, CITE-JSON-02
 
 use serde_json::{json, Map, Value as Json};
 
@@ -88,9 +88,13 @@ fn cited_by(list: &Listing<Ref>) -> Json {
     json!({"total": list.total, "refs": refs})
 }
 
-/// One ref in a cited-by list.
+/// One ref in a cited-by list. A `via` key is present only when the ref cites the target by prefix (design §3.6).
 fn reference(item: &Ref) -> Json {
-    json!({"ref": item.label, "title": item.title})
+    let mut value = json!({"ref": item.label, "title": item.title});
+    if let Some(prefix) = &item.via {
+        value["via"] = json!(prefix);
+    }
+    value
 }
 
 /// One citation: its target, the target's one-liner and whether it resolves.

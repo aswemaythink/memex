@@ -7,6 +7,7 @@ use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
+use crate::cite;
 use crate::collections::frontmatter::Value;
 use crate::collections::manifest;
 use crate::error::Error;
@@ -69,6 +70,8 @@ pub struct Corpus {
     children: BTreeMap<String, Vec<Child>>,
     /// The streams of the log store, which `logs:` reads across (design §3.1).
     streams: BTreeSet<String>,
+    /// The citations of every doc and the backlinks they give, built once when the corpus loads (design §2.3).
+    citations: cite::Index,
 }
 
 impl Corpus {
@@ -80,6 +83,7 @@ impl Corpus {
             kinds: BTreeMap::from([(String::new(), Kind::Dir)]),
             children: BTreeMap::new(),
             streams: BTreeSet::new(),
+            citations: cite::Index::default(),
         };
         for entry in walk::walk(root) {
             let kind = if entry.is_dir { Kind::Dir } else { Kind::File };
@@ -105,6 +109,7 @@ impl Corpus {
             }
         }
         corpus.index_children();
+        corpus.citations = cite::Index::build(&corpus);
         Ok(corpus)
     }
 
@@ -150,6 +155,11 @@ impl Corpus {
             Some(list) => list,
             None => &[],
         }
+    }
+
+    /// The citations of every doc and the backlinks they give (design §2.3).
+    pub fn citations(&self) -> &cite::Index {
+        &self.citations
     }
 
     /// Adds a doc under its label. Every doc is kept, so a label that two files declare is seen as ambiguous, not guessed.

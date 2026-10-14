@@ -12,7 +12,7 @@ stdout
 | 
 | cited by
 |   (none)
-|   showing 0 of 0 (--limit 0 for all)
+|   showing 0 of 0
 | 
 | === anchored:delta ===
 | Delta body line.
@@ -25,7 +25,7 @@ stdout
 | 
 | cited by
 |   (none)
-|   showing 0 of 0 (--limit 0 for all)
+|   showing 0 of 0
 | 
 | === anywhere:delta ===
 | Delta body line.
@@ -38,7 +38,7 @@ stdout
 | 
 | cited by
 |   (none)
-|   showing 0 of 0 (--limit 0 for all)
+|   showing 0 of 0
 stderr
 | memex: not found: notes:readme
 
@@ -56,6 +56,6 @@ stdout
 | 
 | cited by
 |   (none)
-|   showing 0 of 0 (--limit 0 for all)
+|   showing 0 of 0
 stderr
 | memex: not found: anchored:alpha

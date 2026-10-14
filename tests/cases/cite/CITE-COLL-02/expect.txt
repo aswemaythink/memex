@@ -1,0 +1,20 @@
+$ memex show README.md
+exit 0
+stdout
+| === README.md ===
+| # Demo
+| 
+| The demo.
+| 
+| See cases:NOPE-01.
+| 
+| cites
+|   cases:NOPE-01  unresolved
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
