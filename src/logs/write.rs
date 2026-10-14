@@ -18,8 +18,10 @@ pub const GITIGNORE: &[u8] = b"logs/\ncache/\n";
 /// The longest slug, in characters (design §3.4).
 const SLUG_MAX: usize = 60;
 
-/// The most attempts when a concurrent prune removes a stream folder under a write (design §4.3 Vanished entries).
-const ATTEMPTS: u32 = 3;
+/// The most attempts when a concurrent prune removes a stream folder under a write (design §4.3 Vanished entries). A NotFound
+/// create means a prune removed the folder after another writer re-created it. Each concurrent prune does that at most once per
+/// run, so a writer loses at most one race per concurrent prune: 64 attempts survive 63 of them.
+const ATTEMPTS: u32 = 64;
 
 /// One log entry as the verb gathered it. Each optional field is written only when it is known.
 pub struct Entry {
@@ -154,23 +156,28 @@ fn store_exists(store: &Path) -> Result<bool, Error> {
 }
 
 /// Creates `dir` and everything above it, and refuses a `dir` that is a symlink: the store may be a link, but no folder
-/// below it is followed (the rule prune keeps too). A folder a concurrent prune removes after the create is made again (design §4.3).
+/// below it is followed (the rule prune keeps too). A folder that a concurrent prune removes while it is made is made again.
 fn make_folder(dir: &Path) -> Result<(), Error> {
     let mut attempt = 1;
     loop {
-        fs::create_dir_all(dir).map_err(|failure| Error::io_at("cannot create", dir, &failure))?;
-        let failure = match fs::symlink_metadata(dir) {
-            Ok(meta) if meta.is_dir() => return Ok(()),
-            Ok(_) => {
-                return Err(Error::io_message(format!(
+        let (verb, failure) = match fs::create_dir_all(dir) {
+            Err(failure) => ("cannot create", failure),
+            Ok(()) => match fs::symlink_metadata(dir) {
+                Ok(meta) if meta.is_dir() => return Ok(()),
+                Ok(_) => {
+                    return Err(Error::io_message(format!(
                     "cannot write to {}: it is a symlink, and memex follows none inside the store",
                     slash(dir)
                 )))
-            }
-            Err(failure) => failure,
+                }
+                Err(failure) => ("cannot read", failure),
+            },
         };
-        if failure.kind() != io::ErrorKind::NotFound || attempt == ATTEMPTS {
-            return Err(Error::io_at("cannot read", dir, &failure));
+        // A prune removed the folder while it was made (design §4.3 Vanished entries): it is made again, up to ATTEMPTS times.
+        let raced = failure.kind() == io::ErrorKind::AlreadyExists
+            || failure.kind() == io::ErrorKind::NotFound;
+        if !raced || attempt == ATTEMPTS {
+            return Err(Error::io_at(verb, dir, &failure));
         }
         attempt += 1;
     }
@@ -182,9 +189,9 @@ fn write_new(dir: &Path, name: &str, bytes: &[u8]) -> Result<Option<PathBuf>, Er
     retry_vanished(dir, name, || atomic::persist_new(dir, name, bytes))
 }
 
-/// Runs `write` until it has an outcome. While `dir` is not listed under its parent, a failure to create the temporary file makes
-/// the folder again and tries once more (macOS says InvalidInput mid-removal), three attempts in all (design §4.3 Vanished
-/// entries). A listed folder is not made again, and a failure after the create is never retried: each is returned as it is.
+/// Runs `write` until it has an outcome. A failed create that finds `dir` not listed under its parent (macOS says InvalidInput
+/// mid-removal), or that says NotFound (a prune removed the folder after another writer re-created it), makes it again and tries
+/// once more, ATTEMPTS attempts in all (design §4.3 Vanished entries). Any other failure is returned as it is.
 fn retry_vanished(
     dir: &Path,
     name: &str,
@@ -193,7 +200,9 @@ fn retry_vanished(
     let mut outcome = write();
     for _ in 1..ATTEMPTS {
         match outcome {
-            Err(atomic::Failure::Create(_)) if !listed(dir) => {
+            Err(atomic::Failure::Create(ref failure))
+                if !listed(dir) || failure.kind() == io::ErrorKind::NotFound =>
+            {
                 make_folder(dir)?;
                 outcome = write();
             }
@@ -291,11 +300,11 @@ mod tests {
     }
 
     #[test]
-    fn a_create_that_fails_while_the_folder_is_gone_is_tried_three_times() {
+    fn a_create_that_fails_while_the_folder_is_gone_is_tried_up_to_attempts() {
         let store = tempfile::tempdir().expect("a temporary store");
         let dir = store.path().join("impl");
         let name = "20261013-120000-x.md";
-        let calls = std::cell::Cell::new(0);
+        let calls = std::cell::Cell::new(0_u32);
         // Each attempt finds the folder gone, as a prune that empties it leaves it.
         let gone = || -> Result<Option<PathBuf>, atomic::Failure> {
             calls.set(calls.get() + 1);
@@ -305,7 +314,7 @@ mod tests {
             )))
         };
         assert!(retry_vanished(&dir, name, gone).is_err());
-        assert_eq!(calls.get(), 3);
+        assert_eq!(calls.get(), ATTEMPTS);
     }
 
     #[test]
@@ -323,5 +332,33 @@ mod tests {
         };
         assert!(retry_vanished(&dir, name, refused).is_err());
         assert_eq!(calls.get(), 1);
+    }
+
+    #[test]
+    fn a_not_found_create_while_the_folder_is_listed_is_tried_again() {
+        let store = tempfile::tempdir().expect("a temporary store");
+        let dir = store.path().join("impl");
+        make_folder(&dir).expect("a stream folder");
+        let calls = std::cell::Cell::new(0_u32);
+        let gone_once = || -> Result<Option<PathBuf>, atomic::Failure> {
+            calls.set(calls.get() + 1);
+            match calls.get() {
+                1 => Err(atomic::Failure::Create(io::ErrorKind::NotFound.into())),
+                _ => Ok(Some(dir.join("x.md"))),
+            }
+        };
+        assert!(retry_vanished(&dir, "x.md", gone_once).is_ok());
+        assert_eq!(calls.get(), 2);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_stream_folder_that_stays_a_dangling_link_gives_up_with_the_create_message() {
+        let root = tempfile::tempdir().expect("a temporary folder");
+        let dir = root.path().join("impl");
+        std::os::unix::fs::symlink(root.path().join("nothing"), &dir).expect("a dangling link");
+        let message = make_folder(&dir).err().map(|error| error.message);
+        let want = format!("cannot create {} (AlreadyExists)", slash(&dir));
+        assert_eq!(message, Some(want));
     }
 }
