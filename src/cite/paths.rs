@@ -3,6 +3,7 @@
 //! Cases: CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-05, CITE-LINK-01, CITE-LINK-03, CITE-FOLDER-01
 
 use crate::corpus::{readme_label, Corpus, Kind};
+use crate::refs::{has_extension, join};
 
 /// Where a path names the walk.
 pub enum Named {
@@ -58,41 +59,5 @@ fn candidates(base: &str, raw: &str) -> Vec<String> {
             .into_iter()
             .flatten()
             .collect(),
-    }
-}
-
-/// The root-relative path that `token` names from the folder `base`: empty and `.` parts drop out, and each `..` climbs one
-/// folder. None when a `..` would climb above the root.
-fn join(base: &str, token: &str) -> Option<String> {
-    let mut parts: Vec<&str> = base.split('/').filter(|part| !part.is_empty()).collect();
-    for part in token.split('/') {
-        match part {
-            "" | "." => {}
-            ".." => {
-                parts.pop()?;
-            }
-            name => parts.push(name),
-        }
-    }
-    Some(parts.join("/"))
-}
-
-/// True when the last dot of a word is followed by one or more letters or digits.
-fn has_extension(word: &str) -> bool {
-    word.rsplit_once('.').is_some_and(|(_, ext)| {
-        !ext.is_empty() && ext.bytes().all(|byte| byte.is_ascii_alphanumeric())
-    })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::join;
-
-    #[test]
-    fn a_join_stays_inside_the_root() {
-        assert_eq!(join("src/deep", "../cli.rs").as_deref(), Some("src/cli.rs"));
-        assert_eq!(join("", "./a/./b/").as_deref(), Some("a/b"));
-        assert_eq!(join("", "../x"), None);
-        assert_eq!(join("a", "../../x"), None);
     }
 }

@@ -17,6 +17,7 @@
 - `fence.rs`: the one fenced-code scanner of design §2.3: which lines are outside every fence. Citations and init's markers are read only there.
 - `text.rs`: the one text-read helper, which drops a leading UTF-8 byte order mark, reads CRLF line ends as LF, and decodes lossily, for every reader (design §4.4 Text).
 - `corpus.rs`: the read model (design §3.1, §3.6): every walked file and folder, the docs, the label map and the folder index, and the root that `show` reads from.
+- `refs.rs`: the spellings that refs in docs use (design §2.2, §2.3): the case-id grammar, a path token's extension test, and the root-relative join that resolves a path.
 - `resolve/`: resolves a ref to a file, a folder or a doc (design §3.1), a path in another root included, or reports it not found or ambiguous; see its README.md.
 - `render.rs` and `render/`: the sections and misses that `show` prints, as text and as the `--json` document (design §3.3, §3.6).
 - `cite.rs` and `cite/`: the citations a doc makes and the backlinks they give (design §2.3), built the first time a verb asks for them.

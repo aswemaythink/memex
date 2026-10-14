@@ -17,6 +17,7 @@ mod index;
 mod intent;
 mod logs;
 mod par;
+mod refs;
 mod render;
 mod resolve;
 mod root;

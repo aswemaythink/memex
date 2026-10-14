@@ -9,6 +9,7 @@ use super::{Cite, Citer};
 use crate::corpus::{label_of, parent_of, Corpus, Doc, CASES, HEADERS, READMES, RESERVED};
 use crate::fence;
 use crate::par;
+use crate::refs::is_case_id;
 
 /// The collections of intent docs, which have a file and a folder. Their path tokens resolve from their own folder first.
 const INTENT: [&str; 3] = [READMES, HEADERS, CASES];
@@ -136,7 +137,7 @@ impl Names {
         let mut manifest: BTreeMap<String, String> = BTreeMap::new();
         for doc in docs {
             collections.insert(doc.collection.clone());
-            if tokens::is_case_id(&doc.id) {
+            if is_case_id(&doc.id) {
                 declared
                     .entry(doc.id.clone())
                     .or_default()

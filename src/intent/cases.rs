@@ -6,6 +6,7 @@ use std::path::Path;
 use crate::collections::frontmatter::Value;
 use crate::corpus::{parent_of, Doc, CASES};
 use crate::error::Error;
+use crate::refs::{has_extension, is_case_id, join};
 use crate::text;
 
 /// The case docs of the CASES.md at `rel`, whose text is `text` as the one text reader gives it, with its byte order mark
@@ -214,26 +215,6 @@ fn heading_text(line: &str) -> Option<&str> {
     (hashes > 0 && (rest.is_empty() || rest.starts_with(' '))).then(|| rest.trim())
 }
 
-/// True for a case id (design §2.2): an upper-case letter first, then capitals and digits in `-`-separated parts, and at
-/// least two parts in all. A lower-case letter anywhere makes it not an id.
-fn is_case_id(id: &str) -> bool {
-    let parts: Vec<&str> = id.split('-').collect();
-    let [head, tail @ ..] = parts.as_slice() else {
-        return false;
-    };
-    !tail.is_empty()
-        && head.starts_with(|c: char| c.is_ascii_uppercase())
-        && parts.iter().all(|part| is_capitals_and_digits(part))
-}
-
-/// True for a non-empty run of upper-case ASCII letters and digits.
-fn is_capitals_and_digits(part: &str) -> bool {
-    !part.is_empty()
-        && part
-            .bytes()
-            .all(|byte| byte.is_ascii_uppercase() || byte.is_ascii_digit())
-}
-
 /// The text between each pair of backticks on each line. Each line is split on its own, so a stray backtick cannot shift
 /// the pairs of the lines after it.
 fn code_spans(text: &str) -> impl Iterator<Item = &str> {
@@ -253,13 +234,6 @@ fn path_token(span: &str) -> Option<&str> {
     (plain && named).then_some(token)
 }
 
-/// True when the last dot of a token is followed by one or more letters or digits.
-fn has_extension(token: &str) -> bool {
-    token.rsplit_once('.').is_some_and(|(_, ext)| {
-        !ext.is_empty() && ext.bytes().all(|byte| byte.is_ascii_alphanumeric())
-    })
-}
-
 /// The root-relative file that a path token names (design §2.2): from `folder` and then from the root. A token that begins
 /// with `/` names a file from the root only (design §2.3).
 fn resolve(folder: &str, token: &str, is_file: &impl Fn(&str) -> bool) -> Option<String> {
@@ -268,22 +242,6 @@ fn resolve(folder: &str, token: &str, is_file: &impl Fn(&str) -> bool) -> Option
         None => vec![join(folder, token), join("", token)],
     };
     candidates.into_iter().flatten().find(|rel| is_file(rel))
-}
-
-/// The root-relative path that `token` names from the folder `base`: `.` parts are dropped and each `..` climbs one folder.
-/// None when a `..` would climb above the root.
-fn join(base: &str, token: &str) -> Option<String> {
-    let mut parts: Vec<&str> = base.split('/').filter(|part| !part.is_empty()).collect();
-    for part in token.split('/') {
-        match part {
-            "" | "." => {}
-            ".." => {
-                parts.pop()?;
-            }
-            name => parts.push(name),
-        }
-    }
-    Some(parts.join("/"))
 }
 
 #[cfg(test)]
@@ -311,31 +269,10 @@ mod tests {
     }
 
     #[test]
-    fn a_case_id_has_capitals_and_digits_in_at_least_two_parts() {
-        assert!(is_case_id("NAME-001"));
-        assert!(is_case_id("A-1"));
-        assert!(is_case_id("LIB-MEASURE-001"));
-        assert!(!is_case_id("name-001"));
-        assert!(!is_case_id("NODASH"));
-        assert!(!is_case_id("TRAILING-"));
-        assert!(!is_case_id("DOUBLE--1"));
-    }
-
-    #[test]
     fn a_path_token_needs_a_slash_or_an_extension() {
         assert_eq!(path_token("src/cli.rs."), Some("src/cli.rs"));
         assert_eq!(path_token("README"), None);
         assert_eq!(path_token("UTF-8"), None);
         assert_eq!(path_token("memex show x"), None);
-    }
-
-    #[test]
-    fn a_join_stays_inside_the_root() {
-        assert_eq!(
-            join("tests", "../src/cli.rs").as_deref(),
-            Some("src/cli.rs")
-        );
-        assert_eq!(join("", "./a/./b").as_deref(), Some("a/b"));
-        assert_eq!(join("", "../x"), None);
     }
 }

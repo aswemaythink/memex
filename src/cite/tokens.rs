@@ -1,6 +1,8 @@
 //! Splits a line of a doc's text into the tokens that citations are made of (design §2.3).
 //! Cases: CITE-BARE-01, CITE-BARE-02, CITE-PREFIX-01, CITE-COLL-01, CITE-COLL-03, CITE-PATH-04, CITE-LINK-01, CITE-LINK-02, CITE-LINK-04
 
+use crate::refs::is_id_body;
+
 /// One token of a line. Its kind fixes how it resolves, in the precedence of design §2.3.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Token {
@@ -29,12 +31,6 @@ pub fn tokens(line: &str, known: &dyn Fn(&str) -> bool) -> Vec<Token> {
         };
     }
     found
-}
-
-/// True for a case id (design §2.2): a capital first, then capitals and digits in dash-separated parts, with at least two
-/// parts in all.
-pub fn is_case_id(id: &str) -> bool {
-    id.contains('-') && is_id_body(id)
 }
 
 /// True for a family prefix such as `NAME-` or `X-`: an id body followed by one dash (design §2.3).
@@ -120,17 +116,6 @@ fn label_or_prefix(
     }
 }
 
-/// True for an id body: a capital first, then one or more dash-separated parts of capitals and digits.
-fn is_id_body(body: &str) -> bool {
-    body.starts_with(|c: char| c.is_ascii_uppercase())
-        && body.split('-').all(|part| {
-            !part.is_empty()
-                && part
-                    .bytes()
-                    .all(|byte| byte.is_ascii_uppercase() || byte.is_ascii_digit())
-        })
-}
-
 /// True for the bytes that a run is made of: ASCII letters and digits, and `._/@+-` (design §2.3).
 fn is_run(byte: u8) -> bool {
     byte.is_ascii_alphanumeric() || b"._/@+-".contains(&byte)
@@ -147,15 +132,6 @@ mod tests {
 
     fn words(line: &str) -> Vec<Token> {
         tokens(line, &|name: &str| name == "cases")
-    }
-
-    #[test]
-    fn a_case_id_has_capitals_and_digits_in_at_least_two_parts() {
-        assert!(is_case_id("NAME-001"));
-        assert!(is_case_id("LIB-MEASURE-001"));
-        assert!(!is_case_id("name-001"));
-        assert!(!is_case_id("NODASH"));
-        assert!(!is_case_id("TRAILING-"));
     }
 
     #[test]
