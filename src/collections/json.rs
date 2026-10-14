@@ -40,8 +40,8 @@ pub fn docs(manifest: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Vec
 fn items_at(path: &Path, at: &str, warnings: &mut Vec<String>) -> Vec<Json> {
     let document = match read_json(path) {
         Ok(document) => document,
-        Err(reason) => {
-            warn(warnings, path, &reason);
+        Err(line) => {
+            warn(warnings, line);
             return Vec::new();
         }
     };
@@ -51,15 +51,16 @@ fn items_at(path: &Path, at: &str, warnings: &mut Vec<String>) -> Vec<Json> {
     }
 }
 
-/// The JSON value of the file at `path`, or the reason it cannot be used: it cannot be read, or it is not JSON.
+/// The JSON value of the file at `path`, or the warning line for it: it cannot be read, or it is not JSON.
 pub(super) fn read_json(path: &Path) -> Result<Json, String> {
-    let contents = text::read(path).map_err(|failure| manifest::unreadable(&failure))?;
-    serde_json::from_str(&contents).map_err(|failure| format!("not valid JSON: {failure}"))
+    let contents =
+        text::read(path).map_err(|failure| manifest::unreadable_warning(path, &failure))?;
+    serde_json::from_str(&contents)
+        .map_err(|failure| manifest::warning(path, &format!("not valid JSON: {failure}")))
 }
 
-/// Adds the warning for a file that cannot be used to `warnings`, once: a line that is already there is not repeated.
-pub(super) fn warn(warnings: &mut Vec<String>, path: &Path, reason: &str) {
-    let line = manifest::warning(path, reason);
+/// Adds a warning line to `warnings`, once: a line that is already there is not repeated.
+pub(super) fn warn(warnings: &mut Vec<String>, line: String) {
     if !warnings.contains(&line) {
         warnings.push(line);
     }
@@ -301,6 +302,36 @@ mod tests {
         assert_eq!(
             docs(&found, root.path(), &mut Vec::new())[0].title,
             "Stable."
+        );
+    }
+
+    /// An unreadable JSON file warns as `cannot read <path> (<ErrorKind>)`, and the other files still give docs.
+    #[cfg(unix)]
+    #[test]
+    fn an_unreadable_json_file_warns_with_the_cannot_read_form() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let root = tree(&[
+            ("data/locked.json", r#"[{"name":"L"}]"#),
+            ("data/open.json", r#"[{"name":"O"}]"#),
+        ]);
+        let locked = root.path().join("data/locked.json");
+        fs::set_permissions(&locked, fs::Permissions::from_mode(0o000)).expect("a mode");
+        if fs::read(&locked).is_ok() {
+            // Running as root reads any file, so there is nothing to check.
+            return;
+        }
+        let mut found = manifest(&["data"]);
+        found.include = vec!["*.json".to_string()];
+        let mut warnings = Vec::new();
+        let found_docs = docs(&found, root.path(), &mut warnings);
+        fs::set_permissions(&locked, fs::Permissions::from_mode(0o644)).expect("restored");
+        assert_eq!(labels(&found_docs), ["cases:O"]);
+        assert_eq!(warnings.len(), 1, "{warnings:?}");
+        assert!(
+            warnings[0].starts_with("memex: warning: cannot read ")
+                && warnings[0].ends_with("data/locked.json (PermissionDenied)"),
+            "{warnings:?}"
         );
     }
 }

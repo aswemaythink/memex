@@ -1,6 +1,6 @@
 //! Loads and validates the manifests of design §4.2.
 //! Each manifest's docs come from the reader of its kind.
-//! Cases: MAN-LOAD-01, MAN-LOAD-02, MAN-LOAD-03, MAN-LOAD-04, MAN-LOAD-05, MAN-LOAD-06, MAN-LOAD-07, MAN-LOAD-08, MAN-LOAD-09, MAN-LOAD-10, MAN-LOAD-11, MAN-LOAD-12
+//! Cases: MAN-LOAD-01, MAN-LOAD-02, MAN-LOAD-03, MAN-LOAD-04, MAN-LOAD-05, MAN-LOAD-06, MAN-LOAD-07, MAN-LOAD-08, MAN-LOAD-09, MAN-LOAD-10, MAN-LOAD-11, MAN-LOAD-12, MAN-IO-01
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -99,9 +99,9 @@ pub fn warning(path: &Path, reason: &str) -> String {
     error::warning(&format!("{}: {reason}", slash(path)))
 }
 
-/// The warning line for a manifest file or folder that cannot be read: `memex: warning: cannot read <path> (<ErrorKind>)`
-/// (design §4.2), made by the shared error helper.
-fn unreadable_warning(path: &Path, failure: &io::Error) -> String {
+/// The warning line for a file of a manifest or a collection that cannot be read (design §4.2):
+/// `memex: warning: cannot read <path> (<ErrorKind>)`, made by the shared error helper.
+pub fn unreadable_warning(path: &Path, failure: &io::Error) -> String {
     error::warning(&error::Error::io_at("cannot read", path, failure).message)
 }
 
@@ -299,11 +299,6 @@ fn check_globs(globs: &[String]) -> Result<(), String> {
     bad.map_or(Ok(()), |glob| {
         Err(format!("include '{glob}' is not a valid glob"))
     })
-}
-
-/// The reason for a file that cannot be read: the io kind, never the OS text (design §4.4).
-pub fn unreadable(failure: &io::Error) -> String {
-    format!("cannot read it ({:?})", failure.kind())
 }
 
 #[cfg(test)]

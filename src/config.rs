@@ -20,7 +20,7 @@ const DEFAULT_KEEP_LOGS: &str = "3d";
 pub struct Loaded {
     /// Entries older than this many seconds are pruned. None prunes nothing: keep_logs is `forever`, outside the grammar, or in a file that cannot be used.
     pub keep: Option<i64>,
-    /// The full stderr line, `memex: warning: <path>: <reason>`, or None.
+    /// The full stderr line, `memex: warning: <path>: <reason>` or `memex: warning: cannot read <path> (<ErrorKind>)`, or None.
     pub warning: Option<String>,
 }
 
@@ -69,10 +69,10 @@ fn parse(path: &Path, contents: &str) -> Loaded {
     }
 }
 
-/// A config file that cannot be read: nothing is pruned, and the warning names the io::ErrorKind.
+/// A config file that cannot be read: nothing is pruned, and the warning names the path and the io::ErrorKind.
 fn unreadable(path: &Path, failure: &io::Error) -> Loaded {
-    let reason = format!("cannot read it ({:?})", failure.kind());
-    unusable(warning(path, &reason))
+    let message = error::Error::io_at("cannot read", path, failure).message;
+    unusable(error::warning(&message))
 }
 
 /// A config file that cannot be used: nothing is pruned, and the warning says why.

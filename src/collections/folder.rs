@@ -44,13 +44,14 @@ fn folder_doc(
     warnings: &mut Vec<String>,
 ) -> Option<Doc> {
     let parsed = marker_fields(&marker.path).and_then(|(fields, body)| {
-        let id = id_of(manifest, base, marker, &fields)?;
+        let id = id_of(manifest, base, marker, &fields)
+            .map_err(|reason| manifest::warning(&marker.path, &reason))?;
         Ok((id, fields, body))
     });
     let (id, fields, body) = match parsed {
         Ok(found) => found,
-        Err(reason) => {
-            warn(warnings, &marker.path, &reason);
+        Err(line) => {
+            warn(warnings, line);
             return None;
         }
     };
@@ -81,7 +82,7 @@ fn id_of(
 }
 
 /// The fields and body that a marker gives: a JSON marker's top-level scalars and no body, or a Markdown marker's frontmatter
-/// and body. Any other marker gives neither. A JSON or Markdown marker that cannot be read or parsed gives its reason.
+/// and body. Any other marker gives neither. A JSON or Markdown marker that cannot be read or parsed gives its warning line.
 fn marker_fields(path: &Path) -> Result<(Vec<(String, Value)>, String), String> {
     match extension(path) {
         Some("json") => {
@@ -90,7 +91,8 @@ fn marker_fields(path: &Path) -> Result<(Vec<(String, Value)>, String), String> 
             Ok((fields, String::new()))
         }
         Some("md") => {
-            let contents = text::read(path).map_err(|failure| manifest::unreadable(&failure))?;
+            let contents =
+                text::read(path).map_err(|failure| manifest::unreadable_warning(path, &failure))?;
             let document = frontmatter::split(&contents);
             Ok((document.fields, document.body))
         }
