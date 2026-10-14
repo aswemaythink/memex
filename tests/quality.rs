@@ -1,5 +1,6 @@
 //! Repo quality gate: short files, purpose headers, folder READMEs, and no silenced lints in src/.
-//! It also holds tests/ to dead_code as its only allow, and each header's first sentence to 100 characters.
+//! It also holds tests/ to dead_code as its only allow, each header's first sentence to 100 characters, and the
+//! non-test code of src/ to no panicking call.
 //! Cases: none (repo quality gate)
 
 use std::fs;
@@ -16,6 +17,13 @@ const ROOTS: [&str; 2] = ["src", "tests"];
 
 /// The only lint attribute tests/ may use.
 const TEST_ALLOW: &str = "#[allow(dead_code)]";
+
+/// The calls and macros that panic: none may appear in the non-test code of a src/ file.
+#[rustfmt::skip]
+const PANICKING: [&str; 6] = [".expect(", ".unwrap()", "panic!", "unreachable!", "todo!", "unimplemented!"];
+
+/// Test-only modules that src/ declares under `#[cfg(test)]`: their files are test code whole, so the panic gate skips them.
+const TEST_ONLY: [&str; 1] = ["src/collections/testing.rs"];
 
 /// One file or folder under a root.
 struct Node {
@@ -159,6 +167,18 @@ fn src_silences_no_lint() {
 }
 
 #[test]
+fn src_non_test_code_does_not_panic() {
+    let nodes = tree();
+    let mut problems = Vec::new();
+    for node in rust_files(&nodes) {
+        if node.rel.starts_with("src/") && !TEST_ONLY.contains(&node.rel.as_str()) {
+            problems.extend(panicking_lines(&node.rel, &read(&node.path)));
+        }
+    }
+    report(&problems, "return an error or a default; tests may panic");
+}
+
+#[test]
 fn tests_allow_only_dead_code() {
     let nodes = tree();
     let mut problems = Vec::new();
@@ -289,6 +309,38 @@ fn silencing_lines(rel: &str, text: &str, excused: Option<&str>) -> Vec<String> 
         .filter(|(_, line)| !excused.is_some_and(|attr| line.trim_start().starts_with(attr)))
         .map(|(index, line)| format!("{rel}:{}: {}", index + 1, line.trim()))
         .collect()
+}
+
+/// One problem line per line of a file's non-test part, up to its first `#[cfg(test)]`, that calls a panicking function.
+fn panicking_lines(rel: &str, text: &str) -> Vec<String> {
+    text.lines()
+        .take_while(|line| !line.starts_with("#[cfg(test)]") && !line.starts_with("#[cfg(all(test"))
+        .enumerate()
+        .filter(|(_, line)| {
+            let code = code_of(line);
+            PANICKING.iter().any(|call| code.contains(call))
+        })
+        .map(|(index, line)| format!("{rel}:{}: {}", index + 1, line.trim()))
+        .collect()
+}
+
+/// The code of a line: its `//` comment cut off, and each string literal's text left out, so a pattern in either is
+/// never found. A `"` after a `'` or a `\` is a char literal (`'"'`, `'\"'`), not the start of a string.
+fn code_of(line: &str) -> String {
+    let (mut code, mut quoted, mut escaped) = (String::new(), false, false);
+    let mut chars = line.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if quoted {
+            quoted = ch != '"' || escaped;
+            escaped = ch == '\\' && !escaped;
+        } else if ch == '/' && chars.peek() == Some(&'/') {
+            break;
+        } else {
+            quoted = ch == '"' && !code.ends_with(['\'', '\\']);
+            code.push(ch);
+        }
+    }
+    code
 }
 
 /// The text of a file. A file that cannot be read fails the gate, and is never skipped.
