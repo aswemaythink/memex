@@ -1,0 +1,8 @@
+$ memex log impl
+exit 2
+stdout (empty)
+stderr
+| memex: frontmatter key 'To' is set by memex
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+== snapshot repo/.memex/logs
+(missing)

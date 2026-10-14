@@ -50,18 +50,22 @@
 
 ## BODY
 
-- `LOG-BODY-01` A body of 16385 bytes, one over 16 KiB, exits 2 with `log body is over 16 KiB: logs are findings: cite artifacts by path` and writes nothing.
-  design §3.4 Body and §8 item 5. Run: memex log impl with a stdin_file of 16385 bytes.
+- `LOG-BODY-01` A body of 16385 stored bytes, one over 16 KiB, exits 2 with `log body is over 16 KiB: logs are findings: cite artifacts by path` and writes nothing.
+  design §3.4 Body (measured as stored) and §8 item 5. Run: memex log impl with a stdin_file of 16385 LF bytes, which store as read.
 - `LOG-BODY-02` A body whose title is empty, such as one line of only `#` marks, exits 2 with `log body has no title line` and writes nothing.
   design §3.4 Body; PLAN §1 fix 7. Run: memex log impl with stdin `#`.
-- `LOG-BODY-03` A body of exactly 16384 bytes is accepted, and its ref is printed with exit 0.
-  design §3.4 Body: the maximum is 16 KiB. Run: memex log impl with a stdin_file of 16384 bytes; the golden holds the ref only, since the file is too big to dump.
+- `LOG-BODY-03` A body of exactly 16384 stored bytes is accepted, and its ref is printed with exit 0.
+  design §3.4 Body: the maximum is 16 KiB, measured as stored. Run: memex log impl with a stdin_file of 16384 LF bytes; the golden holds the ref only, since the file is too big to dump.
 - `LOG-BODY-04` A body of only spaces, tabs and newlines exits 2 with `log body is empty` and writes nothing.
   design §3.4 Body: required and non-empty, blank counts as empty. Run: memex log impl with stdin of blank lines.
 - `LOG-BODY-05` A body whose only text after its frontmatter is blank lines exits 2 with `log body has no title line` and writes nothing.
   design §3.4 Body: the title is the first non-blank line after any frontmatter. Run: memex log impl with a `---` block, then blank lines.
 - `LOG-BODY-06` A UTF-8 BOM at the start of a body is dropped, so the agent frontmatter after it still merges, the title is read after it, and the stored entry starts with memex's `---` and has no BOM.
   design §4.4 Text: a leading UTF-8 BOM is dropped on read. Run: memex log impl --agent cook-p1 with a stdin_file that starts with a BOM, then a `status: done` block, then `# BOM title`.
+- `LOG-BODY-07` A CRLF body of 16549 bytes, whose LF form is exactly 16384 bytes, is accepted, and its ref is printed with exit 0.
+  design §3.4 Body: the limit is measured after CRLF becomes LF. Run: memex log impl with a stdin_file of 16549 CRLF bytes; the golden holds the ref only.
+- `LOG-BODY-08` A body of 16384 bytes that ends in the two bytes E2 82, which decode lossily to one U+FFFD and make the stored body 16385 bytes, exits 2 with `log body is over 16 KiB: logs are findings: cite artifacts by path` and writes nothing.
+  design §3.4 Body: the limit is measured on the stored body, after lossy decoding. Run: memex log impl with a stdin_file of 16384 bytes that ends in E2 82.
 
 ## FRONT
 
@@ -77,6 +81,18 @@
   design §3.4 Extra fields: the block is leading only. Run: memex log impl with a `# Title` line, then a `---` line and a `time:` line.
 - `LOG-FRONT-06` An indented line that looks like a memex key is a continuation line, so it neither collides nor is refused.
   design §4.2 flat YAML: keys are column-0 lines. Run: memex log impl with `  time: 1` indented under an agent key.
+- `LOG-FRONT-07` An agent key that memex owns, spelled with a capital, `To:`, exits 2 with `frontmatter key 'To' is set by memex` and writes nothing.
+  design §3.4 Extra fields: memex's keys compare case-insensitively. Run: memex log impl with `To: [victim]` in the body's frontmatter.
+- `LOG-FRONT-08` An agent key that memex owns, spelled in capitals, `AGENT:`, exits 2 with `frontmatter key 'AGENT' is set by memex` and writes nothing.
+  design §3.4 Extra fields. Run: memex log impl with `AGENT: evil` in the body's frontmatter.
+- `LOG-FRONT-09` An agent key that memex owns, spelled with a capital and a plural, `Tags:`, exits 2 with `frontmatter key 'Tags' is set by memex` and writes nothing.
+  design §3.4 Extra fields. Run: memex log impl with `Tags: [show]` in the body's frontmatter.
+- `LOG-FRONT-10` An agent key that memex owns, spelled in mixed case, `bRanch:`, exits 2 with `frontmatter key 'bRanch' is set by memex` and writes nothing.
+  design §3.4 Extra fields. Run: memex log impl with `bRanch: main` in the body's frontmatter.
+- `LOG-FRONT-11` Two agent keys that differ only in case, `foo:` and then `Foo:`, exit 2 with `frontmatter key 'Foo' is repeated` and write nothing.
+  design §3.4 Extra fields: a repeated key compares case-insensitively. Run: memex log impl with `foo: 1` then `Foo: 2` in the body's frontmatter.
+- `LOG-FRONT-12` A lone carriage return inside an agent frontmatter value exits 2 with `frontmatter value has a carriage return` and writes nothing.
+  design §4.4 Text accepts CRLF only, and design §3.4 does not yet state this refusal; it is the S5.2 ruling. Run: memex log impl with a block line `status: ok`, then a lone CR, then `To: [victim]` on that line.
 
 ## STREAM
 
@@ -127,3 +143,5 @@
   design §4.1 item 4 and §4.3 (never delete on config it can't read); PLAN §1 fix 6. Run: memex log impl with .memex/config.json a symlink to a missing file, over a 4-day-old entry.
 - `LOG-PRUNE-17` A store that is itself a symlink is followed: the entry is written behind it, and the old entries there are pruned.
   design §4.3 is silent on symlinks; the S1.3 review ruling as in LOG-WRITE-14. Run: memex log impl with .memex/logs a symlink to a sibling folder that holds a 4-day-old and a 2-day-old entry.
+- `LOG-PRUNE-18` A config.json that is a JSON array, `["1h"]`, prints one warning that it is not a JSON object and deletes nothing, so the array is not read by position.
+  design §4.1 item 4 and §4.3 (never delete on config it can't read). Run: memex log impl with config.json `["1h"]` over a 4-day-old entry.

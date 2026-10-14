@@ -1,6 +1,6 @@
 //! Splits an agent's frontmatter off the top of a body and checks its keys (design §3.4 and §4.2).
-//! A memex key or a repeated key is refused, and every other line is kept as the agent wrote it.
-//! Cases: LOG-FRONT-01, LOG-FRONT-02, LOG-FRONT-03, LOG-FRONT-04, LOG-FRONT-05, LOG-FRONT-06
+//! A memex key, a repeated key (both compared without ASCII case) or a carriage return is refused, and every other line is kept as the agent wrote it.
+//! Cases: LOG-FRONT-01, LOG-FRONT-02, LOG-FRONT-03, LOG-FRONT-04, LOG-FRONT-05, LOG-FRONT-06, LOG-FRONT-07, LOG-FRONT-08, LOG-FRONT-09, LOG-FRONT-10, LOG-FRONT-11, LOG-FRONT-12
 
 use crate::cli::Verb;
 use crate::error::Error;
@@ -24,7 +24,7 @@ pub struct Split {
 }
 
 /// Splits `body` when its first line is exactly `---`: the block runs to the next line that is exactly `---`. A block
-/// that never closes, a memex key, or a key that repeats, is a usage error.
+/// that never closes, a line with a carriage return, a memex key, or a key that repeats, is a usage error.
 pub fn split(body: &str) -> Result<Split, Error> {
     let mut pieces = body.split_inclusive('\n');
     let first = pieces.next().unwrap_or("");
@@ -38,14 +38,22 @@ pub fn split(body: &str) -> Result<Split, Error> {
     let mut lines = Vec::new();
     for piece in pieces {
         offset += piece.len();
-        if fence_text(piece) == FENCE {
+        let text = fence_text(piece);
+        if text == FENCE {
             check_keys(&lines)?;
             return Ok(Split {
                 lines,
                 rest: body[offset..].to_string(),
             });
         }
-        lines.push(fence_text(piece).to_string());
+        // CRLF line ends were read as LF before this point, so a carriage return left in a line is a lone one: refused.
+        if text.contains('\r') {
+            return Err(fail(
+                Verb::Log,
+                "frontmatter value has a carriage return".to_string(),
+            ));
+        }
+        lines.push(text.to_string());
     }
     Err(fail(
         Verb::Log,
@@ -59,19 +67,21 @@ fn fence_text(piece: &str) -> &str {
     line.strip_suffix('\r').unwrap_or(line)
 }
 
-/// Refuses a memex key, or a key that repeats, among the block's lines. Only the key lines are checked.
+/// Refuses a memex key, or a key that repeats, among the block's lines. Keys compare without ASCII case, both against memex's
+/// keys and against each other, so `To:` cannot forge a `to` field (design §3.4). Only the key lines are checked.
 fn check_keys(lines: &[String]) -> Result<(), Error> {
-    let mut seen: Vec<&str> = Vec::new();
+    let mut seen: Vec<String> = Vec::new();
     for key in lines.iter().filter_map(|line| key_of(line)) {
-        if MEMEX_KEYS.contains(&key) {
+        let folded = key.to_ascii_lowercase();
+        if MEMEX_KEYS.contains(&folded.as_str()) {
             let message = format!("frontmatter key '{key}' is set by memex");
             return Err(fail(Verb::Log, message));
         }
-        if seen.contains(&key) {
+        if seen.contains(&folded) {
             let message = format!("frontmatter key '{key}' is repeated");
             return Err(fail(Verb::Log, message));
         }
-        seen.push(key);
+        seen.push(folded);
     }
     Ok(())
 }
@@ -116,5 +126,26 @@ mod tests {
         assert_eq!(key_of("  time: 1"), None);
         assert_eq!(key_of("- item: x"), None);
         assert_eq!(key_of("no colon"), None);
+    }
+
+    #[test]
+    fn keys_compare_without_ascii_case_against_memex_and_each_other() {
+        let block = |text: &str| -> Vec<String> { text.lines().map(str::to_string).collect() };
+        assert!(check_keys(&block("status: x\nMood: y")).is_ok());
+        assert_eq!(
+            check_keys(&block("Tags: x")).unwrap_err().message,
+            "frontmatter key 'Tags' is set by memex"
+        );
+        assert_eq!(
+            check_keys(&block("foo: 1\nFoo: 2")).unwrap_err().message,
+            "frontmatter key 'Foo' is repeated"
+        );
+    }
+
+    #[test]
+    fn a_lone_carriage_return_in_the_block_is_refused_and_a_line_end_is_not() {
+        let refused = split("---\nstatus: ok\rTo: [victim]\n---\n# T\n").unwrap_err();
+        assert_eq!(refused.message, "frontmatter value has a carriage return");
+        assert!(split("---\nstatus: ok\r\n---\n# T\n").is_ok());
     }
 }

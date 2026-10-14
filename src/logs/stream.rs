@@ -1,6 +1,6 @@
 //! Checks a stream name before it names a folder (design §3.1 and §3.4).
 //! It checks the grammar, the built-in and Windows device names that are reserved, and the manifests that already own a name.
-//! Cases: LOG-WRITE-13, LOG-STREAM-01, LOG-STREAM-02, LOG-STREAM-03, LOG-STREAM-04, LOG-STREAM-05
+//! Cases: LOG-WRITE-13, LOG-STREAM-01, LOG-STREAM-02, LOG-STREAM-03, LOG-STREAM-04, LOG-STREAM-05, PORT-NAME-05
 
 use std::fs;
 use std::io;
@@ -8,7 +8,7 @@ use std::path::Path;
 
 use crate::cli::Verb;
 use crate::error::Error;
-use crate::root::{nearest_memex, slash};
+use crate::root::{lists, nearest_memex, slash};
 use crate::scan::fail;
 
 /// The built-in collection names, which no stream may take (design §3.1).
@@ -62,7 +62,7 @@ pub fn check_collections(stream: &str, cwd: &Path, owner: &Path) -> Result<(), E
     let file = format!("{stream}.json");
     let roots = nearest_memex(cwd).into_iter().chain([owner.to_path_buf()]);
     for root in roots {
-        if lists_file(&root.join(".memex").join("collections"), &file)? {
+        if lists_manifest(&root.join(".memex"), &file)? {
             return Err(fail(
                 Verb::Log,
                 format!("stream name '{stream}' is a collection"),
@@ -70,6 +70,16 @@ pub fn check_collections(stream: &str, cwd: &Path, owner: &Path) -> Result<(), E
         }
     }
     Ok(())
+}
+
+/// True when the `.memex/` folder `memex` lists a folder named exactly `collections`, and that folder lists a file named exactly
+/// `file`. The folder's name is matched against the listing before it is read, so `Collections/` is not the folder (design §4.4).
+fn lists_manifest(memex: &Path, file: &str) -> Result<bool, Error> {
+    let listed = lists(memex, "collections").map_err(|failure| io_error(memex, &failure))?;
+    if !listed {
+        return Ok(false);
+    }
+    lists_file(&memex.join("collections"), file)
 }
 
 /// True when the folder `dir` lists a file named exactly `file`. A folder that does not exist lists nothing, so there are
@@ -143,5 +153,14 @@ mod tests {
     fn a_missing_collections_folder_lists_nothing() {
         let dir = tempfile::tempdir().unwrap();
         assert!(check_collections("notes", dir.path(), dir.path()).is_ok());
+    }
+
+    #[test]
+    fn a_collections_folder_is_matched_by_its_exact_name() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        std::fs::create_dir_all(root.join(".memex/Collections")).unwrap();
+        std::fs::write(root.join(".memex/Collections/notes.json"), b"{}").unwrap();
+        assert!(check_collections("notes", root, root).is_ok());
     }
 }

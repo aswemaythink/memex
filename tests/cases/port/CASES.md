@@ -60,3 +60,7 @@
   design §4.4 Name matching and §2.2 case index. Run: memex info, then memex show NAM-ITEM-01.
 - `PORT-NAME-03` A folder named `.Memex` is not the store: `log` finds no `.memex/` and exits 3 with the no_root message.
   design §4.4 Name matching (`.memex` is matched against listings) and §4.1 item 1. Run: memex log impl, in a folder that holds only `.Memex/`.
+- `PORT-NAME-04` A `.memex/Config.json` is not the config on any OS: alone, its `forever` is ignored, so a 4-day-old entry is pruned at the 3-day default, with no warning and exit 0.
+  design §4.4 Name matching (`config.json` is matched against the listing) and §4.1 item 4. Run: memex log impl over a 4-day-old entry, with .memex/Config.json holding keep_logs forever.
+- `PORT-NAME-05` A `.memex/Collections/` folder is not the collections folder on any OS: `memex log notes` ignores the `notes.json` inside it and exits 0.
+  design §4.4 Name matching (`collections/` is matched against the listing) and §3.4 Stream name. Run: memex log notes, with .memex/Collections/notes.json present.

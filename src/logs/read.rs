@@ -10,11 +10,16 @@ use crate::collections::frontmatter::split;
 use crate::corpus::Doc;
 use crate::error::Error;
 use crate::logs::write::title_of;
-use crate::root::slash;
+use crate::root::{slash, store_listed};
 use crate::text;
 
-/// Every entry in the store, as docs. A missing store has none. A store that cannot be read is an io error (exit 3).
+/// Every entry in the store, as docs. A store that is not listed under its parent by its exact name, or is missing, has none.
+/// A store that cannot be read is an io error (exit 3).
 pub fn load(store: &Path) -> Result<Vec<Doc>, Error> {
+    let listed = store_listed(store).map_err(|failure| io_error(store, &failure))?;
+    if !listed {
+        return Ok(Vec::new());
+    }
     let mut docs = Vec::new();
     for (stream, folder) in entries(store, true)? {
         for (file, path) in entries(&folder, false)? {

@@ -1,0 +1,14 @@
+$ memex log impl
+exit 0
+stdout
+| impl:20261013-120000-string-config
+stderr
+| memex: warning: $SANDBOX/repo/.memex/config.json: not a JSON object: not pruning
+== snapshot repo/.memex/logs
+-- impl/20261013-120000-string-config.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| ---
+| # String config
+| body

@@ -1,0 +1,13 @@
+$ memex log notes
+exit 0
+stdout
+| notes:20261013-120000-notes-entry
+stderr (empty)
+== snapshot repo/.memex/logs
+-- notes/20261013-120000-notes-entry.md
+| ---
+| stream: notes
+| time: 2026-10-13T12:00:00Z
+| ---
+| # Notes entry
+| body

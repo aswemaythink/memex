@@ -4,6 +4,7 @@
 
 use std::ffi::OsStr;
 use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -164,6 +165,31 @@ fn holds_memex(dir: &Path) -> bool {
     })
 }
 
+/// True when `dir` lists an entry named exactly `name`, of any kind. A folder that does not exist lists nothing. Names inside
+/// `.memex/` are matched this way and never probed with `exists()` (design §4.4 Name matching).
+pub fn lists(dir: &Path, name: &str) -> io::Result<bool> {
+    let listing = match fs::read_dir(dir) {
+        Ok(listing) => listing,
+        Err(failure) if failure.kind() == io::ErrorKind::NotFound => return Ok(false),
+        Err(failure) => return Err(failure),
+    };
+    for item in listing {
+        if item?.file_name().to_str() == Some(name) {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+/// True when the store's own folder is listed under its parent by its exact name, as a folder, a file or a symlink. The writes
+/// and reads that use a listed store follow it (design §4.4 Name matching).
+pub fn store_listed(store: &Path) -> io::Result<bool> {
+    match (store.parent(), store.file_name().and_then(OsStr::to_str)) {
+        (Some(parent), Some(name)) => lists(parent, name),
+        _ => Ok(false),
+    }
+}
+
 impl Git {
     /// Asks git about `cwd`. Returns None when git is missing, or `cwd` is not inside a repository.
     fn probe(cwd: &Path) -> Option<Git> {
@@ -211,4 +237,27 @@ fn git_lines(dir: &Path, args: &[&str]) -> Option<Vec<String>> {
     }
     let text = String::from_utf8_lossy(&output.stdout);
     Some(text.lines().map(str::to_string).collect())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn listings_match_names_exactly_and_a_missing_folder_lists_nothing() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        fs::write(dir.path().join("Config.json"), b"{}").expect("a file");
+        assert!(lists(dir.path(), "Config.json").expect("a listing"));
+        assert!(!lists(dir.path(), "config.json").expect("a listing"));
+        assert!(!lists(&dir.path().join("missing"), "config.json").expect("a listing"));
+    }
+
+    #[test]
+    fn a_store_is_listed_by_its_name_under_its_parent() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let store = dir.path().join(".memex").join("logs");
+        assert!(!store_listed(&store).expect("a listing"));
+        fs::create_dir_all(&store).expect("a store");
+        assert!(store_listed(&store).expect("a listing"));
+    }
 }

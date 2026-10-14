@@ -10,7 +10,7 @@ use tempfile::NamedTempFile;
 
 use crate::clock::Timestamp;
 use crate::error::Error;
-use crate::root::{slash, Place};
+use crate::root::{slash, store_listed, Place};
 
 /// The `.gitignore` that goes beside a new store, so logs can never be committed by accident (design §4.1 item 3).
 const GITIGNORE: &[u8] = b"logs/\ncache/\n";
@@ -129,7 +129,7 @@ fn render(entry: &Entry) -> String {
 /// Creates the store on first use. When the store folder is new, its `.gitignore` is written beside it,
 /// unless the store lives in a bare repo's git dir. An existing `.gitignore` is never touched.
 fn prepare_store(place: &Place) -> Result<(), Error> {
-    if place.store.is_dir() {
+    if store_exists(&place.store)? {
         return Ok(());
     }
     fs::create_dir_all(&place.store)
@@ -140,6 +140,13 @@ fn prepare_store(place: &Place) -> Result<(), Error> {
         }
         _ => Ok(()),
     }
+}
+
+/// True when the store is listed under its parent by its exact name and is a folder. A store listed as a file is not one, so
+/// the create that follows reports it as it always has (design §4.4 Name matching).
+fn store_exists(store: &Path) -> Result<bool, Error> {
+    let listed = store_listed(store).map_err(|failure| io_error("cannot read", store, &failure))?;
+    Ok(listed && store.is_dir())
 }
 
 /// Creates `dir` and everything above it, and refuses a `dir` that is a symlink: the store may be a link, but no folder
@@ -176,10 +183,18 @@ fn taken(target: &Path, failure: &io::Error) -> bool {
     failure.kind() == io::ErrorKind::AlreadyExists || fs::symlink_metadata(target).is_ok()
 }
 
-/// A dot-prefixed temporary file in `dir`. A concurrent prune can remove a stream folder it has just emptied after
-/// `make_folder` made it, so a missing `dir` is made again and the file is tried once more.
+/// A dot-prefixed temporary file in `dir`, made with the mode a new file gets, so an entry is an ordinary file (design §4.4 File
+/// modes). A concurrent prune can remove a stream folder it has just emptied after `make_folder` made it, so a missing `dir` is
+/// made again and the file is tried once more.
 fn temp_in(dir: &Path) -> Result<NamedTempFile, Error> {
-    let create = || tempfile::Builder::new().prefix(".").tempfile_in(dir);
+    let create = || {
+        let mut builder = tempfile::Builder::new();
+        builder.prefix(".");
+        if let Some(mode) = new_file_mode() {
+            builder.permissions(mode);
+        }
+        builder.tempfile_in(dir)
+    };
     let temp = match create() {
         Err(failure) if failure.kind() == io::ErrorKind::NotFound => {
             make_folder(dir)?;
@@ -188,6 +203,19 @@ fn temp_in(dir: &Path) -> Result<NamedTempFile, Error> {
         other => other,
     };
     temp.map_err(|failure| io_error("cannot create a temporary file in", dir, &failure))
+}
+
+/// The mode a new file gets before the umask: 0o666 on unix, as `File::create` gives it, not tempfile's private 0o600.
+#[cfg(unix)]
+fn new_file_mode() -> Option<fs::Permissions> {
+    use std::os::unix::fs::PermissionsExt;
+    Some(fs::Permissions::from_mode(0o666))
+}
+
+/// Windows has no mode to set: a temporary file is an ordinary writable file already.
+#[cfg(not(unix))]
+fn new_file_mode() -> Option<fs::Permissions> {
+    None
 }
 
 /// An I/O error that names what failed and the path, never the OS text (design §4.4).
@@ -266,6 +294,21 @@ mod tests {
         let path = write_entry(&place, &entry).expect("an entry");
         assert_eq!(path, dir.join("20261013-120000-x-2.md"));
         assert!(folder.is_dir(), "the folder is left as it was");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn an_entry_gets_the_ordinary_mode_and_not_the_private_one() {
+        use std::os::unix::fs::PermissionsExt;
+        let root = tempfile::tempdir().expect("a temporary folder");
+        let dir = root.path().join("impl");
+        make_folder(&dir).expect("a stream folder");
+        let entry = write_new(&dir, "20261013-120000-x.md", b"x\n")
+            .expect("a write")
+            .expect("the entry");
+        fs::write(root.path().join("plain"), b"x\n").expect("a plain file");
+        let mode = |path: &Path| fs::metadata(path).expect("metadata").permissions().mode() & 0o777;
+        assert_eq!(mode(&entry), mode(&root.path().join("plain")));
     }
 
     #[test]

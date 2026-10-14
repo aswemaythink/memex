@@ -41,3 +41,7 @@
   design §4.1 item 4; PLAN §1 fix 18. Run: memex log impl with an invalid config.json.
 - `DISC-CONFIG-02` A `.memex/config.json` with an unknown key prints one warning on stderr naming the key, and the entry is still written with the defaults.
   design §4.1 item 4; PLAN §1 fix 18. Run: memex log impl with an extra key beside keep_logs.
+- `DISC-CONFIG-03` A `.memex/config.json` that is a JSON string prints one warning on stderr naming the file, and the entry is still written.
+  design §4.1 item 4 (one key, in an object) and §4.3 (never delete on config it can't read). Run: memex log impl with config.json `"3d"`.
+- `DISC-CONFIG-04` A `.memex/config.json` that is a JSON number prints one warning on stderr naming the file, and the entry is still written.
+  design §4.1 item 4 (one key, in an object) and §4.3 (never delete on config it can't read). Run: memex log impl with config.json `5`.

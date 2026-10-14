@@ -1,0 +1,8 @@
+$ memex log impl
+exit 2
+stdout (empty)
+stderr
+| memex: log body is over 16 KiB: logs are findings: cite artifacts by path
+| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  < body
+== snapshot repo/.memex/logs
+(missing)
