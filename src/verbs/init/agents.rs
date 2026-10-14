@@ -3,10 +3,10 @@
 
 use std::path::Path;
 
-use super::fence::{self, Outside};
 use super::files::{create_new, is_link, label, lists, read_text, replace};
 use super::{Action, Report};
 use crate::error::Error;
+use crate::fence::{self, Outside};
 
 /// The marker line that opens the block.
 const BEGIN: &str = "<!-- memex:begin -->";

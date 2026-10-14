@@ -7,6 +7,7 @@ use super::paths::{self, Named};
 use super::tokens::{self, Token};
 use super::{Cite, Citer};
 use crate::corpus::{label_of, parent_of, Corpus, Doc};
+use crate::fence;
 use crate::par;
 
 /// The collections of intent docs, which have a file and a folder. Their path tokens resolve from their own folder first.
@@ -180,7 +181,7 @@ fn hits_of(corpus: &Corpus, doc: &Doc, names: &Names) -> Vec<Hit> {
     let base = base_folder(doc);
     let known = |name: &str| names.collections.contains(name);
     let mut hits = Vec::new();
-    for line in tokens::live_lines(&doc.text) {
+    for line in fence::live_lines(&doc.text) {
         for token in tokens::tokens(line, &known) {
             token_hits(corpus, &base, names, token, &mut hits);
         }

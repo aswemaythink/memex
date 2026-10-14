@@ -1,5 +1,6 @@
-//! Finds the lines outside fenced code blocks (design §2.3). Init looks for its markers and import only there.
-//! Cases: INIT-FENCE-01, INIT-FENCE-02, INIT-FENCE-03, INIT-FENCE-04, INIT-FENCE-05, INIT-FENCE-06, INIT-FENCE-07
+//! Finds the lines of a text that are outside its fenced code blocks (design §2.3).
+//! Citations are read only there, and init looks for its markers and its import only there.
+//! Cases: CITE-FENCE-01, CITE-FENCE-02, CITE-FENCE-03, CITE-FENCE-04, INIT-FENCE-01, INIT-FENCE-02, INIT-FENCE-03, INIT-FENCE-04, INIT-FENCE-05, INIT-FENCE-06, INIT-FENCE-07
 
 /// What the fences of a text leave outside them.
 #[derive(Debug, PartialEq, Eq)]
@@ -17,31 +18,49 @@ struct Fence {
     len: usize,
 }
 
-/// Scans the lines of a text for fenced code blocks. Each line may keep its line ending. A fence opens with three or more
-/// backticks or tildes, indented at most three spaces, and closes at a line of the same mark, at least as long, indented at
-/// most three spaces, with nothing else on it (design §2.3).
-pub fn scan(lines: &[&str]) -> Outside {
-    let mut open: Option<Fence> = None;
-    let mut live = Vec::with_capacity(lines.len());
-    for line in lines {
+/// Reads lines one at a time and says which are outside every fence.
+#[derive(Default)]
+struct Scanner {
+    /// The fence that is open, if one is.
+    open: Option<Fence>,
+}
+
+impl Scanner {
+    /// True when `line` is outside every fence. A fence opens with three or more backticks or tildes, indented at most three
+    /// spaces, and closes at a line of the same mark, at least as long, indented at most three spaces, with nothing else on it
+    /// (design §2.3). A fence's opening and closing lines are inside it. The line may keep its line ending.
+    fn live(&mut self, line: &str) -> bool {
         let text = line.trim_end_matches(['\r', '\n']);
-        match open {
+        match self.open {
             Some(fence) => {
-                live.push(false);
                 if closes(text, fence) {
-                    open = None;
+                    self.open = None;
                 }
+                false
             }
             None => {
-                open = opens(text);
-                live.push(open.is_none());
+                self.open = opens(text);
+                self.open.is_none()
             }
         }
     }
+}
+
+/// Scans the lines of a text for fenced code blocks: which lines are live, and whether the last fence is never closed. Each line
+/// may keep its line ending.
+pub fn scan(lines: &[&str]) -> Outside {
+    let mut scanner = Scanner::default();
+    let live = lines.iter().map(|line| scanner.live(line)).collect();
     Outside {
         live,
-        open_at_end: open.is_some(),
+        open_at_end: scanner.open.is_some(),
     }
+}
+
+/// The lines of a text outside its fenced code blocks, without their line ends. A fence left open hides the rest.
+pub fn live_lines(text: &str) -> Vec<&str> {
+    let mut scanner = Scanner::default();
+    text.lines().filter(|line| scanner.live(line)).collect()
 }
 
 /// The fence that a line opens, if it does. A backtick fence's info string may not hold a backtick, so such a line is text.
@@ -123,6 +142,17 @@ mod tests {
         let (live, open) = scanned("    ```\nx\n");
         assert_eq!(live, [true, true]);
         assert!(!open);
+    }
+
+    #[test]
+    fn live_lines_leave_out_each_fence_and_what_it_holds() {
+        assert_eq!(live_lines("a\n```\nb\n```\nc"), vec!["a", "c"]);
+        assert_eq!(live_lines("a\n~~~\nb\n```\nc"), vec!["a"]);
+        assert_eq!(
+            live_lines("a\n    ```\nb\n    ```\nc"),
+            vec!["a", "    ```", "b", "    ```", "c"]
+        );
+        assert_eq!(live_lines("a\n   ```\nb\n   ```\nc"), vec!["a", "c"]);
     }
 
     #[test]

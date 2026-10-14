@@ -13,6 +13,7 @@
 - `logs/`: the log store: writing an entry, pruning old ones and reading them as docs (design §3.4, §4.3).
 - `walk.rs`: the ignore walker over the root, run on several threads, with the skip list and `/` labels (design §4.1 item 2).
 - `par.rs`: maps a function over a list on several threads and keeps the results in the list's order; the walk, the file reads and the citation scan use it.
+- `fence.rs`: the one fenced-code scanner of design §2.3: which lines are outside every fence. Citations and init's markers are read only there.
 - `text.rs`: the one text-read helper, which drops a leading UTF-8 byte order mark, reads CRLF line ends as LF, and decodes lossily, for every reader (design §4.4 Text).
 - `corpus.rs`: the read model (design §3.1, §3.6): every walked file and folder, the docs, the label map and the folder index, and the root that `show` reads from.
 - `resolve/`: resolves a ref to a file, a folder or a doc (design §3.1), a path in another root included, or reports it not found or ambiguous; see its README.md.

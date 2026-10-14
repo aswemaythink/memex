@@ -2,7 +2,6 @@
 //! Cases: INIT-FRESH-01, INIT-RERUN-01, INIT-SUB-01, INIT-SUB-02, INIT-INFO-01, INIT-INFO-02, INIT-INFO-03
 
 mod agents;
-mod fence;
 mod files;
 mod install;
 

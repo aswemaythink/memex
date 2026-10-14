@@ -9,6 +9,7 @@ mod collections;
 mod config;
 mod corpus;
 pub mod error;
+mod fence;
 mod grammar;
 pub mod help;
 mod index;

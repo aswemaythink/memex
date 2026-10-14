@@ -112,7 +112,10 @@ pub fn check_in(corpus: &Corpus, names: &[String]) -> Result<(), Error> {
         .collect();
     for name in names {
         let builtin = ["readmes", "headers", "cases", "logs"].contains(&name.as_str());
-        let manifest = corpus.manifests.iter().any(|found| found.manifest.name == *name);
+        let manifest = corpus
+            .manifests
+            .iter()
+            .any(|found| found.manifest.name == *name);
         if !(builtin || held.contains(name.as_str()) || manifest) {
             return Err(fail(Verb::Search, format!("unknown collection '{name}'")));
         }

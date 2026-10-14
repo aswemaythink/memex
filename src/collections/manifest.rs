@@ -105,9 +105,8 @@ pub fn warning(path: &Path, reason: &str) -> String {
 /// names `.memex` and `collections` are matched against the listings of the root and of `.memex/`, never probed on a guessed
 /// path, so `.memex/Collections/` is not the folder on a case-insensitive file system (design §4.4 Name matching).
 fn listing(root: &Path, dir: &Path) -> Result<Vec<(String, PathBuf)>, String> {
-    let listed = lists(root, ".memex").and_then(|found| {
-        Ok(found && lists(&root.join(".memex"), "collections")?)
-    });
+    let listed = lists(root, ".memex")
+        .and_then(|found| Ok(found && lists(&root.join(".memex"), "collections")?));
     if !listed.map_err(|failure| unreadable(&failure))? {
         return Ok(Vec::new());
     }
