@@ -1,0 +1,1 @@
+{"git": "init", "steps": [{"args": ["info"], "cwd": "repo/sub"}, {"args": ["info", "--json"], "cwd": "repo/sub"}]}

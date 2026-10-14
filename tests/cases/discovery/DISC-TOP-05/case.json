@@ -1,0 +1,1 @@
+{"git": "commit", "steps": [{"args": ["info"], "cwd": "repo/.git"}, {"args": ["info", "--json"], "cwd": "repo/.git"}, {"args": ["log", "impl"], "stdin": "Inside git\n", "cwd": "repo/.git"}, {"args": ["log", "impl", "--json"], "stdin": "Inside git\n", "cwd": "repo/.git"}], "snapshot": ["repo/.memex"]}

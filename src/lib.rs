@@ -15,6 +15,7 @@ mod grammar;
 pub mod help;
 mod index;
 mod intent;
+mod layout;
 mod logs;
 mod par;
 mod refs;

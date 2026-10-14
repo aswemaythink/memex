@@ -58,3 +58,18 @@
   design §4.4 git: read verbs are unchanged. Run: memex info, text and then --json, from wt with PATH=/nonexistent, unix only.
 - `DISC-NOGIT-03` With git missing from PATH, `log` from a folder inside a linked worktree that holds its own `.memex/` is refused the same way, and writes nothing there.
   design §4.4 git: the nearest `.git` entry at or above the cwd, found by listing, is the worktree's file, so the folder's own `.memex/` does not change the answer. Run: memex log impl from wt/sub, which has a `.memex/`, with PATH=/nonexistent, unix only; snapshot of wt/sub/.memex.
+
+## TOP
+
+- `DISC-TOP-01` With git missing from PATH, `info` from a subfolder of a repo with no `.memex/` names the repo's toplevel as the root, not the subfolder, in text and with `--json`, exit 0.
+  design §4.1 item 1: the toplevel is found by listing, so the root does not need git. Run: memex info, text and then --json, from repo/sub with PATH=/nonexistent, unix only.
+- `DISC-TOP-02` With git missing from PATH and a `.memex/` above the repo, `info` from repo/sub names the repo as the root, and `log` exits 3 with the no_root message and writes nothing, in text and with `--json`.
+  design §4.1 item 1: the walk stops at the toplevel, so a `.memex/` above a repo never captures it. Run: memex info and memex log impl, text and then --json, from repo/sub with PATH=/nonexistent, unix only; snapshots of repo/.memex and .memex/logs.
+- `DISC-TOP-03` With git present but failing, `info` from repo/sub names the repo as the root, and `log` exits 3 with the no_root message and writes nothing, as in DISC-TOP-02.
+  design §4.4 git: a failing git does not change the root, since the toplevel is found by listing. Run: the DISC-TOP-02 steps with env GIT_DIR=/nonexistent, which makes the real git exit 128 on every rev-parse.
+- `DISC-TOP-04` A `.git` folder that holds no repository, in a subfolder of a repo, bounds the root there: `info` from inside that subfolder names the subfolder as the root, not the repo whose `.memex/` lies above it, in text and with `--json`, exit 0.
+  design §4.1 item 1: a `.git` entry git would reject still marks a toplevel. Run: memex info, text and then --json, from repo/sub, where repo/sub/.git is a folder holding one placeholder file (git cannot store an empty folder, and skips this one as it would an empty one) and repo/.memex/ exists.
+- `DISC-TOP-05` Inside the `.git` folder of a repo with no `.memex/`, `info` names the repo as the root, and `log` exits 3 with the no_root message and writes nothing.
+  design §4.1 item 1: a cwd inside `.git` belongs to the repo that holds it. Run: memex info and memex log impl, text and then --json, from repo/.git of a committed repo; snapshot of repo/.memex.
+- `DISC-TOP-06` A `.git` file that names a missing git dir still marks its folder as the toplevel: `info` from its subfolder names that folder as the root, in text and with `--json`, exit 0.
+  design §4.1 item 1: a `.git` entry git would reject still marks a toplevel. Run: memex info, text and then --json, from repo/sub, where repo/.git is a file whose gitdir line names a folder that does not exist.

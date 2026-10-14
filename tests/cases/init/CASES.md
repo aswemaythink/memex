@@ -134,3 +134,8 @@
   Scenario: AGENTS.md holds a title and then the whole snippet pasted by hand, with no markers; the snapshot shows the file unchanged. design §3.5b item 2 (the warning's exact text). The `kept` report follows the damaged-marker rule, since nothing changed.
 - `INIT-PASTE-02` A heading line that sits only inside a fenced code block is not a paste: init appends the marked block at the end as usual, reports `updated AGENTS.md`, and prints no warning, exit 0.
   Scenario: AGENTS.md holds a fenced `md` example that contains the heading line, and no markers; the snapshot shows the example unchanged and the block at the end. design §2.3 (a fence hides its lines) and §3.5b item 2 (the heading counts only outside fenced code).
+
+## NOGIT
+
+- `INIT-NOGIT-01` With git missing from PATH, `init` run from a subfolder of a repo that has a `.memex/` above it targets the repo's toplevel: it adopts nothing, prints no `using the store at` line, and changes nothing in the subfolder, exit 0, unix only.
+  Scenario: the repo is made by `git init`, repo/sub holds one file, and the sandbox root holds a complete `.memex/`; init runs from repo/sub with PATH=/nonexistent. design §3.5b (inside a repo, the toplevel) and §4.1 item 1 (the toplevel is found by listing).

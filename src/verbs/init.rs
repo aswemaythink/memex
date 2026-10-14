@@ -1,5 +1,5 @@
 //! Carries out `memex init` (design §3.5b): the setup steps in order, then the atlas of the target.
-//! Cases: INIT-FRESH-01, INIT-RERUN-01, INIT-SUB-01, INIT-SUB-02, INIT-INFO-01, INIT-INFO-02, INIT-INFO-03, INIT-NEST-01, INIT-NEST-02, INIT-NEST-03
+//! Cases: INIT-FRESH-01, INIT-RERUN-01, INIT-SUB-01, INIT-SUB-02, INIT-INFO-01, INIT-INFO-02, INIT-INFO-03, INIT-NEST-01, INIT-NEST-02, INIT-NEST-03, INIT-NOGIT-01
 
 mod agents;
 mod files;
@@ -79,9 +79,10 @@ pub fn run(report: &mut Report, now: Timestamp) -> Result<(), Error> {
     atlas(target, now, report)
 }
 
-/// The folder init works in (design §3.5b), and whether that folder is a store adopted from above the cwd. Inside git it is the
-/// toplevel of the cwd's worktree. Outside git it is the root that discovery finds from the cwd, the nearest folder above it with a
-/// `.memex/`, so that init never creates a second store that shadows one above it (INIT-NEST-01); else the cwd, which is not adopted.
+/// The folder init works in (design §3.5b), and whether that folder is a store adopted from above the cwd. Inside a repo it is the
+/// toplevel, found by listing (design §4.1 item 1), so it is the same with git missing, failing or present (INIT-NOGIT-01). Outside
+/// one it is the root that discovery finds from the cwd, the nearest folder above it with a `.memex/`, so that init never creates a
+/// second store that shadows one above it (INIT-NEST-01); else the cwd, which is not adopted.
 fn target_dir(cwd: &Path) -> (PathBuf, bool) {
     if let Some(top) = root::toplevel_of(cwd) {
         return (top, false);

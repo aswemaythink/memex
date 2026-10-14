@@ -1,0 +1,23 @@
+$ memex init  [cwd repo/sub]  [env PATH=/nonexistent]
+exit 0
+stdout
+| created .memex/.gitignore
+| created .memex/config.json
+| created .memex/collections/.gitkeep
+| created AGENTS.md
+| created $SANDBOX/home/.local/bin/memex
+| add to PATH: $SANDBOX/home/.local/bin
+| 
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent  0 readmes · 0 headers · 0 cases
+| use     memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+stderr (empty)
+== snapshot repo/sub
+-- notes.txt
+| A note in a subfolder of the repo.
+== snapshot repo/.memex/config.json
+-- config.json
+| {"keep_logs": "3d"}
+== snapshot .memex/config.json
+-- config.json
+| {"keep_logs": "7d"}

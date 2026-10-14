@@ -1,0 +1,1 @@
+{"git": "init", "platforms": ["unix"], "steps": [{"args": ["init"], "cwd": "repo/sub", "env": {"PATH": "/nonexistent"}}], "snapshot": ["repo/sub", "repo/.memex/config.json", ".memex/config.json"]}

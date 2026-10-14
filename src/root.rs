@@ -1,14 +1,16 @@
 //! Finds where `log` writes, per design §4.1: the root, the folder that owns the store, and the store.
-//! The root is the nearest `.memex/` inside the cwd's git worktree (the walk stops at its toplevel), else the toplevel, else the cwd; the read verbs use the same root, and git is asked through subprocesses.
-//! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-ROOT-05, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-GIT-01, DISC-NOGIT-01, DISC-NOGIT-02, DISC-NOGIT-03, LOG-WRITE-06, LOG-WRITE-10
+//! The root is the nearest `.memex/` above the cwd, bounded by its toplevel, which the listing finds (layout.rs); else the toplevel, else the cwd. The read verbs use the same root. git answers only for the store's place and HEAD.
+//! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-ROOT-05, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-GIT-01, DISC-NOGIT-01, DISC-NOGIT-02, DISC-NOGIT-03, DISC-TOP-01, DISC-TOP-02, DISC-TOP-03, DISC-TOP-04, DISC-TOP-05, DISC-TOP-06, LOG-WRITE-06, LOG-WRITE-10
 
 use std::ffi::OsStr;
-use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 use crate::error::Error;
+use crate::layout::{entry_named, holds_memex, nearest_within, toplevel};
+
+pub use crate::layout::lists;
 
 /// Where `log` writes: the root, the folder whose `.memex/` owns the store, and the store itself.
 pub struct Place {
@@ -31,8 +33,6 @@ pub struct Head {
 
 /// What git said about the cwd. Only present inside a repository.
 struct Git {
-    /// The worktree toplevel. None in a bare repo, which has no worktree.
-    toplevel: Option<PathBuf>,
     /// The absolute git common dir: the main checkout's `.git`, or a bare repo's own folder.
     common_dir: PathBuf,
     /// True when the common dir is a bare repository.
@@ -45,18 +45,16 @@ struct Git {
 pub fn locate(cwd: &Path) -> Result<Place, Error> {
     let canonical = dunce::canonicalize(cwd)
         .map_err(|failure| Error::io_at("cannot resolve", cwd, &failure))?;
+    // The toplevel comes from the listing, so it is the same with git missing, failing or present (design §4.1 item 1).
+    let top = toplevel(&canonical);
+    let found = nearest_within(&canonical, top.as_deref());
+    let has_memex = found.is_some();
     let git = Git::probe(&canonical);
-    let toplevel = git.as_ref().and_then(|git| git.toplevel.clone());
-    // The toplevel that git just reported bounds the walk, so the walk costs no git call of its own (design §4.1 item 1).
-    let found = nearest_within(&canonical, toplevel.as_deref());
-    let worktree = git
-        .as_ref()
-        .filter(|git| git.linked)
-        .and_then(|git| git.toplevel.clone());
-    let root = found.clone().or(toplevel).unwrap_or(canonical);
+    let worktree = git.as_ref().filter(|git| git.linked).and(top.clone());
+    let root = found.or_else(|| top.clone()).unwrap_or(canonical);
     match git {
-        Some(git) if git.bare => bare_place(root, &git, found.is_some(), worktree),
-        git => checkout_place(root, git.as_ref(), found.is_some(), worktree),
+        Some(git) if git.bare => bare_place(root, &git, has_memex, worktree),
+        git => checkout_place(root, top.as_deref(), git.as_ref(), has_memex, worktree),
     }
 }
 
@@ -112,11 +110,12 @@ fn bare_place(
 /// The store of an ordinary folder or checkout. `log` needs a `.memex/` in the root or the store owner.
 fn checkout_place(
     root: PathBuf,
+    top: Option<&Path>,
     git: Option<&Git>,
     has_memex: bool,
     worktree: Option<PathBuf>,
 ) -> Result<Place, Error> {
-    let owner = store_owner(&root, git);
+    let owner = store_owner(&root, top, git);
     if !has_memex && !holds_memex(&owner) {
         return Err(Error::no_root());
     }
@@ -129,13 +128,13 @@ fn checkout_place(
     })
 }
 
-/// The folder that owns the store: the main checkout's counterpart of the root (the same path under the
-/// main checkout, found from the git common dir), or the root itself when there is no main checkout.
-fn store_owner(root: &Path, git: Option<&Git>) -> PathBuf {
+/// The folder that owns the store: the main checkout's counterpart of the root (the same path under the main checkout, found from
+/// the git common dir), or the root itself when there is no main checkout. The root's path under its toplevel comes from the listing.
+fn store_owner(root: &Path, top: Option<&Path>, git: Option<&Git>) -> PathBuf {
     let counterpart = git.and_then(|git| {
-        let toplevel = git.toplevel.as_deref()?;
+        let top = top?;
         let main = main_checkout(git)?;
-        root.strip_prefix(toplevel).ok().map(|rel| main.join(rel))
+        root.strip_prefix(top).ok().map(|rel| main.join(rel))
     });
     counterpart.unwrap_or_else(|| root.to_path_buf())
 }
@@ -149,103 +148,32 @@ fn main_checkout(git: &Git) -> Option<PathBuf> {
     }
 }
 
-/// The nearest folder, from `cwd` upward, that holds a `.memex/` and is not above the worktree that holds `cwd` (design §4.1
-/// item 1). Outside git the walk is unbounded. Git is asked only when a `.git` lies between `cwd` and the folder found.
+/// The nearest folder with a `.memex/` above `cwd`, within its toplevel (design §4.1 item 1). Outside a repo the walk is unbounded.
+/// No git is asked.
 pub fn nearest_memex(cwd: &Path) -> Option<PathBuf> {
     let cwd = resolved(cwd);
-    let found = nearest_within(&cwd, None)?;
-    if git_entry_between(&cwd, &found) {
-        nearest_within(&cwd, toplevel_of(&cwd).as_deref())
-    } else {
-        Some(found)
-    }
+    let top = toplevel(&cwd);
+    nearest_within(&cwd, top.as_deref())
 }
 
 /// The root that the read verbs, `show` and `search`, use for `cwd` (design §4.1 item 1): the nearest folder with a `.memex/`
-/// inside its worktree, else the git toplevel, else `cwd` itself. Git is asked at most once.
+/// inside its toplevel, else the toplevel, else `cwd` itself. No git is asked.
 pub fn root_of(cwd: &Path) -> PathBuf {
     let cwd = resolved(cwd);
-    match nearest_within(&cwd, None) {
-        None => toplevel_of(&cwd).unwrap_or(cwd),
-        Some(found) if !git_entry_between(&cwd, &found) => found,
-        Some(_) => {
-            let top = toplevel_of(&cwd);
-            nearest_within(&cwd, top.as_deref()).or(top).unwrap_or(cwd)
-        }
-    }
+    let top = toplevel(&cwd);
+    nearest_within(&cwd, top.as_deref()).or(top).unwrap_or(cwd)
 }
 
-/// The toplevel of the worktree that holds `cwd`, as git reports it, canonical. None when git is missing, or `cwd` is not in a
-/// worktree, as in a bare repo.
+/// The toplevel of the repository holding `cwd` (design §4.1 item 1), canonical and found by listing. None when no `.git` lies
+/// above `cwd`. No git is asked, so `init` targets the same folder whether git is missing, failing or present.
 pub fn toplevel_of(cwd: &Path) -> Option<PathBuf> {
-    git_line(cwd, &["rev-parse", "--show-toplevel"]).and_then(|top| resolve(cwd, &top))
+    toplevel(&resolved(cwd))
 }
 
-/// `cwd` as the filesystem spells it, so that its ancestors compare equal with git's canonical toplevel. A `cwd` that cannot be
+/// `cwd` as the filesystem spells it, so that its ancestors compare equal with the canonical toplevel. A `cwd` that cannot be
 /// resolved is kept as it was given.
 fn resolved(cwd: &Path) -> PathBuf {
     dunce::canonicalize(cwd).unwrap_or_else(|_| cwd.to_path_buf())
-}
-
-/// The nearest folder from `cwd` up to `bound`, inclusive, that holds a `.memex/`. With no `bound` the walk runs to the
-/// filesystem root. For the bound to be reached, `cwd` and `bound` must both be canonical.
-fn nearest_within(cwd: &Path, bound: Option<&Path>) -> Option<PathBuf> {
-    for dir in cwd.ancestors() {
-        if holds_memex(dir) {
-            return Some(dir.to_path_buf());
-        }
-        if Some(dir) == bound {
-            break;
-        }
-    }
-    None
-}
-
-/// True when a folder from `cwd` up to `found`, not including `found`, lists a `.git` of any kind (a linked worktree's file, a
-/// submodule's file or a main checkout's folder). Such an entry may end the worktree below `found`, so git must say where it
-/// ends (design §4.1 item 1). A listing that fails counts as a `.git`, so git decides.
-fn git_entry_between(cwd: &Path, found: &Path) -> bool {
-    cwd.ancestors()
-        .take_while(|dir| *dir != found)
-        .any(|dir| lists(dir, ".git").unwrap_or(true))
-}
-
-/// True when the nearest `.git` entry at or above `cwd`, found by listing each folder up from `cwd`, is a file: a linked worktree's
-/// (design §4.4 git). A folder that cannot be listed holds none, and a symlink is not a file.
-fn nearest_git_is_file(cwd: &Path) -> bool {
-    cwd.ancestors()
-        .find_map(|dir| entry_named(dir, ".git").ok().flatten())
-        .and_then(|entry| entry.file_type().ok())
-        .is_some_and(|kind| kind.is_file())
-}
-
-/// True when `dir` lists a folder named exactly `.memex`. The name is matched against the listing, never probed on a guessed
-/// path, so a case-insensitive file system does not match another spelling (design §4.4 Name matching).
-fn holds_memex(dir: &Path) -> bool {
-    lists(dir, ".memex").unwrap_or(false) && dir.join(".memex").is_dir()
-}
-
-/// The entry named exactly `name` in `dir`'s listing, if there is one. A folder that does not exist lists nothing. The name is
-/// matched against the listing and never probed (design §4.4 Name matching).
-fn entry_named(dir: &Path, name: &str) -> io::Result<Option<fs::DirEntry>> {
-    let listing = match fs::read_dir(dir) {
-        Ok(listing) => listing,
-        Err(failure) if failure.kind() == io::ErrorKind::NotFound => return Ok(None),
-        Err(failure) => return Err(failure),
-    };
-    for item in listing {
-        let item = item?;
-        if item.file_name().to_str() == Some(name) {
-            return Ok(Some(item));
-        }
-    }
-    Ok(None)
-}
-
-/// True when `dir` lists an entry named exactly `name`, of any kind. A folder that does not exist lists nothing. Names inside
-/// `.memex/` are matched this way and never probed with `exists()` (design §4.4 Name matching).
-pub fn lists(dir: &Path, name: &str) -> io::Result<bool> {
-    entry_named(dir, name).map(|entry| entry.is_some())
 }
 
 /// True when the store's own folder is listed under its parent by its exact name, as a folder, a file or a symlink. The writes
@@ -257,8 +185,18 @@ pub fn store_listed(store: &Path) -> io::Result<bool> {
     }
 }
 
+/// True when the nearest `.git` entry at or above `cwd`, found by listing each folder up from `cwd`, is a file: a linked worktree's
+/// (design §4.4 git). A folder that cannot be listed holds none, and a symlink is not a file.
+fn nearest_git_is_file(cwd: &Path) -> bool {
+    cwd.ancestors()
+        .find_map(|dir| entry_named(dir, ".git").ok().flatten())
+        .and_then(|entry| entry.file_type().ok())
+        .is_some_and(|kind| kind.is_file())
+}
+
 impl Git {
-    /// Asks git about `cwd`. Returns None when git is missing, or `cwd` is not inside a repository.
+    /// Asks git about `cwd`. Returns None when git is missing, or `cwd` is not inside a repository. The toplevel is not asked for:
+    /// the listing finds it (design §4.1 item 1).
     fn probe(cwd: &Path) -> Option<Git> {
         let dirs = git_lines(cwd, &["rev-parse", "--git-dir", "--git-common-dir"])?;
         let [git_dir, common] = dirs.as_slice() else {
@@ -269,10 +207,8 @@ impl Git {
         // Asked from inside the common dir: a worktree of a bare repo answers false from its own cwd.
         let bare = git_line(&common_dir, &["rev-parse", "--is-bare-repository"]).as_deref()
             == Some("true");
-        let toplevel = toplevel_of(cwd);
         let linked = git_dir != common_dir;
         Some(Git {
-            toplevel,
             common_dir,
             bare,
             linked,
@@ -317,15 +253,7 @@ fn git_missing() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn listings_match_names_exactly_and_a_missing_folder_lists_nothing() {
-        let dir = tempfile::tempdir().expect("a temporary folder");
-        fs::write(dir.path().join("Config.json"), b"{}").expect("a file");
-        assert!(lists(dir.path(), "Config.json").expect("a listing"));
-        assert!(!lists(dir.path(), "config.json").expect("a listing"));
-        assert!(!lists(&dir.path().join("missing"), "config.json").expect("a listing"));
-    }
+    use std::fs;
 
     #[test]
     fn a_store_is_listed_by_its_name_under_its_parent() {
@@ -337,19 +265,13 @@ mod tests {
     }
 
     #[test]
-    fn the_walk_stops_at_its_bound_and_a_git_entry_between_asks_git() {
+    fn the_root_is_the_toplevel_when_no_memex_lies_inside_it() {
         let dir = tempfile::tempdir().expect("a temporary folder");
-        let top = resolved(dir.path());
-        let repo = top.join("repo");
+        let repo = resolved(dir.path()).join("repo");
         let cwd = repo.join("sub");
-        fs::create_dir_all(top.join(".memex")).expect("a folder above the repo");
         fs::create_dir_all(&cwd).expect("a folder inside the repo");
-        fs::create_dir_all(repo.join(".git")).expect("a git entry");
-        assert!(git_entry_between(&cwd, &top));
-        assert!(!git_entry_between(&repo, &repo));
-        assert_eq!(nearest_within(&cwd, None), Some(top.clone()));
-        assert_eq!(nearest_within(&cwd, Some(repo.as_path())), None);
-        fs::create_dir_all(repo.join(".memex")).expect("a store in the repo");
-        assert_eq!(nearest_within(&cwd, Some(repo.as_path())), Some(repo));
+        fs::create_dir_all(repo.join(".git")).expect("a git folder");
+        assert_eq!(root_of(&cwd), repo);
+        assert_eq!(toplevel_of(&cwd), Some(repo));
     }
 }
