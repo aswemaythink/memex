@@ -1,5 +1,5 @@
 //! Prunes the log store after every write (design §4.3).
-//! It deletes each entry older than keep_logs by its filename stamp, and removes the stream folders that its deletions empty. The store itself may be a symlink, which is followed; no symlink below it is, and hidden names and anything that is not a log entry are never touched. A path that is already gone (NotFound), and a stream folder a writer has landed in since the check (DirectoryNotEmpty), are skipped without a warning (design §4.3 Vanished entries).
+//! It deletes each entry older than keep_logs by its filename stamp, and removes the stream folders that its deletions empty. The store itself may be a symlink, which is followed; no symlink below it is, and hidden names, names with no label (`is_label_name`, design §4.4) and anything that is not a log entry are never touched. A path that is already gone (NotFound), and a stream folder a writer has landed in since the check (DirectoryNotEmpty), are skipped without a warning (design §4.3 Vanished entries).
 //! Cases: LOG-PRUNE-01, LOG-PRUNE-02, LOG-PRUNE-03, LOG-PRUNE-04, LOG-PRUNE-05, LOG-PRUNE-06, LOG-PRUNE-07, LOG-PRUNE-08, LOG-PRUNE-09, LOG-PRUNE-10, LOG-PRUNE-11, LOG-PRUNE-12, LOG-PRUNE-13, LOG-PRUNE-14, LOG-PRUNE-15, LOG-PRUNE-17
 
 use std::ffi::OsStr;
@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use crate::clock::{self, Timestamp};
 use crate::error;
 use crate::root::slash;
+use crate::walk::is_label_name;
 
 /// Deletes the entries of `store` whose stamps are more than `keep` seconds before `now`. A failure is a warning on stderr, never an error, so the entry that was just written stays and `log` still succeeds.
 pub fn run(store: &Path, keep: i64, now: Timestamp) {
@@ -49,8 +50,8 @@ fn prune_stream(dir: &Path, keep: i64, now: Timestamp) {
     }
 }
 
-/// The paths of the entries of `dir` that are not hidden and have UTF-8 names, sorted. Only names are read here.
-/// A folder that cannot be listed is a warning, and gives no names.
+/// The paths of the entries of `dir` that pass `is_visible`, sorted. Only names are read here, so a hidden name or one with no
+/// label is never stat'd, read or deleted. A folder that cannot be listed is a warning, and gives no names.
 fn names(dir: &Path) -> Vec<PathBuf> {
     let listing = match fs::read_dir(dir) {
         Ok(listing) => listing,
@@ -71,9 +72,10 @@ fn names(dir: &Path) -> Vec<PathBuf> {
     found
 }
 
-/// True for a name that is UTF-8 and does not start with a dot. Hidden and non-UTF-8 names are never log entries or stream folders.
+/// True for a name that has a label (`walk::is_label_name`) and does not start with a dot. Hidden names, and names that are not
+/// UTF-8 or hold a control character, are never log entries or stream folders, so they are skipped before any io (design §4.4).
 fn is_visible(name: &OsStr) -> bool {
-    name.to_str().is_some_and(|text| !text.starts_with('.'))
+    is_label_name(name) && !name.to_string_lossy().starts_with('.')
 }
 
 /// True when the name of `path` is a log entry name whose stamp is more than `keep` seconds before `now`. Only the name is read.
@@ -288,5 +290,41 @@ mod tests {
             Err(io::Error::from(io::ErrorKind::PermissionDenied)),
         );
         assert_eq!(PRINTED.with(|printed| printed.borrow().len()), 1);
+    }
+
+    /// A name with no label is never read or deleted (design §4.4): an expired entry whose name holds a control character
+    /// survives, and so does a stream folder with such a name that cannot be listed, with no warning. A plain expired entry
+    /// beside them is still pruned.
+    #[cfg(unix)]
+    #[test]
+    fn a_name_with_no_label_is_never_read_or_deleted() {
+        use std::os::unix::ffi::OsStrExt;
+        use std::os::unix::fs::PermissionsExt;
+
+        PRINTED.with(|printed| printed.borrow_mut().clear());
+        let root = tempfile::tempdir().expect("a temporary folder");
+        let stream = root.path().join("impl");
+        fs::create_dir(&stream).expect("a stream folder");
+        let plain = stream.join("20261009-120000-plain.md");
+        let escaped = stream.join("20261009-120001-esc\x1b.md");
+        fs::write(&plain, b"old\n").expect("an old entry");
+        fs::write(&escaped, b"old\n").expect("an old entry with a control character");
+        let escaped_stream = root.path().join(OsStr::from_bytes(b"bad\x1b"));
+        fs::create_dir(&escaped_stream).expect("a stream folder with a control character");
+        let kept = escaped_stream.join("20261009-120002-old.md");
+        fs::write(&kept, b"old\n").expect("an old entry in it");
+        let locked = fs::Permissions::from_mode(0o000);
+        fs::set_permissions(&escaped_stream, locked).expect("a mode");
+        let now = clock::parse_stamp("20261013-120000").expect("a stamp");
+        run(root.path(), 3 * 86_400, now);
+        fs::set_permissions(&escaped_stream, fs::Permissions::from_mode(0o755)).expect("restored");
+        assert!(!plain.is_file(), "a plain expired entry is pruned");
+        assert!(escaped.is_file(), "an entry with a control character stays");
+        assert!(
+            kept.is_file(),
+            "a stream folder with a control character is not entered"
+        );
+        let printed = PRINTED.with(|printed| printed.borrow().clone());
+        assert!(printed.is_empty(), "{printed:?}");
     }
 }

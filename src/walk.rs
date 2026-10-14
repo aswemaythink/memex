@@ -1,8 +1,9 @@
 //! Walks the intent layer: the entries under the root that the ignore rules keep (design §4.1 item 2).
-//! A name that is not UTF-8, or that holds a control character, has no label, so the walk skips it (design §4.4).
+//! A name that is not UTF-8, or that holds a control character, has no label (`is_label_name`), so the walk never enters it and gives it no warning (design §4.4).
 //! Cases: INT-IGNORE-01, INT-IGNORE-02, INT-IGNORE-03, INT-SKIP-01, INT-SKIP-02, INT-NAME-03, SHOW-FILE-01, SHOW-DIR-01, SHOW-ROOT-01, SHOW-IO-02
 
 use std::collections::BTreeMap;
+use std::ffi::OsStr;
 use std::io;
 use std::path::{Component, Path, PathBuf};
 use std::sync::mpsc;
@@ -135,13 +136,13 @@ fn named_failure(error: &ignore::Error) -> Option<(&Path, &io::Error)> {
     }
 }
 
-/// The `/`-separated text of a root-relative path: `""` for the root, None when a part is not UTF-8 or holds a control
-/// character, or when the path climbs out.
+/// The `/`-separated text of a root-relative path: `""` for the root, None when a part has no label (`is_label_name`), or
+/// when the path climbs out.
 pub fn rel_string(rel: &Path) -> Option<String> {
     let mut parts = Vec::new();
     for component in rel.components() {
         match component {
-            Component::Normal(part) => parts.push(label_part(part.to_str()?)?),
+            Component::Normal(part) if is_label_name(part) => parts.push(part.to_str()?),
             Component::CurDir => {}
             _ => return None,
         }
@@ -149,17 +150,23 @@ pub fn rel_string(rel: &Path) -> Option<String> {
     Some(parts.join("/"))
 }
 
-/// The text of one part of a label, or None when it holds a control character: U+0000–U+001F or U+007F (design §4.4).
-/// `is_ascii_control` is exactly that set, and none of its bytes occurs inside a longer UTF-8 character, so a byte scan
-/// decides it.
-fn label_part(part: &str) -> Option<&str> {
-    (!part.bytes().any(|byte| byte.is_ascii_control())).then_some(part)
+/// True for a name that has a label: UTF-8, with no control character (U+0000–U+001F or U+007F, design §4.4). The walk never
+/// enters a name that fails this, and the log reader, prune and the manifest listing test it before any io on the entry.
+/// `is_ascii_control` is exactly that set, and none of its bytes occurs inside a longer UTF-8 character, so a byte scan decides it.
+pub fn is_label_name(name: &OsStr) -> bool {
+    name.to_str()
+        .is_some_and(|text| !text.bytes().any(|byte| byte.is_ascii_control()))
 }
 
-/// True for a folder below the root that the walk must not enter: `node_modules` or `target`.
+/// True for an entry below the root that the walk must not enter: a name with no label, or a `node_modules` or `target`
+/// folder (design §4.1 item 2). A skipped folder is never listed, so nothing under it gives an entry or a warning.
 fn is_skipped(entry: &DirEntry) -> bool {
-    entry.depth() > 0
-        && entry.file_type().is_some_and(|kind| kind.is_dir())
+    entry.depth() > 0 && (!is_label_name(entry.file_name()) || is_build_folder(entry))
+}
+
+/// True for a `node_modules` or `target` folder.
+fn is_build_folder(entry: &DirEntry) -> bool {
+    entry.file_type().is_some_and(|kind| kind.is_dir())
         && matches!(entry.file_name().to_str(), Some("node_modules" | "target"))
 }
 
@@ -182,9 +189,10 @@ fn to_entry(root: &Path, entry: &DirEntry) -> Option<Entry> {
 
 #[cfg(test)]
 mod tests {
+    use std::ffi::OsStr;
     use std::path::{Path, PathBuf};
 
-    use super::rel_string;
+    use super::{is_label_name, rel_string};
 
     #[test]
     fn a_path_with_a_part_that_is_not_utf8_has_no_label() {
@@ -209,6 +217,70 @@ mod tests {
         assert_eq!(rel_string(Path::new("a/del\u{7f}.md")), None);
         assert_eq!(rel_string(Path::new("a\nb.rs")), None);
         assert_eq!(rel_string(Path::new("tab\there/README.md")), None);
+    }
+
+    /// The predicate that the walk, the log reader, prune and the manifest listing share: UTF-8 with no control character.
+    /// Space, `~` and U+0080 pass, and so does a non-ASCII letter; a non-UTF-8 name fails.
+    #[test]
+    fn a_name_has_a_label_only_when_it_is_utf8_with_no_control_character() {
+        for name in ["b c~.md", "\u{80}.md", "é.md"] {
+            assert!(is_label_name(OsStr::new(name)), "{name:?}");
+        }
+        for name in [
+            "nul\u{0}.md",
+            "unit\u{1f}.md",
+            "del\u{7f}.md",
+            "a\nb.rs",
+            "tab\there",
+        ] {
+            assert!(!is_label_name(OsStr::new(name)), "{name:?}");
+        }
+        let invalid = not_utf8();
+        assert!(!is_label_name(invalid.file_name().expect("a name")));
+    }
+
+    /// A folder whose name has no label is never entered, so one that cannot be listed gives no warning and no entry, whether
+    /// its name holds a control character or is not UTF-8 (design §4.4). The folders are restored before the asserts.
+    #[cfg(unix)]
+    #[test]
+    fn a_folder_with_no_label_is_never_entered_so_it_gives_no_warning() {
+        use std::collections::BTreeMap;
+        use std::fs;
+        use std::os::unix::ffi::OsStrExt;
+        use std::os::unix::fs::PermissionsExt;
+
+        use super::walk_warned;
+        let dir = tempfile::tempdir().expect("a temp folder");
+        let escaped = dir.path().join("esc\u{1b}");
+        fs::create_dir(&escaped).expect("a folder");
+        let mut folders = vec![escaped];
+        // APFS refuses a name that is not UTF-8, so that folder is made only where the file system allows one.
+        let invalid = dir.path().join(OsStr::from_bytes(b"bad\xff"));
+        if fs::create_dir(&invalid).is_ok() {
+            folders.push(invalid);
+        }
+        fs::write(dir.path().join("ok.rs"), "//! Ok.\n").expect("a file");
+        for folder in &folders {
+            fs::write(folder.join("README.md"), "# Locked\n").expect("a file");
+            fs::set_permissions(folder, fs::Permissions::from_mode(0o000)).expect("a mode");
+        }
+        let open = fs::Permissions::from_mode(0o755);
+        if fs::read_dir(&folders[0]).is_ok() {
+            // Running as root lists a folder whatever its mode, so there is nothing to check.
+            for folder in &folders {
+                fs::set_permissions(folder, open.clone()).expect("restored");
+            }
+            return;
+        }
+        let (mut warnings, mut unlistable) = (Vec::new(), BTreeMap::new());
+        let entries = walk_warned(dir.path(), &mut warnings, &mut unlistable);
+        for folder in &folders {
+            fs::set_permissions(folder, open.clone()).expect("restored");
+        }
+        let labels: Vec<&str> = entries.iter().map(|entry| entry.rel.as_str()).collect();
+        assert_eq!(labels, ["ok.rs"]);
+        assert!(warnings.is_empty(), "{warnings:?}");
+        assert!(unlistable.is_empty(), "{unlistable:?}");
     }
 
     /// A folder that cannot be listed is one warning, and the files beside it are still walked (design §4.2). The folder is

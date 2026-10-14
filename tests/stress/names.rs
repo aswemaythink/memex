@@ -44,6 +44,36 @@ fn names_control_chars_skipped() {
 #[cfg(not(unix))]
 fn names_control_chars_skipped() {}
 
+/// A folder whose name holds a control character is never entered, so one that cannot be listed gives no warning: `info`,
+/// `search names` and `show .` each exit 0 with empty stderr (design §4.2 and §4.4). The folder is made unlistable (mode 000)
+/// for the run, then restored, so the sandbox can be removed.
+#[test]
+#[ignore = "stress suite: run with cargo test --release --test stress -- --ignored"]
+#[cfg(unix)]
+fn names_unlistable_control_folder_is_silent() {
+    let sandbox = Sandbox::new();
+    write_file(&sandbox.path().join("README.md"), ROOT_README);
+    let folder = sandbox.path().join("esc\u{1b}");
+    fs::create_dir(&folder).unwrap_or_else(|e| panic!("cannot make {}: {e}", folder.display()));
+    write_file(
+        &folder.join("README.md"),
+        "# Escaped\n\nA folder whose name holds an escape.\n",
+    );
+    set_mode(&folder, 0o000);
+    let runs = run_stderr(&sandbox);
+    set_mode(&folder, 0o755);
+    for (args, success, stderr) in runs {
+        assert!(success, "memex {args} failed");
+        assert!(stderr.is_empty(), "memex {args} wrote to stderr: {stderr}");
+    }
+}
+
+/// Windows cannot hold a control character in a file name, so there is no such folder to skip on that OS: the test is empty.
+#[test]
+#[ignore = "stress suite: run with cargo test --release --test stress -- --ignored"]
+#[cfg(not(unix))]
+fn names_unlistable_control_folder_is_silent() {}
+
 /// Writes the two names that hold a control character, each with a header that `search names` would find if it were
 /// walked: a file `a<LF>b.rs`, and a folder `tab<TAB>here` with a README. Panics unless both are on disk.
 #[cfg(unix)]
@@ -83,6 +113,34 @@ fn run_verbs(sandbox: &Sandbox) -> Vec<String> {
             output_text(&out.stdout)
         })
         .collect()
+}
+
+/// Runs each command of `VERBS` in the sandbox, and gives each one's arguments, whether it exited 0, and its stderr as text.
+/// Nothing is asserted here, so a caller can restore the tree before it checks the results.
+#[cfg(unix)]
+fn run_stderr(sandbox: &Sandbox) -> Vec<(String, bool, String)> {
+    VERBS
+        .iter()
+        .map(|args| {
+            let out = cmd(sandbox)
+                .args(*args)
+                .output()
+                .unwrap_or_else(|e| panic!("memex {args:?} did not start: {e}"));
+            (
+                format!("{args:?}"),
+                out.status.success(),
+                output_text(&out.stderr),
+            )
+        })
+        .collect()
+}
+
+/// Sets the unix mode of `path`. Panics with the path when the change fails.
+#[cfg(unix)]
+fn set_mode(path: &Path, mode: u32) {
+    use std::os::unix::fs::PermissionsExt;
+    fs::set_permissions(path, fs::Permissions::from_mode(mode))
+        .unwrap_or_else(|e| panic!("cannot set the mode of {}: {e}", path.display()));
 }
 
 /// Asserts that `text` has no control character, except the line breaks that end its lines.

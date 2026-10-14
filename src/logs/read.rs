@@ -1,5 +1,5 @@
 //! Reads the log store's entries as docs for `show` (design §3.1 and §4.3).
-//! Every non-dot `.md` file one folder below the store is one doc, labelled `stream:id`, with its frontmatter as fields and its title from its first line. A stream folder or an entry that cannot be read is a warning, and is skipped (design §4.2); one that is already gone (NotFound) is skipped without a warning (design §4.3 Vanished entries).
+//! Every non-dot `.md` file one folder below the store is one doc, labelled `stream:id`, with its frontmatter as fields and its title from its first line. A stream folder or an entry that cannot be read is a warning, and is skipped (design §4.2); one that is already gone (NotFound) is skipped without a warning (design §4.3 Vanished entries). A name with no label (`is_label_name`) is skipped before any io on it, with no warning (design §4.4).
 //! Cases: SHOW-LOG-01, SHOW-LOG-02, SHOW-JSON-03
 
 use std::fs;
@@ -12,6 +12,7 @@ use crate::error::{self, Error};
 use crate::logs::write::title_of;
 use crate::root::store_listed;
 use crate::text;
+use crate::walk::is_label_name;
 
 /// Every entry in the store, as docs. A store that is not listed under its parent by its exact name, or is missing, has none.
 /// A stream folder or an entry that cannot be read adds its warning to `warnings` and is skipped (design §4.2), and so does a
@@ -39,7 +40,8 @@ pub fn load(store: &Path, warnings: &mut Vec<String>) -> Vec<Doc> {
 }
 
 /// The non-dot entries of `dir` by name, sorted: its folders when `folders` is set, otherwise its `.md` files. A missing
-/// `dir` has none. A `dir` that cannot be listed, or an entry whose type cannot be read, adds its warning and is skipped.
+/// `dir` has none. A `dir` that cannot be listed, or an entry whose type cannot be read, adds its warning and is skipped. An
+/// entry whose name has no label is skipped before any io on it, with no warning (design §4.4).
 fn entries(dir: &Path, folders: bool, warnings: &mut Vec<String>) -> Vec<(String, PathBuf)> {
     let reader = match fs::read_dir(dir) {
         Ok(reader) => reader,
@@ -58,9 +60,12 @@ fn entries(dir: &Path, folders: bool, warnings: &mut Vec<String>) -> Vec<(String
                 continue;
             }
         };
-        let Some(name) = item.file_name().to_str().map(str::to_string) else {
+        let file_name = item.file_name();
+        if !is_label_name(&file_name) {
             continue;
-        };
+        }
+        // A label name is UTF-8, so its lossy text is exactly the name.
+        let name = file_name.to_string_lossy().into_owned();
         let kind = match item.file_type() {
             Ok(kind) => kind,
             Err(failure) => {
@@ -173,5 +178,37 @@ mod tests {
             warnings[1].contains("c.md (PermissionDenied)"),
             "{warnings:?}"
         );
+    }
+
+    /// A stream folder or an entry whose name has no label is skipped before any io on it: a folder that cannot be listed and
+    /// an entry that cannot be read give neither a warning nor a doc (design §4.4). The modes are restored before the asserts.
+    #[cfg(unix)]
+    #[test]
+    fn a_name_with_no_label_is_skipped_before_any_io() {
+        use std::ffi::OsStr;
+        use std::os::unix::ffi::OsStrExt;
+        use std::os::unix::fs::PermissionsExt;
+
+        let dir = tempfile::tempdir().expect("a temp folder");
+        let store = dir.path();
+        let stream = store.join("impl");
+        fs::create_dir_all(&stream).expect("a stream");
+        fs::write(stream.join("20261014-120000-a.md"), "# A\n").expect("an entry");
+        let bad_folder = store.join(OsStr::from_bytes(b"bad\x1b"));
+        fs::create_dir_all(&bad_folder).expect("a stream");
+        fs::write(bad_folder.join("20261014-120001-b.md"), "# B\n").expect("an entry");
+        let bad_entry = stream.join("20261014-120002-c\x1b.md");
+        fs::write(&bad_entry, "# C\n").expect("an entry");
+        let open = fs::Permissions::from_mode(0o755);
+        let closed = fs::Permissions::from_mode(0o000);
+        fs::set_permissions(&bad_folder, closed.clone()).expect("a mode");
+        fs::set_permissions(&bad_entry, closed).expect("a mode");
+        let mut warnings = Vec::new();
+        let docs = load(store, &mut warnings);
+        fs::set_permissions(&bad_folder, open.clone()).expect("restored");
+        fs::set_permissions(&bad_entry, open).expect("restored");
+        let labels: Vec<&str> = docs.iter().map(|doc| doc.label.as_str()).collect();
+        assert_eq!(labels, ["impl:20261014-120000-a"]);
+        assert!(warnings.is_empty(), "{warnings:?}");
     }
 }

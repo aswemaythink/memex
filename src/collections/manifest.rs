@@ -1,5 +1,5 @@
 //! Loads and validates the manifests of design §4.2.
-//! Each manifest's docs come from the reader of its kind.
+//! Each manifest's docs come from the reader of its kind; a file whose name has no label is skipped before any io (design §4.4).
 //! Cases: MAN-LOAD-01, MAN-LOAD-02, MAN-LOAD-03, MAN-LOAD-04, MAN-LOAD-05, MAN-LOAD-06, MAN-LOAD-07, MAN-LOAD-08, MAN-LOAD-09, MAN-LOAD-10, MAN-LOAD-11, MAN-LOAD-12, MAN-IO-01
 
 use std::collections::BTreeMap;
@@ -15,7 +15,7 @@ use crate::corpus::{Doc, RESERVED};
 use crate::error;
 use crate::root::{lists, slash};
 use crate::text;
-use crate::walk::rel_string;
+use crate::walk::{is_label_name, rel_string};
 
 /// How a manifest's roots are read (design §4.2 `kind`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -105,9 +105,9 @@ pub fn unreadable_warning(path: &Path, failure: &io::Error) -> String {
     error::warning(&error::Error::io_at("cannot read", path, failure).message)
 }
 
-/// The `.json` files of the collections folder `dir` by name: dot-named, non-UTF-8, symlink and folder entries are skipped. The
-/// names `.memex` and `collections` are matched against the listings of the root and of `.memex/`, never probed on a guessed
-/// path, so `.memex/Collections/` is not the folder on a case-insensitive file system (design §4.4 Name matching).
+/// The `.json` files of the collections folder `dir` by name: dot-named, label-less (`is_label_name`), symlink and folder entries
+/// are skipped. The names `.memex` and `collections` are matched against the listings of the root and of `.memex/`, never probed on
+/// a guessed path, so `.memex/Collections/` is not the folder on a case-insensitive file system (design §4.4 Name matching).
 fn listing(root: &Path, dir: &Path) -> io::Result<Vec<(String, PathBuf)>> {
     let listed = lists(root, ".memex")
         .and_then(|found| Ok(found && lists(&root.join(".memex"), "collections")?));
@@ -123,9 +123,10 @@ fn listing(root: &Path, dir: &Path) -> io::Result<Vec<(String, PathBuf)>> {
     for item in reader {
         let item = item?;
         let file_name = item.file_name();
-        let Some(name) = file_name.to_str() else {
+        if !is_label_name(&file_name) {
             continue;
-        };
+        }
+        let name = file_name.to_string_lossy();
         let is_file = item.file_type()?.is_file();
         if is_file && !name.starts_with('.') && name.ends_with(".json") {
             files.push((name.to_string(), item.path()));
@@ -346,5 +347,19 @@ mod tests {
                 && warnings[0].ends_with(".memex/collections/notes.json (PermissionDenied)"),
             "{warnings:?}"
         );
+    }
+
+    /// A manifest whose name has a control character has no label: it is skipped with no warning (design §4.4).
+    #[cfg(unix)]
+    #[test]
+    fn a_manifest_name_with_a_control_character_is_skipped_silently() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let folder = dir.path().join(".memex").join("collections");
+        fs::create_dir_all(&folder).expect("a folder");
+        let text = r#"{"name": "esc\u001b", "kind": "markdown", "roots": ["."]}"#;
+        fs::write(folder.join("esc\u{1b}.json"), text).expect("a manifest");
+        let mut warnings = Vec::new();
+        assert!(load(dir.path(), &mut warnings).is_empty());
+        assert!(warnings.is_empty(), "{warnings:?}");
     }
 }
