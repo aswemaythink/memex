@@ -1,0 +1,5 @@
+$ memex show notes:closers notes:unclosed --json
+exit 0
+stdout
+| {"docs":[{"ref":"notes:closers","collection":"notes","id":"closers","path":"notes/closers.md","title":"Real title","fields":{},"text":"```text\n# Hidden heading\n```md\n# Hidden too\n```\n# Real title\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]},{"ref":"notes:unclosed","collection":"notes","id":"unclosed","path":"notes/unclosed.md","title":"```text","fields":{},"text":"```text\n~~~\n# Hidden heading\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
+stderr (empty)

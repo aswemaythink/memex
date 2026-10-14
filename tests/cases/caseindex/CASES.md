@@ -42,6 +42,14 @@ The caseindex family pins design §2.2, how a CASES.md becomes case docs, and th
   Scenario: a fenced dash item for FENCED-001 and a real item after the fence for FENCE-002; show cases:FENCED-001 exits 1 and show cases:FENCE-002 prints it. design §2.3, fenced code is never read as intent, applied to CASES.md.
 - `CASE-FENCE-02` A heading inside a code fence does not set the group of the items after the fence.
   Scenario: a tilde fence holding a level-two heading, then an item; show cases:FENCE-003 shows the heading above the fence as its group. design §2.3.
+- `CASE-FENCE-03` A fence indented up to three spaces is a fence, so an item inside it is code; a line indented four spaces is not a fence, so the item after it is read.
+  Scenario: an item before a three-space fence that holds HIDDEN-001, then FOUR-001 with a four-space line in its detail and FOUR-002 after it; show cases:INDENT-001 prints its claim alone, show cases:HIDDEN-001 exits 1 and show cases:FOUR-002 prints it. design §2.3, the fence definition applied to CASES.md items.
+- `CASE-FENCE-04` The lines of a fence inside an item's detail are left out of the detail, and the detail after the fence is kept.
+  Scenario: DETAIL-001 with two detail lines around a two-space `sh` fence; show cases:DETAIL-001 prints its claim and the two detail lines, and not the fence or its code. design §2.2 Detail and §2.3.
+- `CASE-FENCE-05` A fence closes only at a bare line of its own mark, at least as long: a tilde line, a line with other text after its marks, or a shorter run does not close it.
+  Scenario: a backtick fence holding a tilde line, then one holding a line with `md` after its marks, then a four-backtick fence holding a three-backtick line; show cases:CLOSE-002, cases:CLOSE-004 and cases:CLOSE-007 exit 1, and show cases:CLOSE-005 and cases:CLOSE-008 print their items. design §2.3.
+- `CASE-FENCE-06` A backtick fence line whose info string holds a backtick is text, not a fence, so the items after it are read.
+  Scenario: a line that opens with three backticks and then holds a backtick, between TICK-001 and TICK-002, with TICK-003 after it; show cases:TICK-002 and show cases:TICK-003 print them. design §2.3.
 
 ## GRAMMAR
 

@@ -1,5 +1,5 @@
 //! Reads a markdown manifest's docs (design §4.2): frontmatter becomes fields, the body the text.
-//! Cases: MAN-MD-01, MAN-MD-02, MAN-MD-03, MAN-MD-04, MAN-MD-05, MAN-MD-06, MAN-MD-07, MAN-MD-08, MAN-MD-09, MAN-MD-10, MAN-MD-11, MAN-MD-12
+//! Cases: MAN-MD-01, MAN-MD-02, MAN-MD-03, MAN-MD-04, MAN-MD-05, MAN-MD-06, MAN-MD-07, MAN-MD-08, MAN-MD-09, MAN-MD-10, MAN-MD-11, MAN-MD-12, MAN-MD-14, MAN-MD-15
 
 use std::path::Path;
 
@@ -9,6 +9,7 @@ use super::frontmatter::{split, Value};
 use super::globs::{self, Matched};
 use super::manifest::{self, Manifest};
 use crate::corpus::Doc;
+use crate::fence;
 use crate::text;
 
 /// The globs of a markdown manifest that names none (design §4.2 `include`).
@@ -123,20 +124,11 @@ fn default_title(body: &str) -> String {
         .unwrap_or_default()
 }
 
-/// The text of the first ATX heading that is not inside a code fence.
+/// The text of the first ATX heading that is not inside a code fence, under the one fence definition (design §2.3).
 fn heading(body: &str) -> Option<String> {
-    let mut fenced = false;
-    for line in body.lines() {
-        let line = line.trim_start();
-        if line.starts_with("```") || line.starts_with("~~~") {
-            fenced = !fenced;
-        } else if !fenced {
-            if let Some(text) = heading_text(line) {
-                return Some(text);
-            }
-        }
-    }
-    None
+    fence::live_lines(body)
+        .into_iter()
+        .find_map(|line| heading_text(line.trim_start()))
 }
 
 /// The text of an ATX heading line: one to six `#` marks, then a space or the end of the line, and the text after them.

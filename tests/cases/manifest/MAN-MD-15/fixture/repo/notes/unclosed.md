@@ -1,0 +1,3 @@
+```text
+~~~
+# Hidden heading

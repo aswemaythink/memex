@@ -1,0 +1,57 @@
+$ memex show cases:CLOSE-002
+exit 1
+stdout (empty)
+stderr
+| memex: not found: cases:CLOSE-002
+
+$ memex show cases:CLOSE-004
+exit 1
+stdout (empty)
+stderr
+| memex: not found: cases:CLOSE-004
+
+$ memex show cases:CLOSE-005
+exit 0
+stdout
+| === cases:CLOSE-005 ===
+| An item after the real closer is a case.
+| 
+| group
+|   Fence cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show cases:CLOSE-007
+exit 1
+stdout (empty)
+stderr
+| memex: not found: cases:CLOSE-007
+
+$ memex show cases:CLOSE-008
+exit 0
+stdout
+| === cases:CLOSE-008 ===
+| An item after the longer closer is a case.
+| 
+| group
+|   Fence cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

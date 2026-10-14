@@ -1,20 +1,23 @@
 //! Reads a CASES.md into case docs (design §2.2): each column-0 item that opens with a case id.
-//! Cases: CASE-ITEM-01, CASE-ITEM-02, CASE-ITEM-03, CASE-ITEM-04, CASE-CLAIM-01, CASE-CLAIM-02, CASE-DETAIL-01, CASE-DETAIL-02, CASE-DETAIL-03, CASE-GROUP-01, CASE-GROUP-02, CASE-FENCE-01, CASE-FENCE-02, CASE-GRAMMAR-01, CASE-GRAMMAR-02, CASE-GRAMMAR-03, CASE-CRLF-01, CASE-CRLF-02, CASE-PLAN-01, CASE-EVID-01, CASE-EVID-02, CASE-EVID-03, CASE-EVID-04, CASE-EVID-05, CASE-EVID-06, CASE-EVID-07, CASE-EVID-08
+//! Cases: CASE-ITEM-01, CASE-ITEM-02, CASE-ITEM-03, CASE-ITEM-04, CASE-CLAIM-01, CASE-CLAIM-02, CASE-DETAIL-01, CASE-DETAIL-02, CASE-DETAIL-03, CASE-GROUP-01, CASE-GROUP-02, CASE-FENCE-01, CASE-FENCE-02, CASE-FENCE-03, CASE-FENCE-04, CASE-FENCE-05, CASE-FENCE-06, CASE-GRAMMAR-01, CASE-GRAMMAR-02, CASE-GRAMMAR-03, CASE-CRLF-01, CASE-CRLF-02, CASE-PLAN-01, CASE-EVID-01, CASE-EVID-02, CASE-EVID-03, CASE-EVID-04, CASE-EVID-05, CASE-EVID-06, CASE-EVID-07, CASE-EVID-08
 
 use std::path::Path;
 
 use crate::collections::frontmatter::Value;
 use crate::corpus::{parent_of, Doc, CASES};
 use crate::error::Error;
+use crate::fence;
 use crate::refs::{has_extension, is_case_id, join};
 use crate::text;
 
 /// The case docs of the CASES.md at `rel`, whose text is `text` as the one text reader gives it, with its byte order mark
 /// already dropped and CRLF read as LF (design §4.4), in the order they are written (design §2.2).
 fn parse(rel: &str, text: &str) -> Vec<Doc> {
+    let lines: Vec<&str> = text.lines().collect();
+    let live = fence::scan(&lines).live;
     let mut reader = Reader::new(rel);
-    for line in text.lines() {
-        reader.line(line);
+    for (line, live) in lines.into_iter().zip(live) {
+        reader.line(line, live);
     }
     reader.finish()
 }
@@ -55,7 +58,7 @@ pub fn evidence(doc: &Doc, is_file: impl Fn(&str) -> bool) -> Vec<String> {
     found
 }
 
-/// One pass over a CASES.md: the item being read, the heading above it, and whether a code fence is open.
+/// One pass over a CASES.md: the item being read and the heading above it.
 struct Reader<'a> {
     /// The root-relative path of the CASES.md, which each case doc records as its path.
     rel: &'a str,
@@ -63,8 +66,6 @@ struct Reader<'a> {
     group: Option<String>,
     /// The item whose detail lines may still follow.
     open: Option<Item>,
-    /// True between a column-0 code fence and the next one. Fenced lines are code, not intent (design §2.3).
-    fenced: bool,
     /// The case docs read so far, in order.
     docs: Vec<Doc>,
 }
@@ -76,19 +77,18 @@ impl<'a> Reader<'a> {
             rel,
             group: None,
             open: None,
-            fenced: false,
             docs: Vec::new(),
         }
     }
 
-    /// Reads one line. A column-0 fence opens or closes a code block and ends the open item; any other line is read unless a
-    /// fence is open.
-    fn line(&mut self, line: &str) {
-        if is_fence(line) {
-            self.close();
-            self.fenced = !self.fenced;
-        } else if !self.fenced {
+    /// Reads one line, which `live` says is outside every fence (design §2.3). A live line is read as `plain` reads it. A line
+    /// inside a fence, or a fence line, is code: a column-0 one ends the open item, as a column-0 fence always has, and an
+    /// indented or blank one leaves the item open, so the detail after an indented fence is still the item's.
+    fn line(&mut self, line: &str, live: bool) {
+        if live {
             self.plain(line);
+        } else if !(line.is_empty() || line.starts_with([' ', '\t'])) {
+            self.close();
         }
     }
 
@@ -200,11 +200,6 @@ impl Item {
                 .collect(),
         }
     }
-}
-
-/// True for a line that opens or closes a code fence: three backticks or tildes at column 0.
-fn is_fence(line: &str) -> bool {
-    line.starts_with("```") || line.starts_with("~~~")
 }
 
 /// The text of an ATX heading, which is one or more `#` followed by a space or the end of the line, with the hashes removed.

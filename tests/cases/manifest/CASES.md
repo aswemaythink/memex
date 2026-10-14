@@ -57,5 +57,9 @@
   design §4.4 Text (a leading BOM is dropped on read; \r\n is accepted in frontmatter). Run: memex show notes:bom.
 - `MAN-MD-13` A root of `.` is the root itself, so the manifest reads the whole tree, but the walk skips a `.ignore`d file, `node_modules` and `target`, so the three refs that are not read are not found, exit 1.
   design §4.1 item 2 (the skip list: ignored files, node_modules and target) and §4.2 `roots`. Run: memex show everything:top everything:deep everything:private everything:pkg everything:built.
+- `MAN-MD-14` A fence indented four spaces is not a fence, so the heading after it is the default title, while one indented three spaces still hides the heading under it, exit 0.
+  design §2.3 (a fence is indented at most three spaces), applied to markdown docs. Run: memex show notes:four notes:three --json.
+- `MAN-MD-15` A fence closes only at a bare line of its own mark, at least as long, so a tilde line or a line with other text does not close a backtick fence, and a fence never closed runs to the end of the doc, exit 0.
+  design §2.3 (the fence definition and an unclosed fence), applied to markdown docs. Run: memex show notes:closers notes:unclosed --json.
 
 The folder and json kinds of design §4.2 are cased as `MANK-*` in the [manifest-kinds](../manifest-kinds/CASES.md) family.

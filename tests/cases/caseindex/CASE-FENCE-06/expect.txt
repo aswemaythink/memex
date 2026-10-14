@@ -1,0 +1,39 @@
+$ memex show cases:TICK-002
+exit 0
+stdout
+| === cases:TICK-002 ===
+| An item after that line is a case, since the line is text.
+| 
+| group
+|   Fence cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show cases:TICK-003
+exit 0
+stdout
+| === cases:TICK-003 ===
+| A later item is a case too.
+| 
+| group
+|   Fence cases
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

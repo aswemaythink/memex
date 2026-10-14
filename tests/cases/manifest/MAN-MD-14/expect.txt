@@ -1,0 +1,5 @@
+$ memex show notes:four notes:three --json
+exit 0
+stdout
+| {"docs":[{"ref":"notes:four","collection":"notes","id":"four","path":"notes/four.md","title":"Real title","fields":{},"text":"    ```text\n# Real title\n    ```\nBody line.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]},{"ref":"notes:three","collection":"notes","id":"three","path":"notes/three.md","title":"Real title","fields":{},"text":"   ```text\n# Hidden heading\n   ```\n# Real title\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
+stderr (empty)
