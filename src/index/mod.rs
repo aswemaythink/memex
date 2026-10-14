@@ -13,7 +13,7 @@ use std::ops::Bound;
 use rust_stemmers::{Algorithm, Stemmer};
 
 use crate::par;
-use vocab::{Posting, Vocab};
+use vocab::{Posting, Term, Vocab};
 
 /// The shortest query word that may match by prefix (PLAN §4).
 const PREFIX_MIN: usize = 3;
@@ -91,13 +91,18 @@ impl Totals {
 
 impl Index {
     /// Indexes the sources in order. Each doc's tokens are counted per field, and the field lengths give the normalisers. The docs
-    /// are cut into runs, one per thread, which are counted at once and then joined in order. The group ranks with `weights`, the
-    /// field weights of its manifest or the defaults (design §4.2).
+    /// are cut into runs, one per thread, which are counted at once; the runs' terms are then joined shard by shard, one thread a
+    /// shard, and the stems are found on the threads too. The group ranks with `weights`, the field weights of its manifest or the
+    /// defaults (design §4.2).
     pub fn build(sources: &[Source], weights: [f64; 3]) -> Index {
         let stemmer = Stemmer::create(Algorithm::English);
-        let runs = par::map(&runs_of(sources), |(first, run)| count_run(*first, run));
-        let (terms, lengths) = join_runs(runs);
-        let vocab = terms.into_map();
+        let shards = par::threads();
+        let runs = par::map(&runs_of(sources), |(first, run)| {
+            count_run(*first, run, shards)
+        });
+        let (buckets, counts): (Vec<_>, Vec<_>) = runs.into_iter().unzip();
+        let vocab = vocab::join(buckets, shards);
+        let lengths: Vec<[f64; 3]> = counts.into_iter().flatten().collect();
         Index {
             labels: sources
                 .iter()
@@ -255,39 +260,35 @@ fn runs_of<'a, 'b>(sources: &'a [Source<'b>]) -> Vec<(usize, &'a [Source<'b>])> 
         .collect()
 }
 
-/// The vocabulary of one run of docs, and the token count of each doc in it, with its docs numbered from `first`.
-fn count_run(first: usize, sources: &[Source]) -> (Vocab, Vec<[f64; 3]>) {
+/// The terms of one run of docs, split into `shards` buckets, and the token count of each doc in it, with its docs numbered from
+/// `first`.
+fn count_run(first: usize, sources: &[Source], shards: usize) -> (Vec<Vec<Term>>, Vec<[f64; 3]>) {
     let mut terms = Vocab::default();
     let lengths = sources
         .iter()
         .enumerate()
         .map(|(offset, source)| add_doc(&mut terms, first + offset, source))
         .collect();
-    (terms, lengths)
+    (terms.into_shards(shards), lengths)
 }
 
-/// The runs joined in order: one vocabulary, and the token count of every doc.
-fn join_runs(runs: Vec<(Vocab, Vec<[f64; 3]>)>) -> (Vocab, Vec<[f64; 3]>) {
-    let mut terms = Vocab::default();
-    let mut lengths = Vec::new();
-    for (run, counts) in runs {
-        terms.append(run);
-        lengths.extend(counts);
-    }
-    (terms, lengths)
-}
-
-/// The plain terms of the vocabulary by their stem, so that a query word finds its stem-mates in one lookup.
+/// The plain terms of the vocabulary by their stem, so that a query word finds its stem-mates in one lookup. The stems are found on
+/// the threads; the terms are then added in byte order, so that each stem's terms are in byte order too.
 fn stem_map(
     vocab: &BTreeMap<String, Vec<Posting>>,
     stemmer: &Stemmer,
 ) -> HashMap<String, Vec<String>> {
+    let plain: Vec<&str> = vocab
+        .keys()
+        .map(String::as_str)
+        .filter(|term| !tokenize::is_whole(term))
+        .collect();
+    let stemmed = par::map(&plain, |term| {
+        (stemmer.stem(term).into_owned(), term.to_string())
+    });
     let mut stems: HashMap<String, Vec<String>> = HashMap::new();
-    for term in vocab.keys().filter(|term| !tokenize::is_whole(term)) {
-        stems
-            .entry(stemmer.stem(term).into_owned())
-            .or_default()
-            .push(term.clone());
+    for (stem, term) in stemmed {
+        stems.entry(stem).or_default().push(term);
     }
     stems
 }
