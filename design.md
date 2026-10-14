@@ -110,7 +110,7 @@ memex --help | --version
 - **Other docs** are labelled `collection:id`: `cases:NAME-001`, `doom:2026-09-20-jettison`, `impl:20261013-214107-show-chain`.
 - **Resolution order.**
   1. Absolute path.
-  2. Relative path: tried against both the cwd and the root. If exactly one exists, it wins. If both exist and differ, the result is `ambiguous`.
+  2. Relative path: tried against both the cwd and the root. If exactly one exists, it wins. If both exist and differ, the result is `ambiguous`. `.` is the exception: it is the root's own label, so it always means the root.
   3. `collection:id`, exact.
   4. A bare id that is unique across collections, matched exactly, then case-insensitively.
   5. A unique basename.
@@ -145,7 +145,7 @@ logs  (showing 1 of 1)
 It takes one or more refs and prints a section for each, separated by `=== <label> ===` lines.
 
 - **File.** The header (full content for `.md`), then `cites`, then `cited by`, then the chain. `--up N` limits the depth; `--up 0` prints the file alone.
-- **Folder.** The folder's README if there is one; otherwise `(no README)`. Then the children: subfolders with their README one-liners, and files with their header one-liners or `(no header)`. Then `cites`/`cited by` for the folder path, then the chain. A folder without a README lists its children and is not an error. `show .` is the map of the root.
+- **Folder.** The folder's README if there is one; otherwise `(no README)`. Then the children (the folder's own README.md excluded, since it is already printed): subfolders with their README one-liners, and files with their header one-liners or `(no header)`. Then `cites`/`cited by` for the folder path, then the chain. A folder without a README lists its children and is not an error. `show .` is the map of the root.
 - **Chain.** Ancestor READMEs in full, nearest first, root last. For a README.md itself, the chain starts at the folder above its own, since the file is already printed in full.
 - **Case.** Claim, detail, group, the defining `CASES.md`, evidence paths, and cited by.
 - **Log or collection doc.** The full text, its fields as a `key: value` block, cites, and cited by.
