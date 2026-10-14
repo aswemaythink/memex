@@ -1,0 +1,17 @@
+$ memex init  [cwd repo/sub]
+exit 0
+stdout
+| created .memex/.gitignore
+| created .memex/config.json
+| created .memex/collections/.gitkeep
+| created AGENTS.md
+| 
+| memex  $SANDBOX/repo/sub · log store .memex/logs/
+| intent  0 readmes · 0 headers · 0 cases
+| use     memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr (empty)
+== snapshot repo/sub/.memex/config.json
+-- config.json
+| {"keep_logs": "3d"}
+== snapshot repo/.memex
+(missing)

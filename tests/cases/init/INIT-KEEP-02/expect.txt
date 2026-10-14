@@ -1,0 +1,18 @@
+$ memex init
+exit 0
+stdout
+| kept .memex/.gitignore
+| kept .memex/config.json
+| kept .memex/collections/.gitkeep
+| created AGENTS.md
+| 
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent       0 readmes · 0 headers · 0 cases
+| collections  demo 0
+| use          memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr (empty)
+== snapshot repo/.memex/collections
+-- .gitkeep
+(empty)
+-- demo.json
+| {"name": "demo", "kind": "markdown", "roots": ["docs"]}

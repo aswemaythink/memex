@@ -4,6 +4,7 @@
 
 pub mod here;
 pub mod info;
+pub mod init;
 pub mod log;
 pub mod search;
 pub mod show;

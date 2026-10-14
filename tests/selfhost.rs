@@ -88,6 +88,27 @@ fn no_doc_under_src_has_an_unresolved_citation() {
     );
 }
 
+/// AGENTS.md's marked block is assets/agents-snippet.md byte for byte: the one source that `init` writes (design §6, PLAN §4).
+#[test]
+fn agents_block_is_the_snippet_byte_for_byte() {
+    let agents = read_repo("AGENTS.md");
+    let snippet = read_repo("assets/agents-snippet.md");
+    let block = agents
+        .split_once("<!-- memex:begin -->\n")
+        .and_then(|(_, rest)| rest.split_once("<!-- memex:end -->"))
+        .map(|(block, _)| block);
+    assert_eq!(
+        block,
+        Some(snippet.as_str()),
+        "the marked block in AGENTS.md must equal assets/agents-snippet.md byte for byte; fix: copy the snippet between the markers, or run `memex init` in this repo"
+    );
+}
+
+/// The text of a file under the crate root. A file that cannot be read fails the check.
+fn read_repo(rel: &str) -> String {
+    fs::read_to_string(manifest().join(rel)).unwrap_or_else(|e| panic!("cannot read {rel}: {e}"))
+}
+
 /// Runs the built memex with `args` and `--json` on this repo, with MEMEX_NOW unset, and returns its stdout as JSON. Exit codes
 /// are not judged here: a failed ref is reported by the JSON `errors`, which each check reads.
 fn memex_json(args: &[&str]) -> Value {

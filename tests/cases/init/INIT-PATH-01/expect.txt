@@ -1,0 +1,32 @@
+$ memex init
+exit 0
+stdout
+| created .memex/.gitignore
+| created .memex/config.json
+| created .memex/collections/.gitkeep
+| created AGENTS.md
+| created $SANDBOX/home/.local/bin/memex
+| add to PATH: $SANDBOX/home/.local/bin
+| 
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent  0 readmes · 0 headers · 0 cases
+| use     memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr (empty)
+
+$ memex init
+exit 0
+stdout
+| kept .memex/.gitignore
+| kept .memex/config.json
+| kept .memex/collections/.gitkeep
+| kept AGENTS.md
+| kept $SANDBOX/home/.local/bin/memex
+| add to PATH: $SANDBOX/home/.local/bin
+| 
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent  0 readmes · 0 headers · 0 cases
+| use     memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr (empty)
+== snapshot home/.local/bin
+-- memex
+(binary)
