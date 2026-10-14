@@ -14,6 +14,7 @@ mod fuzz;
 mod fuzz_parse;
 mod names;
 mod scale;
+mod scale_logs;
 
 use support::{cmd, output_text, run_stdin, Sandbox};
 
