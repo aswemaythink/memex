@@ -45,7 +45,7 @@ impl Verb {
     }
 }
 
-/// A parsed invocation. The verbs parse fully; running them is for later slices.
+/// A parsed invocation: a verb with its words and flags, or help, or the version.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
     /// `memex search`, with its words and flags.

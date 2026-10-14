@@ -55,7 +55,7 @@ pub fn check_reserved(stream: &str) -> Result<(), Error> {
 
 /// Refuses a name that a manifest owns: a file `.memex/collections/<stream>.json` under the nearest `.memex/` above `cwd`,
 /// or under the store owner's `.memex/` (design §4.1 item 4 and §4.2). The file names are read from each folder's listing and
-/// compared exactly, never probed (design §4.4 Name matching). Manifests are not loaded until a later slice.
+/// compared exactly, never probed (design §4.4 Name matching).
 pub fn check_collections(stream: &str, cwd: &Path, owner: &Path) -> Result<(), Error> {
     let file = format!("{stream}.json");
     let roots = nearest_memex(cwd).into_iter().chain([owner.to_path_buf()]);

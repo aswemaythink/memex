@@ -6,12 +6,11 @@ use std::path::Path;
 use crate::collections::frontmatter::Value;
 use crate::corpus::{parent_of, Doc, CASES};
 use crate::error::Error;
-use crate::text::{self, strip_bom};
+use crate::text;
 
-/// The case docs of the CASES.md at `rel`, whose text is `text`, in the order they are written (design §2.2). A leading
-/// byte order mark is dropped (design §4.4), and `\r\n` line ends are read like `\n`.
-pub fn parse(rel: &str, text: &str) -> Vec<Doc> {
-    let text = strip_bom(text);
+/// The case docs of the CASES.md at `rel`, whose text is `text` as the one text reader gives it, with its byte order mark
+/// already dropped and CRLF read as LF (design §4.4), in the order they are written (design §2.2).
+fn parse(rel: &str, text: &str) -> Vec<Doc> {
     let mut reader = Reader::new(rel);
     for line in text.lines() {
         reader.line(line);
