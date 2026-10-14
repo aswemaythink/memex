@@ -126,7 +126,7 @@ memex --help | --version
 - **Grouped output, always.** Each collection with hits is one group. The fixed order is `readmes`, `headers`, `cases`, manifest collections (alphabetical), then `logs` as one group. Empty groups are omitted.
   - **Limits.** Without `--in`, `--limit` applies per group (default 5). With `--in`, the default is 20.
   - **Why groups.** Grouping is why READMEs and headers can be in global search: thousands of headers cannot drown a README, and log noise stays in its own group.
-- **Zero hits.** stdout stays empty and the exit is 0, so scripts are unaffected; stderr prints `memex: no hits for <words>; try fewer or other words, or memex info` (with filters only: `memex: no docs match <filters>; …`), in text and JSON modes.
+- **Zero hits.** stdout stays empty and the exit is 0, so scripts are unaffected; stderr prints `memex: no hits for <words>; try fewer or other words, or memex info` (with filters only: `memex: no docs match <filters>; try fewer filters, or memex info`), in text and JSON modes.
 - **Filters without words.** Lists matching docs, newest first for logs.
 - **`--in X` with no words.** Prints the roster: every doc's one-liner, logs newest first, everything else by id. Each roster line carries `<-N`, its cited-by count (prefix citations excluded), so `search --in cases` *is* the orphan audit (`<-0`). Default limit 50.
 - **`--in` names.** Built-in collections, manifest names and stream names. An unknown name is a usage error (exit 2), never a silently empty result.
