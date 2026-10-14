@@ -453,3 +453,5 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - `src/verbs/log.rs` header `Cases:` line is missing LOG-STREAM-04/05, LOG-BODY-06 and LOG-WRITE-15.
 - Header first sentences over 100 chars: add a gate to tests/quality.rs and shorten the existing ones.
 - A README with no H1 and no prose has an empty one-liner, which text output prints as `(no README)`; that misreports a README that exists. Print nothing after the name instead.
+- Header: implement the design §2.1 additions (markup prologues `<?xml`, `<!DOCTYPE`, `<?php` skipped as pragmas; a license block ends at its first blank line), each with an HDR case.
+- Header 60-line index cut: lands with the search index (S3.3).

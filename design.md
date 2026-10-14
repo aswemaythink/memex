@@ -45,7 +45,7 @@ The comment syntax is chosen by extension from a built-in table. Files with unkn
 | `(* *)` | ml mli |
 | `"""` / `'''` module docstring | py (used if there is no leading `#` block) |
 
-- **Header rule.** After blank lines, a shebang, encoding/pragma lines (`# -*-`, `//go:build`, `"use client"`) and one leading license block (a block containing `SPDX-License-Identifier` or starting with `Copyright`), the next comment block is the header. It ends at the first line that is neither comment nor blank.
+- **Header rule.** After blank lines, a shebang, encoding/pragma lines (`# -*-`, `//go:build`, `"use client"`, and markup prologues `<?xml …?>`, `<!DOCTYPE …>`, `<?php`) and one leading license block (a block containing `SPDX-License-Identifier` or starting with `Copyright`); a license block ends at its first blank line, so a header must be separated from it by one, the next comment block is the header. It ends at the first line that is neither comment nor blank.
 - **Limits.** The index keeps the first 60 lines; `show` prints the whole block. A file with no header shows as `(no header)` in listings. That gap is itself a signal.
 - **Files read.** Only the first 8 KiB of each file is read. Binary files are skipped.
 
