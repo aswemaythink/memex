@@ -1,7 +1,8 @@
 //! Entry point of the stress suite: opt-in tests of the built memex, run with `--ignored`.
 //!
-//! The modules are `scale` (large intent layers), `concurrency` (many writers on one store), `fuzz` (hostile input) and
-//! `budget` (timing budgets on a real repository). Each family has its own module, and `support` is their shared code.
+//! The modules are `scale` (large intent layers), `concurrency` (many writers on one store), `fuzz` (hostile input),
+//! `names` (path names with control characters) and `budget` (timing budgets on a real repository). Each family has its
+//! own module, and `support` is their shared code.
 //! Cases: none (stress)
 
 #[allow(dead_code)]
@@ -10,6 +11,7 @@ mod support;
 mod budget;
 mod concurrency;
 mod fuzz;
+mod names;
 mod scale;
 
 use support::{cmd, output_text, run_stdin, Sandbox};

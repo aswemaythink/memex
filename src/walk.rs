@@ -1,4 +1,5 @@
 //! Walks the intent layer: the entries under the root that the ignore rules keep (design §4.1 item 2).
+//! A name that is not UTF-8, or that holds a control character, has no label, so the walk skips it (design §4.4).
 //! Cases: INT-IGNORE-01, INT-IGNORE-02, INT-IGNORE-03, INT-SKIP-01, INT-SKIP-02, INT-NAME-03, SHOW-FILE-01, SHOW-DIR-01, SHOW-ROOT-01, SHOW-IO-02
 
 use std::collections::BTreeMap;
@@ -32,8 +33,9 @@ struct Failure {
 }
 
 /// Every file and folder under `root` that the ignore rules keep, sorted by label. The walk honours `.gitignore` and
-/// `.ignore`, skips hidden entries, `node_modules` and `target` folders, symlinks and names that are not UTF-8, and does
-/// not list the root itself. A folder that cannot be listed gives no entries here; `walk_warned` says so.
+/// `.ignore`, skips hidden entries, `node_modules` and `target` folders, symlinks, and names that are not UTF-8 or hold
+/// a control character. It does not list the root itself. A folder that cannot be listed gives no entries here;
+/// `walk_warned` says so.
 pub fn walk(root: &Path) -> Vec<Entry> {
     walk_warned(root, &mut Vec::new(), &mut BTreeMap::new())
 }
@@ -133,17 +135,25 @@ fn named_failure(error: &ignore::Error) -> Option<(&Path, &io::Error)> {
     }
 }
 
-/// The `/`-separated text of a root-relative path: `""` for the root, None when a part is not UTF-8 or the path climbs out.
+/// The `/`-separated text of a root-relative path: `""` for the root, None when a part is not UTF-8 or holds a control
+/// character, or when the path climbs out.
 pub fn rel_string(rel: &Path) -> Option<String> {
     let mut parts = Vec::new();
     for component in rel.components() {
         match component {
-            Component::Normal(part) => parts.push(part.to_str()?),
+            Component::Normal(part) => parts.push(label_part(part.to_str()?)?),
             Component::CurDir => {}
             _ => return None,
         }
     }
     Some(parts.join("/"))
+}
+
+/// The text of one part of a label, or None when it holds a control character: U+0000–U+001F or U+007F (design §4.4).
+/// `is_ascii_control` is exactly that set, and none of its bytes occurs inside a longer UTF-8 character, so a byte scan
+/// decides it.
+fn label_part(part: &str) -> Option<&str> {
+    (!part.bytes().any(|byte| byte.is_ascii_control())).then_some(part)
 }
 
 /// True for a folder below the root that the walk must not enter: `node_modules` or `target`.
@@ -180,6 +190,25 @@ mod tests {
     fn a_path_with_a_part_that_is_not_utf8_has_no_label() {
         assert_eq!(rel_string(Path::new("a/b.md")).as_deref(), Some("a/b.md"));
         assert_eq!(rel_string(&not_utf8()), None);
+    }
+
+    /// A part with a control character has no label: U+0000–U+001F and U+007F (design §4.4). Space and `~` are not control
+    /// characters, and U+0080 is outside that set, so those parts keep their labels.
+    #[test]
+    fn a_path_with_a_control_character_has_no_label() {
+        assert_eq!(
+            rel_string(Path::new("a/b c~.md")).as_deref(),
+            Some("a/b c~.md")
+        );
+        assert_eq!(
+            rel_string(Path::new("a/\u{80}.md")).as_deref(),
+            Some("a/\u{80}.md")
+        );
+        assert_eq!(rel_string(Path::new("a/nul\u{0}.md")), None);
+        assert_eq!(rel_string(Path::new("a/unit\u{1f}.md")), None);
+        assert_eq!(rel_string(Path::new("a/del\u{7f}.md")), None);
+        assert_eq!(rel_string(Path::new("a\nb.rs")), None);
+        assert_eq!(rel_string(Path::new("tab\there/README.md")), None);
     }
 
     /// A folder that cannot be listed is one warning, and the files beside it are still walked (design §4.2). The folder is
