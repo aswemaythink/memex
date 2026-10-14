@@ -118,3 +118,17 @@
   Scenario: AGENTS.md is a symlink to `outside/shared.md`, a file outside the repo, made by a git patch as LOG-PRUNE-14 does; the snapshot of `repo` shows the link as `(symlink)` and the file it names is unchanged. design §3.5b item 2 (never writes through a symlinked AGENTS.md or CLAUDE.md: it warns and leaves them alone).
 - `INIT-LINK-02` A symlink named CLAUDE.md is never written through: init warns that it is a symlink, reports it `kept`, and leaves the file it names unchanged, while AGENTS.md is created as usual, exit 0, unix only.
   Scenario: CLAUDE.md is a symlink to `outside/shared.md`, and AGENTS.md is missing; the snapshot of `repo` lists the link as `(symlink)` next to the new block. design §3.5b item 2.
+
+## NEST
+
+- `INIT-NEST-01` Outside git, init run from `repo/outer/inner` targets `repo/outer`, the nearest folder above it with a `.memex/`: its `.memex/` files are reported `kept`, AGENTS.md is created there, and nothing is created in `inner`, exit 0.
+  Scenario: `repo/outer/.memex/` is complete and `repo/outer/inner/` holds one file, with no git repo above the sandbox; the snapshot shows `inner` as it was and the store unchanged. design §3.5b (outside git, the root that discovery finds from the cwd, so init never shadows a store above it) and §4.1 item 1.
+- `INIT-NEST-02` Inside git, init run from a subfolder writes into the git toplevel even when a `.memex/` sits above the repo, so the store above is left as it is, exit 0.
+  Scenario: the sandbox root holds `.memex/config.json` above the git repo `repo/`, and the cwd is `repo/sub`; `repo/sub/.memex` stays missing, `repo/.memex/` is created, and the store above is unchanged. design §3.5b (inside git, the toplevel).
+
+## PASTE
+
+- `INIT-PASTE-01` When AGENTS.md has no markers but holds the snippet's heading line outside a fence, init leaves the file byte-identical, reports `kept AGENTS.md`, prints the paste warning on stderr, and exits 0.
+  Scenario: AGENTS.md holds a title and then the whole snippet pasted by hand, with no markers; the snapshot shows the file unchanged. design §3.5b item 2 (the warning's exact text). The `kept` report follows the damaged-marker rule, since nothing changed.
+- `INIT-PASTE-02` A heading line that sits only inside a fenced code block is not a paste: init appends the marked block at the end as usual, reports `updated AGENTS.md`, and prints no warning, exit 0.
+  Scenario: AGENTS.md holds a fenced `md` example that contains the heading line, and no markers; the snapshot shows the example unchanged and the block at the end. design §2.3 (a fence hides its lines) and §3.5b item 2 (the heading counts only outside fenced code).

@@ -1,5 +1,5 @@
 //! Writes the AGENTS.md block and the CLAUDE.md import (design §3.5b item 2).
-//! Cases: INIT-AGENTS-01, INIT-AGENTS-02, INIT-AGENTS-03, INIT-AGENTS-04, INIT-AGENTS-05, INIT-CLAUDE-01, INIT-CLAUDE-02, INIT-CLAUDE-03, INIT-DAMAGE-01, INIT-DAMAGE-02, INIT-DAMAGE-03, INIT-LINK-01, INIT-LINK-02, INIT-FENCE-01, INIT-FENCE-02, INIT-FENCE-03, INIT-FENCE-04, INIT-FENCE-05, INIT-FENCE-06
+//! Cases: INIT-AGENTS-01, INIT-AGENTS-02, INIT-AGENTS-03, INIT-AGENTS-04, INIT-AGENTS-05, INIT-CLAUDE-01, INIT-CLAUDE-02, INIT-CLAUDE-03, INIT-DAMAGE-01, INIT-DAMAGE-02, INIT-DAMAGE-03, INIT-LINK-01, INIT-LINK-02, INIT-FENCE-01, INIT-FENCE-02, INIT-FENCE-03, INIT-FENCE-04, INIT-FENCE-05, INIT-FENCE-06, INIT-PASTE-01, INIT-PASTE-02
 
 use std::path::Path;
 
@@ -7,6 +7,7 @@ use super::files::{create_new, is_link, label, lists, read_text, replace};
 use super::{Action, Report};
 use crate::error::Error;
 use crate::fence::{self, Outside};
+use crate::text::{eol_of, split_bom, trim_eol};
 
 /// The marker line that opens the block.
 const BEGIN: &str = "<!-- memex:begin -->";
@@ -24,6 +25,11 @@ const UNCLOSED: &str =
 /// The warning for CLAUDE.md whose last code fence is never closed: an import appended now would land inside that fence.
 const UNCLOSED_IMPORT: &str =
     "CLAUDE.md: a code fence is never closed, so the import would land inside it; close the fence by hand";
+/// The heading that opens the snippet. Outside a fence, it marks a copy pasted by hand (design §3.5b item 2).
+const HEADING: &str = "## memex: read intent before code";
+/// The warning for AGENTS.md that holds the snippet's heading without markers: a block appended now would be a second copy.
+const PASTED: &str =
+    "AGENTS.md already has the memex snippet without markers; wrap it in <!-- memex:begin --> / <!-- memex:end --> to let init manage it";
 
 /// What the text of AGENTS.md calls for.
 #[derive(Debug, PartialEq, Eq)]
@@ -38,7 +44,7 @@ enum Merge {
 
 /// Puts the block into AGENTS.md (design §3.5b item 2): created when the file is missing, appended when it has no markers, and
 /// replaced between the markers when it has them. A symlink is left alone with a warning, and so is a file whose markers are
-/// damaged or whose last code fence is never closed.
+/// damaged, whose last code fence is never closed, or that holds the snippet's heading without markers (a hand-pasted copy).
 pub fn agents_md(target: &Path, report: &mut Report) -> Result<(), Error> {
     let path = target.join("AGENTS.md");
     let name = label(target, &path);
@@ -109,6 +115,7 @@ fn merge(text: &str) -> Merge {
     let ends = marker_lines(&lines, &fence, END);
     match (begins.as_slice(), ends.as_slice()) {
         ([], []) if fence.open_at_end => Merge::Refused(UNCLOSED),
+        ([], []) if has_heading(&lines, &fence) => Merge::Refused(PASTED),
         ([], []) => Merge::Changed(format!("{bom}{}", append_block(body, eol))),
         ([begin], [end]) if begin < end => replace_block(bom, &lines, (*begin, *end), eol),
         _ => Merge::Refused(DAMAGED),
@@ -202,34 +209,20 @@ fn ends_in_fence(text: &str) -> bool {
     lines_of(split_bom(text).1).1.open_at_end
 }
 
+/// True when some line outside a fence is the snippet's heading, once its trailing whitespace is trimmed (design §3.5b item 2).
+fn has_heading(lines: &[&str], fence: &Outside) -> bool {
+    lines
+        .iter()
+        .zip(&fence.live)
+        .any(|(line, &live)| live && line.trim_end() == HEADING)
+}
+
 /// True when both paths name one file once symlinks are followed. A path that does not resolve is never the same file.
 fn same_file(left: &Path, right: &Path) -> bool {
     match (dunce::canonicalize(left), dunce::canonicalize(right)) {
         (Ok(left), Ok(right)) => left == right,
         _ => false,
     }
-}
-
-/// The text split into its leading byte order mark, which is kept as it is, and the rest.
-fn split_bom(text: &str) -> (&str, &str) {
-    match text.strip_prefix('\u{feff}') {
-        Some(rest) => ("\u{feff}", rest),
-        None => ("", text),
-    }
-}
-
-/// The line ending the text uses: CRLF when it has one, else LF, so that a block written into it matches the file.
-fn eol_of(text: &str) -> &'static str {
-    if text.contains("\r\n") {
-        "\r\n"
-    } else {
-        "\n"
-    }
-}
-
-/// The line without its line ending.
-fn trim_eol(line: &str) -> &str {
-    line.trim_end_matches(['\r', '\n'])
 }
 
 #[cfg(test)]
@@ -316,6 +309,32 @@ mod tests {
         assert_eq!(with_import("# A\n"), "# A\n@AGENTS.md\n");
         assert!(imports("x\n@AGENTS.md\r\n"));
         assert!(!imports("x\n @AGENTS.md\n"));
+    }
+
+    #[test]
+    fn the_heading_is_the_first_line_of_the_snippet() {
+        assert_eq!(SNIPPET.lines().next(), Some(HEADING));
+    }
+
+    #[test]
+    fn a_pasted_snippet_without_markers_is_left_alone() {
+        let text = format!("# Notes\n\n{HEADING}\nold copy\n");
+        assert_eq!(merge(&text), Merge::Refused(PASTED));
+        assert_eq!(
+            merge(&format!("{HEADING}  \r\nx\r\n")),
+            Merge::Refused(PASTED)
+        );
+    }
+
+    #[test]
+    fn a_heading_in_a_fence_or_indented_is_not_a_paste() {
+        let fenced = format!("# Notes\n```md\n{HEADING}\n```\n");
+        let indented = format!("# Notes\n  {HEADING}\n");
+        assert_eq!(
+            merge(&fenced),
+            Merge::Changed(format!("{fenced}\n{}", marked("\n")))
+        );
+        assert!(matches!(merge(&indented), Merge::Changed(_)));
     }
 
     #[test]

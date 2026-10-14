@@ -1,0 +1,27 @@
+$ memex init
+exit 0
+stdout
+| created .memex/.gitignore
+| created .memex/config.json
+| created .memex/collections/.gitkeep
+| kept AGENTS.md
+| 
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent  0 readmes · 0 headers · 0 cases
+| use     memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr
+| memex: warning: AGENTS.md already has the memex snippet without markers; wrap it in <!-- memex:begin --> / <!-- memex:end --> to let init manage it
+== snapshot repo/AGENTS.md
+-- AGENTS.md
+| # Agent notes
+| 
+| ## memex: read intent before code
+| This repo keeps an intent layer: README.md per folder, a header comment atop each file
+| (first line = purpose), and CASES.md listing test ids with their claims (ids appear in test names).
+| - Overview: `memex info`: where everything is (collections, streams, what's new, messages for you).
+| - Orient: `memex show <path>`: header, cited cases, who cites it, README chain; folders list children.
+| - Find: `memex search <words>` over READMEs, headers, cases, collections and logs. Use `rg` for symbols.
+| - Tests for X: `memex show <file>` lists cited case ids; `memex show <ID>` gives claim and evidence.
+| - Findings: `memex log <stream> [--to <agent>] <<'EOF' … EOF` prints a ref. Hand back the ref, not the report.
+| - Messages to you: `memex search to:<your-id>`.
+| - When you change code, update its header/README in the same change and cite the case ids it relies on.

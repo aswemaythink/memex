@@ -1,6 +1,7 @@
 //! Reads text for every reader (design §4.4): a BOM is dropped and CRLF line ends read as LF.
 //! Bytes that are not UTF-8 are decoded lossily. `line_of` gives a line of split text without its line end, for the frontmatter splitters in `logs` and `collections`.
-//! Cases: HDR-BOM-01, HDR-BOM-02, HDR-CRLF-01, LOG-BODY-06, LOG-FRONT-01, LOG-FRONT-12, PORT-CRLF-01, PORT-CRLF-02, PORT-CRLF-03, PORT-CRLF-04, PORT-CRLF-05, PORT-CRLF-06, PORT-BOM-01, PORT-BOM-02, PORT-DECODE-01, PORT-DECODE-02
+//! `split_bom`, `eol_of` and `trim_eol` let init edit AGENTS.md and CLAUDE.md in place, keeping the file's own byte order mark and line ends.
+//! Cases: HDR-BOM-01, HDR-BOM-02, HDR-CRLF-01, LOG-BODY-06, LOG-FRONT-01, LOG-FRONT-12, PORT-CRLF-01, PORT-CRLF-02, PORT-CRLF-03, PORT-CRLF-04, PORT-CRLF-05, PORT-CRLF-06, PORT-BOM-01, PORT-BOM-02, PORT-DECODE-01, PORT-DECODE-02, INIT-AGENTS-05
 
 use std::fs;
 use std::io;
@@ -24,6 +25,28 @@ pub fn read(path: &Path) -> io::Result<String> {
 pub fn line_of(piece: &str) -> &str {
     let line = piece.strip_suffix('\n').unwrap_or(piece);
     line.strip_suffix('\r').unwrap_or(line)
+}
+
+/// The text split into its leading byte order mark, which is kept as it is, and the rest.
+pub fn split_bom(text: &str) -> (&str, &str) {
+    match text.strip_prefix('\u{feff}') {
+        Some(rest) => ("\u{feff}", rest),
+        None => ("", text),
+    }
+}
+
+/// The line ending the text uses: CRLF when it has one, else LF, so that a block written into it matches the file.
+pub fn eol_of(text: &str) -> &'static str {
+    if text.contains("\r\n") {
+        "\r\n"
+    } else {
+        "\n"
+    }
+}
+
+/// The line without its line ending.
+pub fn trim_eol(line: &str) -> &str {
+    line.trim_end_matches(['\r', '\n'])
 }
 
 #[cfg(test)]
