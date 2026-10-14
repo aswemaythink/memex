@@ -8,4 +8,5 @@ stderr (empty)
 $ memex search 'タワー'
 exit 0
 stdout (empty)
-stderr (empty)
+stderr
+| memex: no hits for タワー; try fewer or other words, or memex info

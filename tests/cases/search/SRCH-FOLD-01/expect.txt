@@ -1,0 +1,19 @@
+$ memex search 'tag:CAFÉ'
+exit 0
+stdout
+| logs  (showing 1 of 1)
+|   impl:20261013-110000-cafe-entry  1h · cook-1  Cafe entry
+stderr (empty)
+
+$ memex search 'tag:café'
+exit 0
+stdout
+| logs  (showing 1 of 1)
+|   impl:20261013-110000-cafe-entry  1h · cook-1  Cafe entry
+stderr (empty)
+
+$ memex search tag:CAFE
+exit 0
+stdout (empty)
+stderr
+| memex: no docs match tag:CAFE; …

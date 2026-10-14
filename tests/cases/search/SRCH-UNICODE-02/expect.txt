@@ -8,12 +8,14 @@ stderr (empty)
 $ memex search cafe
 exit 0
 stdout (empty)
-stderr (empty)
+stderr
+| memex: no hits for cafe; try fewer or other words, or memex info
 
 $ memex search 'cafè'
 exit 0
 stdout (empty)
-stderr (empty)
+stderr
+| memex: no hits for cafè; try fewer or other words, or memex info
 
 $ memex search caf
 exit 0

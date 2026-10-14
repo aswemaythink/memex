@@ -187,4 +187,9 @@
   design §3.2 Zero hits (with filters only). The design writes the tail as `…`, and that is printed as it stands. Fixture: a README. Run: memex search tag:nope, then memex search --in readmes agent:cook-2.
 - `SRCH-NOHITS-03` With `--json`, a query with no hits keeps stdout one valid document with an empty groups list, and stderr carries the hint of SRCH-NOHITS-01 for words or of SRCH-NOHITS-02 for filters, exit 0.
   design §3.2 Zero hits and §3.6 (the search document). Fixture: a README. Run: memex search Zzqq --json, then memex search tag:nope --json.
+
+## FOLD
+
+- `SRCH-FOLD-01` A filter value is compared as Unicode lowercasing gives it, so `tag:CAFÉ` and `tag:café` both find the log tagged `café`, while `tag:CAFE` finds nothing, since `é` is not `e`.
+  design §3.2 Filters (`field:value` is exact and case-insensitive). Fixture: one log entry in stream `impl`, tagged `café`. Run: memex search tag:CAFÉ, then memex search tag:café, then memex search tag:CAFE.
 >

@@ -1,5 +1,5 @@
 //! Reads and matches a search's filters, and checks its `--in` names (design §3.2).
-//! Cases: SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-07, SRCH-FILTER-08, SRCH-IN-03, SRCH-IN-04, SRCH-IN-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-JSON-03, CLI-HINT-03, CLI-HINT-04
+//! Cases: SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-07, SRCH-FILTER-08, SRCH-IN-03, SRCH-IN-04, SRCH-IN-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-JSON-03, CLI-HINT-03, CLI-HINT-04, SRCH-FOLD-01
 
 use std::collections::BTreeSet;
 
@@ -27,6 +27,8 @@ pub enum Filter {
         field: String,
         /// The value as the query spells it.
         value: String,
+        /// The value lowercased as `str::to_lowercase` gives it, which a doc's item must lowercase to (design §3.2).
+        folded: String,
     },
     /// `since:value`: a doc whose `time` is at or after the bound.
     Since {
@@ -58,7 +60,12 @@ impl Filter {
     /// True when the doc passes this filter, with `now` as the instant that `since:` is measured from.
     pub fn matches(&self, doc: &Doc, now: Timestamp) -> bool {
         match self {
-            Filter::Field { name, field, value } => holds(doc, name, field, value),
+            Filter::Field {
+                name,
+                field,
+                folded,
+                ..
+            } => holds(doc, name, field, folded),
             Filter::Since { bound, .. } => time_of(doc).is_some_and(|at| bound.keeps(at, now)),
         }
     }
@@ -203,6 +210,7 @@ fn filter_of(name: &str, value: &str) -> Result<Filter, Error> {
         name: name.to_string(),
         field: field.to_string(),
         value: value.to_string(),
+        folded: value.to_lowercase(),
     })
 }
 
@@ -236,10 +244,10 @@ fn date_of(text: &str) -> Option<Timestamp> {
     ))
 }
 
-/// True when the doc holds the field, and one of its items (its text, or an item of its list) matches the filter's value.
-fn holds(doc: &Doc, name: &str, field: &str, value: &str) -> bool {
+/// True when the doc holds the field, and one of its items (its text, or an item of its list) matches the filter's folded value.
+fn holds(doc: &Doc, name: &str, field: &str, folded: &str) -> bool {
     doc.fields.iter().any(|(key, found)| {
-        key.eq_ignore_ascii_case(field) && items(found).iter().any(|item| same(name, item, value))
+        key.eq_ignore_ascii_case(field) && items(found).iter().any(|item| same(name, item, folded))
     })
 }
 
@@ -251,14 +259,24 @@ fn items(found: &Value) -> Vec<&str> {
     }
 }
 
-/// True when an item matches a filter's value, ignoring ASCII case. A `worktree` value with no `/` matches the basename of the
+/// True when an item matches a filter's folded value (design §3.2). A `worktree` value with no `/` matches the basename of the
 /// item, and every other value matches the whole item.
-fn same(name: &str, item: &str, value: &str) -> bool {
-    if name.eq_ignore_ascii_case("worktree") && !value.contains('/') {
+fn same(name: &str, item: &str, folded: &str) -> bool {
+    if name.eq_ignore_ascii_case("worktree") && !folded.contains('/') {
         let basename = item.rsplit('/').next().unwrap_or(item);
-        return basename.eq_ignore_ascii_case(value);
+        return same_text(basename, folded);
     }
-    item.eq_ignore_ascii_case(value)
+    same_text(item, folded)
+}
+
+/// True when an item, lowercased as `str::to_lowercase` gives it, equals a folded value. An ASCII item lowercases to ASCII, so it
+/// cannot equal a folded value that is not ASCII. ASCII pairs compare in place, so only a non-ASCII item allocates.
+fn same_text(item: &str, folded: &str) -> bool {
+    match (item.is_ascii(), folded.is_ascii()) {
+        (true, true) => item.eq_ignore_ascii_case(folded),
+        (true, false) => false,
+        (false, _) => item.to_lowercase() == folded,
+    }
 }
 
 #[cfg(test)]
@@ -296,5 +314,16 @@ mod tests {
         assert!(same("worktree", "/work/wt-cook-2", "wt-cook-2"));
         assert!(same("worktree", "/work/wt-cook-2", "/work/wt-cook-2"));
         assert!(!same("worktree", "/work/wt-cook-2", "/wt-cook-2"));
+    }
+
+    #[test]
+    fn values_match_as_unicode_lowercasing_gives_them() {
+        let fold = |value: &str| value.to_lowercase();
+        assert!(same("tag", "café", &fold("CAFÉ")));
+        assert!(!same("tag", "cafe", &fold("CAFÉ")));
+        // Kelvin sign lowercases to an ASCII k, and a final sigma lowercases to ς at the end of a word.
+        assert!(same("tag", "k", &fold("\u{212a}")));
+        assert!(same("tag", "οδος", &fold("ΟΔΟΣ")));
+        assert!(same("worktree", "/work/Café", &fold("café")));
     }
 }

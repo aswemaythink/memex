@@ -15,4 +15,5 @@ stderr (empty)
 $ memex search STRASSE
 exit 0
 stdout (empty)
-stderr (empty)
+stderr
+| memex: no hits for STRASSE; try fewer or other words, or memex info
