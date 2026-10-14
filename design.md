@@ -100,7 +100,7 @@ memex init
 memex --help | --version
 ```
 
-- **Flags.** `--help` works after any verb, and `--` ends flag parsing. Unknown, repeated or misplaced flags are errors and are never swallowed. A flag that would have no effect is an error, judged on the verb's grammar, not on what the refs resolve to. `--json` anywhere before `--` makes usage errors JSON.
+- **Flags.** `--help` works after any verb and short-circuits: the arguments after it are not checked. `--` ends flag parsing. Unknown, repeated or misplaced flags are errors and are never swallowed. A flag that would have no effect is an error, judged on the verb's grammar, not on what the refs resolve to. `--json` anywhere before `--` makes usage errors JSON.
 - **Bare `memex`.** Prints usage on stderr and exits 2.
 
 ### 3.1 Refs and labels
@@ -170,7 +170,7 @@ Where things are, never their contents. It prints no log bodies or titles, only 
 ```
 memex  /repo · log store .memex/logs/
 intent       48 readmes · 912 headers · 214 cases
-collections  doom 41 · perf 212 · neo-cases 294
+collections  doom 41 · neo-cases 294 · perf 212
 streams      impl 12 (3 new in 24h) · review 3 (1 new) · drift 5
 to cook-2    2 messages → memex search to:cook-2
 here         crates/namer — Namer: turns atoms into stable class names
@@ -178,7 +178,7 @@ use          memex show <path|ref> · memex search <words> · memex log <stream>
 ```
 
 - **Header.** The root, then the log store: root-relative when the store is inside the root, else absolute.
-- **Collections.** Name and doc count; `--json` adds kind, description and owner. Invalid manifests and duplicate case ids are listed as warnings.
+- **Collections.** Name and doc count, alphabetical; `--json` adds kind, description and owner. Invalid manifests and duplicate case ids are listed as warnings.
 - **Streams.** Total entries and how many are new in the last 24 hours, ordered by most recent activity.
 - **`to` line.** A count only: every entry in the store addressed to the id. Shown when an agent id is known (`--agent`, `$MEMEX_AGENT`).
 - **`here` line.** Shown only when the cwd is not the root: the nearest README's one-liner.
@@ -192,11 +192,11 @@ The one-step setup, idempotent. Inside git it targets the toplevel; outside git,
    .memex/
      .gitignore          # logs/ and cache/, ignored by default
      config.json         # {"keep_logs": "3d"}
-     collections/        # manifests go here (empty)
+     collections/        # manifests go here (empty but for a .gitkeep, so git keeps it)
    ```
 2. Writes the AGENTS.md snippet (§6) into `AGENTS.md` between `<!-- memex:begin -->` / `<!-- memex:end -->` markers, creating the file if missing and replacing the block on re-run. If `CLAUDE.md` exists without `@AGENTS.md`, it appends `@AGENTS.md` as a final line. CLAUDE.md is never created. Markers and the `@AGENTS.md` line count only outside fenced code blocks. memex never writes through a symlinked `AGENTS.md` or `CLAUDE.md`: it warns and leaves them alone.
 3. If no `memex` executable is on PATH (e.g. run via `npx`; PATH entries inside a `node_modules/.bin` folder are ignored, since that is npx's temporary shim, while a global npm install counts, and on Windows `memex.exe` or `memex.cmd` count), copies its own binary to `~/.local/bin` (`%LOCALAPPDATA%\Programs\memex` on Windows) and prints the plain line `add to PATH: <dir>` if that folder isn't on PATH. The install dir comes from the `$HOME` / `%LOCALAPPDATA%` env vars, not the known-folder API, so tests can redirect it. An installed binary is replaced only if its bytes differ.
-4. Prints `memex info`.
+4. Prints `memex info` for the target, without an agent id (init has no `--agent`, so its output depends only on the repo).
 
 Reads work without `init` (the intent layer needs zero config); `log` needs a `.memex/`.
 
@@ -214,8 +214,8 @@ With `--json`, stdout is always one JSON document, including errors. Without it,
   - 0: ok, including zero hits.
   - 1: not found or ambiguous.
   - 2: usage error.
-  - 3: environment error: no `.memex/` for `log` (§4.1), store not writable, or I/O failure.
-- **Determinism.** Output is sorted (ties broken by ref). `$MEMEX_NOW` is RFC 3339 UTC with `Z`, and it replaces the clock everywhere: log time, prune, `since:`, ages and `new_24h`. An invalid value exits 3. That lets fixtures compare stdout byte for byte.
+  - 3: environment error: no `.memex/` for `log` (§4.1), store not writable, or an I/O failure that stops the verb. A `show` ref that fails on I/O is that ref's error and exits 1 (§3.3).
+- **Determinism.** Lists are sorted (ties broken by ref) unless a rule gives another order: cites and evidence keep the order they are written in. `$MEMEX_NOW` is RFC 3339 UTC with `Z`, and it replaces the clock everywhere: log time, prune, `since:`, ages and `new_24h`. An invalid value exits 3. That lets fixtures compare stdout byte for byte.
 - **Ages.** Ages print as `Nm` below 60 minutes (`<60m`), `Nh` below 48 hours (`<48h`), else `Nd`.
 
 ## 4. Storage
@@ -266,7 +266,7 @@ With `--json`, stdout is always one JSON document, including errors. Without it,
 
 ### 4.3 Log files
 
-Each entry is one file, `<store>/<stream>/<YYYYMMDD-HHMMSS>-<slug>.md` in UTC, and the id is the filename without `.md`. The slug is derived from the title (§3.4). memex writes the frontmatter. The body is stored verbatim, after any frontmatter the agent supplied.
+Each entry is one file, `<store>/<stream>/<YYYYMMDD-HHMMSS>-<slug>.md` in UTC, and the id is the filename without `.md`. The slug is derived from the title (§3.4). memex writes the frontmatter. The body is stored as given, after any frontmatter the agent supplied, normalised only as §4.4 Text says (no BOM, LF line endings).
 
 ```markdown
 ---
@@ -298,7 +298,7 @@ One codebase for Linux, macOS and Windows, using only cross-platform APIs. No ma
 - **Paths.** Labels and JSON always use `/`. Canonicalise with `dunce` (no `\\?\` prefixes). Compare paths case-sensitively in labels, since filesystem case behaviour varies.
 - **Filenames.** Log names have no colons. Slugs are `[a-z0-9-]`, max 60 chars. Windows reserved names are moot for entry files, because the timestamp prefix comes first; stream folders refuse them (§3.4).
 - **Name matching.** Special names (`README.md`, `CASES.md`, manifest files, `.memex` and everything memex reads inside it: `config.json`, `collections/`, `logs/`) are matched against directory listings, exactly. memex never decides by `exists()`, so case-insensitive filesystems behave like Linux.
-- **Text.** Accept `\r\n` everywhere (headers, CASES.md, frontmatter, log bodies). A leading UTF-8 BOM is dropped on read, so frontmatter still parses from shells that add one. Write `\n`, without a BOM.
+- **Text.** Accept `\r\n` everywhere (headers, CASES.md, frontmatter, log bodies). A leading UTF-8 BOM is dropped on read, so frontmatter still parses from shells that add one. Write `\n`, without a BOM. The exception is a user file memex edits in place (`AGENTS.md`, `CLAUDE.md`): it keeps that file's line endings.
 - **Encoding.** Non-UTF-8 file content is decoded lossily; non-UTF-8 path names are skipped.
 - **Errors.** Never print raw OS error strings. Print memex's message, the `io::ErrorKind` name and the path, so fixtures are identical across OSes.
 - **git.** Subprocess `git rev-parse`, no git library. If git is missing, treat the repo as non-git.
