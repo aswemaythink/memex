@@ -452,3 +452,4 @@ Open:
 - info reads manifests a second time for counts and JSON warnings: use the corpus (corpus.rs is now 338 lines).
 - Out-of-root `show` sections print `(none)` for cites and cited by; needs absolute refs decided first.
 - Perf leftovers from the S3.3 refiner: `tokenize::tokens` allocates a String per token (about 14ms); `Git::probe` runs `git rev-parse` twice (about 15ms). S5.3 decides.
+- init PATH check: implement the design §3.5b ruling (ignore `*/node_modules/.bin`; on Windows count `memex.exe` or `memex.cmd`), with INIT cases. Batch it with the S5.2 fixes.
