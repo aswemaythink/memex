@@ -1,0 +1,28 @@
+$ memex show src
+exit 0
+stdout
+| === src ===
+| # src
+| 
+| The source of the demo.
+| 
+| children
+|   README.md  The source of the demo.
+|   cli.rs  Parses the demo arguments.
+|   deep/  (no README)
+|   empty.rs  (no header)
+|   showing 4 of 4 (--limit 4 for all)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)

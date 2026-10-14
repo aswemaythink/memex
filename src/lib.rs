@@ -1,17 +1,24 @@
 //! memex library: the module map for the intent-layer CLI, and the run function that main.rs calls.
 //! Modules are listed in PLAN.md §4 and added slice by slice.
-//! Cases: CLI-*, LOG-WRITE-*
+//! Cases: CLI-*, LOG-WRITE-*, SHOW-*
 
+pub mod cite;
 pub mod cli;
 mod clock;
+pub mod collections;
 mod config;
+mod corpus;
 pub mod error;
 mod grammar;
 pub mod help;
+mod intent;
 mod logs;
+mod render;
+mod resolve;
 mod root;
 mod scan;
 mod verbs;
+mod walk;
 
 use std::ffi::OsString;
 use std::io::{self, Write};
@@ -31,13 +38,26 @@ pub fn run(args: Vec<OsString>) -> i32 {
     }
 }
 
-/// Carries out a parsed command. Help, version and log do their work; the other verbs are not built yet.
+/// Carries out a parsed command. Help, version, log and show do their work; the other verbs are not built yet.
 fn dispatch(command: Command) -> i32 {
     match command {
         Command::Help(verb) => print_out(&help::text(verb)),
         Command::Version => print_out(&format!("memex {}\n", env!("CARGO_PKG_VERSION"))),
         Command::Search { .. } => not_implemented(Verb::Search),
-        Command::Show { .. } => not_implemented(Verb::Show),
+        Command::Show {
+            refs,
+            up,
+            limit,
+            json,
+        } => {
+            let request = verbs::show::Request {
+                refs,
+                up,
+                limit,
+                json,
+            };
+            finish_show(verbs::show::run(&request), json)
+        }
         Command::Log {
             stream,
             to,
@@ -63,6 +83,23 @@ fn dispatch(command: Command) -> i32 {
 fn finish(result: Result<String, Error>, json: bool) -> i32 {
     match result {
         Ok(text) => print_out(&text),
+        Err(error) => error::report(&error, json),
+    }
+}
+
+/// Prints a `show` report: its stdout, then its stderr. The exit status is 1 when a ref failed, and a fatal error is
+/// reported the usual way.
+fn finish_show(result: Result<verbs::show::Report, Error>, json: bool) -> i32 {
+    match result {
+        Ok(report) => {
+            let code = print_out(&report.stdout);
+            let _ = write!(io::stderr().lock(), "{}", report.stderr);
+            if code == 0 && report.failed {
+                1
+            } else {
+                code
+            }
+        }
         Err(error) => error::report(&error, json),
     }
 }

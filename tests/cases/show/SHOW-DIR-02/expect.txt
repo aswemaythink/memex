@@ -1,0 +1,23 @@
+$ memex show plain
+exit 0
+stdout
+| === plain ===
+| (no README)
+| 
+| children
+|   notes.md  (no header)
+|   showing 1 of 1 (--limit 1 for all)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)

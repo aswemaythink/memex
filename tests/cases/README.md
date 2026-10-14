@@ -90,6 +90,7 @@ When any rule fails, the case trials are not created, and only the failing rules
 ## Families
 
 - [cli](cli/README.md): `CLI-*`, design §3 and §3.6.
+- [show](show/README.md): `SHOW-*`, design §3.3 and §3.6.
 
 ## Choices where PLAN §2 is silent
 

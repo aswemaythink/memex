@@ -1,0 +1,5 @@
+$ memex show src/cli.rs --json
+exit 0
+stdout
+| {"docs":[{"chain":[{"path":"src/README.md","text":"# src\n\nThe source of the demo.\n"},{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"headers","fields":{},"id":"src/cli.rs","path":"src/cli.rs","ref":"src/cli.rs","text":"Parses the demo arguments.\nIt has two lines so that the body shows both.","title":"Parses the demo arguments."}],"errors":[]}
+stderr (empty)

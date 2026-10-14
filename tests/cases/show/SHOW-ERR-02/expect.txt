@@ -1,0 +1,7 @@
+$ memex show README.md  [cwd repo/src]
+exit 1
+stdout (empty)
+stderr
+| memex: ambiguous: README.md
+|   README.md
+|   src/README.md

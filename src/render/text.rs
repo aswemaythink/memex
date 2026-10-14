@@ -1,0 +1,179 @@
+//! Prints `show`'s sections and misses as text (design §3.3): each section under its `===` line, then its blocks in order, with a limits line after the children and cited-by lists.
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-MD-01, SHOW-MD-02, SHOW-LOG-01, SHOW-UP-01, SHOW-ROOT-01, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01
+
+use super::{Link, Listing, Miss, Ref, Section};
+use crate::cite::Cite;
+use crate::collections::frontmatter::Value;
+use crate::corpus::{Child, Kind};
+
+/// A one-liner is cut to this many characters, the ellipsis included (design §2).
+const CLIP: usize = 120;
+
+/// The text of several sections: each ends in a newline, and one blank line separates two sections.
+pub fn sections(sections: &[Section]) -> String {
+    let parts: Vec<String> = sections.iter().map(section).collect();
+    parts.join("\n")
+}
+
+/// The stderr text of the misses: `memex: <message>`, then one indented line per candidate.
+pub fn misses(misses: &[Miss]) -> String {
+    let mut out = String::new();
+    for miss in misses {
+        out.push_str(&format!("memex: {}\n", miss.message));
+        for candidate in &miss.candidates {
+            out.push_str(&format!("  {candidate}\n"));
+        }
+    }
+    out
+}
+
+/// One section: its `===` line, its body, then the blocks it has, in the order of design §3.3.
+fn section(section: &Section) -> String {
+    let mut out = format!("=== {} ===\n", section.label);
+    body(&mut out, section);
+    if let Some(fields) = &section.fields {
+        fields_block(&mut out, fields);
+    }
+    if let Some(children) = &section.children {
+        children_block(&mut out, children);
+    }
+    cites_block(&mut out, &section.cites);
+    cited_by_block(&mut out, &section.cited_by);
+    if let Some(chain) = &section.chain {
+        chain_block(&mut out, chain);
+    }
+    out
+}
+
+/// The body: the text in full, or the placeholder when there is no text.
+fn body(out: &mut String, section: &Section) {
+    match &section.text {
+        Some(text) => out.push_str(&with_newline(text)),
+        None => out.push_str(&format!("{}\n", section.missing)),
+    }
+}
+
+/// The fields block: `key: value` lines, with lists written `[a, b]`.
+fn fields_block(out: &mut String, fields: &[(String, Value)]) {
+    start(out, "fields");
+    if fields.is_empty() {
+        out.push_str("  (none)\n");
+    }
+    for (key, value) in fields {
+        out.push_str(&format!("  {key}: {}\n", value_text(value)));
+    }
+}
+
+/// The children block, one line per child, then the limits line.
+fn children_block(out: &mut String, children: &Listing<Child>) {
+    start(out, "children");
+    if children.total == 0 {
+        out.push_str("  (none)\n");
+    }
+    for child in &children.items {
+        out.push_str(&child_line(child));
+    }
+    limits(out, children.items.len(), children.total);
+}
+
+/// The cites block: one line per citation, or `(none)`.
+fn cites_block(out: &mut String, cites: &[Cite]) {
+    start(out, "cites");
+    if cites.is_empty() {
+        out.push_str("  (none)\n");
+    }
+    for cite in cites {
+        let flag = if cite.resolved { "" } else { "  (unresolved)" };
+        out.push_str(&format!(
+            "  {}{}{flag}\n",
+            cite.reference,
+            title_part(&cite.title)
+        ));
+    }
+}
+
+/// The cited-by block: one line per citing ref, then the limits line.
+fn cited_by_block(out: &mut String, cited: &Listing<Ref>) {
+    start(out, "cited by");
+    if cited.total == 0 {
+        out.push_str("  (none)\n");
+    }
+    for item in &cited.items {
+        let title = item.title.as_deref().unwrap_or("");
+        out.push_str(&format!("  {}{}\n", item.label, title_part(title)));
+    }
+    limits(out, cited.items.len(), cited.total);
+}
+
+/// The chain block: each README with its `---` line, nearest first, or `(none)`.
+fn chain_block(out: &mut String, chain: &[Link]) {
+    start(out, "chain");
+    if chain.is_empty() {
+        out.push_str("  (none)\n");
+    }
+    for link in chain {
+        out.push_str(&format!("--- {}\n", link.path));
+        out.push_str(&with_newline(&link.text));
+    }
+}
+
+/// The line of one child: its name, with `/` for a folder, then its one-liner or its placeholder.
+fn child_line(child: &Child) -> String {
+    let (name, placeholder) = match child.kind {
+        Kind::Dir => (format!("{}/", child.name), "(no README)"),
+        Kind::File => (child.name.clone(), "(no header)"),
+    };
+    let note = match &child.title {
+        Some(title) if !title.is_empty() => clip(title),
+        _ => placeholder.to_string(),
+    };
+    format!("  {name}  {note}\n")
+}
+
+/// The limits line of a list: how many rows it shows, and the total with the flag that shows them all.
+fn limits(out: &mut String, shown: usize, total: usize) {
+    out.push_str(&format!(
+        "  showing {shown} of {total} (--limit {total} for all)\n"
+    ));
+}
+
+/// A blank line and a block's heading, which sits alone on its line.
+fn start(out: &mut String, heading: &str) {
+    out.push_str(&format!("\n{heading}\n"));
+}
+
+/// Two spaces and a one-liner, clipped; nothing when there is no one-liner.
+fn title_part(title: &str) -> String {
+    if title.is_empty() {
+        String::new()
+    } else {
+        format!("  {}", clip(title))
+    }
+}
+
+/// A field value as text: a scalar as written, a list as `[a, b]`, with nested lines indented under their key.
+fn value_text(value: &Value) -> String {
+    match value {
+        Value::Str(text) => text.replace('\n', "\n    "),
+        Value::List(items) => format!("[{}]", items.join(", ")),
+    }
+}
+
+/// The text with a final newline: added when it is missing, and nothing added to an empty text.
+fn with_newline(text: &str) -> String {
+    if text.is_empty() || text.ends_with('\n') {
+        text.to_string()
+    } else {
+        format!("{text}\n")
+    }
+}
+
+/// A one-liner cut to `CLIP` characters: the first `CLIP - 1` and an ellipsis, when it is longer.
+fn clip(text: &str) -> String {
+    if text.chars().count() <= CLIP {
+        return text.to_string();
+    }
+    let mut cut: String = text.chars().take(CLIP - 1).collect();
+    cut.push('…');
+    cut
+}

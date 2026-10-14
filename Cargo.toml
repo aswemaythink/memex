@@ -31,6 +31,8 @@ path = "tests/quality.rs"
 
 [dependencies]
 dunce = "1.0.5"
+# Pinned: ignore 0.4.31 and later declare rust-version 1.88, above this crate's MSRV of 1.85.
+ignore = "=0.4.30"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 tempfile = "3.27.0"

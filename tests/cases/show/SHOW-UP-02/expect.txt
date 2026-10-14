@@ -1,0 +1,19 @@
+$ memex show src/deep/long.rs --up 1
+exit 0
+stdout
+| === src/deep/long.rs ===
+| This header sentence is deliberately long, so that the children list of its folder has to cut it short with an ellipsis, which is what this fixture is for.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| chain
+| --- src/README.md
+| # src
+| 
+| The source of the demo.
+stderr (empty)

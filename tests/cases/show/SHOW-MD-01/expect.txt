@@ -1,0 +1,21 @@
+$ memex show plain/notes.md
+exit 0
+stdout
+| === plain/notes.md ===
+| # Plain notes
+| 
+| A Markdown file that is not a README.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)

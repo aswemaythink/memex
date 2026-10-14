@@ -1,0 +1,19 @@
+$ memex show notes.txt
+exit 0
+stdout
+| === notes.txt ===
+| (no header)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)

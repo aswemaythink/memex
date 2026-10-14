@@ -10,5 +10,12 @@
 - `clock.rs`: `MEMEX_NOW` or the system clock, in UTC, and the RFC 3339 and log-stamp formats of design §3.6.
 - `root.rs`: where `log` writes (design §4.1): the nearest `.memex/`, the git toplevel and main checkout, and the store path, found through git subprocesses.
 - `config.rs`: `.memex/config.json` (design §4.1 item 4): the `keep_logs` value and its warning.
-- `logs/`: the log store: writing an entry and pruning old ones (design §3.4, §4.3).
-- `verbs/`: the verbs that run; `log.rs` is `memex log`.
+- `logs/`: the log store: writing an entry, pruning old ones and reading them as docs (design §3.4, §4.3).
+- `walk.rs`: the ignore walker over the root, with the skip list and `/` labels (design §4.1 item 2).
+- `corpus.rs`: the read model (design §3.1, §3.6): every walked file and folder, the docs, the label map and the folder index, and the root that `show` reads from.
+- `resolve.rs`: resolves a ref to a file, a folder or a doc (design §3.1, steps 1 to 3), or reports it not found or ambiguous.
+- `render.rs` and `render/`: the sections and misses that `show` prints, as text and as the `--json` document (design §3.3, §3.6).
+- `cite.rs`: citations and cited-by lists (design §2.3); a stub until S3.1.
+- `intent/`: the readers of headers, READMEs and CASES.md, and the one-liner rule they share (design §2).
+- `collections/`: manifests, their flat-YAML frontmatter, and the three kinds; the frontmatter is used now, the kinds are stubs until S2.4 and S2.5 (design §4.2).
+- `verbs/`: the verbs that run; `log.rs` is `memex log`, `show.rs` is `memex show`.

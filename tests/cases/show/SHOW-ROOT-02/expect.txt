@@ -1,0 +1,25 @@
+$ memex show .
+exit 0
+stdout
+| === . ===
+| # Demo
+| 
+| The demo repo for show.
+| 
+| children
+|   README.md  The demo repo for show.
+|   notes.txt  (no header)
+|   plain/  (no README)
+|   src/  The source of the demo.
+|   showing 4 of 4 (--limit 4 for all)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| chain
+|   (none)
+stderr (empty)
