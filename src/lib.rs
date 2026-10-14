@@ -5,7 +5,7 @@
 mod cite;
 pub mod cli;
 mod clock;
-pub mod collections;
+mod collections;
 mod config;
 mod corpus;
 pub mod error;

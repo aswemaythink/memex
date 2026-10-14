@@ -1,0 +1,5 @@
+$ memex show paths:notes/alpha.md paths:notes/deep/delta.md --json
+exit 0
+stdout
+| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"paths","fields":{"slug":"alpha-slug","title":"Alpha note"},"id":"notes/alpha.md","path":"notes/alpha.md","ref":"paths:notes/alpha.md","text":"Alpha body line.\n","title":"Alpha body line."},{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"paths","fields":{},"id":"notes/deep/delta.md","path":"notes/deep/delta.md","ref":"paths:notes/deep/delta.md","text":"Delta body line.\n","title":"Delta body line."}],"errors":[]}
+stderr (empty)

@@ -1,0 +1,16 @@
+$ memex show notes:alpha
+exit 0
+stdout
+| === notes:alpha ===
+| Alpha body line.
+| 
+| fields
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

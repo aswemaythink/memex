@@ -1,0 +1,6 @@
+$ memex show notes:alpha
+exit 1
+stdout (empty)
+stderr
+| memex: warning: $SANDBOX/repo/.memex/collections/notes.json: unknown key 'colour'
+| memex: not found: notes:alpha

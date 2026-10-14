@@ -1,9 +1,9 @@
-//! Loads the read model (design §3.1, §3.6): the walked files and their docs, and the folder index.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, INT-NAME-01, INT-NAME-02, INT-CHAIN-01
+//! Loads the read model (design §3.1 and §3.6): every walked file and folder, the docs of READMEs, headers, CASES.md, manifests and logs, the label map, and the folder index.
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, INT-NAME-01, INT-NAME-02, INT-CHAIN-01, MAN-LOAD-02
 
 use std::collections::BTreeMap;
 use std::fs::{self, File};
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -86,11 +86,13 @@ impl Corpus {
                 }
             }
         }
-        for found in manifest::load(root) {
-            for doc in manifest::docs(&found, root) {
+        let mut warnings = Vec::new();
+        for found in manifest::load(root, &mut warnings) {
+            for doc in manifest::docs(&found, root, &mut warnings) {
                 corpus.insert(doc);
             }
         }
+        warn(&warnings);
         if let Some(store) = store {
             for doc in load_logs(store)? {
                 corpus.insert(doc);
@@ -184,6 +186,15 @@ pub fn readme_label(dir: &str) -> String {
         "README.md".to_string()
     } else {
         format!("{dir}/README.md")
+    }
+}
+
+/// Prints each manifest warning on its own stderr line. The loader calls this once per run, and a failed write is ignored,
+/// as there is nowhere left to report it.
+fn warn(lines: &[String]) {
+    let mut stderr = io::stderr().lock();
+    for line in lines {
+        let _ = writeln!(stderr, "{line}");
     }
 }
 

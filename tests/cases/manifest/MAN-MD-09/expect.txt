@@ -1,0 +1,24 @@
+$ memex show sidecars:meta
+exit 0
+stdout
+| === sidecars:meta ===
+| 
+| fields
+|   done: false
+|   label: Meta label
+|   priority: 2
+|   status: draft
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)
+
+$ memex show sidecars:meta --json
+exit 0
+stdout
+| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"sidecars","fields":{"done":"false","label":"Meta label","priority":"2","status":"draft"},"id":"meta","path":"notes/meta.json","ref":"sidecars:meta","text":"","title":""}],"errors":[]}
+stderr (empty)

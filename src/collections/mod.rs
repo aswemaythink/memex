@@ -1,5 +1,5 @@
-//! The collections of design §4.2: the manifest that describes one, the flat-YAML frontmatter reader, and the readers of the three kinds. S2.0 holds the types and the stubs; the loader and the kinds come in S2.4 and S2.5.
-//! Cases: none (module map; MAN-* in S2.4 and S2.5 pins the kinds)
+//! The collections of design §4.2: manifests, frontmatter, and the readers of the three kinds.
+//! Cases: none (module map; manifest.rs and markdown.rs cite their MAN-* ids, and folder and json wait for S2.5)
 
 pub mod folder;
 pub mod frontmatter;

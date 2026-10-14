@@ -1,0 +1,1 @@
+{"name": "sidecars", "kind": "markdown", "roots": ["notes"], "include": ["**/*.md", "**/*.json"]}

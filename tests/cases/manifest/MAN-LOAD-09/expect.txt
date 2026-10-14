@@ -1,0 +1,8 @@
+$ memex show nokind:alpha noroots:alpha
+exit 1
+stdout (empty)
+stderr
+| memex: warning: $SANDBOX/repo/.memex/collections/nokind.json: missing key 'kind'
+| memex: warning: $SANDBOX/repo/.memex/collections/noroots.json: missing key 'roots'
+| memex: not found: nokind:alpha
+| memex: not found: noroots:alpha

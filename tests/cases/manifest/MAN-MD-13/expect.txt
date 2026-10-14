@@ -1,0 +1,32 @@
+$ memex show everything:top everything:deep everything:private everything:pkg everything:built
+exit 1
+stdout
+| === everything:top ===
+| Top body line.
+| 
+| fields
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| === everything:deep ===
+| Deep body line.
+| 
+| fields
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr
+| memex: not found: everything:private
+| memex: not found: everything:pkg
+| memex: not found: everything:built

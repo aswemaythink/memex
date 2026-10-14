@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "notes:alpha"]}, {"args": ["show", "notes:alpha", "--json"]}]}

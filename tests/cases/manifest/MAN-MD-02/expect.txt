@@ -1,0 +1,22 @@
+$ memex show notes:beta
+exit 0
+stdout
+| === notes:beta ===
+| Beta body line.
+| 
+| fields
+|   owners: [ada, grace]
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)
+
+$ memex show notes:beta --json
+exit 0
+stdout
+| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"notes","fields":{"owners":["ada","grace"]},"id":"beta","path":"notes/beta.md","ref":"notes:beta","text":"Beta body line.\n","title":"Beta body line."}],"errors":[]}
+stderr (empty)

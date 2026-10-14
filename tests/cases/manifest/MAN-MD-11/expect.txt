@@ -1,0 +1,61 @@
+$ memex show notes:delta anchored:delta anywhere:delta notes:readme
+exit 1
+stdout
+| === notes:delta ===
+| Delta body line.
+| 
+| fields
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| === anchored:delta ===
+| Delta body line.
+| 
+| fields
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| === anywhere:delta ===
+| Delta body line.
+| 
+| fields
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr
+| memex: not found: notes:readme
+
+$ memex show anchored:alpha anywhere:alpha
+exit 1
+stdout
+| === anywhere:alpha ===
+| Alpha body line.
+| 
+| fields
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr
+| memex: not found: anchored:alpha

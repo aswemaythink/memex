@@ -1,0 +1,17 @@
+$ memex show sidecars:broken sidecars:meta
+exit 1
+stdout
+| === sidecars:meta ===
+| 
+| fields
+|   status: ok
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr
+| memex: warning: $SANDBOX/repo/notes/broken.json: not valid JSON: trailing comma at line 1 column 20
+| memex: not found: sidecars:broken

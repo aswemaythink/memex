@@ -1,0 +1,8 @@
+$ memex show cases:alpha logs:alpha
+exit 1
+stdout (empty)
+stderr
+| memex: warning: $SANDBOX/repo/.memex/collections/cases.json: name 'cases' is reserved
+| memex: warning: $SANDBOX/repo/.memex/collections/logs.json: name 'logs' is reserved
+| memex: not found: cases:alpha
+| memex: not found: logs:alpha

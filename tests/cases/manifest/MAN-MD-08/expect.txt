@@ -1,0 +1,5 @@
+$ memex show titled:alpha titled:fenced --json
+exit 0
+stdout
+| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"titled","fields":{"name":"Alpha display"},"id":"alpha","path":"notes/alpha.md","ref":"titled:alpha","text":"Alpha body line.\n","title":"Alpha display"},{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"titled","fields":{},"id":"fenced","path":"notes/fenced.md","ref":"titled:fenced","text":"```text\n# not a heading\n```\n# Real title\nBody line.\n","title":"Real title"}],"errors":[]}
+stderr (empty)

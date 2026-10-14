@@ -1,0 +1,6 @@
+$ memex show rows:one
+exit 1
+stdout (empty)
+stderr
+| memex: warning: $SANDBOX/repo/.memex/collections/rows.json: kind 'json' needs key 'id'
+| memex: not found: rows:one

@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "sidecars:meta"]}, {"args": ["show", "sidecars:meta", "--json"]}]}

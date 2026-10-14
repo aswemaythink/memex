@@ -1,0 +1,24 @@
+$ memex show notes:gamma
+exit 0
+stdout
+| === notes:gamma ===
+| Gamma body line.
+| 
+| fields
+|   meta:   owner: ada
+|       team: core
+|   kind: note
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)
+
+$ memex show notes:gamma --json
+exit 0
+stdout
+| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"notes","fields":{"kind":"note","meta":"  owner: ada\n  team: core"},"id":"gamma","path":"notes/gamma.md","ref":"notes:gamma","text":"Gamma body line.\n","title":"Gamma body line."}],"errors":[]}
+stderr (empty)

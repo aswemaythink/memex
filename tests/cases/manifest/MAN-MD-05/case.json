@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "paths:notes/alpha.md", "paths:notes/deep/delta.md", "--json"]}]}

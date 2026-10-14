@@ -1,0 +1,1 @@
+{"name": "anchored", "kind": "markdown", "roots": ["notes"], "include": ["deep/*.md"]}

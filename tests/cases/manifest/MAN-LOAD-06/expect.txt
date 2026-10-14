@@ -1,0 +1,17 @@
+$ memex show hidden:alpha hidden:draft
+exit 1
+stdout
+| === hidden:alpha ===
+| Alpha body line.
+| 
+| fields
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr
+| memex: not found: hidden:draft

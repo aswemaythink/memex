@@ -1,0 +1,7 @@
+$ memex show journal:alpha notes:alpha
+exit 1
+stdout (empty)
+stderr
+| memex: warning: $SANDBOX/repo/.memex/collections/notes.json: name 'journal' must match the file name 'notes'
+| memex: not found: journal:alpha
+| memex: not found: notes:alpha
