@@ -1,0 +1,25 @@
+$ memex show nope.rs src/cli.rs nope.rs
+exit 1
+stdout
+| === src/cli.rs ===
+| Parses the demo arguments.
+| It has two lines so that the body shows both.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- src/README.md
+| # src
+| 
+| The source of the demo.
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr
+| memex: not found: nope.rs

@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "../../../repo/readme.md"], "cwd": "repo/src/deep"}, {"args": ["show", "../../../repo/README.md"], "cwd": "repo/src/deep"}]}

@@ -1,0 +1,12 @@
+$ memex show ''
+exit 2
+stdout (empty)
+stderr
+| memex: empty ref
+| usage: memex show   <path|ref>... [--up N] [--limit N] [--json]
+
+$ memex show '' --json
+exit 2
+stdout
+| {"error":{"code":"usage","message":"empty ref"}}
+stderr (empty)

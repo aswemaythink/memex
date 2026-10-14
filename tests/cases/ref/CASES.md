@@ -17,6 +17,10 @@ The ref family pins design §3.1: how a ref becomes the file, folder or doc it n
   Scenario: show ../nope.rs in the root, where no folder beside the root holds it. design §3.1 steps 2 and 6.
 - `REF-REL-04` A relative path that climbs out of the root and back in names the entry inside it, labelled by its root-relative path, exit 0.
   Scenario: show ../../repo/src/cli.rs with cwd repo/src. design §3.1 step 2: the path names the entry it reaches.
+- `REF-REL-05` A relative path matches the walked set case-sensitively: readme.md, SRC/A.RS and SRC/README.md name nothing and exit 1, while README.md names its file, exit 0.
+  Scenario: show readme.md, SRC/A.RS and SRC/README.md, then show README.md, in the root, where README.md, src/README.md and src/a.rs exist. design §3.1 step 2 (matched case-sensitively) and step 4 (a README or header is named by its path only).
+- `REF-REL-06` A relative path that climbs out of the root and back in matches case-sensitively too: from repo/src/deep, ../../../repo/readme.md names nothing and exits 1, though ../../../repo/README.md names the root README, exit 0.
+  Scenario: the two refs with cwd repo/src/deep. design §3.1 step 2: exists means present in the walked set, matched case-sensitively on every OS.
 
 ## AMBIG
 
@@ -65,6 +69,8 @@ The ref family pins design §3.1: how a ref becomes the file, folder or doc it n
   Scenario: the same linked worktree, with the src folder. design §3.1 other worktrees and §3.3 folder.
 - `REF-WT-03` A path outside every root that names no entry is not found, exit 1, though a linked worktree exists.
   Scenario: show ../wt/nope.rs from repo. design §3.1 other worktrees and §3.6.
+- `REF-WT-04` A file outside every root is read with its own folder as the root: the chain of ../loose/notes.md is loose's README and never the README of the enclosing folder, and ../loose lists its children, exit 0.
+  Scenario: a loose folder beside repo/, with no .memex/ or git above it, and a README in the folder above it. design §3.1 other worktrees: with neither, the root is the folder itself, or the file's parent.
 
 ## RESERVED
 

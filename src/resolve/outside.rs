@@ -1,7 +1,9 @@
 //! Resolves a path that leaves the current root against the root that holds it (design §3.1).
-//! Cases: REF-ABS-01, REF-REL-03, REF-REL-04, REF-WT-01, REF-WT-02, REF-WT-03
+//! Cases: REF-ABS-01, REF-REL-03, REF-REL-04, REF-REL-06, REF-WT-01, REF-WT-02, REF-WT-03, REF-WT-04
 
-use std::path::Path;
+use std::ffi::OsStr;
+use std::fs;
+use std::path::{Component, Path, PathBuf};
 
 use crate::corpus::{self, Corpus, Kind};
 use crate::error::Error;
@@ -29,13 +31,13 @@ pub fn absolute<'a>(
     store: Option<&Path>,
     arg: &str,
 ) -> Result<Outcome<'a>, Error> {
-    match dunce::canonicalize(arg) {
-        Ok(full) => place(corpus, store, &full),
-        Err(_) => Ok(Outcome::NotFound),
+    match exact(Path::new(""), Path::new(arg)) {
+        Some(full) => place(corpus, store, &full),
+        None => Ok(Outcome::NotFound),
     }
 }
 
-/// A relative path that climbs above the current root (design §3.1, step 2). None when the file system holds no entry there,
+/// A relative path that climbs above the current root (design §3.1, step 2). None when the path names no entry there as typed,
 /// so that the ref is tried as a name.
 pub fn relative<'a>(
     corpus: &'a Corpus,
@@ -43,10 +45,41 @@ pub fn relative<'a>(
     store: Option<&Path>,
     arg: &str,
 ) -> Result<Option<Outcome<'a>>, Error> {
-    match dunce::canonicalize(cwd.join(arg)) {
-        Ok(full) => place(corpus, store, &full).map(Some),
-        Err(_) => Ok(None),
+    match exact(cwd, Path::new(arg)) {
+        Some(full) => place(corpus, store, &full).map(Some),
+        None => Ok(None),
     }
+}
+
+/// The canonical path that `arg` names from `base`, when each part of `arg` is spelled the way its folder lists it, so that
+/// names match case-sensitively on every OS (design §3.1, step 2). `base` is a canonical folder, or empty for an absolute `arg`.
+/// None when a part is not listed exactly, or when the path names nothing.
+fn exact(base: &Path, arg: &Path) -> Option<PathBuf> {
+    let mut found = base.to_path_buf();
+    for part in arg.components() {
+        match part {
+            Component::Prefix(_) | Component::RootDir => found.push(part.as_os_str()),
+            Component::CurDir => {}
+            Component::ParentDir => {
+                if let Some(parent) = found.parent() {
+                    found = parent.to_path_buf();
+                }
+            }
+            Component::Normal(name) => {
+                if !listed(&found, name) {
+                    return None;
+                }
+                found = dunce::canonicalize(found.join(name)).ok()?;
+            }
+        }
+    }
+    Some(found)
+}
+
+/// True when the folder `dir` lists an entry named exactly `name`. A name is matched against the listing and never probed, so a
+/// case-insensitive file system does not match another spelling (design §4.4, name matching).
+fn listed(dir: &Path, name: &OsStr) -> bool {
+    fs::read_dir(dir).is_ok_and(|entries| entries.flatten().any(|entry| entry.file_name() == name))
 }
 
 /// The outcome for a canonical path: an entry of the current root when it lies inside it, else an entry of its own root.
@@ -58,7 +91,9 @@ fn place<'a>(corpus: &'a Corpus, store: Option<&Path>, full: &Path) -> Result<Ou
 }
 
 /// The entry at `full` in its own nearest root (design §3.1, other worktrees). The root is found from the path, as design
-/// §4.1 finds it for `show`, and it is read with the same log store. A path that root's walk does not hold is not found.
+/// §4.1 finds it for `show`, and it is read with the same log store. With no `.memex/` or git above the path, that root is the
+/// folder itself, or the file's parent, so the walk never climbs to the enclosing tree (REF-WT-04). A path that root's walk
+/// does not hold is not found.
 fn elsewhere<'a>(full: &Path, store: Option<&Path>) -> Result<Outcome<'a>, Error> {
     let start = if full.is_dir() {
         full

@@ -44,6 +44,8 @@
   design §4.4 Name matching: a README is matched by its listed name, `README.md`, exactly, and PLAN §1 fix 15. Run: memex show . and memex show lower --json.
 - `INT-NAME-02` A file named `README.MD` in capitals is not a folder's README, so the folder shows `(no README)` and lists the file as a child, exit 0.
   design §4.4 Name matching and PLAN §1 fix 15: the match is exact on every OS. Run: memex show . and memex show upper.
+- `INT-NAME-03` A folder named `README.md` is a folder, not a README: `show docs` lists it as `README.md/` with `(no README)`, and `show docs/README.md` gives that folder with `(no README)`, exit 0.
+  design §4.2 and §4.4: a README is a file matched by its listed name, so a folder of that name is no README. Run: memex show docs and memex show docs/README.md.
 
 ## CHAIN
 

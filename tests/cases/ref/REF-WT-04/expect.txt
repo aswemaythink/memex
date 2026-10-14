@@ -1,0 +1,43 @@
+$ memex show ../loose/notes.md
+exit 0
+stdout
+| === $SANDBOX/loose/notes.md ===
+| A note with no header of its own.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Loose
+| 
+| A folder with no .memex and no git above it.
+stderr (empty)
+
+$ memex show ../loose
+exit 0
+stdout
+| === $SANDBOX/loose ===
+| # Loose
+| 
+| A folder with no .memex and no git above it.
+| 
+| children
+|   notes.md  (no header)
+|   sub/  A folder below the loose one.
+|   showing 2 of 2
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)

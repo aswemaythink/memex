@@ -1,0 +1,47 @@
+$ memex show docs
+exit 0
+stdout
+| === docs ===
+| (no README)
+| 
+| children
+|   README.md/  (no README)
+|   showing 1 of 1
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for intent.
+stderr (empty)
+
+$ memex show docs/README.md
+exit 0
+stdout
+| === docs/README.md ===
+| (no README)
+| 
+| children
+|   kept.md  (no header)
+|   showing 1 of 1
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for intent.
+stderr (empty)

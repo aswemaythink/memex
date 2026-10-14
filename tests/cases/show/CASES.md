@@ -64,6 +64,15 @@
   design §3.3 Exit code: the others still print and the exit code is 1. Run: memex show nope.rs src/cli.rs.
 - `SHOW-ERR-02` A relative path that the cwd and the root both hold, and that differ, is ambiguous: stdout is empty, stderr names the ref and lists both candidates, and the exit code is 1.
   design §3.1 Resolution order, step 2: if both exist and differ, the result is ambiguous. Run: memex show README.md with cwd repo/src.
+- `SHOW-ERR-03` An empty ref is a usage error: `show ''` prints `memex: empty ref` and the show usage line on stderr, prints nothing on stdout and exits 2, and with `--json` it prints the usage envelope, exit 2.
+  design §3.3 (refs are paths or refs) and §3.6 exit codes: 2 is a usage error. Run: memex show '' and memex show '' --json.
+
+## DUP
+
+- `SHOW-DUP-01` A ref given twice prints its section once, at the position of its first use, so `show src/cli.rs notes.txt src/cli.rs` prints two sections in that order, exit 0.
+  design §3.3 gives a section for each ref in the order given; that a repeat prints once is the S5.2 ruling, which §3.3 should state. Run: memex show src/cli.rs notes.txt src/cli.rs.
+- `SHOW-DUP-02` A ref that is not found and is given twice is reported once on stderr, while the other refs still print, exit 1.
+  design §3.3 Exit code: the others still print and the exit code is 1; the repeat rule is as SHOW-DUP-01. Run: memex show nope.rs src/cli.rs nope.rs.
 
 ## LINE
 

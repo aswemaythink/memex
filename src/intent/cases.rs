@@ -1,9 +1,13 @@
 //! Reads a CASES.md into case docs (design §2.2): each column-0 item that opens with a case id.
 //! Cases: CASE-ITEM-01, CASE-ITEM-02, CASE-ITEM-03, CASE-ITEM-04, CASE-CLAIM-01, CASE-CLAIM-02, CASE-DETAIL-01, CASE-DETAIL-02, CASE-DETAIL-03, CASE-GROUP-01, CASE-GROUP-02, CASE-FENCE-01, CASE-FENCE-02, CASE-GRAMMAR-01, CASE-GRAMMAR-02, CASE-GRAMMAR-03, CASE-CRLF-01, CASE-CRLF-02, CASE-PLAN-01, CASE-EVID-01, CASE-EVID-02, CASE-EVID-03, CASE-EVID-04, CASE-EVID-05, CASE-EVID-06, CASE-EVID-07, CASE-EVID-08
 
+use std::path::Path;
+
 use crate::collections::frontmatter::Value;
 use crate::corpus::{parent_of, Doc};
-use crate::text::strip_bom;
+use crate::error::Error;
+use crate::root::slash;
+use crate::text::{self, strip_bom};
 
 /// The collection of case docs. Their labels are `cases:ID`, and `show` takes them that way (design §3.1).
 pub const COLLECTION: &str = "cases";
@@ -17,6 +21,14 @@ pub fn parse(rel: &str, text: &str) -> Vec<Doc> {
         reader.line(line);
     }
     reader.finish()
+}
+
+/// The case docs of the CASES.md at `path`, which the walk labels `rel` (design §2.2). A file that cannot be read is an error,
+/// which the corpus warns about and skips (design §4.2).
+pub fn read(rel: &str, path: &Path) -> Result<Vec<Doc>, Error> {
+    let contents = text::read(path)
+        .map_err(|failure| Error::io(&format!("cannot read {}", slash(path)), &failure))?;
+    Ok(parse(rel, &contents))
 }
 
 /// The group of a case doc: the heading above its item, which the doc keeps as its `group` field (design §2.2).
@@ -282,6 +294,26 @@ fn join(base: &str, token: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(unix)]
+    #[test]
+    fn an_unreadable_cases_file_is_an_error_naming_its_path() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = tempfile::tempdir().expect("a temp folder");
+        let path = dir.path().join("CASES.md");
+        std::fs::write(&path, "- `NAME-001` A claim.\n").expect("a file");
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o000)).expect("a mode");
+        if std::fs::read(&path).is_ok() {
+            // Running as root reads any file, so there is nothing to check.
+            return;
+        }
+        let error = read("CASES.md", &path).expect_err("an unreadable CASES.md");
+        assert!(
+            error.message.ends_with("CASES.md (PermissionDenied)"),
+            "{}",
+            error.message
+        );
+    }
 
     #[test]
     fn a_case_id_has_capitals_and_digits_in_at_least_two_parts() {

@@ -1,0 +1,36 @@
+$ memex show readme.md
+exit 1
+stdout (empty)
+stderr
+| memex: not found: readme.md
+
+$ memex show SRC/A.RS
+exit 1
+stdout (empty)
+stderr
+| memex: not found: SRC/A.RS
+
+$ memex show SRC/README.md
+exit 1
+stdout (empty)
+stderr
+| memex: not found: SRC/README.md
+
+$ memex show README.md
+exit 0
+stdout
+| === README.md ===
+| # Demo
+| 
+| The demo repo for ref.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)

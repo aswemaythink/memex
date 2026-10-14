@@ -1,10 +1,14 @@
 //! Walks the intent layer: the entries under the root that the ignore rules keep (design §4.1 item 2).
-//! Cases: INT-IGNORE-01, INT-IGNORE-02, INT-IGNORE-03, INT-SKIP-01, INT-SKIP-02, SHOW-FILE-01, SHOW-DIR-01, SHOW-ROOT-01
+//! Cases: INT-IGNORE-01, INT-IGNORE-02, INT-IGNORE-03, INT-SKIP-01, INT-SKIP-02, INT-NAME-03, SHOW-FILE-01, SHOW-DIR-01, SHOW-ROOT-01
 
 use std::ffi::OsStr;
+use std::io;
 use std::path::{Component, Path, PathBuf};
 
 use ignore::{DirEntry, WalkBuilder};
+
+use crate::error::Error;
+use crate::root::slash;
 
 /// One file or folder of the intent layer.
 pub struct Entry {
@@ -18,19 +22,54 @@ pub struct Entry {
 
 /// Every file and folder under `root` that the ignore rules keep, sorted by label. The walk honours `.gitignore` and
 /// `.ignore`, skips hidden entries, `node_modules` and `target` folders, symlinks and names that are not UTF-8, and does
-/// not list the root itself.
+/// not list the root itself. A folder that cannot be listed gives no entries here; `walk_warned` says so.
 pub fn walk(root: &Path) -> Vec<Entry> {
+    walk_warned(root, &mut Vec::new())
+}
+
+/// Like `walk`, and each folder under `root` that the walk cannot read adds its warning to `warnings`, `memex: warning: cannot
+/// read <path> (<ErrorKind>)` (design §4.2). The rest of the tree is still walked.
+pub fn walk_warned(root: &Path, warnings: &mut Vec<String>) -> Vec<Entry> {
     let walker = WalkBuilder::new(root)
         .require_git(false)
         .sort_by_file_name(OsStr::cmp)
         .filter_entry(|entry| !is_skipped(entry))
         .build();
-    let mut entries: Vec<Entry> = walker
-        .filter_map(Result::ok)
-        .filter_map(|entry| to_entry(root, &entry))
-        .collect();
+    let mut entries: Vec<Entry> = Vec::new();
+    for item in walker {
+        match item {
+            Ok(entry) => entries.extend(to_entry(root, &entry)),
+            Err(error) => warnings.extend(walk_warning(&error)),
+        }
+    }
     entries.sort_by(|left, right| left.rel.cmp(&right.rel));
     entries
+}
+
+/// The warning for a walk error that names the path it failed on and an io failure (design §4.2). None for any other error,
+/// such as an ignore file that does not parse.
+fn walk_warning(error: &ignore::Error) -> Option<String> {
+    let (path, failure) = named_failure(error)?;
+    let message = Error::io(&format!("cannot read {}", slash(path)), failure).message;
+    Some(format!("memex: warning: {message}"))
+}
+
+/// The path that a walk error names, and the io failure under it. The walk wraps a failure in its path and its depth, in
+/// either order, so each wrapper is looked through. None when there is no io failure, or no path for it.
+fn named_failure(error: &ignore::Error) -> Option<(&Path, &io::Error)> {
+    let mut named = None;
+    let mut inner = error;
+    loop {
+        match inner {
+            ignore::Error::WithPath { path, err } => {
+                named = named.or(Some(path.as_path()));
+                inner = err.as_ref();
+            }
+            ignore::Error::WithDepth { err, .. } => inner = err.as_ref(),
+            ignore::Error::Io(failure) => return named.map(|path| (path, failure)),
+            _ => return None,
+        }
+    }
 }
 
 /// The `/`-separated text of a root-relative path: `""` for the root, None when a part is not UTF-8 or the path climbs out.
@@ -80,6 +119,37 @@ mod tests {
     fn a_path_with_a_part_that_is_not_utf8_has_no_label() {
         assert_eq!(rel_string(Path::new("a/b.md")).as_deref(), Some("a/b.md"));
         assert_eq!(rel_string(&not_utf8()), None);
+    }
+
+    /// A folder that cannot be listed is one warning, and the files beside it are still walked (design §4.2).
+    #[cfg(unix)]
+    #[test]
+    fn a_folder_that_cannot_be_listed_is_a_warning_and_the_rest_is_walked() {
+        use std::fs;
+        use std::os::unix::fs::PermissionsExt;
+
+        use super::walk_warned;
+        let dir = tempfile::tempdir().expect("a temp folder");
+        let locked = dir.path().join("locked");
+        fs::create_dir(&locked).expect("a folder");
+        fs::write(dir.path().join("ok.rs"), "//! Ok.\n").expect("a file");
+        let open = fs::Permissions::from_mode(0o755);
+        fs::set_permissions(&locked, fs::Permissions::from_mode(0o000)).expect("a mode");
+        if fs::read_dir(&locked).is_ok() {
+            // Running as root lists a folder whatever its mode, so there is nothing to check.
+            fs::set_permissions(&locked, open).expect("restored");
+            return;
+        }
+        let mut warnings = Vec::new();
+        let entries = walk_warned(dir.path(), &mut warnings);
+        fs::set_permissions(&locked, open).expect("restored");
+        assert!(entries.iter().any(|entry| entry.rel == "ok.rs"));
+        assert_eq!(warnings.len(), 1, "{warnings:?}");
+        assert!(
+            warnings[0].starts_with("memex: warning: cannot read ")
+                && warnings[0].ends_with("locked (PermissionDenied)"),
+            "{warnings:?}"
+        );
     }
 
     /// A path whose last part is not UTF-8: raw bytes on unix, an unpaired surrogate on Windows.

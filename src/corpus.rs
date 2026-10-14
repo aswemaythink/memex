@@ -6,6 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs::File;
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
+use std::sync::{Mutex, PoisonError};
 use std::thread;
 
 use crate::cite;
@@ -15,7 +16,6 @@ use crate::error::Error;
 use crate::intent::{self, cases, header, readme};
 use crate::logs::read::load as load_logs;
 use crate::root::slash;
-use crate::text;
 use crate::walk::{self, Entry};
 
 pub use crate::root::root_of;
@@ -106,7 +106,8 @@ impl Corpus {
         Ok((corpus, store))
     }
 
-    /// The intent layer under `root`: every walked entry, the docs of its files, and the docs of its manifests.
+    /// The intent layer under `root`: every walked entry, the docs of its files, and the docs of its manifests. A file that
+    /// cannot be read is skipped with its warning, and the rest of the layer loads (design §4.2).
     fn intent(root: &Path) -> Result<Corpus, Error> {
         let mut corpus = Corpus {
             root: root.to_path_buf(),
@@ -116,16 +117,17 @@ impl Corpus {
             streams: BTreeSet::new(),
             citations: cite::Index::default(),
         };
-        for entry in walk::walk(root) {
+        let mut warnings = Vec::new();
+        for entry in walk::walk_warned(root, &mut warnings) {
             let kind = if entry.is_dir { Kind::Dir } else { Kind::File };
             corpus.kinds.insert(entry.rel.clone(), kind);
             if !entry.is_dir {
-                for doc in file_docs(&entry)? {
-                    corpus.insert(doc);
+                match file_docs(&entry) {
+                    Ok(docs) => docs.into_iter().for_each(|doc| corpus.insert(doc)),
+                    Err(error) => warnings.push(format!("memex: warning: {}", error.message)),
                 }
             }
         }
-        let mut warnings = Vec::new();
         for found in manifest::load(root, &mut warnings) {
             for doc in manifest::docs(&found, root, &mut warnings) {
                 corpus.insert(doc);
@@ -138,7 +140,9 @@ impl Corpus {
     /// Adds the logs of the store, when there is one, then builds the folder index and the citations.
     fn finish(&mut self, store: Option<&Path>) -> Result<(), Error> {
         if let Some(store) = store {
-            let logs = load_logs(store)?;
+            let mut warnings = Vec::new();
+            let logs = load_logs(store, &mut warnings);
+            warn(&warnings);
             self.streams = logs.iter().map(|doc| doc.collection.clone()).collect();
             for doc in logs {
                 self.insert(doc);
@@ -263,12 +267,16 @@ pub fn readme_label(dir: &str) -> String {
     }
 }
 
-/// Prints each manifest warning on its own stderr line. The loader calls this once per run, and a failed write is ignored,
-/// as there is nowhere left to report it.
-fn warn(lines: &[String]) {
+/// Prints each warning on its own stderr line, once per run: a line that a second load of the same tree repeats, as an
+/// `elsewhere` ref loads a root again, is not printed again. A failed write is ignored, as there is nowhere left to report it.
+pub fn warn(lines: &[String]) {
+    static PRINTED: Mutex<BTreeSet<String>> = Mutex::new(BTreeSet::new());
+    let mut printed = PRINTED.lock().unwrap_or_else(PoisonError::into_inner);
     let mut stderr = io::stderr().lock();
     for line in lines {
-        let _ = writeln!(stderr, "{line}");
+        if printed.insert(line.clone()) {
+            let _ = writeln!(stderr, "{line}");
+        }
     }
 }
 
@@ -277,27 +285,13 @@ fn name_of(rel: &str) -> String {
     rel.rsplit('/').next().unwrap_or(rel).to_string()
 }
 
-/// The docs one walked file gives: its README, the cases of a CASES.md, or its header.
+/// The docs one walked file gives: its README, the cases of a CASES.md, or its header. A file that cannot be read is an error.
 fn file_docs(entry: &Entry) -> Result<Vec<Doc>, Error> {
     match entry.path.file_name().and_then(|name| name.to_str()) {
-        Some("README.md") => Ok(vec![readme_doc(entry)?]),
-        Some("CASES.md") => Ok(cases::parse(&entry.rel, &read_text(&entry.path)?)),
+        Some("README.md") => readme::doc(&entry.rel, &entry.path).map(|doc| vec![doc]),
+        Some("CASES.md") => cases::read(&entry.rel, &entry.path),
         _ => Ok(header_doc(entry)?.into_iter().collect()),
     }
-}
-
-/// The doc of a README: its whole text, labelled by its path.
-fn readme_doc(entry: &Entry) -> Result<Doc, Error> {
-    let text = read_text(&entry.path)?;
-    Ok(Doc {
-        label: entry.rel.clone(),
-        collection: "readmes".to_string(),
-        id: entry.rel.clone(),
-        path: Some(entry.rel.clone()),
-        title: readme::one_liner(&text),
-        text,
-        fields: Vec::new(),
-    })
 }
 
 /// The doc of a file's header, when the file has one.
@@ -327,12 +321,38 @@ fn read_head(path: &Path) -> Result<Vec<u8>, Error> {
     Ok(head)
 }
 
-/// The whole text of a file, read as the shared helper reads it (design §4.4 Text).
-fn read_text(path: &Path) -> Result<String, Error> {
-    text::read(path).map_err(|failure| io_error(path, &failure))
-}
-
 /// A read failure, naming the path and the io kind and never the OS text (design §4.4).
 fn io_error(path: &Path, failure: &io::Error) -> Error {
     Error::io(&format!("cannot read {}", slash(path)), failure)
+}
+
+#[cfg(all(test, unix))]
+mod tests {
+    use std::fs;
+    use std::os::unix::fs::PermissionsExt;
+
+    use super::*;
+
+    #[test]
+    fn an_unreadable_header_file_is_an_error_naming_its_path() {
+        let dir = tempfile::tempdir().expect("a temp folder");
+        let path = dir.path().join("locked.rs");
+        fs::write(&path, "//! Locked.\n").expect("a file");
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o000)).expect("a mode");
+        if fs::read(&path).is_ok() {
+            // Running as root reads any file, so there is nothing to check.
+            return;
+        }
+        let entry = Entry {
+            rel: "locked.rs".to_string(),
+            path,
+            is_dir: false,
+        };
+        let error = file_docs(&entry).expect_err("an unreadable header file");
+        assert!(
+            error.message.ends_with("locked.rs (PermissionDenied)"),
+            "{}",
+            error.message
+        );
+    }
 }

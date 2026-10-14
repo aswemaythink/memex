@@ -1,16 +1,21 @@
 //! Carries out `memex show` (design §3.3 and §3.6).
 //! It resolves each ref, builds its section, and reports the sections, the misses and the exit status.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-SECT-01, CASE-JSON-01, REF-WT-01, REF-WT-02, CITE-PREFIX-01, CITE-PREFIX-02, CITE-UNRES-01, CITE-FOLDER-02, CITE-SELF-01, CITE-BACK-01, CITE-BACK-03, CITE-BACK-04, CITE-COLL-02, CITE-JSON-01, CITE-JSON-02
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-SECT-01, CASE-JSON-01, REF-WT-01, REF-WT-02, CITE-PREFIX-01, CITE-PREFIX-02, CITE-UNRES-01, CITE-FOLDER-02, CITE-SELF-01, CITE-BACK-01, CITE-BACK-03, CITE-BACK-04, CITE-COLL-02, CITE-JSON-01, CITE-JSON-02, SHOW-ERR-03, SHOW-DUP-01, SHOW-DUP-02
 
+use std::collections::BTreeSet;
+use std::fs::File;
+use std::io;
 use std::path::Path;
 
 use crate::cite::Cite;
+use crate::cli::Verb;
 use crate::corpus::{self, parent_of, readme_label, Child, Corpus, Doc, Kind};
 use crate::error::Error;
 use crate::intent::cases;
 use crate::render::{self, CaseParts, Fields, Link, Listing, Miss, Ref, Section};
 use crate::resolve::{resolve, Elsewhere, Outcome, Target};
 use crate::root::slash;
+use crate::scan::fail;
 use crate::text;
 use crate::verbs::here;
 
@@ -47,9 +52,13 @@ struct Options {
     limit: usize,
 }
 
-/// Shows each ref in the order given. A ref that fails is reported and the others still print. A fatal problem, such as an
-/// unreadable cwd or a file that cannot be read, is an error.
+/// Shows each ref in the order given. A ref that fails is reported and the others still print. An empty ref is a usage error,
+/// and a ref given twice prints once, at its first position (design §3.3). A fatal problem, such as an unreadable cwd, is an
+/// error. A requested file that cannot be read is warned about and gives no section, so the verb still succeeds (design §4.2).
 pub fn run(request: &Request) -> Result<Report, Error> {
+    if request.refs.iter().any(String::is_empty) {
+        return Err(fail(Verb::Show, "empty ref".to_string()));
+    }
     let here::Here { cwd, store, corpus } = here::load()?;
     let options = Options {
         up: request.up,
@@ -57,10 +66,14 @@ pub fn run(request: &Request) -> Result<Report, Error> {
     };
     let mut sections = Vec::new();
     let mut misses = Vec::new();
+    let mut seen = BTreeSet::new();
     for arg in &request.refs {
+        if !seen.insert(arg.as_str()) {
+            continue;
+        }
         match resolve(&corpus, &cwd, store.as_deref(), arg)? {
-            Outcome::Found(target) => sections.push(section_for(&corpus, &target, &options)?),
-            Outcome::Elsewhere(other) => sections.push(elsewhere_section(&other, &options)?),
+            Outcome::Found(target) => sections.extend(section_for(&corpus, &target, &options)),
+            Outcome::Elsewhere(other) => sections.extend(elsewhere_section(&other, &options)),
             Outcome::NotFound => misses.push(Miss::not_found(arg)),
             Outcome::Ambiguous(candidates) => misses.push(Miss::ambiguous(arg, candidates)),
         }
@@ -84,7 +97,7 @@ pub fn run(request: &Request) -> Result<Report, Error> {
 /// The section of an entry in another root: built from that root's own corpus, and labelled by its absolute path, which
 /// round-trips from anywhere (design §3.1). Its cites and cited by name labels of that root, which do not round-trip from
 /// the cwd, so they print as none until absolute refs are designed for them.
-fn elsewhere_section(other: &Elsewhere, options: &Options) -> Result<Section, Error> {
+fn elsewhere_section(other: &Elsewhere, options: &Options) -> Option<Section> {
     let target = Target::Path {
         rel: other.rel.clone(),
         kind: other.kind,
@@ -96,21 +109,21 @@ fn elsewhere_section(other: &Elsewhere, options: &Options) -> Result<Section, Er
         total: 0,
         items: Vec::new(),
     };
-    Ok(section)
+    Some(section)
 }
 
-/// The section of one resolved target.
-fn section_for(corpus: &Corpus, target: &Target<'_>, options: &Options) -> Result<Section, Error> {
+/// The section of one resolved target, or None for a requested file that cannot be read.
+fn section_for(corpus: &Corpus, target: &Target<'_>, options: &Options) -> Option<Section> {
     match target {
         Target::Path {
             rel,
             kind: Kind::Dir,
-        } => Ok(folder_section(corpus, rel, options)),
+        } => Some(folder_section(corpus, rel, options)),
         Target::Path {
             rel,
             kind: Kind::File,
         } => file_section(corpus, rel, options),
-        Target::Doc(doc) => Ok(doc_section(corpus, doc, options)),
+        Target::Doc(doc) => Some(doc_section(corpus, doc, options)),
     }
 }
 
@@ -151,12 +164,14 @@ fn listed_children(corpus: &Corpus, rel: &str) -> Vec<Child> {
 }
 
 /// The section of a file: its header, or its whole text for a Markdown file, and the chain above its folder. A README
-/// starts its chain one folder higher, since its own text is the body.
-fn file_section(corpus: &Corpus, rel: &str, options: &Options) -> Result<Section, Error> {
+/// starts its chain one folder higher, since its own text is the body. None when the file cannot be read.
+fn file_section(corpus: &Corpus, rel: &str, options: &Options) -> Option<Section> {
     let doc = corpus.doc(rel);
+    let path = corpus.root.join(rel);
     let text = if rel.ends_with(".md") {
-        Some(read_file(&corpus.root.join(rel))?)
+        Some(requested(&path, text::read)?)
     } else {
+        requested(&path, |path| File::open(path))?;
         doc.map(|doc| doc.text.clone())
     };
     let folder = parent_of(rel).unwrap_or("");
@@ -165,7 +180,7 @@ fn file_section(corpus: &Corpus, rel: &str, options: &Options) -> Result<Section
     } else {
         Some(folder)
     };
-    Ok(Section {
+    Some(Section {
         label: rel.to_string(),
         title: doc.map(|doc| doc.title.clone()),
         collection: doc.map(|doc| doc.collection.clone()),
@@ -261,9 +276,15 @@ fn cites_of(corpus: &Corpus, label: &str) -> Vec<Cite> {
     corpus.citations().cites(label).to_vec()
 }
 
-/// The whole text of a file, read as the shared helper reads it. A read failure is an io error (exit 3).
-fn read_file(path: &Path) -> Result<String, Error> {
-    text::read(path).map_err(|failure| Error::io(&format!("cannot read {}", slash(path)), &failure))
+/// Reads a requested file with `read`. A file that cannot be read is warned about, once per run, and gives None, so its
+/// section is skipped (design §4.2): the warning is the same line the corpus prints for an unreadable intent file.
+fn requested<T>(path: &Path, read: impl FnOnce(&Path) -> io::Result<T>) -> Option<T> {
+    read(path)
+        .map_err(|failure| {
+            let message = Error::io(&format!("cannot read {}", slash(path)), &failure).message;
+            corpus::warn(&[format!("memex: warning: {message}")]);
+        })
+        .ok()
 }
 
 /// True for a README.md, at the root or in a folder.
