@@ -101,6 +101,8 @@ When any rule fails, the case trials are not created, and only the failing rules
 - [ref](ref/README.md): `REF-*`, design §3.1 (ref resolution).
 - [cite](cite/README.md): `CITE-*`, design §2.3 (citations and backlinks).
 - [search](search/README.md): `SRCH-*`, design §3.2 and §3.6 (words).
+- [info](info/README.md): `INFO-*`, design §3.5 and §3.6 (the atlas).
+- [init](init/README.md): `INIT-*`, design §3.5b and §6.1 (setup).
 
 ## Choices where PLAN §2 is silent
 

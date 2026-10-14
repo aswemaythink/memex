@@ -103,13 +103,16 @@ fn replace_block(bom: &str, lines: &[&str], (begin, end): (usize, usize), eol: &
     Merge::Changed(out)
 }
 
-/// The text with a blank line and the marked block at its end. A newline comes first when the text lacks one.
+/// The text with a blank line and the marked block at its end. A newline comes first when the text lacks one, and an empty
+/// text gets the block alone.
 fn append_block(body: &str, eol: &str) -> String {
     let mut out = body.to_string();
-    if !body.is_empty() && !body.ends_with('\n') {
+    if !body.is_empty() {
+        if !body.ends_with('\n') {
+            out.push_str(eol);
+        }
         out.push_str(eol);
     }
-    out.push_str(eol);
     out.push_str(&marked(eol));
     out
 }
@@ -207,6 +210,30 @@ mod tests {
         assert_eq!(merge(&begin_only), Merge::Damaged);
         assert_eq!(merge(&end_first), Merge::Damaged);
         assert_eq!(merge(&two_pairs), Merge::Damaged);
+    }
+
+    #[test]
+    fn an_empty_file_gets_the_block_alone() {
+        assert_eq!(merge(""), Merge::Changed(marked("\n")));
+    }
+
+    #[test]
+    fn a_replace_keeps_every_byte_outside_the_markers() {
+        let above = "\u{feff}# Notes\r\n  <!-- memex:begin -->\r\n";
+        let below = "<!-- memex:end -->\r\ntail without newline";
+        let text = format!("{above}old\r\nlines\r\n{below}");
+        let expected = format!("{above}{}{below}", snippet_text("\r\n"));
+        assert_eq!(merge(&text), Merge::Changed(expected));
+        let lf = format!("x\n{BEGIN}\nold\n{END}");
+        assert_eq!(
+            merge(&lf),
+            Merge::Changed(format!("x\n{BEGIN}\n{}{END}", snippet_text("\n")))
+        );
+    }
+
+    #[test]
+    fn a_crlf_block_that_is_the_snippet_is_the_same() {
+        assert_eq!(merge(&marked("\r\n")), Merge::Same);
     }
 
     #[test]

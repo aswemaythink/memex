@@ -67,14 +67,15 @@ pub fn lists(dir: &Path, name: &str) -> Result<bool, Error> {
 /// an overwrite (design §4.4 Atomic writes).
 pub fn create_new(dir: &Path, name: &str, bytes: &[u8]) -> Result<(), Error> {
     let target = dir.join(name);
-    let temp = write_temp(dir, bytes)?;
+    let temp = write_temp(dir, bytes, None)?;
     temp.persist_noclobber(&target)
         .map_err(|failed| io_error("cannot create", &target, &failed.error))?;
     Ok(())
 }
 
-/// Replaces the file at `path` with `bytes`, through a temp file beside its target. A symlink is followed, so the file it names is
-/// the one written, and the link stays as it is (design §4.4 Atomic writes).
+/// Replaces the file at `path` with `bytes`, through a temp file beside its target that takes the file's permissions, so the
+/// user's mode survives. A read-only file is refused, never replaced. A symlink is followed, so the file it names is the one written, and the link stays as it is (design §4.4
+/// Atomic writes).
 pub fn replace(path: &Path, bytes: &[u8]) -> Result<(), Error> {
     let real =
         dunce::canonicalize(path).map_err(|failure| io_error("cannot resolve", path, &failure))?;
@@ -84,7 +85,16 @@ pub fn replace(path: &Path, bytes: &[u8]) -> Result<(), Error> {
             slash(&real)
         )));
     };
-    let temp = write_temp(dir, bytes)?;
+    let permissions = fs::metadata(&real)
+        .map_err(|failure| io_error("cannot read", &real, &failure))?
+        .permissions();
+    if permissions.readonly() {
+        return Err(Error::io_message(format!(
+            "cannot update {}: it is read-only",
+            slash(&real)
+        )));
+    }
+    let temp = write_temp(dir, bytes, Some(permissions))?;
     temp.persist(&real)
         .map_err(|failed| io_error("cannot write", &real, &failed.error))?;
     Ok(())
@@ -101,15 +111,37 @@ pub fn read_text(path: &Path, target: &Path) -> Result<String, Error> {
     })
 }
 
-/// A temp file in `dir` that holds `bytes`. It is removed when dropped, unless it is persisted.
-pub fn write_temp(dir: &Path, bytes: &[u8]) -> Result<NamedTempFile, Error> {
-    let mut temp = tempfile::Builder::new()
-        .prefix(".")
+/// A temp file in `dir` that holds `bytes`, made with `permissions`, else with those of any new file (on unix 0o666 less the
+/// umask, not tempfile's 0o600). It is removed when dropped, unless it is persisted.
+pub fn write_temp(
+    dir: &Path,
+    bytes: &[u8],
+    permissions: Option<fs::Permissions>,
+) -> Result<NamedTempFile, Error> {
+    let mut builder = tempfile::Builder::new();
+    builder.prefix(".");
+    if let Some(permissions) = permissions.or_else(new_file_permissions) {
+        builder.permissions(permissions);
+    }
+    let mut temp = builder
         .tempfile_in(dir)
         .map_err(|failure| io_error("cannot create a temporary file in", dir, &failure))?;
     temp.write_all(bytes)
         .map_err(|failure| io_error("cannot write", dir, &failure))?;
     Ok(temp)
+}
+
+/// The mode a new file gets on unix before the umask, as `File::create` gives it.
+#[cfg(unix)]
+fn new_file_permissions() -> Option<fs::Permissions> {
+    use std::os::unix::fs::PermissionsExt;
+    Some(fs::Permissions::from_mode(0o666))
+}
+
+/// Windows has no mode to give: a temp file is an ordinary writable file already.
+#[cfg(not(unix))]
+fn new_file_permissions() -> Option<fs::Permissions> {
+    None
 }
 
 /// A path as an init line names it: relative to the target when it lies inside it, else as it is, always with `/` separators.
@@ -149,5 +181,37 @@ mod tests {
         assert!(lists(dir.path(), "AGENTS.md").expect("a listing"));
         assert!(!lists(dir.path(), "agents.md").expect("a listing"));
         assert!(!lists(&dir.path().join("missing"), "AGENTS.md").expect("a listing"));
+    }
+
+    #[test]
+    fn a_read_only_file_is_refused_and_left_as_it_is() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let path = dir.path().join("CLAUDE.md");
+        fs::write(&path, b"old").expect("a file");
+        let mut permissions = fs::metadata(&path).expect("metadata").permissions();
+        permissions.set_readonly(true);
+        fs::set_permissions(&path, permissions).expect("read-only");
+        assert!(replace(&path, b"new").is_err());
+        assert_eq!(fs::read(&path).expect("the file"), b"old");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_replaced_file_keeps_its_mode_and_a_new_file_gets_the_usual_one() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let path = dir.path().join("AGENTS.md");
+        fs::write(&path, b"old").expect("a file");
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o640)).expect("a mode");
+        replace(&path, b"new").expect("a replace");
+        let mode = |path: &Path| fs::metadata(path).expect("metadata").permissions().mode() & 0o777;
+        assert_eq!(mode(&path), 0o640);
+        assert_eq!(fs::read(&path).expect("the file"), b"new");
+        create_new(dir.path(), "CLAUDE.md", b"x").expect("a new file");
+        fs::write(dir.path().join("plain"), b"x").expect("a plain file");
+        assert_eq!(
+            mode(&dir.path().join("CLAUDE.md")),
+            mode(&dir.path().join("plain"))
+        );
     }
 }

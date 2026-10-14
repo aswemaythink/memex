@@ -1,10 +1,10 @@
 //! Carries out `memex info` (design §3.5 and §3.6): the atlas of where things are, as text or JSON.
-//! Cases: INFO-HEAD-01, INFO-HEAD-02, INFO-INTENT-01, INFO-INTENT-02, INFO-INTENT-03, INFO-COLL-01, INFO-COLL-02, INFO-STREAM-01, INFO-STREAM-02, INFO-STREAM-03, INFO-STREAM-04, INFO-TO-01, INFO-TO-02, INFO-TO-03, INFO-TO-04, INFO-TO-05, INFO-HERE-01, INFO-HERE-02, INFO-HERE-03, INFO-HERE-04, INFO-USE-01, INFO-CAP-01, INFO-WARN-01, INFO-WARN-02, INFO-NOROOT-01, INFO-NOROOT-02, INFO-JSON-01, INFO-JSON-02, INFO-JSON-03, CASE-DUP-02
+//! Cases: INFO-HEAD-01, INFO-HEAD-02, INFO-INTENT-01, INFO-INTENT-02, INFO-INTENT-03, INFO-COLL-01, INFO-COLL-02, INFO-STREAM-01, INFO-STREAM-02, INFO-STREAM-03, INFO-STREAM-04, INFO-TO-01, INFO-TO-02, INFO-TO-03, INFO-TO-04, INFO-TO-05, INFO-HERE-01, INFO-HERE-02, INFO-HERE-03, INFO-HERE-04, INFO-USE-01, INFO-CAP-01, INFO-WARN-01, INFO-WARN-02, INFO-NOROOT-01, INFO-NOROOT-02, INFO-JSON-01, INFO-JSON-02, INFO-JSON-03, CASE-DUP-02, INIT-INFO-03
 
 use std::collections::BTreeMap;
 use std::env;
 use std::io::{self, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::cli::Verb;
 use crate::clock::{self, Timestamp};
@@ -41,12 +41,23 @@ pub struct Request {
 /// is warned on stderr here; the manifests that do not load were warned when the corpus loaded.
 pub fn run(request: &Request) -> Result<String, Error> {
     let agent = agent_of(request.agent.as_deref())?;
-    let here = here::load()?;
+    render_here(&here::load()?, agent, request.json)
+}
+
+/// The text atlas of `dir`, a canonical folder, as `init` ends with it (design §3.5b item 4). init has no `--agent` and does not
+/// read `$MEMEX_AGENT`, so its atlas has no `to` line and an invalid value cannot fail it after its files are written.
+/// Case: INIT-INFO-03
+pub fn text_in(dir: PathBuf) -> Result<String, Error> {
+    render_here(&here::load_in(dir)?, None, false)
+}
+
+/// The atlas of `here` for `agent`, as text or as its JSON document. Each duplicate case id is warned on stderr.
+fn render_here(here: &Here, agent: Option<String>, json: bool) -> Result<String, Error> {
     let now = clock::now()?;
     let duplicates = duplicate_warnings(&here.corpus);
     warn(&duplicates);
-    let atlas = atlas(&here, agent, now, &duplicates);
-    Ok(if request.json {
+    let atlas = atlas(here, agent, now, &duplicates);
+    Ok(if json {
         render::document(&atlas)
     } else {
         render::text(&atlas)

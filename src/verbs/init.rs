@@ -1,5 +1,5 @@
 //! Carries out `memex init` (design §3.5b): the setup steps in order, then the atlas of the target.
-//! Cases: INIT-FRESH-01, INIT-RERUN-01, INIT-SUB-01, INIT-SUB-02, INIT-INFO-01, INIT-INFO-02
+//! Cases: INIT-FRESH-01, INIT-RERUN-01, INIT-SUB-01, INIT-SUB-02, INIT-INFO-01, INIT-INFO-02, INIT-INFO-03
 
 mod agents;
 mod files;
@@ -10,7 +10,6 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 use crate::error::Error;
-use crate::root::slash;
 use crate::verbs::info;
 
 /// What init prints, kept as it goes, so that a failure still shows the actions taken before it.
@@ -70,7 +69,7 @@ pub fn run(report: &mut Report) -> Result<(), Error> {
     agents::agents_md(&target, report)?;
     agents::claude_md(&target, report)?;
     install::run(&target, report)?;
-    atlas(&target, report)
+    atlas(target, report)
 }
 
 /// The folder init works in: the git toplevel of the cwd when the cwd is inside a worktree, else the cwd (design §3.5b).
@@ -98,14 +97,10 @@ fn git_toplevel(cwd: &Path) -> Option<PathBuf> {
     dunce::canonicalize(text.lines().next()?).ok()
 }
 
-/// Prints the atlas of the target after a blank line. `info` reads the cwd, so the cwd becomes the target first.
-fn atlas(target: &Path, report: &mut Report) -> Result<(), Error> {
-    env::set_current_dir(target)
-        .map_err(|failure| Error::io(&format!("cannot enter {}", slash(target)), &failure))?;
-    let text = info::run(&info::Request {
-        agent: None,
-        json: false,
-    })?;
+/// Prints the atlas of the target after a blank line. It is read from the target as given, so the process cwd never changes,
+/// and it ignores `$MEMEX_AGENT` (INIT-INFO-03).
+fn atlas(target: PathBuf, report: &mut Report) -> Result<(), Error> {
+    let text = info::text_in(target)?;
     report.line("");
     report.stdout.push_str(&text);
     Ok(())

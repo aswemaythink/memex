@@ -7,7 +7,7 @@ stdout
 | created AGENTS.md
 | created $SANDBOX/home/AppData/Local/Programs/memex/memex.exe
 | add to PATH: $SANDBOX/home/AppData/Local/Programs/memex
-|
+| 
 | memex  $SANDBOX/repo · log store .memex/logs/
 | intent  0 readmes · 0 headers · 0 cases
 | use     memex show <path|ref> · memex search <words> · memex log <stream> < body

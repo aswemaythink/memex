@@ -1,4 +1,5 @@
 //! Loads what a reading verb works on: the canonical cwd, its log store, and the corpus of its root.
+//! `load_in` takes a folder in place of the cwd, for init.
 //! The store is found from the cwd, and the root is the one that `root_of` names (design §4.1 item 1).
 //! Cases: none (shared loading; show and search cite their own cases)
 
@@ -21,7 +22,12 @@ pub struct Here {
 
 /// Loads the corpus of the cwd's root. The store is found (which runs git) while the intent layer is read.
 pub fn load() -> Result<Here, Error> {
-    let cwd = current_dir()?;
+    load_in(current_dir()?)
+}
+
+/// Loads as `load` does, as if memex ran in `cwd`, a canonical folder. init reads its target this way, so the process cwd never
+/// changes.
+pub fn load_in(cwd: PathBuf) -> Result<Here, Error> {
     let root = corpus::root_of(&cwd);
     let (corpus, store) = Corpus::load_finding(&root, || store_of(&cwd))?;
     Ok(Here { cwd, store, corpus })

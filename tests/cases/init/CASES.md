@@ -49,6 +49,8 @@
   Scenario: the Windows twin of INSTALL-01, with LOCALAPPDATA under the sandbox home. design §3.5b item 3.
 - `INIT-INSTALL-03` An installed binary whose bytes differ from the running one is replaced and reported `updated`, exit 0.
   Scenario: `home/.local/bin/memex` holds older text in the fixture. design §3.5b item 3 (replaced only if the bytes differ).
+- `INIT-INSTALL-04` An empty or relative `$HOME` is an environment error: init prints the lines it made, names the HOME variable on stderr and exits 3, and writes no binary under the cwd, unix only.
+  Scenario: one run with `HOME` empty, then one with `HOME=home`; `repo/.local` and `repo/home` stay missing. design §3.5b item 3 (the install dir comes from `$HOME`) and §3.5b (exit 3 on an I/O failure).
 
 ## PATH
 
@@ -63,6 +65,8 @@
   Scenario: a git repo with a README and a `src/lib.rs` header; the atlas counts one readme and one header. design §3.5b item 4.
 - `INIT-INFO-02` Run from a subfolder, init prints the atlas of the toplevel, so the `here` line is absent, exit 0.
   Scenario: the cwd `repo/src/deep` sits below a `src/README.md` that would give a here line if the atlas read the cwd. design §3.5b item 4 and §3.5 `here` line.
+- `INIT-INFO-03` The atlas of init ignores `$MEMEX_AGENT`: an invalid id neither fails init nor warns, and a valid id with messages gives no `to` line, exit 0 both times.
+  Scenario: two runs, with `MEMEX_AGENT` set to `bad id` and then to `cook-2`, which two logs address. init has no `--agent`, and an id that `info` would refuse must not exit 2 after the files are written; design §3.5b item 4 is silent, so ignoring the variable is a choice pinned here.
 
 ## RERUN
 

@@ -1,8 +1,9 @@
 //! Installs the running binary when no memex is on PATH (design §3.5b item 3), and hints at PATH.
-//! Cases: INIT-INSTALL-01, INIT-INSTALL-02, INIT-INSTALL-03, INIT-PATH-01, INIT-PATH-02
+//! Cases: INIT-INSTALL-01, INIT-INSTALL-02, INIT-INSTALL-03, INIT-INSTALL-04, INIT-PATH-01, INIT-PATH-02
 
 use std::env;
 use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
 
 use super::files::{io_error, label, lists, write_temp};
@@ -57,13 +58,20 @@ fn install(dir: &Path, bytes: &[u8]) -> Result<Action, Error> {
 }
 
 /// Writes the binary to `dir/EXE` through a temp file in `dir`, made executable where that means something, and then
-/// replaces whatever file is at that name.
+/// replaces whatever file is at that name. A failed replace leaves the old binary whole; on Windows that is what happens while
+/// the old one is running, so a refusal says it may be.
 fn write_binary(dir: &Path, bytes: &[u8]) -> Result<(), Error> {
     let dest = dir.join(EXE);
-    let temp = write_temp(dir, bytes)?;
+    let temp = write_temp(dir, bytes, None)?;
     make_executable(temp.path())?;
-    temp.persist(&dest)
-        .map_err(|failed| io_error("cannot write", &dest, &failed.error))?;
+    temp.persist(&dest).map_err(|failed| {
+        if failed.error.kind() == io::ErrorKind::PermissionDenied {
+            let what = format!("cannot replace {}, which may be running", slash(&dest));
+            Error::io(&what, &failed.error)
+        } else {
+            io_error("cannot write", &dest, &failed.error)
+        }
+    })?;
     Ok(())
 }
 
@@ -71,19 +79,24 @@ fn write_binary(dir: &Path, bytes: &[u8]) -> Result<(), Error> {
 /// redirect it (design §3.5b item 3).
 #[cfg(not(windows))]
 fn install_dir() -> Result<PathBuf, Error> {
-    let home = env::var_os("HOME").ok_or_else(|| {
-        Error::io_message("cannot find $HOME, so memex cannot install itself".to_string())
-    })?;
-    Ok(PathBuf::from(home).join(".local").join("bin"))
+    Ok(env_dir("HOME")?.join(".local").join("bin"))
 }
 
 /// The folder the binary is installed to: `%LOCALAPPDATA%\Programs\memex` on Windows, read from the variable (design §3.5b item 3).
 #[cfg(windows)]
 fn install_dir() -> Result<PathBuf, Error> {
-    let local = env::var_os("LOCALAPPDATA").ok_or_else(|| {
-        Error::io_message("cannot find %LOCALAPPDATA%, so memex cannot install itself".to_string())
-    })?;
-    Ok(PathBuf::from(local).join("Programs").join("memex"))
+    Ok(env_dir("LOCALAPPDATA")?.join("Programs").join("memex"))
+}
+
+/// The absolute folder in the variable `name`. An unset, empty or relative value is an environment error (exit 3), never a
+/// folder under the cwd. Case: INIT-INSTALL-04
+fn env_dir(name: &str) -> Result<PathBuf, Error> {
+    match env::var_os(name).map(PathBuf::from) {
+        Some(dir) if dir.is_absolute() => Ok(dir),
+        _ => Err(Error::io_message(format!(
+            "the {name} variable is not an absolute folder, so memex cannot install itself"
+        ))),
+    }
 }
 
 /// Gives the temp file the mode of an installed program, rwxr-xr-x (unix).

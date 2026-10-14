@@ -1,0 +1,1 @@
+{"git": "init", "platforms": ["unix"], "steps": [{"args": ["init"], "env": {"HOME": ""}}, {"args": ["init"], "env": {"HOME": "home"}}], "snapshot": ["repo/.local", "repo/home"]}

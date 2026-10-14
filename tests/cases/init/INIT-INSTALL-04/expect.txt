@@ -1,0 +1,23 @@
+$ memex init  [env HOME=]
+exit 3
+stdout
+| created .memex/.gitignore
+| created .memex/config.json
+| created .memex/collections/.gitkeep
+| created AGENTS.md
+stderr
+| memex: the HOME variable is not an absolute folder, so memex cannot install itself
+
+$ memex init  [env HOME=home]
+exit 3
+stdout
+| kept .memex/.gitignore
+| kept .memex/config.json
+| kept .memex/collections/.gitkeep
+| kept AGENTS.md
+stderr
+| memex: the HOME variable is not an absolute folder, so memex cannot install itself
+== snapshot repo/.local
+(missing)
+== snapshot repo/home
+(missing)
