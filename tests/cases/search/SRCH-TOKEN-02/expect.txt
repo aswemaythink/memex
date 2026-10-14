@@ -1,0 +1,14 @@
+$ memex search src/hash.rs
+exit 0
+stdout
+| headers  (showing 1 of 1)
+|   src/hash.rs  Hashes the atoms.
+stderr (empty)
+
+$ memex search hash
+exit 0
+stdout
+| headers  (showing 2 of 2)
+|   src/hash.rs  Hashes the atoms.
+|   other/hash.rs  Hashes the atoms too.
+stderr (empty)

@@ -1,0 +1,15 @@
+$ memex search widget --in logs
+exit 0
+stdout
+| logs  (showing 1 of 1)
+|   impl:20261013-115000-widget-log  10m  Widget log
+stderr (empty)
+
+$ memex search widget --in readmes,logs
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   README.md  The widget tool.
+| logs  (showing 1 of 1)
+|   impl:20261013-115000-widget-log  10m  Widget log
+stderr (empty)

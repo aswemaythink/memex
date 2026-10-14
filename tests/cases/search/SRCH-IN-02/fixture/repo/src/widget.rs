@@ -1,0 +1,3 @@
+//! Widget helper.
+
+fn widget() {}

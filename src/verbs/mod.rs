@@ -2,4 +2,5 @@
 //! Cases: none (module map only; each verb cites its own cases)
 
 pub mod log;
+pub mod search;
 pub mod show;

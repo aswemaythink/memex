@@ -2,6 +2,7 @@
 //! Cases: SHOW-FILE-01, SHOW-DIR-01, SHOW-LOG-01, SHOW-LIMIT-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-JSON-01, CASE-SECT-01, CASE-JSON-01
 
 pub mod json;
+pub mod search;
 pub mod text;
 
 use crate::cite::Cite;

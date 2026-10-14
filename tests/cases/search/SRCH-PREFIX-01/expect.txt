@@ -1,0 +1,6 @@
+$ memex search wal
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   a/README.md  The walrus sleeps.
+stderr (empty)

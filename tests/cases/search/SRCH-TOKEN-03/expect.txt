@@ -1,0 +1,6 @@
+$ memex search std::io
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   a/README.md  The code calls std::io once.
+stderr (empty)

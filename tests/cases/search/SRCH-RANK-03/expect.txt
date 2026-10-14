@@ -1,0 +1,4 @@
+$ memex search zzqq
+exit 0
+stdout (empty)
+stderr (empty)

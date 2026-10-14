@@ -1,0 +1,6 @@
+$ memex search walking
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   a/README.md  The tool walks the hub.
+stderr (empty)

@@ -1,0 +1,14 @@
+$ memex search NAME-001
+exit 0
+stdout
+| cases  (showing 1 of 1)
+|   cases:NAME-001  Class names are stable across runs.
+stderr (empty)
+
+$ memex search name
+exit 0
+stdout
+| cases  (showing 2 of 2)
+|   cases:NAME-001  Class names are stable across runs.
+|   cases:NAME-002  Class names are sorted by length.
+stderr (empty)

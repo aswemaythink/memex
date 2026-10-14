@@ -1,0 +1,7 @@
+$ memex search zephyr
+exit 0
+stdout
+| headers  (showing 2 of 2)
+|   src/zephyr.rs  Helper for the build.
+|   src/other.rs  Helper for the build.
+stderr (empty)

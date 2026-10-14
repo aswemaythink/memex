@@ -1,0 +1,11 @@
+$ memex search grammar --json
+exit 0
+stdout
+| {"filters":{},"groups":[{"collection":"readmes","hits":[{"collection":"readmes","fields":{},"fuzzy":["grammer"],"id":"a/README.md","path":"a/README.md","ref":"a/README.md","score":0.144,"snippet":"The grammer rules apply.","title":"The grammer rules apply."}],"total":1}],"query":"grammar"}
+stderr (empty)
+
+$ memex search zzqq --json
+exit 0
+stdout
+| {"filters":{},"groups":[],"query":"zzqq"}
+stderr (empty)

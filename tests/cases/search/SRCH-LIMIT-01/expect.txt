@@ -1,0 +1,22 @@
+$ memex search widget
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   README.md  The widget tool.
+| cases  (showing 5 of 7)
+|   cases:WID-ONE-01  Widget case 01.
+|   cases:WID-ONE-02  Widget case 02.
+|   cases:WID-ONE-03  Widget case 03.
+|   cases:WID-ONE-04  Widget case 04.
+|   cases:WID-ONE-05  Widget case 05.
+stderr (empty)
+
+$ memex search widget --limit 2
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   README.md  The widget tool.
+| cases  (showing 2 of 7)
+|   cases:WID-ONE-01  Widget case 01.
+|   cases:WID-ONE-02  Widget case 02.
+stderr (empty)

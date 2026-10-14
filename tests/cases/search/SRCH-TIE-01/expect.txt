@@ -1,0 +1,7 @@
+$ memex search shared
+exit 0
+stdout
+| headers  (showing 2 of 2)
+|   src/aa.rs  Shared helper.
+|   src/zz.rs  Shared helper.
+stderr (empty)

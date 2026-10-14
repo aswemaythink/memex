@@ -1,0 +1,36 @@
+$ memex search widget
+exit 0
+stdout
+| cases  (showing 5 of 22)
+|   cases:WID-ONE-01  Widget case 01.
+|   cases:WID-ONE-02  Widget case 02.
+|   cases:WID-ONE-03  Widget case 03.
+|   cases:WID-ONE-04  Widget case 04.
+|   cases:WID-ONE-05  Widget case 05.
+stderr (empty)
+
+$ memex search widget --in cases
+exit 0
+stdout
+| cases  (showing 20 of 22)
+|   cases:WID-ONE-01  Widget case 01.
+|   cases:WID-ONE-02  Widget case 02.
+|   cases:WID-ONE-03  Widget case 03.
+|   cases:WID-ONE-04  Widget case 04.
+|   cases:WID-ONE-05  Widget case 05.
+|   cases:WID-ONE-06  Widget case 06.
+|   cases:WID-ONE-07  Widget case 07.
+|   cases:WID-ONE-08  Widget case 08.
+|   cases:WID-ONE-09  Widget case 09.
+|   cases:WID-ONE-10  Widget case 10.
+|   cases:WID-ONE-11  Widget case 11.
+|   cases:WID-ONE-12  Widget case 12.
+|   cases:WID-ONE-13  Widget case 13.
+|   cases:WID-ONE-14  Widget case 14.
+|   cases:WID-ONE-15  Widget case 15.
+|   cases:WID-ONE-16  Widget case 16.
+|   cases:WID-ONE-17  Widget case 17.
+|   cases:WID-ONE-18  Widget case 18.
+|   cases:WID-ONE-19  Widget case 19.
+|   cases:WID-ONE-20  Widget case 20.
+stderr (empty)

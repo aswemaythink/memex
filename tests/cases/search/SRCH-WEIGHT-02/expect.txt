@@ -1,0 +1,6 @@
+$ memex search marker
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   deep/README.md  Intro sentence.
+stderr (empty)

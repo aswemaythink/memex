@@ -1,0 +1,21 @@
+$ memex search widget
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   README.md  The widget tool.
+| headers  (showing 1 of 1)
+|   src/widget.rs  Widget helper.
+| cases  (showing 1 of 1)
+|   cases:WID-ONE-01  The widget case.
+| notes  (showing 1 of 1)
+|   notes:alpha  The widget note.
+| logs  (showing 1 of 1)
+|   impl:20261013-115000-widget-log  10m · cook-2 · feat/a  Widget log
+stderr (empty)
+
+$ memex search gizmo
+exit 0
+stdout
+| headers  (showing 1 of 1)
+|   src/gizmo.rs  Gizmo helper.
+stderr (empty)

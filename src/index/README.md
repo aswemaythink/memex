@@ -1,0 +1,10 @@
+# index
+
+`index/` is the search index that `memex search` builds in memory for each group of docs on each run, and writes nothing to disk (design §3.2, PLAN §4). `mod.rs` builds it from each doc's id, title and body and ranks a query with BM25F; `tokenize.rs` splits text into the lowercase words and the whole ids and paths that both the docs and the query use; `bm25.rs` holds the constants and the arithmetic of PLAN §4; `fuzzy.rs` tells whether two words are one edit apart.
+
+- `mod.rs`: `Index::build` indexes one group, and `Index::search` returns its hits. A query word matches a doc at its best tier only: an exact or stem match (multiplier 1.0), else a prefix of a word of 3 or more characters (0.5), else a one-edit variant of a word of 5 or more characters (0.3). Its candidates come from the vocabulary, so a fuzzy word scans the vocabulary once, not every doc. Hits are ranked by score rounded to 1e-9, then by label.
+- `tokenize.rs`: `tokens` gives a doc's tokens, and `query_tokens` a query term's. A run of letters, digits, dashes, dots and slashes that is an id or a path (it holds a dash or a slash, or a dot before a letter) is one whole token, lowercased, and the document also gets its words. A query's whole token matches only that whole token, so `NAME-001` does not match `NAME-002`.
+- `bm25.rs`: the constants k1 1.2, b 0.75 and the field weights id 4, title 3 and body 1, with the length normaliser of each field, the idf `ln(1 + (N - n + 0.5) / (n + 0.5))` and the saturation `s / (k1 + s)`.
+- `fuzzy.rs`: `one_edit` tells whether two words differ by one insertion, deletion or substitution.
+
+Choices where PLAN §4 is silent: the idf is the BM25 form over the group's own docs, so every group is ranked alone; a match multiplier scales a term's weighted frequency before it saturates; a query word takes the best tier that a doc has for it, so a prefix or a one-edit term counts only where no exact or stem match exists; a whole id or path matches only itself; a field's normaliser uses the mean length of that field over the group. Scores are compared rounded to 1e-9, and the ties then go by label.

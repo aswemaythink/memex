@@ -1,0 +1,3 @@
+//! Gizmo helper.
+
+fn gizmo() {}

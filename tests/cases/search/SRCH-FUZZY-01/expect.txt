@@ -1,0 +1,7 @@
+$ memex search grammar
+exit 0
+stdout
+| readmes  (showing 2 of 2)
+|   b/README.md  The grammar rules apply.
+|   a/README.md  The grammer rules apply.  [~grammer]
+stderr (empty)

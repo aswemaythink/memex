@@ -1,0 +1,9 @@
+$ memex search apples kiwi
+exit 0
+stdout
+| readmes  (showing 4 of 4)
+|   d/README.md  The kiwi ripens.
+|   a/README.md  The apples rot.
+|   b/README.md  The apples fall.
+|   c/README.md  The apples ripen.
+stderr (empty)

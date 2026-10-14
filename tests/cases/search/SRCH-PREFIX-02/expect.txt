@@ -1,0 +1,4 @@
+$ memex search wa
+exit 0
+stdout (empty)
+stderr (empty)
