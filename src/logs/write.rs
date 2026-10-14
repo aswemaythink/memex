@@ -8,12 +8,14 @@ use std::path::{Path, PathBuf};
 
 use tempfile::NamedTempFile;
 
+use crate::atomic;
 use crate::clock::Timestamp;
 use crate::error::Error;
 use crate::root::{slash, store_listed, Place};
 
-/// The `.gitignore` that goes beside a new store, so logs can never be committed by accident (design §4.1 item 3).
-const GITIGNORE: &[u8] = b"logs/\ncache/\n";
+/// The `.gitignore` that goes beside a new store, so logs can never be committed by accident (design §4.1 items 3 and 4). init
+/// writes the same bytes into a new `.memex/`.
+pub const GITIGNORE: &[u8] = b"logs/\ncache/\n";
 
 /// The longest slug, in characters (design §3.4).
 const SLUG_MAX: usize = 60;
@@ -187,14 +189,7 @@ fn taken(target: &Path, failure: &io::Error) -> bool {
 /// modes). A concurrent prune can remove a stream folder it has just emptied after `make_folder` made it, so a missing `dir` is
 /// made again and the file is tried once more.
 fn temp_in(dir: &Path) -> Result<NamedTempFile, Error> {
-    let create = || {
-        let mut builder = tempfile::Builder::new();
-        builder.prefix(".");
-        if let Some(mode) = new_file_mode() {
-            builder.permissions(mode);
-        }
-        builder.tempfile_in(dir)
-    };
+    let create = || atomic::temp_in(dir, None);
     let temp = match create() {
         Err(failure) if failure.kind() == io::ErrorKind::NotFound => {
             make_folder(dir)?;
@@ -203,19 +198,6 @@ fn temp_in(dir: &Path) -> Result<NamedTempFile, Error> {
         other => other,
     };
     temp.map_err(|failure| io_error("cannot create a temporary file in", dir, &failure))
-}
-
-/// The mode a new file gets before the umask: 0o644 on unix (design §4.4 File modes), not tempfile's private 0o600.
-#[cfg(unix)]
-fn new_file_mode() -> Option<fs::Permissions> {
-    use std::os::unix::fs::PermissionsExt;
-    Some(fs::Permissions::from_mode(0o644))
-}
-
-/// Windows has no mode to set: a temporary file is an ordinary writable file already.
-#[cfg(not(unix))]
-fn new_file_mode() -> Option<fs::Permissions> {
-    None
 }
 
 /// An I/O error that names what failed and the path, never the OS text (design §4.4).

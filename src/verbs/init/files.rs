@@ -8,11 +8,11 @@ use std::path::Path;
 use tempfile::NamedTempFile;
 
 use super::{Action, Report};
+use crate::atomic;
 use crate::error::Error;
-use crate::root::slash;
+use crate::logs::write::GITIGNORE;
+use crate::root::{self, slash};
 
-/// `.memex/.gitignore`: the logs and the cache stay out of git by default (design §4.1 item 4).
-const GITIGNORE: &[u8] = b"logs/\ncache/\n";
 /// `.memex/config.json`: its one key, at the default retention (design §4.1 item 4).
 const CONFIG: &[u8] = b"{\"keep_logs\": \"3d\"}\n";
 
@@ -23,6 +23,7 @@ pub fn store(target: &Path, report: &mut Report) -> Result<(), Error> {
     let collections = memex.join("collections");
     fs::create_dir_all(&collections)
         .map_err(|failure| io_error("cannot create", &collections, &failure))?;
+    // The logs and the cache stay out of git by default, with the bytes `log` writes beside a new store (design §4.1 item 4).
     place(target, &memex, ".gitignore", GITIGNORE, report)?;
     place(target, &memex, "config.json", CONFIG, report)?;
     place(target, &collections, ".gitkeep", b"", report)
@@ -46,21 +47,10 @@ fn place(
     Ok(())
 }
 
-/// True when `dir` lists an entry named exactly `name`. Special names are matched against the listing and never probed with
-/// `exists()`, so a case-folding file system behaves like Linux (design §4.4 Name matching). A missing `dir` lists nothing.
+/// True when `dir` lists an entry named exactly `name`, as `root::lists` reads it, with a failed listing as the I/O error that
+/// names `dir`. Special names are never probed with `exists()` (design §4.4 Name matching).
 pub fn lists(dir: &Path, name: &str) -> Result<bool, Error> {
-    let listing = match fs::read_dir(dir) {
-        Ok(listing) => listing,
-        Err(failure) if failure.kind() == io::ErrorKind::NotFound => return Ok(false),
-        Err(failure) => return Err(io_error("cannot read", dir, &failure)),
-    };
-    for item in listing {
-        let item = item.map_err(|failure| io_error("cannot read", dir, &failure))?;
-        if item.file_name().to_str() == Some(name) {
-            return Ok(true);
-        }
-    }
-    Ok(false)
+    root::lists(dir, name).map_err(|failure| io_error("cannot read", dir, &failure))
 }
 
 /// Writes a new file `dir/name` through a temp file in `dir`, so no reader sees part of it. A name that is taken is an error, never
@@ -123,37 +113,18 @@ pub fn read_text(path: &Path, target: &Path) -> Result<String, Error> {
     })
 }
 
-/// A temp file in `dir` that holds `bytes`, made with `permissions`, else with those of any new file (on unix 0o644 less the
-/// umask, not tempfile's 0o600). It is removed when dropped, unless it is persisted.
+/// A temp file in `dir` that holds `bytes`, made with `permissions`, else with those of any new file (`atomic::temp_in`). It is
+/// removed when dropped, unless it is persisted.
 pub fn write_temp(
     dir: &Path,
     bytes: &[u8],
     permissions: Option<fs::Permissions>,
 ) -> Result<NamedTempFile, Error> {
-    let mut builder = tempfile::Builder::new();
-    builder.prefix(".");
-    if let Some(permissions) = permissions.or_else(new_file_permissions) {
-        builder.permissions(permissions);
-    }
-    let mut temp = builder
-        .tempfile_in(dir)
+    let mut temp = atomic::temp_in(dir, permissions)
         .map_err(|failure| io_error("cannot create a temporary file in", dir, &failure))?;
     temp.write_all(bytes)
         .map_err(|failure| io_error("cannot write", dir, &failure))?;
     Ok(temp)
-}
-
-/// The mode a new file gets on unix before the umask: 0o644, as design §4.4 File modes says.
-#[cfg(unix)]
-fn new_file_permissions() -> Option<fs::Permissions> {
-    use std::os::unix::fs::PermissionsExt;
-    Some(fs::Permissions::from_mode(0o644))
-}
-
-/// Windows has no mode to give: a temp file is an ordinary writable file already.
-#[cfg(not(unix))]
-fn new_file_permissions() -> Option<fs::Permissions> {
-    None
 }
 
 /// A path as an init line names it: relative to the target when it lies inside it, else as it is, always with `/` separators.
@@ -184,15 +155,6 @@ mod tests {
             label(target, Path::new("elsewhere/memex")),
             "elsewhere/memex"
         );
-    }
-
-    #[test]
-    fn listings_match_names_exactly_and_a_missing_folder_lists_nothing() {
-        let dir = tempfile::tempdir().expect("a temporary folder");
-        fs::write(dir.path().join("AGENTS.md"), b"x").expect("a file");
-        assert!(lists(dir.path(), "AGENTS.md").expect("a listing"));
-        assert!(!lists(dir.path(), "agents.md").expect("a listing"));
-        assert!(!lists(&dir.path().join("missing"), "AGENTS.md").expect("a listing"));
     }
 
     #[test]

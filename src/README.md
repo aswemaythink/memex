@@ -9,6 +9,7 @@
 - `error.rs`: the fatal error of design §3.6, its codes and exit codes, and its text and JSON renderings.
 - `clock.rs`: `MEMEX_NOW` or the system clock, in UTC, and the RFC 3339 and log-stamp formats of design §3.6.
 - `root.rs`: where `log` writes (design §4.1): the nearest `.memex/`, the git toplevel and main checkout, and the store path, found through git subprocesses.
+- `atomic.rs`: the temp file that every atomic write goes through, dot-prefixed and with an ordinary file's mode (design §4.4).
 - `config.rs`: `.memex/config.json` (design §4.1 item 4): the `keep_logs` value and its warning.
 - `logs/`: the log store: writing an entry, pruning old ones and reading them as docs (design §3.4, §4.3).
 - `walk.rs`: the ignore walker over the root, run on several threads, with the skip list and `/` labels (design §4.1 item 2).

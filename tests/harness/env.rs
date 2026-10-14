@@ -94,11 +94,11 @@ fn same_name(name: &OsStr, key: &str) -> bool {
     }
 }
 
-/// True when the directory holds a memex executable: `memex` on Unix, and `memex.exe` on Windows,
-/// where a bare `memex` file is not something the shell runs.
+/// True when the directory holds a memex executable: `memex` on Unix, and `memex.exe` or an npm `memex.cmd` shim on Windows,
+/// where a bare `memex` file is not something the shell runs. init counts the same Windows names as installed.
 fn has_memex(dir: &Path) -> bool {
     let names: &[&str] = if cfg!(windows) {
-        &["memex.exe"]
+        &["memex.exe", "memex.cmd"]
     } else {
         &["memex", "memex.exe"]
     };

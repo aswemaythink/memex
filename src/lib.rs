@@ -2,6 +2,7 @@
 //! Modules are listed in PLAN.md §4 and added slice by slice.
 //! Cases: CLI-*, LOG-WRITE-*, SHOW-*, SRCH-*
 
+mod atomic;
 mod cite;
 pub mod cli;
 mod clock;
