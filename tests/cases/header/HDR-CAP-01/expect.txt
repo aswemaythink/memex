@@ -1,0 +1,13 @@
+$ memex show late.rs --up 0
+exit 0
+stdout
+| === late.rs ===
+| (no header)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

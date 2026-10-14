@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "Dockerfile", "--up", "0"]}]}

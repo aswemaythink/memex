@@ -1,0 +1,13 @@
+$ memex show both.py --up 0
+exit 0
+stdout
+| === both.py ===
+| Hash header wins.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

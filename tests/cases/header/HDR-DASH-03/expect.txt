@@ -1,0 +1,14 @@
+$ memex show demo.lua --up 0
+exit 0
+stdout
+| === demo.lua ===
+| Demo script.
+| Loads the settings once.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

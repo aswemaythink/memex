@@ -1,0 +1,82 @@
+$ memex show long.rs --up 0
+exit 0
+stdout
+| === long.rs ===
+| Line 01 of the header.
+| Line 02 of the header.
+| Line 03 of the header.
+| Line 04 of the header.
+| Line 05 of the header.
+| Line 06 of the header.
+| Line 07 of the header.
+| Line 08 of the header.
+| Line 09 of the header.
+| Line 10 of the header.
+| Line 11 of the header.
+| Line 12 of the header.
+| Line 13 of the header.
+| Line 14 of the header.
+| Line 15 of the header.
+| Line 16 of the header.
+| Line 17 of the header.
+| Line 18 of the header.
+| Line 19 of the header.
+| Line 20 of the header.
+| Line 21 of the header.
+| Line 22 of the header.
+| Line 23 of the header.
+| Line 24 of the header.
+| Line 25 of the header.
+| Line 26 of the header.
+| Line 27 of the header.
+| Line 28 of the header.
+| Line 29 of the header.
+| Line 30 of the header.
+| Line 31 of the header.
+| Line 32 of the header.
+| Line 33 of the header.
+| Line 34 of the header.
+| Line 35 of the header.
+| Line 36 of the header.
+| Line 37 of the header.
+| Line 38 of the header.
+| Line 39 of the header.
+| Line 40 of the header.
+| Line 41 of the header.
+| Line 42 of the header.
+| Line 43 of the header.
+| Line 44 of the header.
+| Line 45 of the header.
+| Line 46 of the header.
+| Line 47 of the header.
+| Line 48 of the header.
+| Line 49 of the header.
+| Line 50 of the header.
+| Line 51 of the header.
+| Line 52 of the header.
+| Line 53 of the header.
+| Line 54 of the header.
+| Line 55 of the header.
+| Line 56 of the header.
+| Line 57 of the header.
+| Line 58 of the header.
+| Line 59 of the header.
+| Line 60 of the header.
+| Line 61 of the header.
+| Line 62 of the header.
+| Line 63 of the header.
+| Line 64 of the header.
+| Line 65 of the header.
+| Line 66 of the header.
+| Line 67 of the header.
+| Line 68 of the header.
+| Line 69 of the header.
+| Line 70 of the header.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

@@ -1,0 +1,15 @@
+$ memex show tool.py --up 0
+exit 0
+stdout
+| === tool.py ===
+| Command-line tool for the demo.
+| 
+| It reads its settings once and then runs.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

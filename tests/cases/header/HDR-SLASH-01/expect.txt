@@ -1,0 +1,15 @@
+$ memex show purpose.rs --up 0
+exit 0
+stdout
+| === purpose.rs ===
+| Parses the demo arguments.
+| 
+| It keeps the markers out of the header text.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)
