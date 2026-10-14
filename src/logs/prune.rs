@@ -131,8 +131,16 @@ fn remove_if_empty(dir: &Path) {
     if rest.next().is_some() {
         return;
     }
-    if let Err(failure) = fs::remove_dir(dir) {
-        warn("cannot remove the empty folder", dir, &failure);
+    settle_removal(dir, fs::remove_dir(dir));
+}
+
+/// Reports a failed removal of a stream folder that was empty when it was checked. DirectoryNotEmpty is silent: a writer has
+/// landed a file in the folder since, so the folder is in use and stays. This is a ruling, not yet in design §4.3.
+fn settle_removal(dir: &Path, outcome: io::Result<()>) {
+    match outcome {
+        Ok(()) => {}
+        Err(failure) if failure.kind() == io::ErrorKind::DirectoryNotEmpty => {}
+        Err(failure) => warn("cannot remove the empty folder", dir, &failure),
     }
 }
 
@@ -258,5 +266,27 @@ mod tests {
             printed[0].contains("prune: cannot delete the entry (PermissionDenied)"),
             "{printed:?}"
         );
+    }
+
+    #[test]
+    fn a_folder_a_writer_filled_after_the_check_is_kept_silently() {
+        PRINTED.with(|printed| printed.borrow_mut().clear());
+        let root = tempfile::tempdir().expect("a temporary folder");
+        let stream = root.path().join("impl");
+        fs::create_dir(&stream).expect("a stream folder");
+        // What a writer leaves in the folder between the check and the removal: its dot-prefixed temp file.
+        fs::write(stream.join(".writer-temp"), b"").expect("a writer's temp file");
+        let refused = fs::remove_dir(&stream).expect_err("a folder with a file in it");
+        assert_eq!(refused.kind(), io::ErrorKind::DirectoryNotEmpty);
+        settle_removal(&stream, Err(refused));
+        assert!(stream.is_dir(), "the folder stays");
+        let printed = PRINTED.with(|printed| printed.borrow().clone());
+        assert!(printed.is_empty(), "{printed:?}");
+        // Any other failure to remove the folder still warns.
+        settle_removal(
+            &stream,
+            Err(io::Error::from(io::ErrorKind::PermissionDenied)),
+        );
+        assert_eq!(PRINTED.with(|printed| printed.borrow().len()), 1);
     }
 }

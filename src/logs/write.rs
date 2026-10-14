@@ -1,8 +1,7 @@
 //! Writes one log entry to the store (design §3.4 and §4.3).
-//! memex's frontmatter with the agent's lines merged into it, the body verbatim, a file name from the title's slug, and never an overwrite. The store itself may be a symlink, which is followed; a symlinked stream folder is refused. A stream folder that a concurrent prune removes just before the temp file is made is made again (design §4.3 Vanished entries).
+//! memex's frontmatter with the agent's lines merged into it, the body verbatim, a file name from the title's slug, and never an overwrite. The store itself may be a symlink, which is followed; a symlinked stream folder is refused. A stream folder that a concurrent prune removes is made again (design §4.3 Vanished entries).
 //! Cases: LOG-WRITE-01, LOG-WRITE-02, LOG-WRITE-03, LOG-WRITE-04, LOG-WRITE-05, LOG-WRITE-06, LOG-WRITE-08, LOG-WRITE-14, LOG-WRITE-15, LOG-FRONT-01, LOG-BODY-02, DISC-STORE-01, DISC-STORE-02, PORT-MODE-01
 
-use std::ffi::OsStr;
 use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
@@ -12,7 +11,7 @@ use tempfile::NamedTempFile;
 use crate::atomic;
 use crate::clock::Timestamp;
 use crate::error::Error;
-use crate::root::{lists, slash, store_listed, Place};
+use crate::root::{slash, store_listed, Place};
 
 /// The `.gitignore` that goes beside a new store, so logs can never be committed by accident (design §4.1 items 3 and 4). init
 /// writes the same bytes into a new `.memex/`.
@@ -20,6 +19,9 @@ pub const GITIGNORE: &[u8] = b"logs/\ncache/\n";
 
 /// The longest slug, in characters (design §3.4).
 const SLUG_MAX: usize = 60;
+
+/// The most attempts when a concurrent prune removes a stream folder under a write (design §4.3 Vanished entries).
+const ATTEMPTS: u32 = 3;
 
 /// One log entry as the verb gathered it. Each optional field is written only when it is known.
 pub struct Entry {
@@ -154,16 +156,25 @@ fn store_exists(store: &Path) -> Result<bool, Error> {
 }
 
 /// Creates `dir` and everything above it, and refuses a `dir` that is a symlink: the store may be a link, but no folder
-/// below it is followed (the rule prune keeps too).
+/// below it is followed (the rule prune keeps too). A folder a concurrent prune removes after the create is made again (design §4.3).
 fn make_folder(dir: &Path) -> Result<(), Error> {
-    fs::create_dir_all(dir).map_err(|failure| Error::io_at("cannot create", dir, &failure))?;
-    match fs::symlink_metadata(dir) {
-        Ok(meta) if meta.is_dir() => Ok(()),
-        Ok(_) => Err(Error::io_message(format!(
-            "cannot write to {}: it is a symlink, and memex follows none inside the store",
-            slash(dir)
-        ))),
-        Err(failure) => Err(Error::io_at("cannot read", dir, &failure)),
+    let mut attempt = 1;
+    loop {
+        fs::create_dir_all(dir).map_err(|failure| Error::io_at("cannot create", dir, &failure))?;
+        let failure = match fs::symlink_metadata(dir) {
+            Ok(meta) if meta.is_dir() => return Ok(()),
+            Ok(_) => {
+                return Err(Error::io_message(format!(
+                    "cannot write to {}: it is a symlink, and memex follows none inside the store",
+                    slash(dir)
+                )))
+            }
+            Err(failure) => failure,
+        };
+        if failure.kind() != io::ErrorKind::NotFound || attempt == ATTEMPTS {
+            return Err(Error::io_at("cannot read", dir, &failure));
+        }
+        attempt += 1;
     }
 }
 
@@ -200,32 +211,28 @@ fn temp_with(
     dir: &Path,
     create: impl Fn(&Path) -> io::Result<NamedTempFile>,
 ) -> Result<NamedTempFile, Error> {
-    const ATTEMPTS: u32 = 3;
     let mut attempt = 1;
     loop {
-        match create(dir) {
+        let failure = match create(dir) {
             Ok(temp) => return Ok(temp),
-            Err(_) if attempt < ATTEMPTS && !listed(dir) => {
-                make_folder(dir)?;
-                attempt += 1;
-            }
-            Err(failure) => {
-                return Err(Error::io_at(
-                    "cannot create a temporary file in",
-                    dir,
-                    &failure,
-                ));
-            }
+            Err(failure) => failure,
+        };
+        if attempt == ATTEMPTS || listed(dir) {
+            return Err(Error::io_at(
+                "cannot create a temporary file in",
+                dir,
+                &failure,
+            ));
         }
+        make_folder(dir)?;
+        attempt += 1;
     }
 }
 
-/// True when `dir` is still listed under its parent by its exact name (design §4.4 Name matching). A failed listing is not one.
+/// True when `dir` is still listed under its parent by its exact name, which `store_listed` checks for any folder (design §4.4
+/// Name matching). A failed listing is not one.
 fn listed(dir: &Path) -> bool {
-    match (dir.parent(), dir.file_name().and_then(OsStr::to_str)) {
-        (Some(parent), Some(name)) => matches!(lists(parent, name), Ok(true)),
-        _ => false,
-    }
+    store_listed(dir).unwrap_or(false)
 }
 
 #[cfg(test)]
