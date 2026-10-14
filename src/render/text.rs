@@ -1,6 +1,7 @@
 //! Prints `show`'s sections and misses as text (design §3.3).
-//! Each section sits under its `===` line, then its blocks in order, with a limits line after the children and cited-by lists.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-MD-01, SHOW-MD-02, SHOW-LOG-01, SHOW-UP-01, SHOW-ROOT-01, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, INT-NOHEAD-03, CASE-SECT-01, CITE-PREFIX-01, CITE-UNRES-01, CITE-BACK-01, CITE-BACK-04, CITE-LINK-03, SHOW-OTHER-01
+//! Each section sits under its `===` line, then its blocks in order, with a limits line after the children and cited-by lists,
+//! and a gap legend after its children (a file: after its body) when it prints a placeholder (design §3.3 Gaps).
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-MD-01, SHOW-MD-02, SHOW-LOG-01, SHOW-UP-01, SHOW-ROOT-01, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, INT-NOHEAD-03, CASE-SECT-01, CITE-PREFIX-01, CITE-UNRES-01, CITE-BACK-01, CITE-BACK-04, CITE-LINK-03, SHOW-OTHER-01, SHOW-GAP-01, SHOW-GAP-02, SHOW-GAP-03
 
 use super::{CaseParts, Citations, Fields, Link, Listing, Miss, Ref, Section};
 use crate::cite::Cite;
@@ -9,6 +10,24 @@ use crate::corpus::{Child, Kind};
 
 /// A one-liner is cut to this many characters, the ellipsis included (design §2).
 const CLIP: usize = 120;
+
+/// The placeholder of a folder with no README, which is also its body (design §3.3).
+const NO_README: &str = "(no README)";
+
+/// The placeholder of a file with no header, which is also its body (design §3.3).
+const NO_HEADER: &str = "(no header)";
+
+/// The gap legend: each placeholder with the line that explains it, in the order the legend prints them (design §3.3 Gaps).
+const GAP_LEGEND: [(&str, &str); 2] = [
+    (
+        NO_README,
+        "(no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is",
+    ),
+    (
+        NO_HEADER,
+        "(no header): add a comment block atop the file; its first sentence states the file's purpose",
+    ),
+];
 
 /// The text of several sections: each ends in a newline, and one blank line separates two sections.
 pub fn sections(sections: &[Section]) -> String {
@@ -44,12 +63,35 @@ fn section(section: &Section) -> String {
     if let Some(children) = &section.children {
         children_block(&mut out, children);
     }
+    gap_legend(&mut out, section);
     cites_block(&mut out, &section.citations);
     cited_by_block(&mut out, &section.citations);
     if let Some(chain) = &section.chain {
         chain_block(&mut out, chain);
     }
     out
+}
+
+/// The gap legend: one line per placeholder that the section prints, each once, in legend order. It follows the children, or a
+/// file's body, with no blank line before it, and a section that prints no placeholder gets none (design §3.3 Gaps).
+fn gap_legend(out: &mut String, section: &Section) {
+    let used = placeholders(section);
+    for (placeholder, line) in GAP_LEGEND {
+        if used.contains(&placeholder) {
+            out.push_str(line);
+            out.push('\n');
+        }
+    }
+}
+
+/// The placeholders that a section prints: its body's, when the body is a placeholder, and each child line's, one per line.
+fn placeholders(section: &Section) -> Vec<&'static str> {
+    let body = section.text.is_none().then_some(section.missing);
+    let children = section
+        .children
+        .iter()
+        .flat_map(|listing| listing.items.iter().filter_map(child_placeholder));
+    body.into_iter().chain(children).collect()
 }
 
 /// The body: the text in full, or the placeholder when there is no text.
@@ -175,14 +217,25 @@ fn chain_block(out: &mut String, chain: &[Link]) {
 /// The line of one child: its name, with `/` for a folder, then its one-liner. A folder whose README exists but has no
 /// one-liner shows its name alone; only a folder with no README, or a file with no header, shows a placeholder.
 fn child_line(child: &Child) -> String {
-    let (name, placeholder) = match child.kind {
-        Kind::Dir => (format!("{}/", child.name), "(no README)"),
-        Kind::File => (child.name.clone(), "(no header)"),
+    let name = match child.kind {
+        Kind::Dir => format!("{}/", child.name),
+        Kind::File => child.name.clone(),
     };
+    match (child_placeholder(child), &child.title) {
+        (Some(placeholder), _) => format!("  {name}  {placeholder}\n"),
+        (None, Some(title)) if !title.is_empty() => format!("  {name}  {}\n", clip(title)),
+        (None, _) => format!("  {name}\n"),
+    }
+}
+
+/// The placeholder that a child's line prints in place of its one-liner: `(no README)` for a folder, `(no header)` for a file.
+/// None when the line has a one-liner, or when it is a folder whose README has none, which shows its name alone.
+fn child_placeholder(child: &Child) -> Option<&'static str> {
     match (&child.title, child.kind) {
-        (Some(title), Kind::Dir) if title.is_empty() => format!("  {name}\n"),
-        (Some(title), _) if !title.is_empty() => format!("  {name}  {}\n", clip(title)),
-        _ => format!("  {name}  {placeholder}\n"),
+        (Some(title), Kind::Dir) if title.is_empty() => None,
+        (Some(title), _) if !title.is_empty() => None,
+        (_, Kind::Dir) => Some(NO_README),
+        (_, Kind::File) => Some(NO_HEADER),
     }
 }
 

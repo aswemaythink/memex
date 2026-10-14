@@ -8,6 +8,7 @@ stdout
 |   kappa/
 |   lambda/  (no README)
 |   showing 2 of 2
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
 | 
 | cites
 |   (none)

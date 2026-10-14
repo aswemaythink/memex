@@ -1,0 +1,46 @@
+$ memex show headed
+exit 0
+stdout
+| === headed ===
+| # Headed
+| 
+| A folder whose README is here, and whose children all have a one-liner.
+| 
+| children
+|   a.rs  The one child of a folder whose children all have a header.
+|   showing 1 of 1
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/cli.rs --up 0
+exit 0
+stdout
+| === src/cli.rs ===
+| Parses the demo arguments.
+| It has two lines so that the body shows both.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show headed --json
+exit 0
+stdout
+| {"docs":[{"ref":"headed","collection":null,"id":null,"path":"headed","title":"A folder whose README is here, and whose children all have a one-liner.","fields":{},"text":"# Headed\n\nA folder whose README is here, and whose children all have a one-liner.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}],"children":{"total":1,"items":[{"path":"headed/a.rs","kind":"file","title":"The one child of a folder whose children all have a header."}]}}],"errors":[]}
+stderr (empty)

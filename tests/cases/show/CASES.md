@@ -115,3 +115,12 @@
 
 - `SHOW-ORDER-01` A folder lists its children sorted by name, files and folders together, and no sibling whose name starts with the folder's name leaks in: `show .` lists exactly a, a!, a-b, a.b and a0 in that order, `show a` lists only f.rs and x/, and `show a-b` lists only g.rs, in text and with `--json`, exit 0.
   design §3.3 Folder: the children are the folder's own entries, with its README.md left out; design §3.6 Determinism: lists are sorted, ties broken by ref. Run: memex show ., memex show a and memex show a-b, each with and without --json.
+
+## GAP
+
+- `SHOW-GAP-01` A folder with no README, holding a headerless file and a subfolder with no README, prints `(no README)` as its body and on the subfolder's line, `(no header)` on the file's line, and after its children the legend lines `(no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is` and `(no header): add a comment block atop the file; its first sentence states the file's purpose`, each once, exit 0; with `--json` the same folder has no legend text, exit 0.
+  design §3.3 Gaps: a section that prints a placeholder follows its children with one legend line per placeholder, once; JSON is unchanged. Run: memex show plain, then memex show plain --json.
+- `SHOW-GAP-02` A headerless file prints `(no header)` as its body, and the `(no header)` legend line directly after that body, before `cites`, exit 0; with `--json` it has no legend text, exit 0.
+  design §3.3 Gaps: a file section's legend follows its body. Run: memex show notes.txt, then memex show notes.txt --json.
+- `SHOW-GAP-03` A folder with a README whose children all have a one-liner, and a file with a header, print no legend line, and `--json` has none either, exit 0.
+  design §3.3 Gaps: a section that prints no placeholder gets no legend line. Run: memex show headed, memex show src/cli.rs --up 0, then memex show headed --json.

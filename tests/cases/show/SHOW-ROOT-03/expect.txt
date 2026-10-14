@@ -12,6 +12,8 @@ stdout
 |   src/  The source of the demo.
 |   sub/  A subfolder of the demo repo, where the cwd of this case is.
 |   showing 4 of 4
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
 | 
 | cites
 |   (none)

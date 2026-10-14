@@ -56,6 +56,8 @@ stdout
 |   item-49.txt  (no header)
 |   item-50.txt  (no header)
 |   showing 50 of 51 (--limit 51 for all)
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
 | 
 | cites
 |   (none)

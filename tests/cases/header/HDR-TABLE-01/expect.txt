@@ -35,6 +35,7 @@ stdout
 |   sample.tsx  Header for tsx.
 |   sample.zig  Header for zig.
 |   showing 29 of 29
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
 | 
 | cites
 |   (none)
@@ -76,6 +77,7 @@ stdout
 |   sample.yml  Header for yml.
 |   sample.zsh  Header for zsh.
 |   showing 21 of 21
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
 | 
 | cites
 |   (none)
@@ -101,6 +103,7 @@ stdout
 |   sample.lua  Header for lua.
 |   sample.sql  Header for sql.
 |   showing 5 of 5
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
 | 
 | cites
 |   (none)
@@ -127,6 +130,7 @@ stdout
 |   sample.lisp  Header for lisp.
 |   sample.scm  Header for scm.
 |   showing 6 of 6
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
 | 
 | cites
 |   (none)
@@ -151,6 +155,7 @@ stdout
 |   sample.m  Header for m.
 |   sample.tex  Header for tex.
 |   showing 4 of 4
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
 | 
 | cites
 |   (none)
@@ -175,6 +180,7 @@ stdout
 |   sample.vue  Header for vue.
 |   sample.xml  Header for xml.
 |   showing 4 of 4
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
 | 
 | cites
 |   (none)
@@ -197,6 +203,7 @@ stdout
 |   sample.ml  Header for ml.
 |   sample.mli  Header for mli.
 |   showing 2 of 2
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
 | 
 | cites
 |   (none)

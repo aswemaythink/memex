@@ -22,6 +22,7 @@ stdout
 | children
 |   cli.rs  Parses the arguments.
 |   showing 1 of 1
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
 | 
 | cites
 |   (none)
@@ -58,6 +59,7 @@ stdout
 | children
 |   cli.rs  Parses the arguments.
 |   showing 1 of 1
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
 | 
 | cites
 |   (none)

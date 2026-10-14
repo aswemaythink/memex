@@ -1,0 +1,26 @@
+$ memex show notes.txt
+exit 0
+stdout
+| === notes.txt ===
+| (no header)
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show notes.txt --json
+exit 0
+stdout
+| {"docs":[{"ref":"notes.txt","collection":null,"id":"notes.txt","path":"notes.txt","title":null,"fields":{},"text":null,"cites":[],"cited_by":{"total":0,"refs":[]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}]}],"errors":[]}
+stderr (empty)

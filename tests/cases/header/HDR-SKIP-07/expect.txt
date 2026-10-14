@@ -3,6 +3,7 @@ exit 0
 stdout
 | === block.rs ===
 | (no header)
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
 | 
 | cites
 |   (none)
@@ -17,6 +18,7 @@ exit 0
 stdout
 | === joined.rs ===
 | (no header)
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
 | 
 | cites
 |   (none)

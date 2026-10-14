@@ -10,6 +10,7 @@ stdout
 |   cli.rs  Parses the demo arguments.
 |   deep/  (no README)
 |   showing 2 of 2
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
 | 
 | cites
 |   (in another root: run show from $SANDBOX/wt)

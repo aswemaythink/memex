@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "headed"]}, {"args": ["show", "src/cli.rs", "--up", "0"]}, {"args": ["show", "headed", "--json"]}]}

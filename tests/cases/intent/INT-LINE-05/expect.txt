@@ -7,6 +7,7 @@ stdout
 | children
 |   long/  This one-liner is deliberately long, so that text output has to cut it short at one hundred and twenty characters while…
 |   showing 1 of 1
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
 | 
 | cites
 |   (none)

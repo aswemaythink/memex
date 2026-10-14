@@ -8,6 +8,8 @@ stdout
 |   sub/  (no README)
 |   top.txt  (no header)
 |   showing 2 of 2
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
 | 
 | cites
 |   (none)
@@ -29,6 +31,8 @@ stdout
 | children
 |   keep.txt  (no header)
 |   showing 1 of 1
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
 | 
 | cites
 |   (none)
