@@ -1,0 +1,1 @@
+{"git": "commit", "setup": [{"run": ["git", "worktree", "add", "../wt", "-b", "feat"]}], "platforms": ["unix"], "steps": [{"args": ["log", "impl"], "stdin": "No git here\n", "cwd": "wt", "env": {"PATH": "/nonexistent"}}, {"args": ["log", "impl", "--json"], "stdin": "No git here\n", "cwd": "wt", "env": {"PATH": "/nonexistent"}}], "snapshot": ["repo/.memex", "wt/.memex"]}

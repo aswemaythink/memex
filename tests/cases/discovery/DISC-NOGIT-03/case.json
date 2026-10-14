@@ -1,0 +1,1 @@
+{"git": "commit", "setup": [{"run": ["git", "worktree", "add", "../wt", "-b", "feat"]}], "platforms": ["unix"], "steps": [{"args": ["log", "impl"], "stdin": "Nested, no git\n", "cwd": "wt/sub", "env": {"PATH": "/nonexistent"}}], "snapshot": ["wt/sub/.memex"]}

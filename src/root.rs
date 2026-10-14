@@ -1,6 +1,6 @@
 //! Finds where `log` writes, per design §4.1: the root, the folder that owns the store, and the store.
 //! The root is the nearest `.memex/` inside the cwd's git worktree (the walk stops at its toplevel), else the toplevel, else the cwd; the read verbs use the same root, and git is asked through subprocesses.
-//! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-ROOT-05, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-GIT-01, LOG-WRITE-06, LOG-WRITE-10
+//! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-ROOT-05, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-GIT-01, DISC-NOGIT-01, DISC-NOGIT-02, DISC-NOGIT-03, LOG-WRITE-06, LOG-WRITE-10
 
 use std::ffi::OsStr;
 use std::fs;
@@ -59,6 +59,19 @@ pub fn locate(cwd: &Path) -> Result<Place, Error> {
         git => checkout_place(root, git.as_ref(), found.is_some(), worktree),
     }
 }
+
+/// `locate` for `log`. Without git, a linked worktree is refused, since its entry would be lost with the worktree (design §4.4
+/// git). The nearest `.git` entry at or above `cwd` decides it, and git is asked only when that entry is a file.
+pub fn locate_for_log(cwd: &Path) -> Result<Place, Error> {
+    let here = resolved(cwd);
+    if nearest_git_is_file(&here) && git_missing() {
+        return Err(Error::io_message(NO_GIT_IN_WORKTREE.to_string()));
+    }
+    locate(cwd)
+}
+
+/// The refusal of `log` in a linked worktree that git cannot be asked about (design §4.4 git).
+const NO_GIT_IN_WORKTREE: &str = "cannot find the main checkout's log store: git is not on PATH (this folder is a linked worktree); put git on PATH";
 
 /// The branch and short commit of HEAD, as git sees them from `cwd`.
 pub fn head(cwd: &Path) -> Head {
@@ -197,26 +210,42 @@ fn git_entry_between(cwd: &Path, found: &Path) -> bool {
         .any(|dir| lists(dir, ".git").unwrap_or(true))
 }
 
+/// True when the nearest `.git` entry at or above `cwd`, found by listing each folder up from `cwd`, is a file: a linked worktree's
+/// (design §4.4 git). A folder that cannot be listed holds none, and a symlink is not a file.
+fn nearest_git_is_file(cwd: &Path) -> bool {
+    cwd.ancestors()
+        .find_map(|dir| entry_named(dir, ".git").ok().flatten())
+        .and_then(|entry| entry.file_type().ok())
+        .is_some_and(|kind| kind.is_file())
+}
+
 /// True when `dir` lists a folder named exactly `.memex`. The name is matched against the listing, never probed on a guessed
 /// path, so a case-insensitive file system does not match another spelling (design §4.4 Name matching).
 fn holds_memex(dir: &Path) -> bool {
     lists(dir, ".memex").unwrap_or(false) && dir.join(".memex").is_dir()
 }
 
-/// True when `dir` lists an entry named exactly `name`, of any kind. A folder that does not exist lists nothing. Names inside
-/// `.memex/` are matched this way and never probed with `exists()` (design §4.4 Name matching).
-pub fn lists(dir: &Path, name: &str) -> io::Result<bool> {
+/// The entry named exactly `name` in `dir`'s listing, if there is one. A folder that does not exist lists nothing. The name is
+/// matched against the listing and never probed (design §4.4 Name matching).
+fn entry_named(dir: &Path, name: &str) -> io::Result<Option<fs::DirEntry>> {
     let listing = match fs::read_dir(dir) {
         Ok(listing) => listing,
-        Err(failure) if failure.kind() == io::ErrorKind::NotFound => return Ok(false),
+        Err(failure) if failure.kind() == io::ErrorKind::NotFound => return Ok(None),
         Err(failure) => return Err(failure),
     };
     for item in listing {
-        if item?.file_name().to_str() == Some(name) {
-            return Ok(true);
+        let item = item?;
+        if item.file_name().to_str() == Some(name) {
+            return Ok(Some(item));
         }
     }
-    Ok(false)
+    Ok(None)
+}
+
+/// True when `dir` lists an entry named exactly `name`, of any kind. A folder that does not exist lists nothing. Names inside
+/// `.memex/` are matched this way and never probed with `exists()` (design §4.4 Name matching).
+pub fn lists(dir: &Path, name: &str) -> io::Result<bool> {
+    entry_named(dir, name).map(|entry| entry.is_some())
 }
 
 /// True when the store's own folder is listed under its parent by its exact name, as a folder, a file or a symlink. The writes
@@ -275,6 +304,14 @@ fn git_lines(dir: &Path, args: &[&str]) -> Option<Vec<String>> {
     }
     let text = String::from_utf8_lossy(&output.stdout);
     Some(text.lines().map(str::to_string).collect())
+}
+
+/// True when git cannot be started, so no `git` is on PATH. Git that starts and then fails is not missing (design §4.4 git).
+fn git_missing() -> bool {
+    matches!(
+        Command::new("git").arg("--version").output(),
+        Err(failure) if failure.kind() == io::ErrorKind::NotFound
+    )
 }
 
 #[cfg(test)]

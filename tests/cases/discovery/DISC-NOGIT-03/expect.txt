@@ -1,0 +1,8 @@
+$ memex log impl  [cwd wt/sub]  [env PATH=/nonexistent]
+exit 3
+stdout (empty)
+stderr
+| memex: cannot find the main checkout's log store: git is not on PATH (this folder is a linked worktree); put git on PATH
+== snapshot wt/sub/.memex
+-- config.json
+| {"keep_logs": "3d"}

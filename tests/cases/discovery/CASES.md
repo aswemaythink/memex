@@ -49,3 +49,12 @@
   design §4.1 item 4 (one key, in an object) and §4.3 (never delete on config it can't read). Run: memex log impl with config.json `"3d"`.
 - `DISC-CONFIG-04` A `.memex/config.json` that is a JSON number prints one warning on stderr naming the file, and the entry is still written.
   design §4.1 item 4 (one key, in an object) and §4.3 (never delete on config it can't read). Run: memex log impl with config.json `5`.
+
+## NOGIT
+
+- `DISC-NOGIT-01` With git missing from PATH, `log` in a linked worktree exits 3 with `memex: cannot find the main checkout's log store: git is not on PATH (this folder is a linked worktree); put git on PATH`, and with `--json` the envelope has code `io` on stdout. Neither store gains an entry or a `.gitignore`.
+  design §4.4 git: without git, a linked worktree's log is refused, since the entry would be lost with the worktree. Run: memex log impl, text and then --json, from wt with PATH=/nonexistent, unix only; snapshots of repo/.memex and wt/.memex.
+- `DISC-NOGIT-02` With git missing from PATH, `info` in the same linked worktree still works: exit 0, the overview on stdout and nothing on stderr, in text and with `--json`.
+  design §4.4 git: read verbs are unchanged. Run: memex info, text and then --json, from wt with PATH=/nonexistent, unix only.
+- `DISC-NOGIT-03` With git missing from PATH, `log` from a folder inside a linked worktree that holds its own `.memex/` is refused the same way, and writes nothing there.
+  design §4.4 git: the nearest `.git` entry at or above the cwd, found by listing, is the worktree's file, so the folder's own `.memex/` does not change the answer. Run: memex log impl from wt/sub, which has a `.memex/`, with PATH=/nonexistent, unix only; snapshot of wt/sub/.memex.
