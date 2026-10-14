@@ -431,7 +431,7 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [x] S3.3 (refined 4c6ab19)
 - [x] S3.4 (selfhost gate live)
 - [x] S4.1
-- [ ] S4.2 (self-init)
+- [x] S4.2 (self-init: all kept; refiner pass running)
 - [ ] S5.1
 - [ ] S5.2
 - [ ] S5.3
