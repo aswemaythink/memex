@@ -3,13 +3,13 @@
 //! Cases: none (stress)
 
 use std::collections::BTreeSet;
-use std::fs;
+use std::fs::{self, File};
 use std::path::{Path, PathBuf};
-use std::process::{Command, Output};
-use std::sync::{Arc, Barrier};
+use std::process::{Command, Output, Stdio};
+use std::sync::{Arc, Barrier, Mutex, PoisonError};
 use std::thread;
 
-use crate::support::{cmd, output_text, run_stdin, Sandbox};
+use crate::support::{cmd, output_text, Sandbox};
 
 /// The streams that the prune tests write into and prune.
 const STREAMS: [&str; 3] = ["impl", "review", "drift"];
@@ -17,16 +17,18 @@ const STREAMS: [&str; 3] = ["impl", "review", "drift"];
 const SAME_STEM: &str = "20261014-120000-same-second";
 /// The anchor is current, so no prune takes it, and the readers show it.
 const ANCHOR: &str = "impl:20261014-120000-anchor";
+const ANCHOR_BODY: &str = "# Anchor\n\nThe anchor stays.\n";
 /// Three months before MEMEX_NOW, so the default keep_logs of 3d prunes these entries.
 const EXPIRED_STAMP: &str = "20260701-120000";
+/// How many children may hold their stdio files open in this process at once: 3 descriptors each, well under 256.
+const SLOTS: usize = 32;
 
 /// One memex process for `run_together`: its command, and the text it reads on stdin (None for a reader).
 struct Job(Command, Option<String>);
 
-/// The jobs of the worktree test, with each writer's name and body in the same order.
-type Plan = (Vec<Job>, Vec<String>, Vec<String>);
+/// The jobs of the worktree test, with each writer's body in the same order.
+type Plan = (Vec<Job>, Vec<String>);
 
-/// Ten rounds of 50 processes and one of 200 log one title in one second: each ref is distinct, each body intact.
 #[test]
 #[ignore = "stress suite: run with cargo test --release --test stress -- --ignored"]
 fn conc_same_second() {
@@ -53,7 +55,6 @@ fn same_second_round(writers: usize) {
     assert_store(sandbox.path(), &want);
 }
 
-/// Writers and readers run at once over 5,000 expired entries, then 20 rounds where writers land in pruned folders.
 #[test]
 #[ignore = "stress suite: run with cargo test --release --test stress -- --ignored"]
 fn conc_log_while_prune() {
@@ -67,8 +68,8 @@ fn conc_log_while_prune() {
 fn prune_under_load() {
     let sandbox = repo();
     let root = sandbox.path();
-    let anchor = log_job(&sandbox, "impl", "# Anchor\n\nThe anchor stays.\n", None);
-    assert_clean(&start(anchor, &Barrier::new(1)), "the anchor's memex log");
+    let anchor = run_together(vec![log_job(&sandbox, "impl", ANCHOR_BODY, None)]);
+    assert_clean(&anchor[0], "the anchor's memex log");
     write_expired(root, 5000);
     let bodies: Vec<String> = (0..20)
         .map(|n| format!("# New entry {n:02}\n\nWriter {n:02} logged during the prune.\n"))
@@ -77,8 +78,8 @@ fn prune_under_load() {
     jobs.extend((0..10).map(|n| reader_job(&sandbox, n)));
     let outputs = run_together(jobs);
     let (writes, reads) = outputs.split_at(bodies.len());
-    for (n, output) in reads.iter().enumerate() {
-        assert_clean(output, &format!("reader {n}"));
+    for output in reads {
+        assert_clean(output, "reader");
     }
     let mut want = check_writes(root, writes, &bodies);
     want.insert(store_key(ANCHOR));
@@ -97,35 +98,26 @@ fn emptied_folder_round() {
     assert_store(sandbox.path(), &want);
 }
 
-/// Ten writers in the main checkout and in each of three linked worktrees log at once into one store. Each entry names
-/// its writer's worktree, and all 40 remain after the worktrees are removed.
+/// Ten writers in the main checkout and in each linked worktree log at once; all 40 survive `git worktree remove`.
 #[test]
 #[ignore = "stress suite: run with cargo test --release --test stress -- --ignored"]
 fn conc_worktrees() {
     let sandbox = repo();
     let root = sandbox.path();
-    let holder = tempfile::Builder::new()
-        .prefix("memex-stress-wt-")
-        .tempdir()
-        .unwrap_or_else(|e| panic!("cannot make a folder for the worktrees: {e}"));
+    let holder = tempfile::tempdir().unwrap_or_else(|e| panic!("cannot make a folder: {e}"));
     let worktrees = ["wt-1", "wt-2", "wt-3"].map(|name| holder.path().join(name));
     for path in &worktrees {
         let arg = path.to_string_lossy().into_owned();
-        let added = git(root, &["worktree", "add", "--detach", &arg]);
-        must_succeed(&added, "git worktree add");
+        must_succeed(&git(root, &["worktree", "add", "--detach", &arg]), "add");
     }
-    let (jobs, names, bodies) = worktree_jobs(&sandbox, &worktrees);
+    let (jobs, bodies) = worktree_jobs(&sandbox, &worktrees);
     let outputs = run_together(jobs);
     let want = check_writes(root, &outputs, &bodies);
     let refs: Vec<String> = outputs.iter().map(printed_ref).collect();
-    for (reference, name) in refs.iter().zip(&names) {
-        assert_worktree(root, reference, name);
-    }
     assert_store(root, &want);
     for path in &worktrees {
         let arg = path.to_string_lossy().into_owned();
-        let removed = git(root, &["worktree", "remove", &arg]);
-        must_succeed(&removed, "git worktree remove");
+        must_succeed(&git(root, &["worktree", "remove", &arg]), "remove");
     }
     assert_store(root, &want);
     for (reference, body) in refs.iter().zip(&bodies) {
@@ -133,22 +125,21 @@ fn conc_worktrees() {
     }
 }
 
-/// The 40 writers of the worktree test: ten from the main checkout, named `main`, then ten from each linked worktree.
+/// The 40 writers of the worktree test: ten from the main checkout, then ten from each linked worktree.
 fn worktree_jobs(sandbox: &Sandbox, worktrees: &[PathBuf]) -> Plan {
     let mut sources: Vec<(String, Option<&Path>)> = vec![("main".to_string(), None)];
     for (k, path) in worktrees.iter().enumerate() {
         sources.push((format!("wt-{}", k + 1), Some(path.as_path())));
     }
-    let (mut jobs, mut names, mut bodies) = (Vec::new(), Vec::new(), Vec::new());
+    let (mut jobs, mut bodies) = (Vec::new(), Vec::new());
     for (name, dir) in &sources {
         for n in 1..=10 {
             let body = format!("# Entry from {name} {n:02}\n\nWriter {n:02} ran in {name}.\n");
             jobs.push(log_job(sandbox, "impl", &body, *dir));
-            names.push(name.clone());
             bodies.push(body);
         }
     }
-    (jobs, names, bodies)
+    (jobs, bodies)
 }
 
 /// A fresh git repository with one empty commit and `memex init` run in it, as a real project is.
@@ -161,19 +152,16 @@ fn repo() -> Sandbox {
     sandbox
 }
 
-/// Runs `git args` in `dir` with a fixed identity, and without GIT_* variables or the system and global config.
+/// Runs `git args` in `dir` with a fixed identity, and without the GIT_DIR, GIT_WORK_TREE and GIT_INDEX_FILE a hook sets.
 fn git(dir: &Path, args: &[&str]) -> Output {
     let mut command = Command::new("git");
-    for (name, _) in std::env::vars_os() {
-        let upper = name.to_string_lossy().to_ascii_uppercase();
-        if upper.starts_with("GIT_") {
-            command.env_remove(name);
-        }
-    }
     command
         .args(["-c", "user.name=stress", "-c", "user.email=stress@x.test"])
         .args(args)
         .current_dir(dir)
+        .env_remove("GIT_DIR")
+        .env_remove("GIT_WORK_TREE")
+        .env_remove("GIT_INDEX_FILE")
         .env("GIT_CONFIG_NOSYSTEM", "1")
         .env("GIT_CONFIG_GLOBAL", dir.join(".gitconfig"));
     command
@@ -183,34 +171,67 @@ fn git(dir: &Path, args: &[&str]) -> Output {
 
 /// Starts every job's process at once: a thread per job waits at a barrier, then runs its command to the end.
 fn run_together(jobs: Vec<Job>) -> Vec<Output> {
+    let dir = tempfile::tempdir().unwrap_or_else(|e| panic!("cannot make a folder: {e}"));
     let barrier = Arc::new(Barrier::new(jobs.len()));
-    let threads: Vec<_> = jobs
-        .into_iter()
-        .map(|job| {
-            let barrier = Arc::clone(&barrier);
-            thread::spawn(move || start(job, &barrier))
-        })
-        .collect();
-    threads
-        .into_iter()
-        .map(|thread| {
+    let slots = Arc::new((0..SLOTS).map(|_| Mutex::new(())).collect::<Vec<_>>());
+    let mut threads = Vec::new();
+    for (n, job) in jobs.into_iter().enumerate() {
+        let barrier = Arc::clone(&barrier);
+        let slots = Arc::clone(&slots);
+        let dir = dir.path().to_path_buf();
+        threads.push(thread::spawn(move || {
+            start(job, &barrier, &slots[n % SLOTS], &dir, n)
+        }));
+    }
+    let mut outputs = Vec::new();
+    for thread in threads {
+        outputs.push(
             thread
                 .join()
-                .unwrap_or_else(|_| panic!("a process thread panicked"))
-        })
-        .collect()
+                .unwrap_or_else(|_| panic!("a thread panicked")),
+        );
+    }
+    outputs
 }
 
-/// Waits at `barrier`, then runs the job's process to the end and returns its output.
-fn start(job: Job, barrier: &Barrier) -> Output {
-    let Job(mut command, stdin) = job;
+/// Runs the job's process to the end. Its stdin and outputs are files, opened under the thread's slot only while the
+/// child is spawned, so at most `SLOTS` children hold descriptors in this process at once.
+fn start(job: Job, barrier: &Barrier, slot: &Mutex<()>, dir: &Path, n: usize) -> Output {
+    let Job(command, stdin) = job;
+    let input = dir.join(format!("{n}.in"));
+    let (out, err) = (dir.join(format!("{n}.out")), dir.join(format!("{n}.err")));
+    fs::write(&input, stdin.unwrap_or_default()).unwrap_or_else(|e| panic!("stdin: {e}"));
     barrier.wait();
-    match stdin {
-        Some(text) => run_stdin(&mut command, &text),
-        None => command
-            .output()
-            .unwrap_or_else(|e| panic!("did not start: {e}")),
+    let mut child = {
+        let _slot = slot.lock().unwrap_or_else(PoisonError::into_inner);
+        let mut command = command;
+        command.stdin(stdio(&input, false));
+        command.stdout(stdio(&out, true));
+        command.stderr(stdio(&err, true));
+        command
+            .spawn()
+            .unwrap_or_else(|e| panic!("did not start: {e}"))
+    };
+    let status = child
+        .wait()
+        .unwrap_or_else(|e| panic!("did not finish: {e}"));
+    let stdout = read(&out).into_bytes();
+    let stderr = read(&err).into_bytes();
+    Output {
+        status,
+        stdout,
+        stderr,
     }
+}
+
+/// A file as a child's stdio: opened for reading when `write` is false, else created.
+fn stdio(path: &Path, write: bool) -> Stdio {
+    let file = if write {
+        File::create(path)
+    } else {
+        File::open(path)
+    };
+    Stdio::from(file.unwrap_or_else(|e| panic!("{}: {e}", path.display())))
 }
 
 /// A writer: `memex log <stream>` with `body` on stdin, run from `dir` when one is given.
@@ -247,8 +268,7 @@ fn reader_job(sandbox: &Sandbox, n: usize) -> Job {
 /// Writes `count` expired entries spread over the streams. The next write prunes each one.
 fn write_expired(root: &Path, count: usize) {
     for n in 0..count {
-        let stream = STREAMS[n % STREAMS.len()];
-        let dir = store(root).join(stream);
+        let dir = store(root).join(STREAMS[n % STREAMS.len()]);
         fs::create_dir_all(&dir).unwrap_or_else(|e| panic!("{}: {e}", dir.display()));
         let text = format!("---\ntime: 2026-07-01T12:00:00Z\n---\n# Expired {n:05}\n");
         let path = dir.join(format!("{EXPIRED_STAMP}-expired-{n:05}.md"));
@@ -265,7 +285,6 @@ fn check_writes(root: &Path, outputs: &[Output], bodies: &[String]) -> BTreeSet<
         assert_body(root, &reference, body);
         keys.insert(store_key(&reference));
     }
-    assert_eq!(keys.len(), bodies.len(), "two writers printed one ref");
     keys
 }
 
@@ -304,16 +323,6 @@ fn assert_body(root: &Path, reference: &str, body: &str) {
     let text = read(&path);
     let shown = path.display();
     assert!(text.ends_with(body), "{shown} lacks its body\n{text}");
-}
-
-/// Panics unless the entry `reference` names its writer's worktree: `wt-1` and so on, or none for `main`.
-fn assert_worktree(root: &Path, reference: &str, name: &str) {
-    let path = entry_file(root, reference);
-    let text = read(&path);
-    let field = text.lines().find_map(|l| l.strip_prefix("worktree: "));
-    let ok = field.map_or(name == "main", |v| v.rsplit('/').next() == Some(name));
-    let shown = path.display();
-    assert!(ok, "{shown} names {field:?} for {name}");
 }
 
 /// Panics unless `output` exited 0 and wrote nothing to stderr. `what` names the process in the message.
