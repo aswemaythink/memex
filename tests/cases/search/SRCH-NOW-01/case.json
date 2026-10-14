@@ -1,0 +1,1 @@
+{"steps": [{"args": ["search", "demo"], "env": {"MEMEX_NOW": "2026-10-13T12:00:00+01:00"}}, {"args": ["search", "demo", "--json"], "env": {"MEMEX_NOW": "not-a-date"}}, {"args": ["search", "demo"]}]}

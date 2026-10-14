@@ -162,3 +162,8 @@
 
 - `SRCH-AGE-01` A log's age prints as `59m` under an hour, `47h` under 48 hours, and `2d` from 48 hours on.
   design §3.6 Ages (Nm below 60 minutes, Nh below 48 hours, else Nd), with MEMEX_NOW at 2026-10-13T12:00:00Z. Run: memex search ageword, then memex search --in impl.
+
+## NOW
+
+- `SRCH-NOW-01` An invalid `$MEMEX_NOW` exits 3 for search before it reads anything: `invalid MEMEX_NOW:` and the value on stderr, or the `io` envelope on stdout with `--json`.
+  design §3.6 Determinism: `$MEMEX_NOW` replaces the clock everywhere, and an invalid value exits 3. Run: memex search demo with MEMEX_NOW as `2026-10-13T12:00:00+01:00`, then memex search demo --json with `not-a-date`, then memex search demo with the default value, which exits 0.

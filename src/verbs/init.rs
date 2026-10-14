@@ -5,12 +5,12 @@ mod agents;
 mod files;
 mod install;
 
-use std::env;
-use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::path::PathBuf;
 
+use crate::clock::Timestamp;
 use crate::error::Error;
-use crate::verbs::info;
+use crate::root;
+use crate::verbs::{here, info};
 
 /// What init prints, kept as it goes, so that a failure still shows the actions taken before it.
 #[derive(Debug, Default)]
@@ -63,44 +63,25 @@ impl Report {
 
 /// Carries out `init` in the target folder, recording each action in `report`, and ends with the atlas of the target after a
 /// blank line. The steps run in the order of design §3.5b. A failure leaves the actions before it in `report`.
-pub fn run(report: &mut Report) -> Result<(), Error> {
+pub fn run(report: &mut Report, now: Timestamp) -> Result<(), Error> {
     let target = target_dir()?;
     files::store(&target, report)?;
     agents::agents_md(&target, report)?;
     agents::claude_md(&target, report)?;
     install::run(&target, report)?;
-    atlas(target, report)
+    atlas(target, now, report)
 }
 
 /// The folder init works in: the git toplevel of the cwd when the cwd is inside a worktree, else the cwd (design §3.5b).
 fn target_dir() -> Result<PathBuf, Error> {
-    let cwd = env::current_dir()
-        .map_err(|failure| Error::io("cannot read the current folder", &failure))?;
-    let cwd = dunce::canonicalize(&cwd)
-        .map_err(|failure| Error::io("cannot resolve the current folder", &failure))?;
-    Ok(git_toplevel(&cwd).unwrap_or(cwd))
-}
-
-/// The toplevel of the worktree that git reports for `cwd`, canonical. None outside a worktree, in a bare repo, or without git.
-fn git_toplevel(cwd: &Path) -> Option<PathBuf> {
-    let output = Command::new("git")
-        .args(["rev-parse", "--show-toplevel"])
-        .current_dir(cwd)
-        .stdin(Stdio::null())
-        .stderr(Stdio::null())
-        .output()
-        .ok()?;
-    if !output.status.success() {
-        return None;
-    }
-    let text = String::from_utf8_lossy(&output.stdout);
-    dunce::canonicalize(text.lines().next()?).ok()
+    let cwd = here::current_dir()?;
+    Ok(root::toplevel_of(&cwd).unwrap_or(cwd))
 }
 
 /// Prints the atlas of the target after a blank line. It is read from the target as given, so the process cwd never changes,
 /// and it ignores `$MEMEX_AGENT` (INIT-INFO-03).
-fn atlas(target: PathBuf, report: &mut Report) -> Result<(), Error> {
-    let text = info::text_in(target)?;
+fn atlas(target: PathBuf, now: Timestamp, report: &mut Report) -> Result<(), Error> {
+    let text = info::text_in(target, now)?;
     report.line("");
     report.stdout.push_str(&text);
     Ok(())

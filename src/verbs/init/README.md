@@ -20,5 +20,5 @@ Choices where design §3.5b is silent:
 - A replaced binary that cannot be replaced, as on Windows while it runs, is left whole: init exits 3, and the error says it may be running.
 - Written files get the mode of any new file (0o644 less the umask on unix), a replaced file keeps its own mode, and a read-only AGENTS.md or CLAUDE.md is refused (exit 3), never replaced. The binary is 0o755 on unix.
 - An empty AGENTS.md gets the block alone, with no blank line above it.
-- The atlas is `info::text_in` of the target, so the process cwd never changes. It ignores `$MEMEX_AGENT`: init has no `--agent`, and an invalid value must not exit 2 after the files are written (INIT-INFO-03).
+- The atlas is `info::text_in` of the target, so the process cwd never changes. It ignores `$MEMEX_AGENT`: init has no `--agent`, and an invalid value must not exit 2 after the files are written (INIT-INFO-03). An invalid `$MEMEX_NOW` exits 3 before anything is written, as it does for every verb.
 - `.memex/.gitignore` gets the bytes of `logs/write.rs`'s `GITIGNORE`, the one copy of the design §4.1 text.

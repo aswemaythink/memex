@@ -150,8 +150,9 @@ pub fn root_of(cwd: &Path) -> PathBuf {
         .unwrap_or_else(|| cwd.to_path_buf())
 }
 
-/// The toplevel of the worktree that holds `cwd`, as git reports it. None when git is missing or `cwd` is not in a worktree.
-fn toplevel_of(cwd: &Path) -> Option<PathBuf> {
+/// The toplevel of the worktree that holds `cwd`, as git reports it, canonical. None when git is missing, or `cwd` is not in a
+/// worktree, as in a bare repo.
+pub fn toplevel_of(cwd: &Path) -> Option<PathBuf> {
     git_line(cwd, &["rev-parse", "--show-toplevel"]).and_then(|top| resolve(cwd, &top))
 }
 

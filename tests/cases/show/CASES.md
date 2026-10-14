@@ -98,3 +98,8 @@
   design §3.6 show shape and exit codes. Run: memex show nope.rs --json.
 - `SHOW-JSON-05` `--json` on an ambiguous ref lists its `candidates` in the error, and exits 1.
   design §3.6 show shape (errors carry candidates) and design §3.1. Run: memex show README.md --json with cwd repo/src.
+
+## NOW
+
+- `SHOW-NOW-01` An invalid `$MEMEX_NOW` exits 3 for show too, though show prints no time: `invalid MEMEX_NOW:` and the value on stderr, or the `io` envelope on stdout with `--json`.
+  design §3.6 Determinism: an invalid value exits 3, and the value is checked once as every verb starts. Run: memex show README.md with MEMEX_NOW as `2026-10-13 12:00:00`, then memex show README.md --json with `not-a-date`, then memex show README.md with the default value, which exits 0.

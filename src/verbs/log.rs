@@ -6,7 +6,7 @@ use std::env;
 use std::io::{self, Write};
 use std::path::Path;
 
-use crate::clock;
+use crate::clock::Timestamp;
 use crate::config;
 use crate::error::{escape, Error};
 use crate::logs::write::{self, Entry};
@@ -29,7 +29,7 @@ pub struct Request {
 
 /// Writes the entry and returns what stdout should carry: `<stream>:<id>` on one line, or `{"ref","path"}` with `--json`.
 /// Every refusal comes before anything is written. Warnings about the config go to stderr as they are found.
-pub fn run(request: &Request) -> Result<String, Error> {
+pub fn run(request: &Request, now: Timestamp) -> Result<String, Error> {
     stream::check_grammar(&request.stream)?;
     stream::check_reserved(&request.stream)?;
     let to = values::list("--to", &request.to)?;
@@ -38,7 +38,6 @@ pub fn run(request: &Request) -> Result<String, Error> {
     let text = body::read_stdin()?;
     let split = front::split(&text)?;
     body::check_title(&split.rest)?;
-    let now = clock::now()?;
     let cwd = env::current_dir()
         .map_err(|failure| Error::io("cannot read the current folder", &failure))?;
     let place = root::locate(&cwd)?;

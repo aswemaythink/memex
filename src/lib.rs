@@ -1,6 +1,6 @@
 //! memex library: the module map for the intent-layer CLI, and the run function that main.rs calls.
-//! Modules are listed in PLAN.md §4 and added slice by slice.
-//! Cases: CLI-*, LOG-WRITE-*, SHOW-*, SRCH-*
+//! src/README.md says what each module does.
+//! Cases: CLI-*, LOG-WRITE-*, SHOW-*, SRCH-*, INFO-NOW-01, SRCH-NOW-01, SHOW-NOW-01
 
 mod atomic;
 mod cite;
@@ -29,6 +29,7 @@ use std::ffi::OsString;
 use std::io::{self, Write};
 
 use cli::Command;
+use clock::Timestamp;
 use error::Error;
 
 /// Runs memex on the arguments after the program name and returns the exit code.
@@ -42,8 +43,9 @@ pub fn run(args: Vec<OsString>) -> i32 {
     }
 }
 
-/// Carries out a parsed command. Every verb does its work. A search with `--in` and no words is the roster (design §3.2),
-/// which the search verb prints.
+/// Carries out a parsed command. Each verb starts by reading the clock once, so an invalid `$MEMEX_NOW` exits 3 for every verb
+/// before it reads or writes anything (design §3.6); help and version never read it. A search with `--in` and no words is the
+/// roster (design §3.2), which the search verb prints.
 fn dispatch(command: Command) -> i32 {
     match command {
         Command::Help(verb) => print_out(&help::text(verb)),
@@ -60,7 +62,7 @@ fn dispatch(command: Command) -> i32 {
                 limit,
                 json,
             };
-            finish(verbs::search::run(&request), json)
+            finish(started(|now| verbs::search::run(&request, now)), json)
         }
         Command::Show {
             refs,
@@ -74,7 +76,7 @@ fn dispatch(command: Command) -> i32 {
                 limit,
                 json,
             };
-            finish_show(verbs::show::run(&request), json)
+            finish_show(started(|_| verbs::show::run(&request)), json)
         }
         Command::Log {
             stream,
@@ -90,14 +92,23 @@ fn dispatch(command: Command) -> i32 {
                 agent,
                 json,
             };
-            finish(verbs::log::run(&request), json)
+            finish(started(|now| verbs::log::run(&request, now)), json)
         }
         Command::Info { agent, json } => {
             let request = verbs::info::Request { agent, json };
-            finish(verbs::info::run(&request), json)
+            finish(started(|now| verbs::info::run(&request, now)), json)
         }
-        Command::Init => finish_init(),
+        Command::Init => match clock::now() {
+            Ok(now) => finish_init(now),
+            Err(error) => error::report(&error, false),
+        },
     }
+}
+
+/// Runs a verb with the instant of the run: `MEMEX_NOW`, else the system clock, read once as the verb starts. `show` reads no
+/// time, but its `MEMEX_NOW` is checked all the same.
+fn started<T>(verb: impl FnOnce(Timestamp) -> Result<T, Error>) -> Result<T, Error> {
+    verb(clock::now()?)
 }
 
 /// Prints a verb's stdout, or its error the way the invocation asked for, and returns the exit status.
@@ -138,9 +149,9 @@ fn print_out(text: &str) -> i32 {
 
 /// Carries out `init` and prints what it did: the action lines and the atlas to stdout, the warnings to stderr. A failure still
 /// prints the actions taken before it, then its error, so the user sees how far init got.
-fn finish_init() -> i32 {
+fn finish_init(now: Timestamp) -> i32 {
     let mut report = verbs::init::Report::default();
-    let result = verbs::init::run(&mut report);
+    let result = verbs::init::run(&mut report, now);
     let code = print_out(&report.stdout);
     let _ = write!(io::stderr().lock(), "{}", report.stderr);
     match result {

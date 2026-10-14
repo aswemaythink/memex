@@ -39,29 +39,28 @@ pub struct Request {
 
 /// Carries out `info` and returns its stdout: the text of the atlas, or its JSON document with `--json`. Each duplicate case id
 /// is warned on stderr here; the manifests that do not load were warned when the corpus loaded.
-pub fn run(request: &Request) -> Result<String, Error> {
+pub fn run(request: &Request, now: Timestamp) -> Result<String, Error> {
     let agent = agent_of(request.agent.as_deref())?;
-    render_here(&here::load()?, agent, request.json)
+    Ok(render_here(&here::load()?, agent, now, request.json))
 }
 
 /// The text atlas of `dir`, a canonical folder, as `init` ends with it (design §3.5b item 4). init has no `--agent` and does not
 /// read `$MEMEX_AGENT`, so its atlas has no `to` line and an invalid value cannot fail it after its files are written.
 /// Case: INIT-INFO-03
-pub fn text_in(dir: PathBuf) -> Result<String, Error> {
-    render_here(&here::load_in(dir)?, None, false)
+pub fn text_in(dir: PathBuf, now: Timestamp) -> Result<String, Error> {
+    Ok(render_here(&here::load_in(dir)?, None, now, false))
 }
 
 /// The atlas of `here` for `agent`, as text or as its JSON document. Each duplicate case id is warned on stderr.
-fn render_here(here: &Here, agent: Option<String>, json: bool) -> Result<String, Error> {
-    let now = clock::now()?;
+fn render_here(here: &Here, agent: Option<String>, now: Timestamp, json: bool) -> String {
     let duplicates = duplicate_warnings(&here.corpus);
     warn(&duplicates);
     let atlas = atlas(here, agent, now, &duplicates);
-    Ok(if json {
+    if json {
         render::document(&atlas)
     } else {
         render::text(&atlas)
-    })
+    }
 }
 
 /// The agent id from `--agent`, else `$MEMEX_AGENT`, checked as `log` checks it (design §3.4). Its usage error names `info`.

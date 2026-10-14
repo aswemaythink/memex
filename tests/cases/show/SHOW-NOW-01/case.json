@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "README.md"], "env": {"MEMEX_NOW": "2026-10-13 12:00:00"}}, {"args": ["show", "README.md", "--json"], "env": {"MEMEX_NOW": "not-a-date"}}, {"args": ["show", "README.md"]}]}

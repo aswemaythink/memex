@@ -34,7 +34,7 @@ pub fn load_in(cwd: PathBuf) -> Result<Here, Error> {
 }
 
 /// The cwd, canonical.
-fn current_dir() -> Result<PathBuf, Error> {
+pub fn current_dir() -> Result<PathBuf, Error> {
     let cwd = env::current_dir()
         .map_err(|failure| Error::io("cannot read the current folder", &failure))?;
     dunce::canonicalize(&cwd)

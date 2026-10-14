@@ -1,0 +1,18 @@
+$ memex search demo  [env MEMEX_NOW=2026-10-13T12:00:00+01:00]
+exit 3
+stdout (empty)
+stderr
+| memex: invalid MEMEX_NOW: 2026-10-13T12:00:00+01:00
+
+$ memex search demo --json  [env MEMEX_NOW=not-a-date]
+exit 3
+stdout
+| {"error":{"code":"io","message":"invalid MEMEX_NOW: not-a-date"}}
+stderr (empty)
+
+$ memex search demo
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   README.md  The demo project.
+stderr (empty)

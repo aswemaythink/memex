@@ -1,0 +1,30 @@
+$ memex show README.md  [env 'MEMEX_NOW=2026-10-13 12:00:00']
+exit 3
+stdout (empty)
+stderr
+| memex: invalid MEMEX_NOW: 2026-10-13 12:00:00
+
+$ memex show README.md --json  [env MEMEX_NOW=not-a-date]
+exit 3
+stdout
+| {"error":{"code":"io","message":"invalid MEMEX_NOW: not-a-date"}}
+stderr (empty)
+
+$ memex show README.md
+exit 0
+stdout
+| === README.md ===
+| # Demo
+| 
+| The demo project.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)

@@ -1,6 +1,6 @@
 # src
 
-`src/` is the crate's source: the `memex` library (`lib.rs`, whose module map is in PLAN.md §4) and the thin `main.rs` binary that turns `memex::run`'s result into the process exit code. Modules land slice by slice, in the order PLAN.md §6 gives.
+`src/` is the crate's source: the `memex` library (`lib.rs`, whose module map is in PLAN.md §4) and the thin `main.rs` binary that turns `memex::run`'s result into the process exit code. 
 
 - `cli.rs`: the argv grammar of design §3, parsed into a typed `Command`, or into the usage error the grammar calls for.
 - `grammar.rs`: the grammar's tables: the flags each verb takes, what each flag takes after it, and the words each verb takes.
@@ -22,6 +22,6 @@
 - `cite.rs` and `cite/`: the citations a doc makes and the backlinks they give (design §2.3), built the first time a verb asks for them.
 - `intent/`: the readers of headers, READMEs and CASES.md, and the one-liner rule they share (design §2); `files.rs` picks the reader for each walked file.
 - `collections/`: manifests, their flat-YAML frontmatter, and the three kinds (`markdown`, `folder` and `json`), each read by its own module (design §4.2).
-- `verbs/`: the verbs that run; `log.rs` is `memex log`, `show.rs` is `memex show`, `search.rs` is `memex search`.
+- `verbs/`: one module per verb (`search`, `show`, `log`, `info`, `init`), and `here.rs`, which loads what the reading verbs share. `lib.rs` reads the clock once as each verb starts.
 - `index/`: the search index of design §3.2 and PLAN §4, built in memory per run: tokens, stems, BM25F, prefix and one-edit matches, and the ranking; and `filter.rs`, the `field:value` and `since:` filters that narrow the docs first.
 - `render/search.rs`: `search`'s groups as text, with the `(showing N of M)` headings, and as its `--json` document (design §3.2, §3.6).

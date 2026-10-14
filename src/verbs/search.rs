@@ -77,7 +77,7 @@ struct Plan {
 
 /// Carries out a search and returns its stdout: the text of its groups, or the JSON document with `--json`. Zero hits give no
 /// text, and the exit status is 0 as usual.
-pub fn run(request: &Request) -> Result<String, Error> {
+pub fn run(request: &Request, now: Timestamp) -> Result<String, Error> {
     let corpus = here::load()?.corpus;
     if let Some(names) = &request.in_ {
         filter::check_in(&corpus, names)?;
@@ -85,7 +85,7 @@ pub fn run(request: &Request) -> Result<String, Error> {
     let scope = scope_of(&corpus, request.in_.as_deref());
     let fields = filter::fields_of(scope.iter().flat_map(|(_, docs)| docs.iter().copied()));
     let (filters, literals) = filter::read(&request.terms, &fields)?;
-    let plan = Plan::new(request, &literals, filters, clock::now()?)?;
+    let plan = Plan::new(request, &literals, filters, now)?;
     let groups = rank_groups(&corpus, &plan, scope);
     Ok(if request.json {
         let spelled: Vec<(&str, &str)> = plan.filters.iter().map(Filter::spelled).collect();
