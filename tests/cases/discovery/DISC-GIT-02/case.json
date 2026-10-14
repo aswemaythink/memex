@@ -1,0 +1,1 @@
+{"git": "commit", "setup": [{"run": ["git", "checkout", "--detach", "-q"]}], "platforms": ["unix"], "steps": [{"args": ["log", "impl"], "stdin": "Detached, no git\n", "env": {"PATH": "/nonexistent"}}], "snapshot": ["repo/.memex/logs"]}

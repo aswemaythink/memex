@@ -1,0 +1,1 @@
+{"platforms": ["unix"], "steps": [{"args": ["log", "impl"], "stdin": "Invalid HEAD, no git\n", "env": {"PATH": "/nonexistent"}}], "snapshot": ["repo/.memex/logs"]}

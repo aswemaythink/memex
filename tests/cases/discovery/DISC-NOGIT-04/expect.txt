@@ -1,0 +1,16 @@
+$ memex log impl  [cwd wt-bare]  [env PATH=/nonexistent]
+exit 3
+stdout (empty)
+stderr
+| memex: cannot find the main checkout's log store: git did not answer and this linked worktree's repository is not a .git folder; run memex log where git works
+
+$ memex log impl --json  [cwd wt-bare]  [env PATH=/nonexistent]
+exit 3
+stdout
+| {"error":{"code":"io","message":"cannot find the main checkout's log store: git did not answer and this linked worktree's repository is not a .git folder; run memex log where git works"}}
+stderr (empty)
+== snapshot bare.git/memex
+(missing)
+== snapshot wt-bare/.memex
+-- config.json
+| {"keep_logs": "3d"}

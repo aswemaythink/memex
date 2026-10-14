@@ -12,6 +12,7 @@ stderr
 | ---
 | stream: impl
 | time: 2026-10-13T12:00:00Z
+| branch: main
 | ---
 | # Fresh entry
 | body

@@ -1,6 +1,7 @@
 //! Finds where `log` writes, per design §4.1: the root, the folder that owns the store, and the store.
-//! The root is the nearest `.memex/` above the cwd, bounded by its toplevel, which the listing finds (layout.rs); else the toplevel, else the cwd. The read verbs use the same root. git answers only for the store's place and HEAD.
-//! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-ROOT-05, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-GIT-01, DISC-NOGIT-01, DISC-NOGIT-02, DISC-NOGIT-03, DISC-TOP-01, DISC-TOP-02, DISC-TOP-03, DISC-TOP-04, DISC-TOP-05, DISC-TOP-06, LOG-WRITE-06, LOG-WRITE-10
+//! The root is the nearest `.memex/` above the cwd, bounded by its toplevel, which the listing finds (layout.rs); else the toplevel, else the cwd. The read verbs use the same root.
+//! git answers for the store's place and HEAD while it works; when it gives no answer, the layout (layout.rs) answers from plain files (design §4.4 git).
+//! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-ROOT-05, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-GIT-01, DISC-GIT-02, DISC-GIT-03, DISC-NOGIT-01, DISC-NOGIT-02, DISC-NOGIT-03, DISC-NOGIT-04, DISC-NOGIT-05, DISC-NOGIT-06, DISC-NOGIT-07, DISC-TOP-01, DISC-TOP-02, DISC-TOP-03, DISC-TOP-04, DISC-TOP-05, DISC-TOP-06, LOG-WRITE-06, LOG-WRITE-10
 
 use std::ffi::OsStr;
 use std::io;
@@ -8,7 +9,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 use crate::error::Error;
-use crate::layout::{entry_named, holds_memex, nearest_within, toplevel};
+use crate::layout::{head_branch, holds_memex, layout_of, nearest_within, toplevel, Layout};
 
 pub use crate::layout::lists;
 
@@ -24,8 +25,8 @@ pub struct Place {
     pub worktree: Option<PathBuf>,
 }
 
-/// The branch and short commit of HEAD. Each is None when it cannot be known: no git, no commits,
-/// or, for the branch, a detached HEAD.
+/// The branch and short commit of HEAD. Each is None when it cannot be known: the commit needs git, and the branch is
+/// None for a detached HEAD.
 pub struct Head {
     pub branch: Option<String>,
     pub commit: Option<String>,
@@ -41,42 +42,55 @@ struct Git {
     linked: bool,
 }
 
-/// Finds the place `log` writes from `cwd`. A missing `.memex/` is the `no_root` error (exit 3).
+/// Who places the store: git while it answers, else the layout (design §4.4 git).
+enum Source {
+    /// A repository, as git describes it, or as the layout does for a linked worktree whose common dir is a `.git` folder.
+    Repo(Git),
+    /// No repository, or a main checkout, submodule or separate git dir: the store is the root's own.
+    Own,
+    /// A linked worktree whose store the layout cannot place (design §4.4 git).
+    Unplaced,
+}
+
+/// The store as the reads and `log` see it, and whether the layout cannot place it.
+struct Resolution {
+    /// The place, or the `no_root` error when no `.memex/` is in reach, in which case the reads show no store.
+    place: Result<Place, Error>,
+    /// True when the layout cannot place a linked worktree's store, so `log` refuses before it writes (design §4.4 git).
+    unplaced: bool,
+}
+
+/// The refusal of `log` in a linked worktree whose store the layout cannot place (design §4.4 git).
+const UNPLACED: &str = "cannot find the main checkout's log store: git did not answer and this linked worktree's repository is not a .git folder; run memex log where git works";
+
+/// Finds the place the reads and `log` use from `cwd`. A missing `.memex/` is the `no_root` error (exit 3).
 pub fn locate(cwd: &Path) -> Result<Place, Error> {
-    let canonical = dunce::canonicalize(cwd)
-        .map_err(|failure| Error::io_at("cannot resolve", cwd, &failure))?;
-    // The toplevel comes from the listing, so it is the same with git missing, failing or present (design §4.1 item 1).
-    let top = toplevel(&canonical);
-    let found = nearest_within(&canonical, top.as_deref());
-    let has_memex = found.is_some();
-    let git = Git::probe(&canonical);
-    let worktree = git.as_ref().filter(|git| git.linked).and(top.clone());
-    let root = found.or_else(|| top.clone()).unwrap_or(canonical);
-    match git {
-        Some(git) if git.bare => bare_place(root, &git, has_memex, worktree),
-        git => checkout_place(root, top.as_deref(), git.as_ref(), has_memex, worktree),
-    }
+    resolution_of(cwd)?.place
 }
 
-/// `locate` for `log`. Without git, a linked worktree is refused, since its entry would be lost with the worktree (design §4.4
-/// git). The nearest `.git` entry at or above `cwd` decides it, and git is asked only when that entry is a file.
-pub fn locate_for_log(cwd: &Path) -> Result<Place, Error> {
-    let here = resolved(cwd);
-    if nearest_git_is_file(&here) && git_missing() {
-        return Err(Error::io_message(NO_GIT_IN_WORKTREE.to_string()));
+/// `locate` for `log`. A linked worktree whose store the layout cannot place is refused before anything is written, since its
+/// entry would be lost with the worktree (design §4.4 git).
+pub fn locate_for_write(cwd: &Path) -> Result<Place, Error> {
+    let found = resolution_of(cwd)?;
+    if found.unplaced {
+        return Err(Error::io_message(UNPLACED.to_string()));
     }
-    locate(cwd)
+    found.place
 }
 
-/// The refusal of `log` in a linked worktree that git cannot be asked about (design §4.4 git).
-const NO_GIT_IN_WORKTREE: &str = "cannot find the main checkout's log store: git is not on PATH (this folder is a linked worktree); put git on PATH";
-
-/// The branch and short commit of HEAD, as git sees them from `cwd`.
+/// The branch and short commit of HEAD, as git sees them from `cwd`. When git gives no branch, the branch is read from HEAD as a
+/// plain file, and the commit is omitted (design §4.4 git).
 pub fn head(cwd: &Path) -> Head {
-    let branch =
-        git_line(cwd, &["rev-parse", "--abbrev-ref", "HEAD"]).filter(|name| name != "HEAD");
-    let commit = git_line(cwd, &["rev-parse", "--short=7", "HEAD"]);
-    Head { branch, commit }
+    match git_line(cwd, &["rev-parse", "--abbrev-ref", "HEAD"]) {
+        Some(name) => Head {
+            branch: Some(name).filter(|name| name != "HEAD"),
+            commit: git_line(cwd, &["rev-parse", "--short=7", "HEAD"]),
+        },
+        None => Head {
+            branch: toplevel(&resolved(cwd)).and_then(|top| head_branch(&top)),
+            commit: None,
+        },
+    }
 }
 
 /// A path as labels and JSON write it: `/` separators on every OS, and no change on Unix.
@@ -148,6 +162,48 @@ fn main_checkout(git: &Git) -> Option<PathBuf> {
     }
 }
 
+/// The store as the cwd's repository places it (design §4.1 item 3): git's answer while git gives one, else the layout's.
+fn resolution_of(cwd: &Path) -> Result<Resolution, Error> {
+    let canonical = dunce::canonicalize(cwd)
+        .map_err(|failure| Error::io_at("cannot resolve", cwd, &failure))?;
+    // The toplevel comes from the listing, so it is the same with git missing, failing or present (design §4.1 item 1).
+    let top = toplevel(&canonical);
+    let found = nearest_within(&canonical, top.as_deref());
+    let has_memex = found.is_some();
+    let source = source_of(&canonical, top.as_deref());
+    let unplaced = matches!(source, Source::Unplaced);
+    let worktree = match &source {
+        Source::Repo(git) if git.linked => top.clone(),
+        _ => None,
+    };
+    let root = found.or_else(|| top.clone()).unwrap_or(canonical);
+    let place = match source {
+        Source::Repo(git) if git.bare => bare_place(root, &git, has_memex, worktree),
+        Source::Repo(git) => checkout_place(root, top.as_deref(), Some(&git), has_memex, worktree),
+        Source::Own | Source::Unplaced => {
+            checkout_place(root, top.as_deref(), None, has_memex, None)
+        }
+    };
+    Ok(Resolution { place, unplaced })
+}
+
+/// Who places the store for the repository at `canonical`: git while it answers. Without git's answer the layout decides: a linked
+/// worktree whose common dir is a `.git` folder maps to its main checkout, and one it cannot place is `Unplaced` (design §4.4 git).
+fn source_of(canonical: &Path, top: Option<&Path>) -> Source {
+    if let Some(git) = Git::probe(canonical) {
+        return Source::Repo(git);
+    }
+    match top.map(layout_of) {
+        Some(Layout::Linked(common_dir)) => Source::Repo(Git {
+            common_dir,
+            bare: false,
+            linked: true,
+        }),
+        Some(Layout::Unplaced) => Source::Unplaced,
+        Some(Layout::Own) | None => Source::Own,
+    }
+}
+
 /// The nearest folder with a `.memex/` above `cwd`, within its toplevel (design §4.1 item 1). Outside a repo the walk is unbounded.
 /// No git is asked.
 pub fn nearest_memex(cwd: &Path) -> Option<PathBuf> {
@@ -185,18 +241,9 @@ pub fn store_listed(store: &Path) -> io::Result<bool> {
     }
 }
 
-/// True when the nearest `.git` entry at or above `cwd`, found by listing each folder up from `cwd`, is a file: a linked worktree's
-/// (design §4.4 git). A folder that cannot be listed holds none, and a symlink is not a file.
-fn nearest_git_is_file(cwd: &Path) -> bool {
-    cwd.ancestors()
-        .find_map(|dir| entry_named(dir, ".git").ok().flatten())
-        .and_then(|entry| entry.file_type().ok())
-        .is_some_and(|kind| kind.is_file())
-}
-
 impl Git {
-    /// Asks git about `cwd`. Returns None when git is missing, or `cwd` is not inside a repository. The toplevel is not asked for:
-    /// the listing finds it (design §4.1 item 1).
+    /// Asks git about `cwd`. Returns None when git is missing or fails, or `cwd` is not inside a repository. The toplevel is not
+    /// asked for: the listing finds it (design §4.1 item 1).
     fn probe(cwd: &Path) -> Option<Git> {
         let dirs = git_lines(cwd, &["rev-parse", "--git-dir", "--git-common-dir"])?;
         let [git_dir, common] = dirs.as_slice() else {
@@ -240,14 +287,6 @@ fn git_lines(dir: &Path, args: &[&str]) -> Option<Vec<String>> {
     }
     let text = String::from_utf8_lossy(&output.stdout);
     Some(text.lines().map(str::to_string).collect())
-}
-
-/// True when git cannot be started, so no `git` is on PATH. Git that starts and then fails is not missing (design §4.4 git).
-fn git_missing() -> bool {
-    matches!(
-        Command::new("git").arg("--version").output(),
-        Err(failure) if failure.kind() == io::ErrorKind::NotFound
-    )
 }
 
 #[cfg(test)]

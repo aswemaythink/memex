@@ -1,17 +1,36 @@
 $ memex log impl  [cwd wt]  [env PATH=/nonexistent]
-exit 3
-stdout (empty)
-stderr
-| memex: cannot find the main checkout's log store: git is not on PATH (this folder is a linked worktree); put git on PATH
+exit 0
+stdout
+| impl:20261013-120000-no-git-here
+stderr (empty)
 
 $ memex log impl --json  [cwd wt]  [env PATH=/nonexistent]
-exit 3
+exit 0
 stdout
-| {"error":{"code":"io","message":"cannot find the main checkout's log store: git is not on PATH (this folder is a linked worktree); put git on PATH"}}
+| {"ref":"impl:20261013-120000-no-git-here-2","path":"$SANDBOX/repo/.memex/logs/impl/20261013-120000-no-git-here-2.md"}
 stderr (empty)
 == snapshot repo/.memex
+-- .gitignore
+| logs/
+| cache/
 -- config.json
 | {"keep_logs": "3d"}
+-- logs/impl/20261013-120000-no-git-here-2.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| branch: feat
+| worktree: $SANDBOX/wt
+| ---
+| No git here
+-- logs/impl/20261013-120000-no-git-here.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| branch: feat
+| worktree: $SANDBOX/wt
+| ---
+| No git here
 == snapshot wt/.memex
 -- config.json
 | {"keep_logs": "3d"}

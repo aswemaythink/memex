@@ -1,0 +1,1 @@
+A folder under a dangling .git file.

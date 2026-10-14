@@ -36,8 +36,12 @@
 
 ## GIT
 
-- `DISC-GIT-01` With git missing from PATH, a log in a repo is treated as non-git: the repo's `.memex/` takes the entry, and the entry has no branch or commit.
-  design §4.4 git: if git is missing, the repo is treated as non-git. Run: memex log impl with PATH=/nonexistent (unix only).
+- `DISC-GIT-01` With git missing from PATH, a log in a repo writes the entry with the repo's branch, read from its HEAD, and no commit: the repo's `.memex/` takes the entry.
+  design §4.4 git: without git the branch comes from HEAD and the commit is omitted. Run: memex log impl with PATH=/nonexistent (unix only); snapshot of repo/.memex/logs.
+- `DISC-GIT-02` With git missing from PATH, a log in a repo whose HEAD is detached writes an entry with neither a branch nor a commit.
+  design §4.4 git: a HEAD that holds a commit name names no branch. Run: after `git checkout --detach`, memex log impl with PATH=/nonexistent (unix only); snapshot of repo/.memex/logs.
+- `DISC-GIT-03` With git missing from PATH, a HEAD that names `refs/heads/.invalid` (reftable's placeholder) gives the entry no branch.
+  design §4.4 git: a branch name with a part that starts with a dot is no branch. Run: memex log impl with PATH=/nonexistent (unix only), in a repo whose `.git` folder holds only a HEAD with `ref: refs/heads/.invalid`; snapshot of repo/.memex/logs.
 
 ## CONFIG
 
@@ -52,12 +56,20 @@
 
 ## NOGIT
 
-- `DISC-NOGIT-01` With git missing from PATH, `log` in a linked worktree exits 3 with `memex: cannot find the main checkout's log store: git is not on PATH (this folder is a linked worktree); put git on PATH`, and with `--json` the envelope has code `io` on stdout. Neither store gains an entry or a `.gitignore`.
-  design §4.4 git: without git, a linked worktree's log is refused, since the entry would be lost with the worktree. Run: memex log impl, text and then --json, from wt with PATH=/nonexistent, unix only; snapshots of repo/.memex and wt/.memex.
+- `DISC-NOGIT-01` With git missing from PATH, `log` in a linked worktree of an ordinary checkout writes to the main checkout's `.memex/logs/`, and nothing in the worktree: the entry has the worktree's branch, its toplevel as `worktree`, and no commit. Text, then --json.
+  design §4.4 git: the layout names the main checkout (the worktree's `commondir` names a `.git` folder), so the store is its counterpart there, as with git. Run: memex log impl, text and then --json, from wt with PATH=/nonexistent, unix only; snapshots of repo/.memex and wt/.memex.
 - `DISC-NOGIT-02` With git missing from PATH, `info` in the same linked worktree still works: exit 0, the overview on stdout and nothing on stderr, in text and with `--json`.
   design §4.4 git: read verbs are unchanged. Run: memex info, text and then --json, from wt with PATH=/nonexistent, unix only.
-- `DISC-NOGIT-03` With git missing from PATH, `log` from a folder inside a linked worktree that holds its own `.memex/` is refused the same way, and writes nothing there.
-  design §4.4 git: the nearest `.git` entry at or above the cwd, found by listing, is the worktree's file, so the folder's own `.memex/` does not change the answer. Run: memex log impl from wt/sub, which has a `.memex/`, with PATH=/nonexistent, unix only; snapshot of wt/sub/.memex.
+- `DISC-NOGIT-03` With git missing from PATH, `log` from a folder inside a linked worktree that holds its own `.memex/` writes to the same folder of the main checkout, as DISC-WT-02 does with git, and nothing in the worktree's folder.
+  design §4.1 item 3 and §4.4 git: the nearest `.git` entry, found by listing, is the worktree's file and names the main checkout, so the folder maps to its counterpart there. Run: memex log impl from wt/sub, which has a `.memex/`, with PATH=/nonexistent, unix only; snapshots of repo/sub/.memex and wt/sub/.memex.
+- `DISC-NOGIT-04` With git missing from PATH, `log` in a linked worktree of a bare repo is refused: exit 3 with `memex: cannot find the main checkout's log store: git did not answer and this linked worktree's repository is not a .git folder; run memex log where git works`, and with `--json` the envelope has code `io`. Neither store gains an entry or a `.gitignore`.
+  design §4.4 git: the common dir is not named `.git`, so the layout cannot place the store, and the worktree's own store would be lost with it. Run: memex log impl, text and then --json, from wt-bare with PATH=/nonexistent, unix only; snapshots of bare.git/memex and wt-bare/.memex.
+- `DISC-NOGIT-05` With git present but failing (GIT_DIR=/nonexistent makes every rev-parse exit 128), `log` in a linked worktree writes as DISC-NOGIT-01 does.
+  design §4.4 git: a failing git gives no answer, as a missing one does. Run: the DISC-NOGIT-01 steps with env GIT_DIR=/nonexistent, and the same snapshots.
+- `DISC-NOGIT-06` With git missing from PATH, `log` in a submodule writes to the submodule's own `.memex/` and is not refused, since its `.git` file names a git dir with no `commondir`.
+  design §4.4 git: a `.git` file whose git dir has no commondir is a main checkout, so the store is the root's own. Run: memex log impl from repo/sub, a submodule, with PATH=/nonexistent, unix only; snapshot of repo/sub/.memex.
+- `DISC-NOGIT-07` With git missing from PATH, `log` in a folder whose `.git` is a file naming a missing git dir is refused with the DISC-NOGIT-04 message, and writes nothing.
+  design §4.4 git: the commondir cannot be read, so the layout cannot place the store. Run: memex log impl from repo/sub, where repo/.git is a file whose gitdir line names a folder that does not exist, with PATH=/nonexistent, unix only; snapshot of repo/.memex.
 
 ## TOP
 
@@ -73,3 +85,8 @@
   design §4.1 item 1: a cwd inside `.git` belongs to the repo that holds it. Run: memex info and memex log impl, text and then --json, from repo/.git of a committed repo; snapshot of repo/.memex.
 - `DISC-TOP-06` A `.git` file that names a missing git dir still marks its folder as the toplevel: `info` from its subfolder names that folder as the root, in text and with `--json`, exit 0.
   design §4.1 item 1: a `.git` entry git would reject still marks a toplevel. Run: memex info, text and then --json, from repo/sub, where repo/.git is a file whose gitdir line names a folder that does not exist.
+
+## IGNORE
+
+- `DISC-IGNORE-01` With git missing from PATH, a README that `.gitignore` names is absent from `search --in readmes`, and a README it does not name is found.
+  design §4.1 item 2: the ignore walker honours `.gitignore` and `.ignore`, and §4.4 git: nothing in the walk needs git. Run: memex search secretword --in readmes, then search publicword --in readmes, with PATH=/nonexistent, unix only; the first README is git-ignored.

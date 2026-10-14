@@ -1,0 +1,12 @@
+$ memex search secretword --in readmes  [env PATH=/nonexistent]
+exit 0
+stdout (empty)
+stderr
+| memex: no hits for secretword; try fewer or other words, or memex info
+
+$ memex search publicword --in readmes  [env PATH=/nonexistent]
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   README.md  publicword lives here.
+stderr (empty)

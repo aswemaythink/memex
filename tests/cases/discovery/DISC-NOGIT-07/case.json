@@ -1,0 +1,1 @@
+{"platforms": ["unix"], "steps": [{"args": ["log", "impl"], "stdin": "Dangling, no git\n", "cwd": "repo/sub", "env": {"PATH": "/nonexistent"}}, {"args": ["log", "impl", "--json"], "stdin": "Dangling, no git\n", "cwd": "repo/sub", "env": {"PATH": "/nonexistent"}}], "snapshot": ["repo/.memex"]}

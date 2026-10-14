@@ -1,6 +1,6 @@
 //! Walks the intent layer: the entries under the root that the ignore rules keep (design §4.1 item 2).
 //! A name that is not UTF-8, or that holds a control character, has no label (`is_label_name`), so the walk never enters it and gives it no warning (design §4.4).
-//! Cases: INT-IGNORE-01, INT-IGNORE-02, INT-IGNORE-03, INT-SKIP-01, INT-SKIP-02, INT-NAME-03, SHOW-FILE-01, SHOW-DIR-01, SHOW-ROOT-01, SHOW-IO-02
+//! Cases: INT-IGNORE-01, INT-IGNORE-02, INT-IGNORE-03, INT-SKIP-01, INT-SKIP-02, INT-NAME-03, SHOW-FILE-01, SHOW-DIR-01, SHOW-ROOT-01, SHOW-IO-02, DISC-IGNORE-01
 
 use std::collections::BTreeMap;
 use std::ffi::OsStr;

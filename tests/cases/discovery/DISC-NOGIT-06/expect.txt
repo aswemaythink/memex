@@ -1,0 +1,31 @@
+$ memex log impl  [cwd repo/sub]  [env PATH=/nonexistent]
+exit 0
+stdout
+| impl:20261013-120000-submodule-no-git
+stderr (empty)
+
+$ memex log impl --json  [cwd repo/sub]  [env PATH=/nonexistent]
+exit 0
+stdout
+| {"ref":"impl:20261013-120000-submodule-no-git-2","path":"$SANDBOX/repo/sub/.memex/logs/impl/20261013-120000-submodule-no-git-2.md"}
+stderr (empty)
+== snapshot repo/sub/.memex
+-- .gitignore
+| logs/
+| cache/
+-- config.json
+| {"keep_logs": "3d"}
+-- logs/impl/20261013-120000-submodule-no-git-2.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| branch: main
+| ---
+| Submodule, no git
+-- logs/impl/20261013-120000-submodule-no-git.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| branch: main
+| ---
+| Submodule, no git

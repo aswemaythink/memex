@@ -1,8 +1,22 @@
 $ memex log impl  [cwd wt/sub]  [env PATH=/nonexistent]
-exit 3
-stdout (empty)
-stderr
-| memex: cannot find the main checkout's log store: git is not on PATH (this folder is a linked worktree); put git on PATH
+exit 0
+stdout
+| impl:20261013-120000-nested-no-git
+stderr (empty)
+== snapshot repo/sub/.memex
+-- .gitignore
+| logs/
+| cache/
+-- config.json
+| {"keep_logs": "3d"}
+-- logs/impl/20261013-120000-nested-no-git.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| branch: feat
+| worktree: $SANDBOX/wt
+| ---
+| Nested, no git
 == snapshot wt/sub/.memex
 -- config.json
 | {"keep_logs": "3d"}

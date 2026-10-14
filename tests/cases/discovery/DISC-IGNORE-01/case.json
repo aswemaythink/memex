@@ -1,0 +1,1 @@
+{"git": "commit", "platforms": ["unix"], "steps": [{"args": ["search", "secretword", "--in", "readmes"], "env": {"PATH": "/nonexistent"}}, {"args": ["search", "publicword", "--in", "readmes"], "env": {"PATH": "/nonexistent"}}]}

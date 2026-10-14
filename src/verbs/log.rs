@@ -39,7 +39,7 @@ pub fn run(request: &Request, now: Timestamp) -> Result<String, Error> {
     body::check_title(&split.rest)?;
     let cwd = env::current_dir()
         .map_err(|failure| Error::io("cannot read the current folder", &failure))?;
-    let place = root::locate_for_log(&cwd)?;
+    let place = root::locate_for_write(&cwd)?;
     stream::check_collections(&request.stream, &cwd, &place.owner)?;
     let config = config::load(&place.owner);
     if let Some(line) = &config.warning {
