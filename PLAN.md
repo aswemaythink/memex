@@ -445,7 +445,7 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [ ] S8.1
 - [ ] S8.2
 - [ ] S8.3
-- [ ] Site
+- [ ] Site (drafted 859b035; awaiting user copy sign-off; deploy held until release)
 
 ## 12. Tidy backlog
 Cleared by T1 (2026-10-14): header first sentences of 100 chars or fewer, gated; one BOM-dropping text reader; listing-based `.memex` discovery; one root discovery; header prologue and license rules; `preserve_order` JSON fields; collection warnings; stale comments.
