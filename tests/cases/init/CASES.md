@@ -58,6 +58,8 @@
   Scenario: two runs with `memex_on_path` false on unix. design §3.5b item 3 (the plain PATH hint).
 - `INIT-PATH-02` When a memex executable is on PATH, init installs nothing, reports nothing about the binary and prints no PATH hint, exit 0.
   Scenario: `memex_on_path` is true, and `home/.local` stays missing. design §3.5b item 3 (skip when memex is on PATH).
+- `INIT-PATH-03` A memex in a `node_modules/.bin` folder on PATH is npx's shim and does not count: init installs the binary, reports it `created`, and prints the PATH hint, exit 0, unix only.
+  Scenario: PATH is `node_modules/.bin:/usr/bin:/bin`, and a patch puts an executable `memex` in `repo/node_modules/.bin`. A case cannot name a sandbox path, so the entry is relative to the run's folder, `repo/`. design §3.5b item 3 (PATH entries inside a `node_modules/.bin` folder are ignored). The Windows rule, `memex.exe` or `memex.cmd` counts, has no case: it is pinned by a unit test in install.rs.
 
 ## INFO
 
@@ -86,3 +88,27 @@
   Scenario: AGENTS.md has an end marker, a line, then a begin marker. design §3.5b item 2.
 - `INIT-DAMAGE-03` Two pairs of markers change nothing, and the warning goes to stderr, exit 0.
   Scenario: AGENTS.md holds two complete blocks. design §3.5b item 2 (more than one pair is damage).
+
+## FENCE
+
+- `INIT-FENCE-01` A marker pair inside a backtick fence is not the block: init appends a real block after the document and leaves the fenced example as it is, exit 0.
+  Scenario: AGENTS.md holds a fenced example of the markers and no block; the snapshot shows the example unchanged and the block at the end. design §2.3 (citations are never extracted from fenced code blocks) and §3.5b item 2 (markers count only outside fenced code blocks).
+- `INIT-FENCE-02` A CLAUDE.md whose only `@AGENTS.md` line sits in a fence gets the import as its final line and reports `updated CLAUDE.md`, exit 0.
+  Scenario: CLAUDE.md holds a fenced `@AGENTS.md` line and no import; AGENTS.md is missing, so init creates it first. design §3.5b item 2 (the import line counts only outside fenced code blocks).
+- `INIT-FENCE-03` A closed fence above the block does not hide it: init replaces only the lines between the real markers and leaves the fenced example, exit 0.
+  Scenario: AGENTS.md holds a fenced example of the markers, then the real block with stale text. design §2.3 (a fence closes at its closing line) and §3.5b item 2 (replace).
+- `INIT-FENCE-04` A tilde fence hides a marker pair the way a backtick fence does, so init appends a real block, exit 0.
+  Scenario: AGENTS.md holds the markers inside a `~~~` fence and no block. design §2.3 (a fence is three or more backticks or tildes).
+- `INIT-FENCE-05` A code fence that is never closed hides the end of AGENTS.md, so init writes nothing: it reports `kept AGENTS.md`, warns on stderr, and exits 0.
+  Scenario: AGENTS.md ends inside a fence that is never closed and holds no block. design §2.3 (an unclosed fence runs to the end of the doc). Design §3.5b is silent on this case: a block appended there would sit inside the fence, so the next run would append another, and the warning and the kept file are a choice pinned here.
+- `INIT-FENCE-06` A code fence that is never closed hides the end of CLAUDE.md, so init writes no import: it reports `kept CLAUDE.md`, warns on stderr, and exits 0.
+  Scenario: CLAUDE.md ends inside a fence that is never closed and holds `@AGENTS.md`; AGENTS.md is missing and gets created. design §2.3 and §3.5b item 2. The warning is a choice pinned here, for the reason given at INIT-FENCE-05.
+- `INIT-FENCE-07` A line indented four spaces is code, not a fence, so a marker pair under it is the real block and is replaced, exit 0.
+  Scenario: AGENTS.md holds a four-space indented fence line, then an old block whose text is replaced. design §2.3 (a fence is indented at most three spaces).
+
+## LINK
+
+- `INIT-LINK-01` A symlink named AGENTS.md is never written through: init warns that it is a symlink, reports it `kept`, and leaves the file it names unchanged, exit 0, unix only.
+  Scenario: AGENTS.md is a symlink to `outside/shared.md`, a file outside the repo, made by a git patch as LOG-PRUNE-14 does; the snapshot of `repo` shows the link as `(symlink)` and the file it names is unchanged. design §3.5b item 2 (never writes through a symlinked AGENTS.md or CLAUDE.md: it warns and leaves them alone).
+- `INIT-LINK-02` A symlink named CLAUDE.md is never written through: init warns that it is a symlink, reports it `kept`, and leaves the file it names unchanged, while AGENTS.md is created as usual, exit 0, unix only.
+  Scenario: CLAUDE.md is a symlink to `outside/shared.md`, and AGENTS.md is missing; the snapshot of `repo` lists the link as `(symlink)` next to the new block. design §3.5b item 2.

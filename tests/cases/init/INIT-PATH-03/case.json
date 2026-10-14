@@ -1,0 +1,1 @@
+{"git": "init", "platforms": ["unix"], "env": {"PATH": "node_modules/.bin:/usr/bin:/bin"}, "setup": [{"run": ["git", "apply", "../shim.patch"]}], "steps": [{"args": ["init"]}], "snapshot": ["repo/node_modules/.bin"]}

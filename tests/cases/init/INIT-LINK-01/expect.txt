@@ -1,0 +1,26 @@
+$ memex init
+exit 0
+stdout
+| created .memex/.gitignore
+| created .memex/config.json
+| created .memex/collections/.gitkeep
+| kept AGENTS.md
+| 
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent  0 readmes · 0 headers · 0 cases
+| use     memex show <path|ref> · memex search <words> · memex log <stream> < body
+stderr
+| memex: warning: AGENTS.md is a symlink; not touching it
+== snapshot repo
+-- .memex/.gitignore
+| logs/
+| cache/
+-- .memex/collections/.gitkeep
+(empty)
+-- .memex/config.json
+| {"keep_logs": "3d"}
+-- AGENTS.md
+(symlink)
+== snapshot outside
+-- shared.md
+| # Shared notes

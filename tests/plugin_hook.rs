@@ -54,6 +54,52 @@ fn session_start_prints_the_info_overview() {
 }
 
 #[test]
+fn session_start_reads_the_atlas_of_the_cwd_in_the_hook_input() {
+    let repo = fixture();
+    let worktree = fixture_titled("Worktree");
+    let bin = memex_link();
+    let input = session_json_in(worktree.path());
+    let hook = run_hook(&with_memex(&bin), &input, repo.path());
+    assert!(hook.status.success(), "the hook exits 0: {hook:?}");
+    let info = run_memex(&["info"], worktree.path());
+    let here = run_memex(&["info"], repo.path());
+    assert_ne!(text(&info), text(&here), "the two atlases differ");
+    assert_eq!(
+        text(&hook),
+        text(&info),
+        "SessionStart prints the atlas of the hook input's cwd"
+    );
+}
+
+#[test]
+fn subagent_start_reads_the_atlas_of_the_cwd_in_the_hook_input() {
+    let repo = fixture();
+    let worktree = fixture_titled("Worktree");
+    let bin = memex_link();
+    let input = subagent_json_in("cook", worktree.path());
+    let hook = run_hook(&with_memex(&bin), &input, repo.path());
+    let info = run_memex(&["info", "--agent", "cook"], worktree.path());
+    assert_eq!(
+        additional_context(&hook),
+        format!("{}\n{}", id_line("cook"), text(&info))
+    );
+}
+
+#[test]
+fn a_cwd_that_is_not_a_folder_is_ignored() {
+    let repo = fixture();
+    let bin = memex_link();
+    let path = with_memex(&bin);
+    let plain = text(&run_memex(&["info"], repo.path()));
+    let readme = repo.path().join("README.md");
+    let missing = repo.path().join("missing");
+    for cwd in [&readme, &missing] {
+        let hook = run_hook(&path, &session_json_in(cwd), repo.path());
+        assert_eq!(text(&hook), plain, "a cwd of {} is ignored", cwd.display());
+    }
+}
+
+#[test]
 fn subagent_start_gives_the_id_line_and_the_agent_info_as_json() {
     let repo = fixture();
     let bin = memex_link();
@@ -164,6 +210,29 @@ fn subagent_json(agent: &str) -> String {
     )
 }
 
+/// The hook input that Claude Code sends at SessionStart from `cwd`.
+fn session_json_in(cwd: &Path) -> String {
+    format!(
+        r#"{{"session_id":"s1","hook_event_name":"SessionStart","source":"startup","cwd":"{}"}}"#,
+        json_path(cwd)
+    )
+}
+
+/// The hook input that Claude Code sends at SubagentStart for a sub-agent of the given type, run from `cwd`.
+fn subagent_json_in(agent: &str, cwd: &Path) -> String {
+    format!(
+        r#"{{"session_id":"s1","hook_event_name":"SubagentStart","agent_id":"a1","agent_type":"{agent}","cwd":"{}"}}"#,
+        json_path(cwd)
+    )
+}
+
+/// A path as it sits inside a JSON string. The temp folders of these tests hold no quote or backslash, so none is escaped.
+fn json_path(path: &Path) -> String {
+    let text = path.display().to_string();
+    assert!(!text.contains(['"', '\\']), "{text} needs a JSON escape");
+    text
+}
+
 /// The id line that a SubagentStart context opens with.
 fn id_line(agent: &str) -> String {
     format!("your memex id is {agent}; pass --agent {agent} to memex log and memex info")
@@ -171,6 +240,11 @@ fn id_line(agent: &str) -> String {
 
 /// A temporary repo with a `.memex` folder and one README, so that `memex info` reads a small, fixed store.
 fn fixture() -> TempDir {
+    fixture_titled("Fixture")
+}
+
+/// A temporary repo as `fixture` makes it, with its README headed `title`, so two fixtures have two different atlases.
+fn fixture_titled(title: &str) -> TempDir {
     let dir = tempfile::tempdir().expect("a temporary folder");
     fs::create_dir_all(dir.path().join(".memex").join("collections")).expect("the .memex folder");
     fs::write(
@@ -180,7 +254,7 @@ fn fixture() -> TempDir {
     .expect("config.json");
     fs::write(
         dir.path().join("README.md"),
-        "# Fixture\n\nA folder that stands in for a repo in the hook tests.\n",
+        format!("# {title}\n\nA folder that stands in for a repo in the hook tests.\n"),
     )
     .expect("README.md");
     dir

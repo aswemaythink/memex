@@ -1,7 +1,8 @@
 //! Installs the running binary when no memex is on PATH (design §3.5b item 3), and hints at PATH.
-//! Cases: INIT-INSTALL-01, INIT-INSTALL-02, INIT-INSTALL-03, INIT-INSTALL-04, INIT-PATH-01, INIT-PATH-02
+//! Cases: INIT-INSTALL-01, INIT-INSTALL-02, INIT-INSTALL-03, INIT-INSTALL-04, INIT-PATH-01, INIT-PATH-02, INIT-PATH-03
 
 use std::env;
+use std::ffi::OsStr;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -17,6 +18,13 @@ const EXE: &str = "memex.exe";
 /// The file name of the installed binary on unix.
 #[cfg(not(windows))]
 const EXE: &str = "memex";
+/// The file names that count as a memex on PATH: `memex.exe` or `memex.cmd` on Windows, since cmd and PowerShell run a PATH
+/// file only by one of those extensions (design §3.5b item 3).
+#[cfg(windows)]
+const PROGRAMS: &[&str] = &["memex.exe", "memex.cmd"];
+/// The file names that count as a memex on PATH: `memex` on unix.
+#[cfg(not(windows))]
+const PROGRAMS: &[&str] = &["memex"];
 
 /// Installs the running binary into the install folder when no memex is on PATH, then prints the PATH hint when that folder is
 /// not on PATH. With a memex on PATH, nothing is reported (design §3.5b item 3).
@@ -113,17 +121,30 @@ fn make_executable(_path: &Path) -> Result<(), Error> {
     Ok(())
 }
 
-/// True when some folder on PATH lists a memex program. An unreadable folder on PATH holds none.
+/// True when a folder on the PATH in the environment holds a memex program that init counts (design §3.5b item 3).
 fn memex_on_path() -> bool {
-    let Some(path) = env::var_os("PATH") else {
-        return false;
-    };
-    env::split_paths(&path).any(|dir| holds_program(&dir))
+    env::var_os("PATH").is_some_and(|path| memex_in(&path))
 }
 
-/// True when `dir` lists the binary's name and that entry is a program that can run.
+/// True when some folder of `path` holds a memex program, leaving out npx's shim folders. An unreadable folder holds none.
+fn memex_in(path: &OsStr) -> bool {
+    env::split_paths(path).any(|dir| !npx_shim(&dir) && holds_program(&dir))
+}
+
+/// True for a folder whose path has `node_modules` directly followed by `.bin`: npx's temporary shim, which is not an install
+/// (design §3.5b item 3).
+fn npx_shim(dir: &Path) -> bool {
+    let parts: Vec<&OsStr> = dir.iter().collect();
+    parts
+        .windows(2)
+        .any(|pair| pair[0] == "node_modules" && pair[1] == ".bin")
+}
+
+/// True when `dir` lists one of the program names that count, and that entry is a program that can run.
 fn holds_program(dir: &Path) -> bool {
-    lists(dir, EXE).unwrap_or(false) && executable(&dir.join(EXE))
+    PROGRAMS
+        .iter()
+        .any(|name| lists(dir, name).unwrap_or(false) && executable(&dir.join(name)))
 }
 
 /// True when the path is a file that a shell can run: an execute bit is set (unix). On Windows the `.exe` name decides.
@@ -171,5 +192,48 @@ mod tests {
         let dir = tempfile::tempdir().expect("a temporary folder");
         assert!(!holds_program(dir.path()));
         assert!(!holds_program(&dir.path().join("missing")));
+    }
+
+    #[test]
+    fn an_npx_shim_folder_is_a_node_modules_bin_pair_anywhere_in_the_path() {
+        assert!(npx_shim(Path::new("/proj/node_modules/.bin")));
+        assert!(npx_shim(Path::new("/proj/node_modules/.bin/")));
+        assert!(npx_shim(Path::new("/proj/node_modules/.bin/tools")));
+        assert!(!npx_shim(Path::new("/proj/node_modules")));
+        assert!(!npx_shim(Path::new("/proj/.bin")));
+        assert!(!npx_shim(Path::new("/usr/local/bin")));
+    }
+
+    #[test]
+    fn a_memex_in_a_shim_folder_does_not_count_and_one_elsewhere_does() {
+        let root = tempfile::tempdir().expect("a temporary folder");
+        let shim = root.path().join("node_modules").join(".bin");
+        let plain = root.path().join("bin");
+        for dir in [&shim, &plain] {
+            fs::create_dir_all(dir).expect("a folder");
+        }
+        program(&shim, PROGRAMS[0]);
+        let only_shim = env::join_paths([&shim]).expect("a PATH");
+        assert!(!memex_in(&only_shim));
+        program(&plain, PROGRAMS[0]);
+        let both = env::join_paths([&shim, &plain]).expect("a PATH");
+        assert!(memex_in(&both));
+    }
+
+    #[test]
+    fn a_cmd_file_counts_only_on_windows() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        fs::write(dir.path().join("memex.cmd"), b"@echo off\r\n").expect("a file");
+        assert_eq!(holds_program(dir.path()), cfg!(windows));
+    }
+
+    /// Writes a file named `name` in `dir` that a shell can run: executable where that means something.
+    fn program(dir: &Path, name: &str) {
+        fs::write(dir.join(name), b"#!/bin/sh\n").expect("a program file");
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            fs::set_permissions(dir.join(name), fs::Permissions::from_mode(0o755)).expect("a mode");
+        }
     }
 }

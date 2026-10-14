@@ -1,0 +1,7 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+new file mode 120000
+--- /dev/null
++++ b/CLAUDE.md
+@@ -0,0 +1 @@
++../outside/shared.md
+\ No newline at end of file

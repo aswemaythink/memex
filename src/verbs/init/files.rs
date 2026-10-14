@@ -1,5 +1,5 @@
 //! Writes the `.memex/` files (design §3.5b item 1) and holds the file helpers the init modules share.
-//! Cases: INIT-FRESH-01, INIT-KEEP-01, INIT-KEEP-02, INIT-RERUN-01, INIT-IO-01
+//! Cases: INIT-FRESH-01, INIT-KEEP-01, INIT-KEEP-02, INIT-RERUN-01, INIT-IO-01, INIT-LINK-01, INIT-LINK-02
 
 use std::fs;
 use std::io::{self, Write};
@@ -73,31 +73,43 @@ pub fn create_new(dir: &Path, name: &str, bytes: &[u8]) -> Result<(), Error> {
     Ok(())
 }
 
-/// Replaces the file at `path` with `bytes`, through a temp file beside its target that takes the file's permissions, so the
-/// user's mode survives. A read-only file is refused, never replaced. A symlink is followed, so the file it names is the one written, and the link stays as it is (design §4.4
-/// Atomic writes).
+/// Replaces the file at `path` with `bytes`, through a temp file beside it that takes the file's permissions, so the user's mode
+/// survives. A read-only file is refused, never replaced. A symlink is refused and never written through, so the link and the file
+/// it names stay as they are (design §3.5b item 2). Callers check for links first and warn (design §4.4 Atomic writes).
 pub fn replace(path: &Path, bytes: &[u8]) -> Result<(), Error> {
-    let real =
-        dunce::canonicalize(path).map_err(|failure| io_error("cannot resolve", path, &failure))?;
-    let Some(dir) = real.parent() else {
+    if is_link(path)? {
+        return Err(Error::io_message(format!(
+            "cannot update {}: it is a symlink",
+            slash(path)
+        )));
+    }
+    let Some(dir) = path.parent() else {
         return Err(Error::io_message(format!(
             "cannot write {}: it has no folder",
-            slash(&real)
+            slash(path)
         )));
     };
-    let permissions = fs::metadata(&real)
-        .map_err(|failure| io_error("cannot read", &real, &failure))?
+    let permissions = fs::metadata(path)
+        .map_err(|failure| io_error("cannot read", path, &failure))?
         .permissions();
     if permissions.readonly() {
         return Err(Error::io_message(format!(
             "cannot update {}: it is read-only",
-            slash(&real)
+            slash(path)
         )));
     }
     let temp = write_temp(dir, bytes, Some(permissions))?;
-    temp.persist(&real)
-        .map_err(|failed| io_error("cannot write", &real, &failed.error))?;
+    temp.persist(path)
+        .map_err(|failed| io_error("cannot write", path, &failed.error))?;
     Ok(())
+}
+
+/// True when the entry at `path` is a symbolic link. The link is not followed, so a link to nothing is a link too. The entry
+/// is one that a listing has already named, so this is not an existence probe (design §4.4 Name matching).
+pub fn is_link(path: &Path) -> Result<bool, Error> {
+    fs::symlink_metadata(path)
+        .map(|meta| meta.file_type().is_symlink())
+        .map_err(|failure| io_error("cannot read", path, &failure))
 }
 
 /// The text of the file at `path`, which must be UTF-8. A file that memex cannot read exactly is never rewritten (design §4.4 Encoding).
@@ -193,6 +205,19 @@ mod tests {
         fs::set_permissions(&path, permissions).expect("read-only");
         assert!(replace(&path, b"new").is_err());
         assert_eq!(fs::read(&path).expect("the file"), b"old");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_symlink_is_refused_and_neither_it_nor_its_target_changes() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let real = dir.path().join("shared.md");
+        fs::write(&real, b"old").expect("a file");
+        let link = dir.path().join("AGENTS.md");
+        std::os::unix::fs::symlink(&real, &link).expect("a symlink");
+        assert!(replace(&link, b"new").is_err());
+        assert!(is_link(&link).expect("a link"));
+        assert_eq!(fs::read(&real).expect("the target"), b"old");
     }
 
     #[cfg(unix)]

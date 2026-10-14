@@ -1,9 +1,10 @@
 //! Writes the AGENTS.md block and the CLAUDE.md import (design §3.5b item 2).
-//! Cases: INIT-AGENTS-01, INIT-AGENTS-02, INIT-AGENTS-03, INIT-AGENTS-04, INIT-AGENTS-05, INIT-CLAUDE-01, INIT-CLAUDE-02, INIT-CLAUDE-03, INIT-DAMAGE-01, INIT-DAMAGE-02, INIT-DAMAGE-03
+//! Cases: INIT-AGENTS-01, INIT-AGENTS-02, INIT-AGENTS-03, INIT-AGENTS-04, INIT-AGENTS-05, INIT-CLAUDE-01, INIT-CLAUDE-02, INIT-CLAUDE-03, INIT-DAMAGE-01, INIT-DAMAGE-02, INIT-DAMAGE-03, INIT-LINK-01, INIT-LINK-02, INIT-FENCE-01, INIT-FENCE-02, INIT-FENCE-03, INIT-FENCE-04, INIT-FENCE-05, INIT-FENCE-06
 
 use std::path::Path;
 
-use super::files::{create_new, label, lists, read_text, replace};
+use super::fence::{self, Outside};
+use super::files::{create_new, is_link, label, lists, read_text, replace};
 use super::{Action, Report};
 use crate::error::Error;
 
@@ -11,12 +12,18 @@ use crate::error::Error;
 const BEGIN: &str = "<!-- memex:begin -->";
 /// The marker line that closes the block.
 const END: &str = "<!-- memex:end -->";
-/// The snippet between the markers: design §6, with one source (assets/README.md).
+/// The snippet between the markers: design §6, with one source (assets/agents-snippet.md).
 const SNIPPET: &str = include_str!("../../../assets/agents-snippet.md");
 /// The line that CLAUDE.md ends with, to import AGENTS.md (design §3.5b item 2).
 const IMPORT: &str = "@AGENTS.md";
 /// The warning for AGENTS.md whose markers are damaged, printed after `memex: warning: ` (design §3.5b item 2).
 const DAMAGED: &str = "AGENTS.md: memex markers are damaged; fix them by hand";
+/// The warning for AGENTS.md whose last code fence is never closed: a block appended now would land inside that fence.
+const UNCLOSED: &str =
+    "AGENTS.md: a code fence is never closed, so the block would land inside it; close the fence by hand";
+/// The warning for CLAUDE.md whose last code fence is never closed: an import appended now would land inside that fence.
+const UNCLOSED_IMPORT: &str =
+    "CLAUDE.md: a code fence is never closed, so the import would land inside it; close the fence by hand";
 
 /// What the text of AGENTS.md calls for.
 #[derive(Debug, PartialEq, Eq)]
@@ -25,12 +32,13 @@ enum Merge {
     Same,
     /// The whole new text of the file.
     Changed(String),
-    /// The markers are not one pair in order, so nothing is changed.
-    Damaged,
+    /// Nothing is written, and the warning says why.
+    Refused(&'static str),
 }
 
 /// Puts the block into AGENTS.md (design §3.5b item 2): created when the file is missing, appended when it has no markers, and
-/// replaced between the markers when it has them. A file whose markers are damaged is left as it is, with a warning.
+/// replaced between the markers when it has them. A symlink is left alone with a warning, and so is a file whose markers are
+/// damaged or whose last code fence is never closed.
 pub fn agents_md(target: &Path, report: &mut Report) -> Result<(), Error> {
     let path = target.join("AGENTS.md");
     let name = label(target, &path);
@@ -39,11 +47,15 @@ pub fn agents_md(target: &Path, report: &mut Report) -> Result<(), Error> {
         report.action(Action::Created, &name);
         return Ok(());
     }
+    if is_link(&path)? {
+        link_kept(report, &name);
+        return Ok(());
+    }
     let text = read_text(&path, target)?;
     match merge(&text) {
         Merge::Same => report.action(Action::Kept, &name),
-        Merge::Damaged => {
-            report.warn(DAMAGED);
+        Merge::Refused(warning) => {
+            report.warn(warning);
             report.action(Action::Kept, &name);
         }
         Merge::Changed(new) => {
@@ -54,16 +66,26 @@ pub fn agents_md(target: &Path, report: &mut Report) -> Result<(), Error> {
     Ok(())
 }
 
-/// Adds `@AGENTS.md` as the final line of CLAUDE.md when no line of it is exactly that (design §3.5b item 2). A missing CLAUDE.md
-/// stays missing. A CLAUDE.md that is the same file as AGENTS.md is kept, so the import never lands in AGENTS.md itself.
+/// Adds `@AGENTS.md` as the final line of CLAUDE.md when no line outside a fence is exactly that (design §3.5b item 2). A missing
+/// CLAUDE.md stays missing. A symlink is left alone with a warning, and so is a CLAUDE.md that is the same file as AGENTS.md, so
+/// the import never lands in AGENTS.md itself.
 pub fn claude_md(target: &Path, report: &mut Report) -> Result<(), Error> {
     if !lists(target, "CLAUDE.md")? {
         return Ok(());
     }
     let path = target.join("CLAUDE.md");
     let name = label(target, &path);
+    if is_link(&path)? {
+        link_kept(report, &name);
+        return Ok(());
+    }
     let text = read_text(&path, target)?;
     if imports(&text) || same_file(&path, &target.join("AGENTS.md")) {
+        report.action(Action::Kept, &name);
+        return Ok(());
+    }
+    if ends_in_fence(&text) {
+        report.warn(UNCLOSED_IMPORT);
         report.action(Action::Kept, &name);
         return Ok(());
     }
@@ -72,17 +94,24 @@ pub fn claude_md(target: &Path, report: &mut Report) -> Result<(), Error> {
     Ok(())
 }
 
+/// Warns that a symlinked AGENTS.md or CLAUDE.md is left alone, and reports it kept, since nothing changed (design §3.5b item 2).
+fn link_kept(report: &mut Report, name: &str) {
+    report.warn(&format!("{name} is a symlink; not touching it"));
+    report.action(Action::Kept, name);
+}
+
 /// The new state of AGENTS.md, from its text. A leading byte order mark stays where it is.
 fn merge(text: &str) -> Merge {
     let (bom, body) = split_bom(text);
     let eol = eol_of(body);
-    let lines: Vec<&str> = body.split_inclusive('\n').collect();
-    let begins = marker_lines(&lines, BEGIN);
-    let ends = marker_lines(&lines, END);
+    let (lines, fence) = lines_of(body);
+    let begins = marker_lines(&lines, &fence, BEGIN);
+    let ends = marker_lines(&lines, &fence, END);
     match (begins.as_slice(), ends.as_slice()) {
+        ([], []) if fence.open_at_end => Merge::Refused(UNCLOSED),
         ([], []) => Merge::Changed(format!("{bom}{}", append_block(body, eol))),
         ([begin], [end]) if begin < end => replace_block(bom, &lines, (*begin, *end), eol),
-        _ => Merge::Damaged,
+        _ => Merge::Refused(DAMAGED),
     }
 }
 
@@ -141,19 +170,36 @@ fn snippet_text(eol: &str) -> String {
     SNIPPET.lines().map(|line| format!("{line}{eol}")).collect()
 }
 
-/// The indexes of the lines that are exactly `marker`, ignoring the blanks and the line ending around it.
-fn marker_lines(lines: &[&str], marker: &str) -> Vec<usize> {
+/// The lines of a text, each with its line ending, and the fences among them.
+fn lines_of(body: &str) -> (Vec<&str>, Outside) {
+    let lines: Vec<&str> = body.split_inclusive('\n').collect();
+    let fence = fence::scan(&lines);
+    (lines, fence)
+}
+
+/// The indexes of the lines outside every fence that are exactly `marker`, ignoring the blanks and the line ending around it.
+fn marker_lines(lines: &[&str], fence: &Outside, marker: &str) -> Vec<usize> {
     lines
         .iter()
         .enumerate()
-        .filter(|(_, line)| line.trim() == marker)
+        .filter(|(index, line)| fence.live[*index] && line.trim() == marker)
         .map(|(index, _)| index)
         .collect()
 }
 
-/// True when some line of the text is exactly the import. A line ending is not part of a line.
+/// True when some line outside a fence is exactly the import, in the text after its byte order mark. A line ending is not part
+/// of a line.
 fn imports(text: &str) -> bool {
-    split_bom(text).1.lines().any(|line| line == IMPORT)
+    let (lines, fence) = lines_of(split_bom(text).1);
+    lines
+        .iter()
+        .zip(&fence.live)
+        .any(|(line, &live)| live && trim_eol(line) == IMPORT)
+}
+
+/// True when the text, after its byte order mark, ends inside a fence that is never closed.
+fn ends_in_fence(text: &str) -> bool {
+    lines_of(split_bom(text).1).1.open_at_end
 }
 
 /// True when both paths name one file once symlinks are followed. A path that does not resolve is never the same file.
@@ -207,9 +253,28 @@ mod tests {
         let begin_only = format!("{BEGIN}\nx\n");
         let end_first = format!("{END}\n{BEGIN}\n");
         let two_pairs = format!("{}{}", marked("\n"), marked("\n"));
-        assert_eq!(merge(&begin_only), Merge::Damaged);
-        assert_eq!(merge(&end_first), Merge::Damaged);
-        assert_eq!(merge(&two_pairs), Merge::Damaged);
+        assert_eq!(merge(&begin_only), Merge::Refused(DAMAGED));
+        assert_eq!(merge(&end_first), Merge::Refused(DAMAGED));
+        assert_eq!(merge(&two_pairs), Merge::Refused(DAMAGED));
+    }
+
+    #[test]
+    fn markers_inside_a_fence_are_not_the_block() {
+        let text = format!("# Notes\n\n```md\n{BEGIN}\nexample\n{END}\n```\n");
+        let expected = format!("{text}\n{}", marked("\n"));
+        assert_eq!(merge(&text), Merge::Changed(expected));
+    }
+
+    #[test]
+    fn a_closed_fence_above_the_block_does_not_hide_it() {
+        let text = format!("```\nx\n```\n{BEGIN}\nold\n{END}\n");
+        let expected = format!("```\nx\n```\n{}", marked("\n"));
+        assert_eq!(merge(&text), Merge::Changed(expected));
+    }
+
+    #[test]
+    fn an_unclosed_fence_refuses_the_append() {
+        assert_eq!(merge("# Notes\n```\nx\n"), Merge::Refused(UNCLOSED));
     }
 
     #[test]
@@ -251,5 +316,13 @@ mod tests {
         assert_eq!(with_import("# A\n"), "# A\n@AGENTS.md\n");
         assert!(imports("x\n@AGENTS.md\r\n"));
         assert!(!imports("x\n @AGENTS.md\n"));
+    }
+
+    #[test]
+    fn an_import_inside_a_fence_is_not_the_import() {
+        assert!(!imports("```\n@AGENTS.md\n```\n"));
+        assert!(!imports("```\n@AGENTS.md\n"));
+        assert!(ends_in_fence("```\n@AGENTS.md\n"));
+        assert!(!ends_in_fence("```\n@AGENTS.md\n```\n"));
     }
 }

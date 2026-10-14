@@ -40,6 +40,14 @@ hint() {
 input=$(cat)
 event=$(field hook_event_name)
 
+# The hook input's cwd is the folder the session or sub-agent runs in, so memex reads that folder's atlas: a worktree sub-agent
+# sees its own. field does not unescape JSON, so a cwd with a backslash is not used, and neither is one that is not a folder.
+cwd=$(field cwd)
+case "$cwd" in
+  '' | *\\*) ;;
+  *) if [ -d "$cwd" ]; then cd "$cwd" 2>/dev/null || :; fi ;;
+esac
+
 if ! command -v memex >/dev/null 2>&1; then
   hint
   exit 0

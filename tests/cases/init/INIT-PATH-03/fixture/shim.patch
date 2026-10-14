@@ -1,0 +1,6 @@
+diff --git a/node_modules/.bin/memex b/node_modules/.bin/memex
+new file mode 100755
+--- /dev/null
++++ b/node_modules/.bin/memex
+@@ -0,0 +1 @@
++#!/bin/sh

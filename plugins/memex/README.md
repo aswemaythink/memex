@@ -25,6 +25,7 @@ The plugin needs `memex` on PATH. Install it with `npx @rynwhite/memex init`, or
 
 - **SessionStart** prints `memex info`, which becomes context for the session.
 - **SubagentStart** adds, as `additionalContext`, the line `your memex id is <agent_type>; pass --agent <agent_type> to memex log and memex info`, followed by the output of `memex info --agent <agent_type>`. The context is capped at 9,000 bytes.
+- Both events run memex in the `cwd` of the hook input, so a sub-agent that works in its own git worktree reads that worktree's atlas. A `cwd` that is not a folder, or that holds a backslash (the hook does not unescape JSON), is ignored.
 - The hook never sets `MEMEX_AGENT`. A session-wide value would leak the parent's id into every sub-agent.
 - Without `memex` on PATH, both events print the install hint instead.
 - Errors from memex never fail the hook: it always exits 0.
