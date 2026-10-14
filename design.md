@@ -73,7 +73,7 @@ There is one standard: a Markdown file named `CASES.md`, placed anywhere (by con
 
 ### 2.3 Citations and derived backlinks
 
-memex scans every indexed doc (READMEs, headers, CASES.md entries, manifest docs, logs) for citations. Citations are never extracted from fenced code blocks (a fence is a line of three or more backticks or tildes indented at most three spaces; an unclosed fence runs to the end of the doc). This one fence definition applies everywhere memex skips fenced code: citations, CASES.md items, markdown docs and init's markers. Self-citations are dropped.
+memex scans every indexed doc (READMEs, headers, CASES.md entries, manifest docs, logs) for citations. Citations are never extracted from fenced code blocks (a fence is a line of three or more backticks or tildes indented at most three spaces; an unclosed fence runs to the end of the doc). A fence closes at a line of the same mark, at least as long, with nothing else on it; a backtick opener's info string holds no backticks. This one fence definition applies everywhere memex skips fenced code: citations, CASES.md items, markdown docs and init's markers. Self-citations are dropped.
 
 | Form | Matches |
 |---|---|
