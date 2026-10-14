@@ -1,5 +1,5 @@
 //! Finds where `log` writes, per design §4.1: the root, the folder that owns the store, and the store.
-//! The root is the nearest `.memex/`, else the git toplevel, else the cwd; the store is found through git subprocesses.
+//! The root is the nearest `.memex/`, else the git toplevel, else the cwd, and the read verbs use the same root; git is asked through subprocesses.
 //! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-GIT-01, LOG-WRITE-06, LOG-WRITE-10
 
 use std::ffi::OsStr;
@@ -141,6 +141,19 @@ pub fn nearest_memex(cwd: &Path) -> Option<PathBuf> {
         .map(Path::to_path_buf)
 }
 
+/// The root that the read verbs, `show` and `search`, use for `cwd` (design §4.1 item 1): the nearest folder with a `.memex/`,
+/// else the git toplevel, else `cwd` itself.
+pub fn root_of(cwd: &Path) -> PathBuf {
+    nearest_memex(cwd)
+        .or_else(|| toplevel_of(cwd))
+        .unwrap_or_else(|| cwd.to_path_buf())
+}
+
+/// The toplevel of the worktree that holds `cwd`, as git reports it. None when git is missing or `cwd` is not in a worktree.
+fn toplevel_of(cwd: &Path) -> Option<PathBuf> {
+    git_line(cwd, &["rev-parse", "--show-toplevel"]).and_then(|top| resolve(cwd, &top))
+}
+
 /// True when `dir` lists a folder named exactly `.memex`. The name is matched against the listing, never probed on a guessed
 /// path, so a case-insensitive file system does not match another spelling (design §4.4 Name matching).
 fn holds_memex(dir: &Path) -> bool {
@@ -163,8 +176,7 @@ impl Git {
         // Asked from inside the common dir: a worktree of a bare repo answers false from its own cwd.
         let bare = git_line(&common_dir, &["rev-parse", "--is-bare-repository"]).as_deref()
             == Some("true");
-        let toplevel =
-            git_line(cwd, &["rev-parse", "--show-toplevel"]).and_then(|top| resolve(cwd, &top));
+        let toplevel = toplevel_of(cwd);
         let linked = git_dir != common_dir;
         Some(Git {
             toplevel,

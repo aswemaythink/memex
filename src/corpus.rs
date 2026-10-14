@@ -1,11 +1,11 @@
-//! Loads the read model (design §3.1 and §3.6): every walked file and folder, the docs of READMEs, headers, CASES.md, manifests and logs, the label map, and the folder index.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, INT-NAME-01, INT-NAME-02, INT-CHAIN-01, MAN-LOAD-02, REF-AMBIG-02, REF-AMBIG-03, REF-RESERVED-03, REF-RESERVED-04
+//! Loads the read model (design §3.1 and §3.6): the walked entries and the docs built from them.
+//! The docs are READMEs, headers, CASES.md, manifests and logs, with the label map and the folder index.
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, INT-NAME-01, INT-NAME-02, INT-CHAIN-01, INT-BOM-01, MAN-LOAD-02, REF-AMBIG-02, REF-AMBIG-03, REF-RESERVED-03, REF-RESERVED-04
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
 use std::thread;
 
 use crate::cite;
@@ -15,7 +15,10 @@ use crate::error::Error;
 use crate::intent::{self, cases, header, readme};
 use crate::logs::read::load as load_logs;
 use crate::root::slash;
+use crate::text;
 use crate::walk::{self, Entry};
+
+pub use crate::root::root_of;
 
 /// The most bytes of a file that header detection reads (design §2.1).
 const HEAD_BYTES: u64 = 8 * 1024;
@@ -233,15 +236,6 @@ impl Corpus {
     }
 }
 
-/// The root that `show` reads from for a cwd: the nearest folder with a `.memex/`, else the git toplevel, else the cwd.
-pub fn root_of(cwd: &Path) -> PathBuf {
-    cwd.ancestors()
-        .find(|dir| dir.join(".memex").is_dir())
-        .map(Path::to_path_buf)
-        .or_else(|| git_toplevel(cwd))
-        .unwrap_or_else(|| cwd.to_path_buf())
-}
-
 /// The label of a root-relative path: `.` for the root, the path itself otherwise.
 pub fn label_of(rel: &str) -> String {
     if rel.is_empty() {
@@ -281,22 +275,6 @@ fn warn(lines: &[String]) {
 /// The last component of a root-relative path.
 fn name_of(rel: &str) -> String {
     rel.rsplit('/').next().unwrap_or(rel).to_string()
-}
-
-/// The git worktree toplevel that holds `cwd`, from git. None when git is missing or `cwd` is not in a worktree.
-fn git_toplevel(cwd: &Path) -> Option<PathBuf> {
-    let output = Command::new("git")
-        .args(["rev-parse", "--show-toplevel"])
-        .current_dir(cwd)
-        .stdin(Stdio::null())
-        .stderr(Stdio::null())
-        .output()
-        .ok()?;
-    if !output.status.success() {
-        return None;
-    }
-    let text = String::from_utf8_lossy(&output.stdout);
-    dunce::canonicalize(text.lines().next()?).ok()
 }
 
 /// The docs one walked file gives: its README, the cases of a CASES.md, or its header.
@@ -349,10 +327,9 @@ fn read_head(path: &Path) -> Result<Vec<u8>, Error> {
     Ok(head)
 }
 
-/// The whole text of a file, decoded lossily.
+/// The whole text of a file, read as the shared helper reads it (design §4.4 Text).
 fn read_text(path: &Path) -> Result<String, Error> {
-    let bytes = fs::read(path).map_err(|failure| io_error(path, &failure))?;
-    Ok(String::from_utf8_lossy(&bytes).into_owned())
+    text::read(path).map_err(|failure| io_error(path, &failure))
 }
 
 /// A read failure, naming the path and the io kind and never the OS text (design §4.4).

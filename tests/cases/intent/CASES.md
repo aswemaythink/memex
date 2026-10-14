@@ -49,3 +49,8 @@
 
 - `INT-CHAIN-01` The chain of a folder with no README of its own lists the nearest ancestor README first and the root README last, exit 0.
   design §3.3 Chain: ancestor READMEs in full, nearest first, root last. Run: memex show a/b.
+
+## BOM
+
+- `INT-BOM-01` A README that starts with a UTF-8 byte order mark has its one-liner and its text read without the mark, exit 0.
+  design §4.4 Text: a leading UTF-8 BOM is dropped on every read, READMEs included. Run: memex show . and memex show bom.
