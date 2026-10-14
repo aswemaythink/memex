@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "memo:NOTE-1"]}, {"args": ["show", "memo:NOTE-1", "--json"]}]}

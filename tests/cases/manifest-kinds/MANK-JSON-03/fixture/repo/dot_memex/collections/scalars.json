@@ -1,0 +1,1 @@
+{"name": "scalars", "kind": "json", "roots": ["data"], "include": ["*.json"], "id": "name"}

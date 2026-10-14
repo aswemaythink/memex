@@ -1,0 +1,5 @@
+$ memex show byname:NAME-009 byfield:FIELD-1 byfield:two --json
+exit 1
+stdout
+| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"byname","fields":{},"id":"NAME-009","path":null,"ref":"byname:NAME-009","text":"","title":""},{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"byfield","fields":{"claim":"Has the field.","code":"FIELD-1"},"id":"FIELD-1","path":null,"ref":"byfield:FIELD-1","text":"","title":""}],"errors":[{"arg":"byfield:two","code":"not_found","message":"not found: byfield:two"}]}
+stderr (empty)

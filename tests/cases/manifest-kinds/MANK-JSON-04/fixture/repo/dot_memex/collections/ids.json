@@ -1,0 +1,1 @@
+{"name": "ids", "kind": "json", "roots": ["data"], "include": ["*.json"], "id": "id"}

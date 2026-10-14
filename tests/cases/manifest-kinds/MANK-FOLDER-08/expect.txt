@@ -1,0 +1,5 @@
+$ memex show agents:HID-01 agents:.hidden --json
+exit 1
+stdout
+| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"agents","fields":{},"id":"HID-01","path":null,"ref":"agents:HID-01","text":"","title":""}],"errors":[{"arg":"agents:.hidden","code":"not_found","message":"not found: agents:.hidden"}]}
+stderr (empty)

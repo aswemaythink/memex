@@ -1,0 +1,5 @@
+$ memex show titled:T-1 plain:P-1 plain:P-2 --json
+exit 0
+stdout
+| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"titled","fields":{"claim":"Stable names hold. Second sentence here.","id":"T-1"},"id":"T-1","path":null,"ref":"titled:T-1","text":"T-1\nStable names hold. Second sentence here.","title":"Stable names hold."},{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"plain","fields":{"claim":"Plain line. More.","id":"P-1"},"id":"P-1","path":null,"ref":"plain:P-1","text":"Plain line. More.\nP-1","title":"Plain line."},{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"plain","fields":{"body":"# Real heading\nmore","claim":"Intro line.","id":"P-2"},"id":"P-2","path":null,"ref":"plain:P-2","text":"P-2\nIntro line.\n# Real heading\nmore","title":"Real heading"}],"errors":[]}
+stderr (empty)

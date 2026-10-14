@@ -1,0 +1,1 @@
+{"name": "rows", "kind": "json", "roots": ["data"], "include": ["**/*.json"], "id": "id", "at": "/items"}

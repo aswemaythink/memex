@@ -1,0 +1,5 @@
+$ memex show rows:ONE-1 rows:ONE-2 rows:TWO-1 --json
+exit 0
+stdout
+| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"rows","fields":{"claim":"First.","id":"ONE-1"},"id":"ONE-1","path":null,"ref":"rows:ONE-1","text":"First.\nONE-1","title":"First."},{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"rows","fields":{"claim":"Second.","id":"ONE-2"},"id":"ONE-2","path":null,"ref":"rows:ONE-2","text":"Second.\nONE-2","title":"Second."},{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"rows","fields":{"claim":"Nested.","id":"TWO-1"},"id":"TWO-1","path":null,"ref":"rows:TWO-1","text":"Nested.\nTWO-1","title":"Nested."}],"errors":[]}
+stderr (empty)

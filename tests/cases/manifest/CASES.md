@@ -56,20 +56,4 @@
 - `MAN-MD-13` A root of `.` is the root itself, so the manifest reads the whole tree, but the walk skips a `.ignore`d file, `node_modules` and `target`, so the three refs that are not read are not found, exit 1.
   design §4.1 item 2 (the skip list: ignored files, node_modules and target) and §4.2 `roots`. Run: memex show everything:top everything:deep everything:private everything:pkg everything:built.
 
-## FOLDER
-
-- `MAN-FOLDER-01` (planned) A folder that holds the marker file is one doc, whose fields are the marker's top-level scalars, or its frontmatter when the marker is a `.md` file.
-  design §4.2 `folder` (the marker file defines a doc; fields come from its scalars or its frontmatter).
-- `MAN-FOLDER-02` (planned) Each `merge` file adds its full text when it is Markdown and only its header when it is code, so no code body is read.
-  design §4.2 `folder` (`merge` files; code merges header only).
-- `MAN-FOLDER-03` (planned) The id of a folder doc is the marker's field named by the manifest's `id`, or the folder name when `id` is not given.
-  design §4.2 `id` (folder: marker field or folder name, default).
-
-## JSON
-
-- `MAN-JSON-01` (planned) Each entry of the array at `at` in every matched file is one doc, with its scalars as fields and its strings indexed as text.
-  design §4.2 `json`.
-- `MAN-JSON-02` (planned) `at` is a JSON Pointer to the entries array, and the document root is the array when `at` is not given.
-  design §4.2 `at` (default: document root).
-- `MAN-JSON-03` (planned) The id of each entry is the field that the manifest's `id` names, and a json manifest must name one, as MAN-LOAD-12 pins.
-  design §4.2 `id` (json: entry field, required).
+The folder and json kinds of design §4.2 are cased as `MANK-*` in the [manifest-kinds](../manifest-kinds/CASES.md) family.

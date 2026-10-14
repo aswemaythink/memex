@@ -1,0 +1,34 @@
+$ memex show units:alpha units:beta units:gamma
+exit 1
+stdout
+| === units:alpha ===
+| 
+| fields
+|   claim: Alpha holds.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| === units:beta ===
+| 
+| fields
+|   claim: Beta holds.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr
+| memex: not found: units:gamma
+
+$ memex show units:alpha units:beta units:gamma --json
+exit 1
+stdout
+| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"units","fields":{"claim":"Alpha holds."},"id":"alpha","path":null,"ref":"units:alpha","text":"","title":""},{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"units","fields":{"claim":"Beta holds."},"id":"beta","path":null,"ref":"units:beta","text":"","title":""}],"errors":[{"arg":"units:gamma","code":"not_found","message":"not found: units:gamma"}]}
+stderr (empty)

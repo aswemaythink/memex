@@ -1,0 +1,1 @@
+{"name": "merged", "kind": "folder", "roots": ["merged"], "marker": "case.json", "merge": ["README.md", "EXTRA.md"]}

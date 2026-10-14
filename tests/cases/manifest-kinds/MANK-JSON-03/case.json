@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "scalars:SCALAR-1"]}, {"args": ["show", "scalars:SCALAR-1", "--json"]}]}

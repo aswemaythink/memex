@@ -1,0 +1,5 @@
+$ memex show mixed:GOOD-1 mixed:OBJ-1 --json
+exit 1
+stdout
+| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"mixed","fields":{"id":"GOOD-1"},"id":"GOOD-1","path":null,"ref":"mixed:GOOD-1","text":"GOOD-1","title":"GOOD-1"}],"errors":[{"arg":"mixed:OBJ-1","code":"not_found","message":"not found: mixed:OBJ-1"}]}
+stderr (empty)

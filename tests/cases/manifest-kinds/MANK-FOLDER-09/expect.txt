@@ -1,0 +1,5 @@
+$ memex show broken:BAD-1 broken:GOOD-1 --json
+exit 1
+stdout
+| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"broken","fields":{"claim":"Fine."},"id":"GOOD-1","path":null,"ref":"broken:GOOD-1","text":"","title":""}],"errors":[{"arg":"broken:BAD-1","code":"not_found","message":"not found: broken:BAD-1"}]}
+stderr (empty)

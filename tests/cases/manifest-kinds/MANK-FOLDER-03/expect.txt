@@ -1,0 +1,25 @@
+$ memex show memo:NOTE-1
+exit 0
+stdout
+| === memo:NOTE-1 ===
+| # Heading
+| 
+| Body text.
+| 
+| fields
+|   id: NOTE-1
+|   tags: [a, b]
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)
+
+$ memex show memo:NOTE-1 --json
+exit 0
+stdout
+| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"memo","fields":{"id":"NOTE-1","tags":["a","b"]},"id":"NOTE-1","path":null,"ref":"memo:NOTE-1","text":"# Heading\n\nBody text.","title":"Heading"}],"errors":[]}
+stderr (empty)

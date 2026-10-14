@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "pointer:PTR-1", "bare:BARE-1", "bare:BARE-2", "--json"]}]}

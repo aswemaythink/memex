@@ -1,0 +1,1 @@
+{"name": "code", "kind": "folder", "roots": ["code"], "marker": "case.json", "merge": ["spec.rs"]}

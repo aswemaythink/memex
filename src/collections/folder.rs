@@ -7,10 +7,8 @@ use std::fs::{self, File};
 use std::io::Read;
 use std::path::Path;
 
-use serde_json::Value as Json;
-
 use super::frontmatter::{self, Value};
-use super::json::{doc, field_text, glob_hits, scalar_fields};
+use super::json::{doc, field_text, glob_hits, scalar_fields, Tree};
 use super::manifest::Manifest;
 use crate::corpus::{parent_of, Doc};
 use crate::intent::header;
@@ -63,9 +61,8 @@ fn folder_doc(
 fn marker_fields(path: &Path) -> Option<(Vec<(String, Value)>, String)> {
     match extension(path) {
         Some("json") => {
-            let document: Json = serde_json::from_slice(&fs::read(path).ok()?).ok()?;
-            let fields = document.as_object().map(scalar_fields).unwrap_or_default();
-            Some((fields, String::new()))
+            let document: Tree = serde_json::from_slice(&fs::read(path).ok()?).ok()?;
+            Some((scalar_fields(document.members()), String::new()))
         }
         Some("md") => {
             let document = frontmatter::split(&read_text(path)?);
@@ -227,8 +224,8 @@ mod tests {
             .iter()
             .map(|(name, _)| name.as_str())
             .collect();
-        assert_eq!(names, ["count", "id", "name", "ok"]);
-        assert_eq!(found_docs[0].fields[0].1, Value::Str("3".to_string()));
+        assert_eq!(names, ["id", "name", "count", "ok"]);
+        assert_eq!(found_docs[0].fields[2].1, Value::Str("3".to_string()));
         assert_eq!(found_docs[0].title, "Stable names");
         assert_eq!(found_docs[0].path, None);
     }

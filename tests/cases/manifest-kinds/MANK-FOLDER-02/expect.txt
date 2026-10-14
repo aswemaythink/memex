@@ -1,0 +1,23 @@
+$ memex show scalar:SCALAR-1
+exit 0
+stdout
+| === scalar:SCALAR-1 ===
+| 
+| fields
+|   name: Scalars
+|   count: 3
+|   ok: true
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)
+
+$ memex show scalar:SCALAR-1 --json
+exit 0
+stdout
+| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"scalar","fields":{"count":"3","name":"Scalars","ok":"true"},"id":"SCALAR-1","path":null,"ref":"scalar:SCALAR-1","text":"","title":""}],"errors":[]}
+stderr (empty)

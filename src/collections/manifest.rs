@@ -1,5 +1,5 @@
 //! Loads and validates the manifests of design §4.2 and matches the files under their roots. Each manifest's docs come from its kind's reader.
-//! Cases: MAN-LOAD-01, MAN-LOAD-02, MAN-LOAD-03, MAN-LOAD-04, MAN-LOAD-05, MAN-LOAD-06, MAN-LOAD-07, MAN-LOAD-08, MAN-LOAD-09, MAN-LOAD-10, MAN-LOAD-11, MAN-LOAD-12, MAN-MD-11, MAN-MD-13
+//! Cases: MAN-LOAD-01, MAN-LOAD-02, MAN-LOAD-03, MAN-LOAD-04, MAN-LOAD-05, MAN-LOAD-06, MAN-LOAD-07, MAN-LOAD-08, MAN-LOAD-09, MAN-LOAD-10, MAN-LOAD-11, MAN-LOAD-12, MAN-MD-11, MAN-MD-13, MANK-JSON-06
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -27,17 +27,6 @@ pub enum Kind {
     Folder,
     /// Each entry of the array at `at` is one doc.
     Json,
-}
-
-impl Kind {
-    /// The word that the manifest's `kind` key takes for this kind.
-    fn word(self) -> &'static str {
-        match self {
-            Kind::Markdown => "markdown",
-            Kind::Folder => "folder",
-            Kind::Json => "json",
-        }
-    }
 }
 
 /// A collection manifest with every key of design §4.2.
@@ -171,10 +160,8 @@ fn parse(stem: &str, value: &Json) -> Result<Manifest, String> {
     let name = name_of(object, stem)?;
     let kind = kind_of(object)?;
     if let Some(key) = object.keys().find(|key| !applies(key, kind)) {
-        return Err(format!(
-            "key '{key}' does not apply to kind '{}'",
-            kind.word()
-        ));
+        let word = format!("{kind:?}").to_lowercase();
+        return Err(format!("key '{key}' does not apply to kind '{word}'"));
     }
     let include = strings_of(object, "include")?;
     check_globs(&include)?;
@@ -194,6 +181,9 @@ fn parse(stem: &str, value: &Json) -> Result<Manifest, String> {
     };
     if kind == Kind::Json && manifest.id.is_none() {
         return Err("kind 'json' needs key 'id'".to_string());
+    }
+    if kind == Kind::Json && manifest.include.is_empty() {
+        return Err("kind 'json' needs key 'include'".to_string());
     }
     Ok(manifest)
 }

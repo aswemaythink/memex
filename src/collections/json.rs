@@ -2,11 +2,14 @@
 //! It also holds the helpers that the folder kind shares with it: fields, one-liners, docs and glob matches.
 //! Cases: MANK-JSON-01, MANK-JSON-02, MANK-JSON-03, MANK-JSON-04, MANK-JSON-05, MANK-JSON-06, MANK-JSON-07, MANK-JSON-08
 
+use std::fmt;
 use std::fs;
 use std::path::Path;
 
 use ignore::overrides::OverrideBuilder;
-use serde_json::{Map, Value as Json};
+use serde::de::{MapAccess, Visitor};
+use serde::{Deserialize, Deserializer};
+use serde_json::Value as Json;
 
 use super::frontmatter::Value;
 use super::manifest::Manifest;
@@ -35,37 +38,107 @@ pub fn docs(manifest: &Manifest, root: &Path) -> Vec<Doc> {
     docs
 }
 
-/// The items of the array that `at` points to in the JSON file at `path`, a JSON Pointer where empty means the whole document.
-/// A file that is not JSON, or whose `at` does not reach an array, has none.
-fn items_at(path: &Path, at: &str) -> Vec<Json> {
-    let Ok(bytes) = fs::read(path) else {
-        return Vec::new();
-    };
-    let Ok(document) = serde_json::from_slice::<Json>(&bytes) else {
-        return Vec::new();
-    };
-    document
-        .pointer(at)
-        .and_then(Json::as_array)
-        .cloned()
-        .unwrap_or_default()
+/// A parsed JSON value whose objects keep their members in the order the file gives them, which serde_json's own map does
+/// not (design §4.2 fields). Nested values are kept, but only scalars become fields.
+#[derive(Clone, Deserialize)]
+#[serde(untagged)]
+pub(super) enum Tree {
+    /// An object, with its members in source order.
+    Object(#[serde(deserialize_with = "ordered_members")] Vec<(String, Tree)>),
+    /// An array, with its items in order.
+    Array(Vec<Tree>),
+    /// A string, number, boolean or null.
+    Leaf(Json),
+}
+
+/// Reads an object one member at a time, so that its members keep the order the file gives them.
+fn ordered_members<'de, D: Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Vec<(String, Tree)>, D::Error> {
+    struct Members;
+
+    impl<'de> Visitor<'de> for Members {
+        type Value = Vec<(String, Tree)>;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("an object")
+        }
+
+        fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<Self::Value, A::Error> {
+            let mut members = Vec::new();
+            while let Some(member) = map.next_entry::<String, Tree>()? {
+                members.push(member);
+            }
+            Ok(members)
+        }
+    }
+
+    deserializer.deserialize_map(Members)
+}
+
+impl Tree {
+    /// The members of an object in source order, or none for any other value.
+    pub(super) fn members(&self) -> &[(String, Tree)] {
+        match self {
+            Tree::Object(members) => members.as_slice(),
+            Tree::Array(_) | Tree::Leaf(_) => &[],
+        }
+    }
+
+    /// The value that a JSON Pointer reaches (design §4.2 `at`); the empty pointer is the whole value.
+    fn pointer(&self, at: &str) -> Option<&Tree> {
+        if at.is_empty() {
+            return Some(self);
+        }
+        at.strip_prefix('/')?
+            .split('/')
+            .try_fold(self, |node, part| {
+                node.child(&part.replace("~1", "/").replace("~0", "~"))
+            })
+    }
+
+    /// The member or the item that one reference token of a JSON Pointer names.
+    fn child(&self, token: &str) -> Option<&Tree> {
+        match self {
+            Tree::Object(members) => members
+                .iter()
+                .find(|(name, _)| name == token)
+                .map(|(_, tree)| tree),
+            Tree::Array(items) => items.get(token.parse::<usize>().ok()?),
+            Tree::Leaf(_) => None,
+        }
+    }
+}
+
+/// The items of the array that `at` points to in the JSON file at `path`. A file that is not JSON, or whose `at` does not
+/// reach an array, has none.
+fn items_at(path: &Path, at: &str) -> Vec<Tree> {
+    let document = fs::read(path)
+        .ok()
+        .and_then(|bytes| serde_json::from_slice::<Tree>(&bytes).ok());
+    match document.as_ref().and_then(|tree| tree.pointer(at)) {
+        Some(Tree::Array(items)) => items.clone(),
+        _ => Vec::new(),
+    }
 }
 
 /// The doc of one entry: its scalars as fields, its string scalars as the text, and its `id` field as the id. None when the
 /// entry is not an object, or its `id` is missing or empty.
-fn entry_doc(manifest: &Manifest, key: &str, item: &Json) -> Option<Doc> {
-    let object = item.as_object()?;
-    let fields = scalar_fields(object);
+fn entry_doc(manifest: &Manifest, key: &str, item: &Tree) -> Option<Doc> {
+    let members = item.members();
+    let fields = scalar_fields(members);
     let id = field_text(&fields, key).filter(|id| !id.is_empty())?;
-    let text = text_of(object);
-    Some(doc(manifest, id, text, fields))
+    Some(doc(manifest, id, text_of(members), fields))
 }
 
-/// The text of an entry: its string scalars, one per line, in key order.
-fn text_of(object: &Map<String, Json>) -> String {
-    object
-        .values()
-        .filter_map(Json::as_str)
+/// The text of an entry: its string scalars, one per line, in source order.
+fn text_of(members: &[(String, Tree)]) -> String {
+    members
+        .iter()
+        .filter_map(|(_, tree)| match tree {
+            Tree::Leaf(Json::String(text)) => Some(text.as_str()),
+            _ => None,
+        })
         .collect::<Vec<&str>>()
         .join("\n")
 }
@@ -88,12 +161,15 @@ pub(super) fn glob_hits<'a>(root: &Path, globs: &[String], files: &[&'a Entry]) 
         .collect()
 }
 
-/// The fields that an object's top-level scalars give, in key order: strings, numbers and booleans as text. Nulls, arrays
+/// The fields that an object's top-level scalars give, in source order: strings, numbers and booleans as text. Nulls, arrays
 /// and nested objects give none.
-pub(super) fn scalar_fields(object: &Map<String, Json>) -> Vec<(String, Value)> {
-    object
+pub(super) fn scalar_fields(members: &[(String, Tree)]) -> Vec<(String, Value)> {
+    members
         .iter()
-        .filter_map(|(key, value)| scalar_text(value).map(|text| (key.clone(), Value::Str(text))))
+        .filter_map(|(key, tree)| match tree {
+            Tree::Leaf(value) => scalar_text(value).map(|text| (key.clone(), Value::Str(text))),
+            Tree::Object(_) | Tree::Array(_) => None,
+        })
         .collect()
 }
 
@@ -207,8 +283,8 @@ mod tests {
         found.iter().map(|doc| doc.label.as_str()).collect()
     }
 
-    /// MANK-JSON-01 and MANK-JSON-05: each object of the array at `at` is one doc labelled by its id, and a `title` field
-    /// gives its one-liner.
+    /// MANK-JSON-01, MANK-JSON-02 and MANK-JSON-05: each object of the array at the pointer is one doc labelled by its id, and
+    /// a `title` field gives its one-liner.
     #[test]
     fn each_object_of_the_array_at_the_pointer_is_one_doc() {
         let root = tree(&[(
@@ -224,18 +300,9 @@ mod tests {
         assert_eq!(found_docs[0].title, "Stable.");
     }
 
-    /// MANK-JSON-02: with no `at`, the whole document is the array.
+    /// MANK-JSON-03: an entry's scalars are its fields in source order, and its string scalars are its text.
     #[test]
-    fn at_defaults_to_the_document_root() {
-        let root = tree(&[("data/items.json", r#"[{"name":"A"},{"name":"B"}]"#)]);
-        let mut found = manifest(&["data"]);
-        found.include = vec!["*.json".to_string()];
-        assert_eq!(labels(&docs(&found, root.path())), ["cases:A", "cases:B"]);
-    }
-
-    /// MANK-JSON-03: an entry's scalars are its fields, and its string scalars are its text; nested values are not fields.
-    #[test]
-    fn scalars_are_fields_and_strings_are_the_text() {
+    fn scalars_are_fields_in_source_order_and_strings_are_the_text() {
         let root = tree(&[(
             "data/one.json",
             r#"[{"name":"X","n":2,"ok":false,"nested":{"a":"b"},"tags":["t"],"none":null,"note":"Words."}]"#,
@@ -252,24 +319,12 @@ mod tests {
         assert_eq!(
             fields,
             [
-                ("n", Value::Str("2".to_string())),
                 ("name", Value::Str("X".to_string())),
-                ("note", Value::Str("Words.".to_string())),
+                ("n", Value::Str("2".to_string())),
                 ("ok", Value::Str("false".to_string())),
+                ("note", Value::Str("Words.".to_string())),
             ]
         );
-    }
-
-    /// MANK-JSON-04: an entry without a text `id` field gives no doc, since the id is required.
-    #[test]
-    fn an_entry_without_a_text_id_gives_no_doc() {
-        let root = tree(&[(
-            "data/ids.json",
-            r#"[{"claim":"no name"},{"name":""},"bare",{"name":"OK"}]"#,
-        )]);
-        let mut found = manifest(&["data"]);
-        found.include = vec!["ids.json".to_string()];
-        assert_eq!(labels(&docs(&found, root.path())), ["cases:OK"]);
     }
 
     /// MANK-JSON-06: only the files that `include` matches give docs, at any depth with `**/`.
@@ -299,14 +354,5 @@ mod tests {
         found.include = vec!["*.json".to_string()];
         found.at = Some("/cases".to_string());
         assert_eq!(labels(&docs(&found, root.path())), ["cases:G"]);
-    }
-
-    /// MANK-JSON-08: a root may sit in a hidden folder, as for the folder kind.
-    #[test]
-    fn a_root_in_a_hidden_folder_is_walked() {
-        let root = tree(&[(".agents/data/x.json", r#"[{"name":"HID"}]"#)]);
-        let mut found = manifest(&[".agents/data"]);
-        found.include = vec!["*.json".to_string()];
-        assert_eq!(labels(&docs(&found, root.path())), ["cases:HID"]);
     }
 }

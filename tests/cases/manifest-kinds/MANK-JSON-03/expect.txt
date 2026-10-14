@@ -1,0 +1,26 @@
+$ memex show scalars:SCALAR-1
+exit 0
+stdout
+| === scalars:SCALAR-1 ===
+| SCALAR-1
+| Words here.
+| 
+| fields
+|   name: SCALAR-1
+|   n: 2
+|   ok: false
+|   note: Words here.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)
+
+$ memex show scalars:SCALAR-1 --json
+exit 0
+stdout
+| {"docs":[{"chain":[],"cited_by":{"refs":[],"total":0},"cites":[],"collection":"scalars","fields":{"n":"2","name":"SCALAR-1","note":"Words here.","ok":"false"},"id":"SCALAR-1","path":null,"ref":"scalars:SCALAR-1","text":"SCALAR-1\nWords here.","title":"SCALAR-1"}],"errors":[]}
+stderr (empty)
