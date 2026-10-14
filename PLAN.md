@@ -421,11 +421,11 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [x] S1.3 (refined d66f8c5)
 - [x] S2.0 (+ S2.0b fixes running)
 - [x] P1 portability fixes
-- [ ] S2.1
-- [ ] S2.2
-- [ ] S2.3
+- [x] S2.1
+- [x] S2.2
+- [x] S2.3
 - [ ] S2.4
-- [ ] S2.5
+- [x] S2.5
 - [ ] S3.1
 - [ ] S3.2
 - [ ] S3.3

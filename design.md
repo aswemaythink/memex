@@ -149,7 +149,7 @@ It takes one or more refs and prints a section for each, separated by `=== <labe
 - **Chain.** Ancestor READMEs in full, nearest first, root last. For a README.md itself, the chain starts at the folder above its own, since the file is already printed in full.
 - **Case.** Claim, detail, group, the defining `CASES.md`, evidence paths, and cited by.
 - **Log or collection doc.** The full text, its fields as a `key: value` block, cites, and cited by.
-- **Limits.** The children and cited-by lists use `--limit` (default 50) and always print `showing N of M (--limit M for all)`.
+- **Limits.** The children and cited-by lists use `--limit` (default 50) and always print `showing N of M`, adding `(--limit M for all)` only when the list was cut (N < M).
 - **Exit code.** If any ref fails, memex still prints the others and exits 1.
 
 ### 3.4 `log`
