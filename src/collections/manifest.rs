@@ -71,15 +71,15 @@ pub struct Loaded {
 /// The manifests under `<root>/.memex/collections/` by file name; a file that cannot be used adds a warning and is skipped.
 pub fn load(root: &Path, warnings: &mut Vec<String>) -> Vec<Manifest> {
     let dir = root.join(".memex").join("collections");
-    let files = listing(root, &dir).unwrap_or_else(|reason| {
-        warnings.push(warning(&dir, &reason));
+    let files = listing(root, &dir).unwrap_or_else(|failure| {
+        warnings.push(unreadable_warning(&dir, &failure));
         Vec::new()
     });
     let mut manifests = Vec::new();
     for (file, path) in files {
         match read_one(&path, &file) {
             Ok(manifest) => manifests.push(manifest),
-            Err(reason) => warnings.push(warning(&path, &reason)),
+            Err(line) => warnings.push(line),
         }
     }
     manifests
@@ -99,31 +99,34 @@ pub fn warning(path: &Path, reason: &str) -> String {
     error::warning(&format!("{}: {reason}", slash(path)))
 }
 
+/// The warning line for a manifest file or folder that cannot be read: `memex: warning: cannot read <path> (<ErrorKind>)`
+/// (design §4.2), made by the shared error helper.
+fn unreadable_warning(path: &Path, failure: &io::Error) -> String {
+    error::warning(&error::Error::io_at("cannot read", path, failure).message)
+}
+
 /// The `.json` files of the collections folder `dir` by name: dot-named, non-UTF-8, symlink and folder entries are skipped. The
 /// names `.memex` and `collections` are matched against the listings of the root and of `.memex/`, never probed on a guessed
 /// path, so `.memex/Collections/` is not the folder on a case-insensitive file system (design §4.4 Name matching).
-fn listing(root: &Path, dir: &Path) -> Result<Vec<(String, PathBuf)>, String> {
+fn listing(root: &Path, dir: &Path) -> io::Result<Vec<(String, PathBuf)>> {
     let listed = lists(root, ".memex")
         .and_then(|found| Ok(found && lists(&root.join(".memex"), "collections")?));
-    if !listed.map_err(|failure| unreadable(&failure))? {
+    if !listed? {
         return Ok(Vec::new());
     }
     let reader = match fs::read_dir(dir) {
         Ok(reader) => reader,
         Err(failure) if failure.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
-        Err(failure) => return Err(unreadable(&failure)),
+        Err(failure) => return Err(failure),
     };
     let mut files = Vec::new();
     for item in reader {
-        let item = item.map_err(|failure| unreadable(&failure))?;
+        let item = item?;
         let file_name = item.file_name();
         let Some(name) = file_name.to_str() else {
             continue;
         };
-        let is_file = item
-            .file_type()
-            .map_err(|failure| unreadable(&failure))?
-            .is_file();
+        let is_file = item.file_type()?.is_file();
         if is_file && !name.starts_with('.') && name.ends_with(".json") {
             files.push((name.to_string(), item.path()));
         }
@@ -132,12 +135,14 @@ fn listing(root: &Path, dir: &Path) -> Result<Vec<(String, PathBuf)>, String> {
     Ok(files)
 }
 
-/// Reads and validates one manifest. Its name is checked against the file name without `.json`.
+/// Reads and validates one manifest. Its name is checked against the file name without `.json`. A file that cannot be read or
+/// used gives its warning line, which names the file.
 fn read_one(path: &Path, file: &str) -> Result<Manifest, String> {
-    let text = text::read(path).map_err(|failure| unreadable(&failure))?;
-    let value: Json =
-        serde_json::from_str(&text).map_err(|failure| format!("not valid JSON: {failure}"))?;
+    let text = text::read(path).map_err(|failure| unreadable_warning(path, &failure))?;
+    let value: Json = serde_json::from_str(&text)
+        .map_err(|failure| warning(path, &format!("not valid JSON: {failure}")))?;
     parse(file.strip_suffix(".json").unwrap_or(file), &value)
+        .map_err(|reason| warning(path, &reason))
 }
 
 /// Checks a manifest against design §4.2: its keys, the kind they belong to, and the value each takes.
@@ -318,5 +323,33 @@ mod tests {
         let exact = dir.path().join(".memex").join("collections");
         fs::rename(&other, &exact).expect("renamed");
         assert_eq!(load(dir.path(), &mut warnings).len(), 1, "{warnings:?}");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn an_unreadable_manifest_warns_with_the_path_and_the_io_kind() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let folder = dir.path().join(".memex").join("collections");
+        fs::create_dir_all(&folder).expect("a folder");
+        let file = folder.join("notes.json");
+        let manifest = r#"{"name": "notes", "kind": "markdown", "roots": ["."]}"#;
+        fs::write(&file, manifest).expect("a manifest");
+        fs::set_permissions(&file, fs::Permissions::from_mode(0o000)).expect("a mode");
+        if fs::read(&file).is_ok() {
+            // Running as root reads any file, so there is nothing to check.
+            return;
+        }
+        let mut warnings = Vec::new();
+        let manifests = load(dir.path(), &mut warnings);
+        fs::set_permissions(&file, fs::Permissions::from_mode(0o644)).expect("restored");
+        assert!(manifests.is_empty(), "{manifests:?}");
+        assert_eq!(warnings.len(), 1, "{warnings:?}");
+        assert!(
+            warnings[0].starts_with("memex: warning: cannot read ")
+                && warnings[0].ends_with(".memex/collections/notes.json (PermissionDenied)"),
+            "{warnings:?}"
+        );
     }
 }
