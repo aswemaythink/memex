@@ -121,11 +121,12 @@ memex --help | --version
 ### 3.2 `search`
 
 - **No arguments.** Usage error (exit 2) pointing to `memex info`, which is the one overview.
-- **Words.** Ranked BM25 with field weights, English stemming and prefix matching. Fuzzy matching allows one edit for words of 5 or more characters, and those hits are marked `[~variant]`. Word lengths and edits count characters (Unicode scalar values), not bytes, so `café` is one edit from `cafe`. Ids and paths are also kept as whole tokens, so `NAME-001` matches exactly. Any word may match; more matches rank higher. Scores are only comparable within one group. Ranking compares scores quantized to `1e-9`, then by ref, so libm differences across OSes cannot reorder results.
+- **Words.** Ranked BM25 with field weights, English stemming and prefix matching. Fuzzy matching allows one edit for words of 5 or more characters, and those hits are marked `[~variant]`. A word is a run of Unicode letters and digits, lowercased, so `naïve`, `café`, `Straße` and CJK runs are words. Word lengths and edits count characters (Unicode scalar values), not bytes, so `café` is one edit from `cafe`. Ids and paths are also kept as whole tokens, so `NAME-001` matches exactly. Any word may match; more matches rank higher. Scores are only comparable within one group. Ranking compares scores quantized to `1e-9`, then by ref, so libm differences across OSes cannot reorder results.
 - **Filters `field:value`.** Exact and case-insensitive, combined with AND. Reserved: `agent:`, `to:`, `tag:`, `branch:`, `worktree:` (basename or path), and `since:` (`30m`, `6h`, `2d`, `1w` or `2026-10-13`; it keeps only docs that have a `time`). Any other `x:` is a filter only if some doc in scope has field `x`; otherwise it is a literal word. That keeps `std::io` and refs searchable.
 - **Grouped output, always.** Each collection with hits is one group. The fixed order is `readmes`, `headers`, `cases`, manifest collections (alphabetical), then `logs` as one group. Empty groups are omitted.
   - **Limits.** Without `--in`, `--limit` applies per group (default 5). With `--in`, the default is 20.
   - **Why groups.** Grouping is why READMEs and headers can be in global search: thousands of headers cannot drown a README, and log noise stays in its own group.
+- **Zero hits.** stdout stays empty and the exit is 0, so scripts are unaffected; stderr prints `memex: no hits for <words>; try fewer or other words, or memex info` (with filters only: `memex: no docs match <filters>; …`), in text and JSON modes.
 - **Filters without words.** Lists matching docs, newest first for logs.
 - **`--in X` with no words.** Prints the roster: every doc's one-liner, logs newest first, everything else by id. Each roster line carries `<-N`, its cited-by count (prefix citations excluded), so `search --in cases` *is* the orphan audit (`<-0`). Default limit 50.
 - **`--in` names.** Built-in collections, manifest names and stream names. An unknown name is a usage error (exit 2), never a silently empty result.
@@ -185,7 +186,7 @@ use          memex show <path|ref> · memex search <words> · memex log <stream>
 
 ### 3.5b `init`
 
-The one-step setup, idempotent. Inside git it targets the toplevel; outside git, the cwd. It reports each action.
+The one-step setup, idempotent. Inside git it targets the toplevel; outside git, the root that discovery finds (§4.1 item 1: the nearest folder above with `.memex/`), else the cwd, so init never creates a second store that shadows one above it. It reports each action.
 
 1. Creates `.memex/` (never overwrites existing files):
    ```
@@ -194,13 +195,25 @@ The one-step setup, idempotent. Inside git it targets the toplevel; outside git,
      config.json         # {"keep_logs": "3d"}
      collections/        # manifests go here (empty but for a .gitkeep, so git keeps it)
    ```
-2. Writes the AGENTS.md snippet (§6) into `AGENTS.md` between `<!-- memex:begin -->` / `<!-- memex:end -->` markers, creating the file if missing and replacing the block on re-run. If `CLAUDE.md` exists without `@AGENTS.md`, it appends `@AGENTS.md` as a final line. CLAUDE.md is never created. Markers and the `@AGENTS.md` line count only outside fenced code blocks. memex never writes through a symlinked `AGENTS.md` or `CLAUDE.md`: it warns and leaves them alone.
+2. Writes the AGENTS.md snippet (§6) into `AGENTS.md` between `<!-- memex:begin -->` / `<!-- memex:end -->` markers, creating the file if missing and replacing the block on re-run. If `CLAUDE.md` exists without `@AGENTS.md`, it appends `@AGENTS.md` as a final line. CLAUDE.md is never created. Markers and the `@AGENTS.md` line count only outside fenced code blocks. memex never writes through a symlinked `AGENTS.md` or `CLAUDE.md`: it warns and leaves them alone. If `AGENTS.md` has no markers but already holds the snippet's heading line (`## memex: read intent before code`) outside fenced code, init leaves the file alone and warns `memex: warning: AGENTS.md already has the memex snippet without markers; wrap it in <!-- memex:begin --> / <!-- memex:end --> to let init manage it`.
 3. If no `memex` executable is on PATH (e.g. run via `npx`; PATH entries inside a `node_modules/.bin` folder are ignored, since that is npx's temporary shim, while a global npm install counts, and on Windows `memex.exe` or `memex.cmd` count), copies its own binary to `~/.local/bin` (`%LOCALAPPDATA%\Programs\memex` on Windows) and prints the plain line `add to PATH: <dir>` if that folder isn't on PATH. The install dir comes from the `$HOME` / `%LOCALAPPDATA%` env vars, not the known-folder API, so tests can redirect it. An installed binary is replaced only if its bytes differ.
 4. Prints `memex info` for the target, without an agent id (init has no `--agent`, so its output depends only on the repo).
 
-If another process creates one of init's files between init's check and its write, init leaves that file untouched and exits 3 with `memex: cannot create <path>: another process created it while init ran`.
+If another process creates one of init's files between init's check and its write, init leaves that file untouched and exits 3 with `memex: cannot create <path>: another process created it while init ran, or a name that differs only in case holds it`.
 
 Reads work without `init` (the intent layer needs zero config); `log` needs a `.memex/`.
+
+### 3.5c Messages
+
+Agents are memex's main readers, so every error that leaves the user stuck names the next step, in the same line:
+
+- `not found: <arg> (find refs with memex search <words>)`
+- `unknown collection '<name>'; collections: <names, comma-separated, in §3.2 group order>`
+- `log body is empty: memex log <stream> <<'EOF' … EOF`
+- `unexpected argument '<word>'` for `log` adds `: log reads its body from stdin: memex log <stream> <<'EOF' … EOF`
+- `unknown verb '<word>'` adds `; run memex --help`
+
+Exit codes and JSON codes are unchanged.
 
 ### 3.6 JSON
 
@@ -254,7 +267,7 @@ With `--json`, stdout is always one JSON document, including errors. Without it,
 | `roots` | all | root-relative folders (required) |
 | `include` | markdown, json | globs under roots (markdown default `**/*.md`) |
 | `id` | all | markdown: `stem` (default) or `path` or a frontmatter field; folder: marker field or folder name (default); json: entry field (required) |
-| `title` | all | field for the one-liner (default: first `#` heading / first line) |
+| `title` | all | field for the one-liner (default, for every kind: the first ATX heading outside fenced code, 1–6 `#` then a space or tab, else the first non-blank line; an empty title field falls back to the default; no first-sentence cut) |
 | `weights` | all | per-field ranking boost (defaults: `id` 4, `title` 3, body 1) |
 | `marker`, `merge` | folder | marker file defines a doc; `merge` globs in that folder are appended to the body |
 | `at` | json | JSON Pointer to the entries array (default: document root) |
@@ -263,7 +276,7 @@ With `--json`, stdout is always one JSON document, including errors. Without it,
 - **`folder`.** Each folder containing `marker` is one doc. The marker's fields come from top-level JSON scalars, or from frontmatter for a `.md` marker. Each `merge` file adds its full text if it is Markdown, or **only its header** if it is code, so memex still never reads code bodies.
 - **`json`.** Each entry of the array at `at`, in every matched file, is one doc. Scalars become fields and strings are indexed as text.
 - **Frontmatter.** Flat YAML: `key: scalar`, `key: [a, b]`, or `- item` lists. Anything nested is kept as text and cannot be filtered. Frontmatter is optional, and missing fields simply don't score.
-- **Unreadable files.** A README, header, CASES.md or stream folder that can't be read is a warning (`memex: warning: cannot read <path> (<ErrorKind>)`) and is skipped. A path whose name memex skips (§4.4 Encoding) gets no warning either. It never fails a read verb.
+- **Unreadable files.** A README, header, CASES.md or stream folder that can't be read is a warning (`memex: warning: cannot read <path> (<ErrorKind>)`) and is skipped. A path whose name memex skips (§4.4 Encoding) gets no warning either. A folder manifest's `merge` file that can't be read gets the same warning. A manifest root that is a symlink resolving outside the repo root is skipped with `memex: warning: <collection>: root <root> leads outside the repo; skipped`. It never fails a read verb.
 - **Invalid manifests.** An invalid manifest or an unknown key is a warning, and that collection is skipped. It never makes the run fail. Warnings are printed once per run on stderr by every verb that loads them, in text and JSON modes. `info` also lists them, with duplicate ids, in its output.
 - **Duplicate case ids.** Reported as `info` warnings, and as `ambiguous` in `show`.
 
@@ -290,7 +303,7 @@ show walks hub READMEs
 - **Concurrency.** There are no locks.
   - **Write.** memex writes a dot-prefixed temp file in the stream folder, then persists it to the final name without overwriting (`persist_noclobber`, atomic on all platforms). If the name exists, it retries with `-2`, `-3`, ….
   - **Read.** Readers ignore dotfiles, so a partial entry is never visible.
-  - **Vanished entries.** An entry or stream folder that disappears between listing and use (another process pruned it) is already gone: prune and readers skip it silently (`NotFound` never warns, nor does removing a stream folder a writer has just landed in; every other error kind still does). A write whose stream folder is removed under it re-creates the folder and retries.
+  - **Vanished entries.** An entry or stream folder that disappears between listing and use (another process pruned it) is already gone: prune and readers skip it silently (`NotFound` never warns, nor does removing a stream folder a writer has just landed in; every other error kind still does). A write whose stream folder is removed under it re-creates the folder and retries, up to 64 attempts (each concurrent prune can remove the folder at most once per run, so a writer loses at most one race per pruner).
   - **Accepted limit.** A stream folder swapped for a symlink between memex's check and its write is followed; closing that race needs `openat`, which std does not offer portably. The store is trusted like the repo it lives in.
 - **Cleanup.** Logs go stale, so they're pruned. Every `memex log` deletes entries older than `keep_logs` (default `3d`; `"forever"` disables pruning) across the store. `keep_logs` takes `Nm`, `Nh`, `Nd`, `Nw` or `forever`. If the value is invalid, memex prints a warning on stderr and does not prune. It never deletes on config it can't read. A far-future `$MEMEX_NOW` makes every entry stale, so a `log` under it prunes the whole store; `$MEMEX_NOW` is a fixture clock, not a setting (accepted). The age of an entry comes from its filename timestamp, and only files matching `YYYYMMDD-HHMMSS-*.md` are ever deleted. Stream folders emptied by a prune are removed. There's no background process; pruning happens only on write. Anything worth keeping beyond that belongs in a collection, not a log. `rm -rf` still works.
 
@@ -306,7 +319,7 @@ One codebase for Linux, macOS and Windows, using only cross-platform APIs. No ma
 - **Text.** Accept `\r\n` everywhere (headers, CASES.md, frontmatter, log bodies). A leading UTF-8 BOM is dropped on read, so frontmatter still parses from shells that add one. Write `\n`, without a BOM. The exception is a user file memex edits in place (`AGENTS.md`, `CLAUDE.md`): it keeps that file's line endings.
 - **Encoding.** Non-UTF-8 file content is decoded lossily; non-UTF-8 path names, and names containing a control character (U+0000–U+001F, U+007F), are skipped, since they cannot print as one-line labels.
 - **Errors.** Never print raw OS error strings. Print memex's message, the `io::ErrorKind` name and the path, so fixtures are identical across OSes.
-- **git.** Subprocess `git rev-parse`, no git library. If git is missing, treat the repo as non-git.
+- **git.** Subprocess `git rev-parse`, no git library. If git is missing, treat the repo as non-git, except that `log` in a folder whose root lists a `.git` **file** (a linked worktree) exits 3 with `cannot find the main checkout's log store: git is not on PATH (this folder is a linked worktree); put git on PATH`, since writing to the worktree's own store would be lost with the worktree. Read verbs are unchanged.
 - **TTY.** `std::io::IsTerminal`. TTY stdin for `log` and INFO-CAP-02 are the behaviours with no fixture case (CI runners have no portable TTY; INFO-CAP-02's 3,000-byte boundary depends on the sandbox root's length, which differs by OS); unit tests pin them. Races and closed pipes are pinned by the opt-in stress suite (`tests/stress/`).
 - **Shell examples.** Docs use bash heredocs (Git Bash on Windows runs them); stdin piping works from any shell.
 
