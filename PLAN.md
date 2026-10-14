@@ -438,6 +438,7 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [x] S5.3 (reference-ui info 94, search 138, show 117 ms; no cache)
 - [x] S5.4 (whole-crate refine; coverage audit closed)
 - [x] S6.1 (enabling it for this repo needs user approval)
+- [x] Hardening round 2 (2026-10-14): quiet-machine stress at bf3680f, load 3.9-7.5, 28/28 pass. reference-ui medians: info 79.4 ms (budget 120), search button 108.7 ms (160), show packages 87.9 ms (130); before the round (70cafdf, load 7.5): 103.6 / 152.7 / 129.6. scale_100k: info 1131, search 1259 (budget 2000), show 1189 ms (1500); 50k-entry prune 2.47 s (5 s).
 - [ ] S6.2
 - [ ] S6.3
 - [ ] Playtest 2: A
