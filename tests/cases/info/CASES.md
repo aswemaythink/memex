@@ -68,7 +68,7 @@
 - `INFO-CAP-01` Text over 3,000 bytes cuts the longest list line to its first items ending in `+N more`, until the whole output is under the cap.
   Scenario: 200 streams of one entry each, named 90 characters long so that the cut does not move with the length of the sandbox path (the header carries the root); the streams line shows its first 26 items and then `+174 more`, and the output is at most 3,000 bytes. design §3.5 Header and the cap (`+N more`).
 - `INFO-CAP-02` (planned) Text of exactly 3,000 bytes is not cut, and 3,001 bytes is.
-  Scenario: as CAP-01, with the stream names sized so the whole text is exactly 3,000 bytes. Not built yet: the header carries the sandbox root, whose length differs by OS, so the boundary cannot be golden'd on every OS until the root's length is fixed. design §3.5: text over 3,000 bytes is cut.
+  design §3.5: text over 3,000 bytes is cut. Planned: the header carries the sandbox root, whose length differs by OS, so no golden can sit on the boundary on every OS. Until then it is pinned by the unit test `info_cap_02_*` in src/render/info.rs, which pads the root to 3,000 and 3,001 bytes.
 
 ## WARN
 

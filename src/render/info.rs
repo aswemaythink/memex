@@ -1,5 +1,5 @@
 //! Prints `info`'s atlas as text under the 3,000-byte cap (design §3.5) and as JSON (design §3.6).
-//! Cases: INFO-HEAD-01, INFO-HEAD-02, INFO-INTENT-01, INFO-INTENT-02, INFO-INTENT-03, INFO-COLL-01, INFO-COLL-02, INFO-STREAM-01, INFO-STREAM-02, INFO-STREAM-03, INFO-STREAM-04, INFO-TO-01, INFO-TO-02, INFO-TO-03, INFO-TO-04, INFO-TO-05, INFO-HERE-01, INFO-HERE-02, INFO-HERE-03, INFO-HERE-04, INFO-USE-01, INFO-CAP-01, INFO-WARN-01, INFO-WARN-02, INFO-NOROOT-01, INFO-NOROOT-02, INFO-JSON-01, INFO-JSON-02, INFO-JSON-03
+//! Cases: INFO-HEAD-01, INFO-HEAD-02, INFO-INTENT-01, INFO-INTENT-02, INFO-INTENT-03, INFO-COLL-01, INFO-COLL-02, INFO-STREAM-01, INFO-STREAM-02, INFO-STREAM-03, INFO-STREAM-04, INFO-TO-01, INFO-TO-02, INFO-TO-03, INFO-TO-04, INFO-TO-05, INFO-HERE-01, INFO-HERE-02, INFO-HERE-03, INFO-HERE-04, INFO-USE-01, INFO-CAP-01, INFO-CAP-02, INFO-WARN-01, INFO-WARN-02, INFO-NOROOT-01, INFO-NOROOT-02, INFO-JSON-01, INFO-JSON-02, INFO-JSON-03
 
 use serde_json::{json, Value as Json};
 
@@ -318,6 +318,39 @@ mod tests {
         assert_eq!(counted(1, "readme", "readmes"), "1 readme");
         assert_eq!(counted(0, "readme", "readmes"), "0 readmes");
         assert_eq!(counted(2, "readme", "readmes"), "2 readmes");
+    }
+
+    /// An atlas whose root is `root` and whose streams line lists forty streams, so it is long enough to be cut.
+    fn atlas_with_root(root: String) -> Atlas {
+        let stream = |index| Stream {
+            name: format!("stream-{index:02}-with-a-long-name"),
+            count: 1,
+            new_24h: 0,
+            newest: None,
+        };
+        Atlas {
+            root,
+            store: None,
+            store_label: "none (run memex init)".to_string(),
+            intent: Intent::default(),
+            collections: Vec::new(),
+            streams: (0..40).map(stream).collect(),
+            to: None,
+            here: None,
+            warnings: Vec::new(),
+        }
+    }
+
+    /// INFO-CAP-02: a text of exactly 3,000 bytes is not cut, and one of 3,001 bytes is. The root is padded to hit the boundary,
+    /// which no golden can do on every OS, since the sandbox root's length differs.
+    #[test]
+    fn info_cap_02_a_text_of_exactly_the_cap_is_not_cut_and_one_byte_more_is() {
+        let short = text(&atlas_with_root(String::new()));
+        assert!(short.len() < CAP && !short.contains("more"), "{short}");
+        let exact = text(&atlas_with_root("/".repeat(CAP - short.len())));
+        assert!(exact.len() == CAP && !exact.contains("more"), "{exact}");
+        let over = text(&atlas_with_root("/".repeat(CAP - short.len() + 1)));
+        assert!(over.len() <= CAP && over.contains("+1 more"), "{over}");
     }
 
     #[test]

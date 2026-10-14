@@ -4,4 +4,4 @@ The info family covers design §3.5 and §3.6: what `memex info` prints, the atl
 
 Where design §3.5 is silent, these cases pin the choice: a count of one is singular; the to line appears only with at least one entry; a stream is new within 24 hours inclusive; a stream is ordered by its newest entry, then by name; the collections are alphabetical; a built-in's JSON `kind` is `null`; JSON `newest` is RFC 3339; an agent id that `log` refuses is a usage error for `info` too. INFO-NOTEXT-01 pins that the atlas prints no log title or body text.
 
-INFO-NOW-01 pins that an invalid `$MEMEX_NOW` exits 3 for info. INFO-CAP-02, the exact 3,000-byte boundary, is planned and not built: the header carries the sandbox root, whose length differs by OS, so no golden for that boundary is the same on every OS yet.
+INFO-NOW-01 pins that an invalid `$MEMEX_NOW` exits 3 for info. INFO-CAP-02, the exact 3,000-byte boundary, has no case folder: the header carries the sandbox root, whose length differs by OS, so no golden for that boundary is the same on every OS. A unit test in src/render/info.rs pins it instead.
