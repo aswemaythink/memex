@@ -1,0 +1,1 @@
+{"git": "init", "steps": [{"args": ["log", "impl"], "stdin": "Inside the bounded folder\n", "cwd": "repo/sub"}, {"args": ["log", "impl", "--json"], "stdin": "Inside the bounded folder\n", "cwd": "repo/sub"}], "snapshot": ["repo/.memex"]}

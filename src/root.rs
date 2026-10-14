@@ -1,7 +1,7 @@
 //! Finds where `log` writes, per design §4.1: the root, the folder that owns the store, and the store.
 //! The root is the nearest `.memex/` above the cwd, bounded by its toplevel, which the listing finds (layout.rs); else the toplevel, else the cwd. The read verbs use the same root.
 //! git answers for the store's place and HEAD while it works; when it gives no answer, the layout (layout.rs) answers from plain files (design §4.4 git).
-//! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-ROOT-05, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-GIT-01, DISC-GIT-02, DISC-GIT-03, DISC-NOGIT-01, DISC-NOGIT-02, DISC-NOGIT-03, DISC-NOGIT-04, DISC-NOGIT-05, DISC-NOGIT-06, DISC-NOGIT-07, DISC-TOP-01, DISC-TOP-02, DISC-TOP-03, DISC-TOP-04, DISC-TOP-05, DISC-TOP-06, LOG-WRITE-06, LOG-WRITE-10
+//! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-ROOT-05, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-GIT-01, DISC-GIT-02, DISC-GIT-03, DISC-NOGIT-01, DISC-NOGIT-02, DISC-NOGIT-03, DISC-NOGIT-04, DISC-NOGIT-05, DISC-NOGIT-06, DISC-NOGIT-07, DISC-TOP-01, DISC-TOP-02, DISC-TOP-03, DISC-TOP-04, DISC-TOP-05, DISC-TOP-06, DISC-TOP-07, LOG-WRITE-06, LOG-WRITE-10
 
 use std::ffi::OsStr;
 use std::io;
@@ -142,10 +142,11 @@ fn checkout_place(
     })
 }
 
-/// The folder that owns the store: the main checkout's counterpart of the root (the same path under the main checkout, found from
-/// the git common dir), or the root itself when there is no main checkout. The root's path under its toplevel comes from the listing.
+/// The folder that owns the store: in a linked worktree, the main checkout's counterpart of the root (the same path under the main
+/// checkout, found from the git common dir); else the root itself. The root's path under its toplevel comes from the listing. Git's
+/// answer for an outer repo, as under a `.git` folder git skips, is not linked, so the root keeps its own store (DISC-TOP-07).
 fn store_owner(root: &Path, top: Option<&Path>, git: Option<&Git>) -> PathBuf {
-    let counterpart = git.and_then(|git| {
+    let counterpart = git.filter(|git| git.linked).and_then(|git| {
         let top = top?;
         let main = main_checkout(git)?;
         root.strip_prefix(top).ok().map(|rel| main.join(rel))
@@ -313,4 +314,29 @@ mod tests {
         assert_eq!(root_of(&cwd), repo);
         assert_eq!(toplevel_of(&cwd), Some(repo));
     }
+
+    /// With the git on PATH, `log` from a repo whose `.git` is a FIFO is refused without blocking, and HEAD gives nothing.
+    #[cfg(unix)]
+    #[test]
+    fn a_fifo_git_entry_neither_blocks_nor_places_the_store() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let repo = resolved(dir.path());
+        fs::create_dir_all(repo.join(".memex")).expect("a store owner");
+        let made = Command::new("mkfifo")
+            .arg(repo.join(".git"))
+            .status()
+            .expect("mkfifo runs");
+        assert!(made.success());
+        let (sender, receiver) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let refused = locate_for_write(&repo).is_err();
+            sender.send((refused, head(&repo).branch))
+        });
+        let outcome = receiver.recv_timeout(std::time::Duration::from_secs(5));
+        assert_eq!(outcome.expect("locate and head return"), (true, None));
+    }
+
+    #[cfg(not(unix))]
+    #[test]
+    fn a_fifo_git_entry_neither_blocks_nor_places_the_store() {}
 }

@@ -85,6 +85,8 @@
   design §4.1 item 1: a cwd inside `.git` belongs to the repo that holds it. Run: memex info and memex log impl, text and then --json, from repo/.git of a committed repo; snapshot of repo/.memex.
 - `DISC-TOP-06` A `.git` file that names a missing git dir still marks its folder as the toplevel: `info` from its subfolder names that folder as the root, in text and with `--json`, exit 0.
   design §4.1 item 1: a `.git` entry git would reject still marks a toplevel. Run: memex info, text and then --json, from repo/sub, where repo/.git is a file whose gitdir line names a folder that does not exist.
+- `DISC-TOP-07` With git present, `log` inside the DISC-TOP-04 subfolder exits 3 with the no_root message and writes nothing to the repo's `.memex/` above it, in text and with `--json`.
+  design §4.1 items 1 and 3: git answers for the outer repo's main checkout, whose store is the root's own, so a `.memex/` above the bound does not capture it. Run: memex log impl, text and then --json, from repo/sub of the DISC-TOP-04 layout; snapshot of repo/.memex.
 
 ## IGNORE
 

@@ -1,10 +1,10 @@
 //! Finds a repository's toplevel by listing, and reads its layout as plain files, never by asking git.
-//! The toplevel bounds the walk for `.memex/` (design §4.1 item 1). The layout (design §4.4 git) is the `.git` entry, its `gitdir:` line, the git dir's `commondir` and its `HEAD`; the listing helpers that match special names against a folder's listing (design §4.4 Name matching) live here too.
+//! The toplevel bounds the walk for `.memex/` (design §4.1 item 1). The layout (design §4.4 git) is the `.git` entry, its `gitdir:` line, the git dir's `commondir` and its `HEAD`, each read only as a small regular file, so a hostile layout cannot block or flood the read; the listing helpers that match special names against a folder's listing (design §4.4 Name matching) live here too.
 //! Cases: DISC-TOP-01, DISC-TOP-02, DISC-TOP-03, DISC-TOP-04, DISC-TOP-05, DISC-TOP-06, DISC-ROOT-05, DISC-GIT-01, DISC-GIT-02, DISC-GIT-03, DISC-NOGIT-04, DISC-NOGIT-05, DISC-NOGIT-06, DISC-NOGIT-07, INIT-NOGIT-01
 
 use std::ffi::OsStr;
 use std::fs;
-use std::io;
+use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 
 /// The toplevel of the repository holding `start`: the nearest folder at or above it whose listing has an entry named `.git`, of
@@ -60,6 +60,10 @@ pub fn lists(dir: &Path, name: &str) -> io::Result<bool> {
     entry_named(dir, name).map(|entry| entry.is_some())
 }
 
+/// The largest layout file (`.git`, `commondir`, `HEAD`) memex reads, in bytes. Each holds one short line; git itself refuses a
+/// larger `.git` file.
+const LAYOUT_FILE_CAP: u64 = 16 * 1024;
+
 /// What the layout of a repository says about its log store, when git gives no answer (design §4.4 git).
 pub enum Layout {
     /// A main checkout (a `.git` folder), a submodule or a separate git dir (a `.git` file whose git dir has no `commondir`): the
@@ -101,14 +105,28 @@ fn git_entry_is_folder(top: &Path) -> bool {
 
 /// The git dir of the repository whose toplevel is `top`: its `.git` folder, or the folder that a `.git` file's `gitdir:` line names,
 /// relative to `top`. None when the entry is neither, or the file has no such line.
-pub fn git_dir(top: &Path) -> Option<PathBuf> {
+fn git_dir(top: &Path) -> Option<PathBuf> {
     let entry = entry_named(top, ".git").ok().flatten()?;
     if entry.path().is_dir() {
         return Some(entry.path());
     }
-    let text = fs::read_to_string(entry.path()).ok()?;
-    let target = text.lines().next()?.strip_prefix("gitdir:")?.trim();
+    let line = first_line(&entry.path()).ok()?;
+    let target = line.strip_prefix("gitdir:")?.trim();
     (!target.is_empty()).then(|| top.join(target))
+}
+
+/// The first line of a layout file, without its line ending. Only a regular file (followed through a symlink) of at most
+/// `LAYOUT_FILE_CAP` bytes is read, so a FIFO, a device or a huge file cannot block or exhaust the read.
+fn first_line(path: &Path) -> io::Result<String> {
+    let meta = fs::metadata(path)?;
+    if !meta.is_file() || meta.len() > LAYOUT_FILE_CAP {
+        return Err(io::Error::other("not a layout file"));
+    }
+    let mut text = String::new();
+    fs::File::open(path)?
+        .take(LAYOUT_FILE_CAP)
+        .read_to_string(&mut text)?;
+    Ok(text.lines().next().unwrap_or_default().to_string())
 }
 
 /// The common dir that a git dir's `commondir` file names, resolved from the git dir (design §4.4 git). `Ok(None)` when the git dir
@@ -119,21 +137,23 @@ fn common_dir(git_dir: &Path) -> io::Result<Option<PathBuf>> {
     let Some(entry) = entry_named(git_dir, "commondir")? else {
         return Ok(None);
     };
-    let text = fs::read_to_string(entry.path())?;
-    let line = text.lines().next().map(str::trim_end).unwrap_or_default();
+    let text = first_line(&entry.path())?;
+    let line = text.trim_end();
     if line.is_empty() {
         return Err(io::Error::other("the commondir file is empty"));
     }
-    dunce::canonicalize(git_dir.join(line)).map(Some)
+    let common = dunce::canonicalize(git_dir.join(line))?;
+    if !common.is_dir() {
+        return Err(io::Error::other("the commondir file names no folder"));
+    }
+    Ok(Some(common))
 }
 
 /// The branch that the repository's `HEAD` names, read from its git dir (design §4.4 git). None for a detached HEAD, for a HEAD that
 /// is not a `ref: refs/heads/<name>` line, and for a name no branch can have.
 pub fn head_branch(top: &Path) -> Option<String> {
-    let head = fs::read_to_string(git_dir(top)?.join("HEAD")).ok()?;
+    let head = first_line(&git_dir(top)?.join("HEAD")).ok()?;
     let name = head
-        .lines()
-        .next()?
         .strip_prefix("ref:")?
         .trim()
         .strip_prefix("refs/heads/")?;
@@ -197,6 +217,46 @@ mod tests {
         assert!(!is_branch_name("feat/.hidden"));
     }
 
+    /// The reads run on another thread, so a read that blocks on the FIFO fails the test after two seconds instead of hanging it.
+    #[cfg(unix)]
+    #[test]
+    fn a_layout_file_that_is_a_fifo_is_not_read() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let top = dunce::canonicalize(dir.path()).expect("a canonical folder");
+        let made = std::process::Command::new("mkfifo")
+            .arg(top.join(".git"))
+            .status()
+            .expect("mkfifo runs");
+        assert!(made.success());
+        let (sender, receiver) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let unplaced = matches!(layout_of(&top), Layout::Unplaced);
+            sender.send((unplaced, head_branch(&top)))
+        });
+        let outcome = receiver.recv_timeout(std::time::Duration::from_secs(2));
+        assert_eq!(outcome.expect("the layout reads return"), (true, None));
+    }
+
+    #[cfg(not(unix))]
+    #[test]
+    fn a_layout_file_that_is_a_fifo_is_not_read() {}
+
+    #[test]
+    fn a_layout_file_larger_than_the_cap_is_not_read() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let top = dunce::canonicalize(dir.path()).expect("a canonical folder");
+        let git = top.join("real.git");
+        fs::create_dir_all(&git).expect("a git dir");
+        fs::write(git.join("HEAD"), b"ref: refs/heads/main\n").expect("a HEAD");
+        let line = format!("gitdir: {}\n", git.display());
+        fs::write(top.join(".git"), &line).expect("a git file");
+        assert_eq!(head_branch(&top), Some("main".to_string()));
+        let padded = format!("{line}{}", " ".repeat(LAYOUT_FILE_CAP as usize));
+        fs::write(top.join(".git"), padded).expect("a huge git file");
+        assert_eq!(head_branch(&top), None);
+        assert!(matches!(layout_of(&top), Layout::Unplaced));
+    }
+
     #[test]
     fn a_linked_worktree_maps_to_its_main_checkout_and_a_dangling_git_file_is_unplaced() {
         let dir = tempfile::tempdir().expect("a temporary folder");
@@ -214,5 +274,19 @@ mod tests {
         fs::write(wt.join(".git"), b"gitdir: missing\n").expect("a dangling file");
         assert!(matches!(layout_of(&wt), Layout::Unplaced));
         assert_eq!(head_branch(&wt), None);
+    }
+
+    #[test]
+    fn a_commondir_naming_a_git_file_is_unplaced_not_the_worktree_itself() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let top = dunce::canonicalize(dir.path()).expect("a canonical folder");
+        let linked = top.join("main").join(".git").join("worktrees").join("wt");
+        fs::create_dir_all(&linked).expect("a linked git dir");
+        let wt = top.join("wt");
+        fs::create_dir_all(&wt).expect("a worktree");
+        fs::write(wt.join(".git"), format!("gitdir: {}\n", linked.display())).expect("a file");
+        let own_file = format!("{}\n", wt.join(".git").display());
+        fs::write(linked.join("commondir"), own_file).expect("a commondir naming a file");
+        assert!(matches!(layout_of(&wt), Layout::Unplaced));
     }
 }

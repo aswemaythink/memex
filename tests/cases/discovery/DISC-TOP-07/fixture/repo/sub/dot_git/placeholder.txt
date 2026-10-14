@@ -1,0 +1,1 @@
+A folder named .git that holds no repository: git skips it, as it skips an empty one.
