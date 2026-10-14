@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "../other/src/cli.rs"]}, {"args": ["show", "../other/src/cli.rs", "--json"]}]}

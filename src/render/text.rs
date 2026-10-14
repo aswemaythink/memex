@@ -1,8 +1,8 @@
 //! Prints `show`'s sections and misses as text (design §3.3).
 //! Each section sits under its `===` line, then its blocks in order, with a limits line after the children and cited-by lists.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-MD-01, SHOW-MD-02, SHOW-LOG-01, SHOW-UP-01, SHOW-ROOT-01, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, INT-NOHEAD-03, CASE-SECT-01, CITE-PREFIX-01, CITE-UNRES-01, CITE-BACK-01, CITE-BACK-04, CITE-LINK-03
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-MD-01, SHOW-MD-02, SHOW-LOG-01, SHOW-UP-01, SHOW-ROOT-01, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, INT-NOHEAD-03, CASE-SECT-01, CITE-PREFIX-01, CITE-UNRES-01, CITE-BACK-01, CITE-BACK-04, CITE-LINK-03, SHOW-OTHER-01
 
-use super::{CaseParts, Fields, Link, Listing, Miss, Ref, Section};
+use super::{CaseParts, Citations, Fields, Link, Listing, Miss, Ref, Section};
 use crate::cite::Cite;
 use crate::collections::frontmatter::Value;
 use crate::corpus::{Child, Kind};
@@ -35,7 +35,7 @@ fn section(section: &Section) -> String {
     if let Some(Fields::Case(case)) = &section.fields {
         // A case has no cites block: design §3.3 lists its claim, detail, group, defining CASES.md, evidence and cited by.
         case_blocks(&mut out, section.path.as_deref(), case);
-        cited_by_block(&mut out, &section.cited_by);
+        cited_by_block(&mut out, &section.citations);
         return out;
     }
     if let Some(Fields::Pairs(pairs)) = &section.fields {
@@ -44,8 +44,8 @@ fn section(section: &Section) -> String {
     if let Some(children) = &section.children {
         children_block(&mut out, children);
     }
-    cites_block(&mut out, &section.cites);
-    cited_by_block(&mut out, &section.cited_by);
+    cites_block(&mut out, &section.citations);
+    cited_by_block(&mut out, &section.citations);
     if let Some(chain) = &section.chain {
         chain_block(&mut out, chain);
     }
@@ -102,9 +102,17 @@ fn children_block(out: &mut String, children: &Listing<Child>) {
     limits(out, children.items.len(), children.total);
 }
 
-/// The cites block: one line per citation, or `(none)`.
-fn cites_block(out: &mut String, cites: &[Cite]) {
+/// The cites block: one line per citation, or `(none)`. An entry of another root names its root in place of the list.
+fn cites_block(out: &mut String, citations: &Citations) {
     start(out, "cites");
+    match citations {
+        Citations::Listed { cites, .. } => cite_lines(out, cites),
+        Citations::OtherRoot { root } => out.push_str(&other_root_line(root)),
+    }
+}
+
+/// One line per citation, or `(none)` when there is none.
+fn cite_lines(out: &mut String, cites: &[Cite]) {
     if cites.is_empty() {
         out.push_str("  (none)\n");
     }
@@ -121,9 +129,18 @@ fn cites_block(out: &mut String, cites: &[Cite]) {
     }
 }
 
-/// The cited-by block: one line per citing ref, marked with the prefix it cites by, then the limits line.
-fn cited_by_block(out: &mut String, cited: &Listing<Ref>) {
+/// The cited-by block: one line per citing ref, marked with the prefix it cites by, then the limits line. An entry of another
+/// root names its root in place of the list, with no limits line.
+fn cited_by_block(out: &mut String, citations: &Citations) {
     start(out, "cited by");
+    match citations {
+        Citations::Listed { cited_by, .. } => cited_by_lines(out, cited_by),
+        Citations::OtherRoot { root } => out.push_str(&other_root_line(root)),
+    }
+}
+
+/// One line per citing ref, or `(none)` when there is none, then the limits line.
+fn cited_by_lines(out: &mut String, cited: &Listing<Ref>) {
     if cited.total == 0 {
         out.push_str("  (none)\n");
     }
@@ -136,6 +153,11 @@ fn cited_by_block(out: &mut String, cited: &Listing<Ref>) {
         out.push_str(&format!("  {}{}{via}\n", item.label, title_part(title)));
     }
     limits(out, cited.items.len(), cited.total);
+}
+
+/// The line that stands in for a list of an entry in another root: the root that holds the list (design §3.1).
+fn other_root_line(root: &str) -> String {
+    format!("  (in another root: run show from {root})\n")
 }
 
 /// The chain block: each README with its `---` line, nearest first, or `(none)`.

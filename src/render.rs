@@ -1,6 +1,6 @@
 //! The sections and misses that `show` prints (design §3.3 and §3.6).
 //! Each carries its lists and limits. The text and JSON renderings are in render/.
-//! Cases: SHOW-FILE-01, SHOW-DIR-01, SHOW-LOG-01, SHOW-LIMIT-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-JSON-01, CASE-SECT-01, CASE-JSON-01
+//! Cases: SHOW-FILE-01, SHOW-DIR-01, SHOW-LOG-01, SHOW-LIMIT-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-JSON-01, CASE-SECT-01, CASE-JSON-01, SHOW-OTHER-01
 
 pub mod info;
 pub mod json;
@@ -34,10 +34,8 @@ pub struct Section {
     pub fields: Option<Fields>,
     /// The children of a folder, with the limit applied. None for anything else.
     pub children: Option<Listing<Child>>,
-    /// The citations the target makes.
-    pub cites: Vec<Cite>,
-    /// The refs that cite the target, with the limit applied.
-    pub cited_by: Listing<Ref>,
+    /// The citations of the target, or, for an entry of another root, the root that holds them (design §3.1).
+    pub citations: Citations,
     /// The READMEs above the target, nearest first. None when no chain is printed: under `--up 0`, or for a doc.
     pub chain: Option<Vec<Link>>,
 }
@@ -75,6 +73,23 @@ pub struct Ref {
     pub title: Option<String>,
     /// The prefix that the doc cites the target by, such as `NAME-*`; None when it cites the target directly.
     pub via: Option<String>,
+}
+
+/// The citations of a section (design §3.1 and §3.3). An entry of another root has none computed: its citations name labels of
+/// that root, which do not resolve from the cwd, so its root is printed in their place.
+pub enum Citations {
+    /// The citations the target makes, and the refs that cite it.
+    Listed {
+        /// The citations the target makes, in the order its text gives them.
+        cites: Vec<Cite>,
+        /// The refs that cite the target, with the limit applied.
+        cited_by: Listing<Ref>,
+    },
+    /// The entry is in another root, which holds its citations.
+    OtherRoot {
+        /// The absolute path of that root, with `/` separators.
+        root: String,
+    },
 }
 
 /// The first items of a list, with the total so that the limits line can say what was left out (design §3.3).

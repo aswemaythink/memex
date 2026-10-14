@@ -6,11 +6,10 @@ stdout
 | It has two lines so that the body shows both.
 | 
 | cites
-|   (none)
+|   (in another root: run show from $SANDBOX/wt)
 | 
 | cited by
-|   (none)
-|   showing 0 of 0
+|   (in another root: run show from $SANDBOX/wt)
 | 
 | chain
 | --- src/README.md

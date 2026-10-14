@@ -5,11 +5,10 @@ stdout
 | A note with no header of its own.
 | 
 | cites
-|   (none)
+|   (in another root: run show from $SANDBOX/loose)
 | 
 | cited by
-|   (none)
-|   showing 0 of 0
+|   (in another root: run show from $SANDBOX/loose)
 | 
 | chain
 | --- README.md
@@ -32,11 +31,10 @@ stdout
 |   showing 2 of 2
 | 
 | cites
-|   (none)
+|   (in another root: run show from $SANDBOX/loose)
 | 
 | cited by
-|   (none)
-|   showing 0 of 0
+|   (in another root: run show from $SANDBOX/loose)
 | 
 | chain
 |   (none)

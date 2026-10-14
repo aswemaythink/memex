@@ -1,10 +1,10 @@
 //! Builds the `--json` document of `show` (design §3.6).
 //! Its shape is `{"docs":[...],"errors":[...]}`, with each doc's fields, cites, cited_by, children and chain.
-//! Cases: SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-JSON-01, CITE-JSON-01, CITE-JSON-02
+//! Cases: SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-JSON-01, CITE-JSON-01, CITE-JSON-02, SHOW-OTHER-01
 
 use serde_json::{json, Map, Value as Json};
 
-use super::{CaseParts, Fields, Link, Listing, Miss, Ref, Section};
+use super::{CaseParts, Citations, Fields, Link, Listing, Miss, Ref, Section};
 use crate::cite::Cite;
 use crate::collections::frontmatter::Value;
 use crate::corpus::{Child, Kind};
@@ -26,8 +26,8 @@ fn doc(section: &Section) -> Json {
         "title": section.title,
         "fields": fields(section.fields.as_ref()),
         "text": section.text,
-        "cites": section.cites.iter().map(cite).collect::<Vec<Json>>(),
-        "cited_by": cited_by(&section.cited_by),
+        "cites": cites(&section.citations),
+        "cited_by": cited_by(&section.citations),
         "chain": section.chain.as_deref().unwrap_or(&[]).iter().map(link).collect::<Vec<Json>>(),
     });
     if let Some(children) = &section.children {
@@ -83,8 +83,25 @@ fn child(item: &Child) -> Json {
     json!({"path": item.rel, "kind": kind, "title": item.title})
 }
 
+/// The cites array of a doc: one object per citation, or null for an entry of another root, whose citations are not computed
+/// (design §3.6).
+fn cites(citations: &Citations) -> Json {
+    match citations {
+        Citations::Listed { cites, .. } => Json::Array(cites.iter().map(cite).collect()),
+        Citations::OtherRoot { .. } => Json::Null,
+    }
+}
+
+/// The cited-by object of a doc: the total and the shown refs, or null for an entry of another root (design §3.6).
+fn cited_by(citations: &Citations) -> Json {
+    match citations {
+        Citations::Listed { cited_by, .. } => refs_object(cited_by),
+        Citations::OtherRoot { .. } => Json::Null,
+    }
+}
+
 /// The cited-by object: the total and the shown refs.
-fn cited_by(list: &Listing<Ref>) -> Json {
+fn refs_object(list: &Listing<Ref>) -> Json {
     let refs: Vec<Json> = list.items.iter().map(reference).collect();
     json!({"total": list.total, "refs": refs})
 }

@@ -1,0 +1,28 @@
+$ memex show ../other/src/cli.rs
+exit 0
+stdout
+| === $SANDBOX/other/src/cli.rs ===
+| Parses the other arguments; the folder's README.md says more.
+| 
+| cites
+|   (in another root: run show from $SANDBOX/other)
+| 
+| cited by
+|   (in another root: run show from $SANDBOX/other)
+| 
+| chain
+| --- src/README.md
+| # src
+| 
+| The other source.
+| --- README.md
+| # Other
+| 
+| A second root beside the demo. Its parser is in `src/cli.rs`.
+stderr (empty)
+
+$ memex show ../other/src/cli.rs --json
+exit 0
+stdout
+| {"docs":[{"ref":"$SANDBOX/other/src/cli.rs","collection":"headers","id":"src/cli.rs","path":"src/cli.rs","title":"Parses the other arguments; the folder's README.md says more.","fields":{},"text":"Parses the other arguments; the folder's README.md says more.","cites":null,"cited_by":null,"chain":[{"path":"src/README.md","text":"# src\n\nThe other source.\n"},{"path":"README.md","text":"# Other\n\nA second root beside the demo. Its parser is in `src/cli.rs`.\n"}]}],"errors":[]}
+stderr (empty)

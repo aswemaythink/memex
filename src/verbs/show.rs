@@ -1,6 +1,6 @@
 //! Carries out `memex show` (design §3.3 and §3.6).
 //! It resolves each ref, takes its section from `show/section.rs`, and reports the sections, the misses and the exit status.
-//! Cases: SHOW-DUP-01, SHOW-DUP-02, SHOW-ERR-01, SHOW-ERR-02, SHOW-ERR-03, SHOW-IO-01, SHOW-IO-02, SHOW-JSON-01, SHOW-JSON-04, SHOW-JSON-05, SHOW-SEP-01, REF-WT-01, REF-WT-02
+//! Cases: SHOW-DUP-01, SHOW-DUP-02, SHOW-ERR-01, SHOW-ERR-02, SHOW-ERR-03, SHOW-IO-01, SHOW-IO-02, SHOW-JSON-01, SHOW-JSON-04, SHOW-JSON-05, SHOW-SEP-01, REF-WT-01, REF-WT-02, SHOW-OTHER-01
 
 mod section;
 
@@ -12,8 +12,9 @@ use self::section::{section_for, Options};
 use crate::cli::Verb;
 use crate::corpus::Corpus;
 use crate::error::Error;
-use crate::render::{self, Listing, Miss, Section};
+use crate::render::{self, Miss, Section};
 use crate::resolve::{resolve, Elsewhere, Outcome, Target};
+use crate::root::slash;
 use crate::scan::fail;
 use crate::verbs::here;
 
@@ -60,6 +61,7 @@ fn show_in(corpus: &Corpus, cwd: &Path, store: Option<&Path>, request: &Request)
     let options = Options {
         up: request.up,
         limit: request.limit.unwrap_or(DEFAULT_LIMIT),
+        other_root: None,
     };
     let mut sections = Vec::new();
     let mut misses = Vec::new();
@@ -103,19 +105,18 @@ fn show_in(corpus: &Corpus, cwd: &Path, store: Option<&Path>, request: &Request)
 
 /// The section of an entry in another root: built from that root's own corpus, and labelled by its absolute path, which
 /// round-trips from anywhere (design §3.1). Its cites and cited by name labels of that root, which do not round-trip from
-/// the cwd, so they print as none until absolute refs are designed for them.
+/// the cwd, so they are not computed: the section names that root in their place.
 fn elsewhere_section(other: &Elsewhere, options: &Options) -> Result<Section, io::Error> {
     let target = Target::Path {
         rel: other.rel.clone(),
         kind: other.kind,
     };
-    let mut section = section_for(&other.corpus, &target, options)?;
-    section.label.clone_from(&other.label);
-    section.cites.clear();
-    section.cited_by = Listing {
-        total: 0,
-        items: Vec::new(),
+    let scoped = Options {
+        other_root: Some(slash(&other.corpus.root)),
+        ..options.clone()
     };
+    let mut section = section_for(&other.corpus, &target, &scoped)?;
+    section.label.clone_from(&other.label);
     Ok(section)
 }
 

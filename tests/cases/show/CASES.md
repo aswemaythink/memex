@@ -105,3 +105,8 @@
 
 - `SHOW-NOW-01` An invalid `$MEMEX_NOW` exits 3 for show too, though show prints no time: `invalid MEMEX_NOW:` and the value on stderr, or the `io` envelope on stdout with `--json`.
   design §3.6 Determinism: an invalid value exits 3, and the value is checked once as every verb starts. Run: memex show README.md with MEMEX_NOW as `2026-10-13 12:00:00`, then memex show README.md --json with `not-a-date`, then memex show README.md with the default value, which exits 0.
+
+## OTHER
+
+- `SHOW-OTHER-01` A file in another root, a sibling folder with its own `.memex/`, prints `cites` and `cited by` as `(in another root: run show from <root>)` in place of their lists, with no limits line, and its chain comes from that root; with `--json` its `cites` and `cited_by` are null, exit 0.
+  design §3.1 Other worktrees and §3.6 show: cites and cited_by are null for an entry in another root. Run: memex show ../other/src/cli.rs from repo/, then the same with --json.

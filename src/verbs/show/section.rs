@@ -1,6 +1,6 @@
 //! Builds what `memex show` prints for one target: a folder, a file or a doc (design §3.3).
 //! A folder or a file that cannot be read gives its io error, which `show.rs` reports as that ref's error.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-LINE-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-IO-01, SHOW-IO-02, CASE-JSON-01, CASE-SECT-01, CITE-BACK-01, CITE-BACK-03, CITE-BACK-04, CITE-COLL-02, CITE-FOLDER-02, CITE-JSON-01, CITE-JSON-02, CITE-MAN-01, CITE-PREFIX-01, CITE-PREFIX-02, CITE-SELF-01, CITE-UNRES-01
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-LINE-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-IO-01, SHOW-IO-02, CASE-JSON-01, CASE-SECT-01, CITE-BACK-01, CITE-BACK-03, CITE-BACK-04, CITE-COLL-02, CITE-FOLDER-02, CITE-JSON-01, CITE-JSON-02, CITE-MAN-01, CITE-PREFIX-01, CITE-PREFIX-02, CITE-SELF-01, CITE-UNRES-01, SHOW-OTHER-01
 
 use std::fs::File;
 use std::io;
@@ -8,16 +8,20 @@ use std::io;
 use crate::cite::Cite;
 use crate::corpus::{self, parent_of, readme_label, Child, Corpus, Doc, Kind};
 use crate::intent::cases;
-use crate::render::{CaseParts, Fields, Link, Listing, Ref, Section};
+use crate::render::{CaseParts, Citations, Fields, Link, Listing, Ref, Section};
 use crate::resolve::Target;
 use crate::text;
 
 /// The settings that every section is built with.
+#[derive(Clone)]
 pub struct Options {
     /// The most READMEs in a chain, or None for the whole chain.
     pub up: Option<usize>,
     /// The most rows of a children list or a cited-by list.
     pub limit: usize,
+    /// The root that holds the target, when the target lies in another root. Its citations are then not computed, since they name
+    /// labels of that root (design §3.1). None for a target of the current root.
+    pub other_root: Option<String>,
 }
 
 /// The section of one resolved target. A folder or a file that cannot be read gives its io error (design §3.3).
@@ -58,10 +62,12 @@ fn folder_section(corpus: &Corpus, rel: &str, options: &Options) -> Result<Secti
         missing: "(no README)",
         fields: None,
         children: Some(Listing::of(&children, options.limit)),
-        cites: readme
-            .map(|doc| cites_of(corpus, &doc.label))
-            .unwrap_or_default(),
-        cited_by: cited_by(corpus, &label, options.limit),
+        citations: citations(
+            corpus,
+            options,
+            readme.map(|doc| doc.label.as_str()),
+            &label,
+        ),
         chain: chain(corpus, parent_of(rel), options),
     })
 }
@@ -107,10 +113,12 @@ fn file_section(corpus: &Corpus, rel: &str, options: &Options) -> Result<Section
         missing: "(no header)",
         fields: None,
         children: None,
-        cites: doc
-            .map(|doc| cites_of(corpus, &doc.label))
-            .unwrap_or_else(|| cites_of(corpus, key)),
-        cited_by: cited_by(corpus, key, options.limit),
+        citations: citations(
+            corpus,
+            options,
+            Some(doc.map_or(key, |doc| doc.label.as_str())),
+            key,
+        ),
         chain: chain(corpus, start, options),
     })
 }
@@ -128,12 +136,12 @@ fn doc_section(corpus: &Corpus, doc: &Doc, options: &Options) -> Section {
         fields: Some(doc_fields(corpus, doc)),
         children: None,
         // A case shows cited by and no cites (design §3.3 Case), so its JSON cites list is empty too.
-        cites: if doc.collection == corpus::CASES {
-            Vec::new()
-        } else {
-            cites_of(corpus, &doc.label)
-        },
-        cited_by: cited_by(corpus, &doc.label, options.limit),
+        citations: citations(
+            corpus,
+            options,
+            (doc.collection != corpus::CASES).then_some(doc.label.as_str()),
+            &doc.label,
+        ),
         chain: None,
     }
 }
@@ -191,6 +199,24 @@ fn cited_by(corpus: &Corpus, label: &str, limit: usize) -> Listing<Ref> {
 /// The citations of the doc with this label, in the order the index holds them.
 fn cites_of(corpus: &Corpus, label: &str) -> Vec<Cite> {
     corpus.citations().cites(label).to_vec()
+}
+
+/// The citations of a target: the cites of the doc labelled `cites_label` (none for None, as for a case) and the refs that cite
+/// `cited_by_label`. For an entry of another root neither is computed, since they name labels of that root, so the root is
+/// printed in their place (design §3.1).
+fn citations(
+    corpus: &Corpus,
+    options: &Options,
+    cites_label: Option<&str>,
+    cited_by_label: &str,
+) -> Citations {
+    match &options.other_root {
+        Some(root) => Citations::OtherRoot { root: root.clone() },
+        None => Citations::Listed {
+            cites: cites_label.map_or_else(Vec::new, |label| cites_of(corpus, label)),
+            cited_by: cited_by(corpus, cited_by_label, options.limit),
+        },
+    }
 }
 
 /// True for a README.md, at the root or in a folder.
