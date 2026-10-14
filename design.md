@@ -115,7 +115,7 @@ memex --help | --version
   4. A bare id that is unique across collections, matched exactly, then case-insensitively.
   5. A unique basename.
   6. If several still match, memex lists candidates and exits 1. It never guesses.
-- **Other worktrees.** A path outside the current root resolves against *its own* nearest root (a `.memex/` or git toplevel above it). With neither, its root is the path itself for a folder, or its parent for a file; memex never walks the enclosing filesystem. `memex show ../wt-cook-3/src/x.rs` reads that worktree's intent layer, so no `@worktree` suffix is needed. Logs are shared anyway.
+- **Other worktrees.** A path outside the current root resolves against *its own* nearest root (a `.memex/` or git toplevel above it). With neither, its root is the path itself for a folder, or its parent for a file; memex never walks the enclosing filesystem. `memex show ../wt-cook-3/src/x.rs` reads that worktree's intent layer, so no `@worktree` suffix is needed. Its `cites` and `cited by` would name labels of that root, which don't resolve from the cwd, so text prints `(in another root: run show from <root>)` in place of each list and JSON gives `cites: null` and `cited_by: null`; nothing is dropped silently. Logs are shared anyway.
 - **Built-in collections.** The names `readmes`, `headers`, `cases` and `logs` are reserved. `logs` means every stream.
 
 ### 3.2 `search`
@@ -143,7 +143,7 @@ logs  (showing 1 of 1)
 
 ### 3.3 `show`
 
-It takes one or more refs and prints a section for each, separated by `=== <label> ===` lines. A ref repeated in one call prints once, at its first position. A requested file that can't be read, or a requested folder that can't be listed, is that ref's error (`io`), so `show` exits 1 as for any failed ref; unreadable files met while loading the corpus stay warnings (§4.2).
+It takes one or more refs and prints a section for each, separated by `=== <label> ===` lines. A ref repeated in one call prints once, at its first position. A requested file that can't be read, or a requested folder that can't be listed, is that ref's error (`io`), so `show` exits 1 as for any failed ref; unreadable files met while loading the corpus stay warnings (§4.2). A path inside a folder that can't be listed was never walked, so it is `not found`; the folder's own warning says why.
 
 - **File.** The header (full content for `.md`), then `cites`, then `cited by`, then the chain. `--up N` limits the depth; `--up 0` prints the file alone.
 - **Folder.** The folder's README if there is one; otherwise `(no README)`. Then the children (the folder's own README.md excluded, since it is already printed): subfolders with their README one-liners, and files with their header one-liners or `(no header)`. Then `cites`/`cited by` for the folder path, then the chain. A folder without a README lists its children and is not an error. `show .` is the map of the root.
@@ -207,7 +207,7 @@ With `--json`, stdout is always one JSON document, including errors. Without it,
 - **Doc:** `{ref, collection, id, path, title, fields:{…}}`. `fields` holds frontmatter and manifest fields; logs add `time, agent, to[], tags[], branch, worktree, commit`.
 - **`search` (with words or filters, or a roster):** `{query, filters:{…}, groups:[{collection, total, hits:[doc + {score|null, snippet, fuzzy:[]}]}]}`. Roster hits have `score: null` and `cited_by: N`, which, like `<-N`, excludes prefix citations. JSON scores are rounded to 3 decimals. The shape is the same with or without `--in`.
 - **`info`:** `{root, log_store, collections:[{name, kind, builtin, count, description, owner, new_24h?, newest?, error?}], to?:{agent, count}, here?:{path, title}, warnings:[]}`, where `kind` is `log` for streams.
-- **`show`:** `{docs:[doc + {text, cites:[{ref, title, resolved}], cited_by:{total, refs:[{ref, title, via?}]}, children?:{total, items:[{path, kind:"dir"|"file", title}]}, chain:[{path, text}]}], errors:[{arg, code, message, candidates?}]}`.
+- **`show`:** `{docs:[doc + {text, cites:[{ref, title, resolved}], cited_by:{total, refs:[{ref, title, via?}]}, children?:{total, items:[{path, kind:"dir"|"file", title}]}, chain:[{path, text}]}], errors:[{arg, code, message, candidates?}]}`. `cites` and `cited_by` are `null` for an entry in another root (§3.1).
 - **`log`:** `{ref, path}`, where `path` is absolute and `/`-separated.
 - **Fatal errors:** `{error:{code, message}}`, where `code` is one of `usage | not_found | ambiguous | no_root | io`. `no_root` is `log` with no `.memex/` (§4.1).
 - **Exit codes:**
@@ -215,7 +215,7 @@ With `--json`, stdout is always one JSON document, including errors. Without it,
   - 1: not found or ambiguous.
   - 2: usage error.
   - 3: environment error: no `.memex/` for `log` (§4.1), store not writable, or an I/O failure that stops the verb.
-- **Closed stdout.** If the reader closes stdout early (`memex search … | head -1`), memex stops writing, prints nothing on stderr and exits 0. A `show` ref that fails on I/O is that ref's error and exits 1 (§3.3).
+- **Closed stdout.** If the reader closes stdout early (`memex search … | head -1`), memex stops writing, prints nothing on stderr and exits with the code it would otherwise have (0 on success); a closed stdout is never itself an error. A `show` ref that fails on I/O is that ref's error and exits 1 (§3.3).
 - **Determinism.** Lists are sorted (ties broken by ref) unless a rule gives another order: cites and evidence keep the order they are written in. `$MEMEX_NOW` is RFC 3339 UTC with `Z`, and it replaces the clock everywhere: log time, prune, `since:`, ages and `new_24h`. An invalid value exits 3. That lets fixtures compare stdout byte for byte.
 - **Ages.** Ages print as `Nm` below 60 minutes (`<60m`), `Nh` below 48 hours (`<48h`), else `Nd`.
 
@@ -223,7 +223,7 @@ With `--json`, stdout is always one JSON document, including errors. Without it,
 
 ### 4.1 Discovery
 
-1. **Root.** memex walks up from the cwd, or from the path argument for `show`, to the nearest folder that contains `.memex/`, and the nearest one wins as with git. If there is none, the root is the git worktree toplevel, or the cwd outside git. `log` then needs `.memex/` in the root or the main checkout (item 3).
+1. **Root.** memex walks up from the cwd, or from the path argument for `show`, to the nearest folder that contains `.memex/`, and the nearest one wins as with git. Inside a git worktree the walk stops at the toplevel, so a `.memex/` above the repo (say in `$HOME`) never captures it. If there is none, the root is the git worktree toplevel, or the cwd outside git. `log` then needs `.memex/` in the root or the main checkout (item 3).
 2. **Intent layer.** It is read from the root's tree, live, using the `ignore` walker. That means `.gitignore` and `.ignore` are honoured (`.ignore` is the way to exclude paths from memex and rg together). The built-in skip list is hidden entries, anything git-ignored or `.ignore`d, `node_modules` and `target`. Manifest roots may point into hidden folders. A README is matched by its listed filename, `README.md`, exactly. memex never probes with `exists()`, so behaviour is portable across case-insensitive filesystems.
 3. **Log store.** `.memex/logs/`, ignored by default (`.memex/.gitignore`). Inside a git worktree it resolves to the **main checkout's** `.memex/logs/` (the same root path in the main worktree, found via `git rev-parse --git-common-dir`), so every worktree shares one store and logs survive `git worktree remove`. A bare repo has no main checkout, so its store is `<git-common-dir>/memex/logs/`; there `log` needs `.memex/` in the root only, and no `.gitignore` is written because the store is inside the git dir. `log` is allowed if the root or the main checkout has `.memex/`. With neither, it exits 3 with "run `memex init`". Creating the store also writes `.memex/.gitignore` when it's missing, so logs can never be committed by accident. memex creates the folder on the first `log`.
 4. **`.memex/` contents.** Committed: `collections/<name>.json` manifests, `config.json`, `.gitignore`. Ignored by default: `logs/` and `cache/`. A team that wants to keep logs removes `logs/` from the `.gitignore`; that's their choice. `config.json` has one key, `keep_logs`. It is read from the store owner's `.memex/config.json` (the main checkout's, for a worktree), and defaults to `3d`.
@@ -288,7 +288,7 @@ show walks hub READMEs
 - **Concurrency.** There are no locks.
   - **Write.** memex writes a dot-prefixed temp file in the stream folder, then persists it to the final name without overwriting (`persist_noclobber`, atomic on all platforms). If the name exists, it retries with `-2`, `-3`, ….
   - **Read.** Readers ignore dotfiles, so a partial entry is never visible.
-  - **Vanished entries.** An entry or stream folder that disappears between listing and use (another process pruned it) is already gone: prune and readers skip it silently (`NotFound` never warns; every other error kind still does). A write whose stream folder is removed under it re-creates the folder and retries.
+  - **Vanished entries.** An entry or stream folder that disappears between listing and use (another process pruned it) is already gone: prune and readers skip it silently (`NotFound` never warns, nor does removing a stream folder a writer has just landed in; every other error kind still does). A write whose stream folder is removed under it re-creates the folder and retries.
 - **Cleanup.** Logs go stale, so they're pruned. Every `memex log` deletes entries older than `keep_logs` (default `3d`; `"forever"` disables pruning) across the store. `keep_logs` takes `Nm`, `Nh`, `Nd`, `Nw` or `forever`. If the value is invalid, memex prints a warning on stderr and does not prune. It never deletes on config it can't read. The age of an entry comes from its filename timestamp, and only files matching `YYYYMMDD-HHMMSS-*.md` are ever deleted. Stream folders emptied by a prune are removed. There's no background process; pruning happens only on write. Anything worth keeping beyond that belongs in a collection, not a log. `rm -rf` still works.
 
 ### 4.4 Portability
@@ -301,7 +301,7 @@ One codebase for Linux, macOS and Windows, using only cross-platform APIs. No ma
 - **Filenames.** Log names have no colons. Slugs are `[a-z0-9-]`, max 60 chars. Windows reserved names are moot for entry files, because the timestamp prefix comes first; stream folders refuse them (§3.4).
 - **Name matching.** Special names (`README.md`, `CASES.md`, manifest files, `.memex` and everything memex reads inside it: `config.json`, `collections/`, `logs/`) are matched against directory listings, exactly. memex never decides by `exists()`, so case-insensitive filesystems behave like Linux.
 - **Text.** Accept `\r\n` everywhere (headers, CASES.md, frontmatter, log bodies). A leading UTF-8 BOM is dropped on read, so frontmatter still parses from shells that add one. Write `\n`, without a BOM. The exception is a user file memex edits in place (`AGENTS.md`, `CLAUDE.md`): it keeps that file's line endings.
-- **Encoding.** Non-UTF-8 file content is decoded lossily; non-UTF-8 path names are skipped.
+- **Encoding.** Non-UTF-8 file content is decoded lossily; non-UTF-8 path names, and names containing a control character (U+0000–U+001F, U+007F), are skipped, since they cannot print as one-line labels.
 - **Errors.** Never print raw OS error strings. Print memex's message, the `io::ErrorKind` name and the path, so fixtures are identical across OSes.
 - **git.** Subprocess `git rev-parse`, no git library. If git is missing, treat the repo as non-git.
 - **TTY.** `std::io::IsTerminal`. TTY stdin for `log` and INFO-CAP-02 are the behaviours with no fixture case (CI runners have no portable TTY; INFO-CAP-02's 3,000-byte boundary depends on the sandbox root's length, which differs by OS); unit tests pin them. Races and closed pipes are pinned by the opt-in stress suite (`tests/stress/`).
