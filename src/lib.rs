@@ -14,6 +14,7 @@ pub mod help;
 mod index;
 mod intent;
 mod logs;
+mod par;
 mod render;
 mod resolve;
 mod root;

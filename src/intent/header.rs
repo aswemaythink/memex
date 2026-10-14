@@ -30,6 +30,11 @@ pub fn header(path: &Path, bytes: &[u8]) -> Option<String> {
     })
 }
 
+/// True when a file of this name or extension has a comment family, so that its header is read. Any other file has no header.
+pub fn has_family(path: &Path) -> bool {
+    families::family_of(path).is_some()
+}
+
 /// The header text as the index reads it: with the cut note left out, since only `show` prints that line (design §2.1).
 pub fn without_note(text: &str) -> &str {
     text.strip_suffix(CUT_NOTE)

@@ -3,6 +3,7 @@
 //! Cases: SHOW-DIR-01, SHOW-FILE-01, SHOW-LINE-01
 
 pub mod cases;
+pub mod files;
 pub mod header;
 pub mod readme;
 

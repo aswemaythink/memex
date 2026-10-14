@@ -1,13 +1,14 @@
 //! Walks the intent layer: the entries under the root that the ignore rules keep (design §4.1 item 2).
 //! Cases: INT-IGNORE-01, INT-IGNORE-02, INT-IGNORE-03, INT-SKIP-01, INT-SKIP-02, INT-NAME-03, SHOW-FILE-01, SHOW-DIR-01, SHOW-ROOT-01
 
-use std::ffi::OsStr;
 use std::io;
 use std::path::{Component, Path, PathBuf};
+use std::sync::mpsc;
 
-use ignore::{DirEntry, WalkBuilder};
+use ignore::{DirEntry, WalkBuilder, WalkState};
 
 use crate::error::Error;
+use crate::par;
 use crate::root::slash;
 
 /// One file or folder of the intent layer.
@@ -28,30 +29,57 @@ pub fn walk(root: &Path) -> Vec<Entry> {
 }
 
 /// Like `walk`, and each folder under `root` that the walk cannot read adds its warning to `warnings`, `memex: warning: cannot
-/// read <path> (<ErrorKind>)` (design §4.2). The rest of the tree is still walked.
+/// read <path> (<ErrorKind>)` (design §4.2), in the order of a depth-first walk. The rest of the tree is still walked. The walk
+/// runs on several threads, so its items are collected, then ordered by path and by label.
 pub fn walk_warned(root: &Path, warnings: &mut Vec<String>) -> Vec<Entry> {
-    let walker = WalkBuilder::new(root)
+    let (sender, items) = mpsc::channel();
+    let mut builder = WalkBuilder::new(root);
+    builder
         .require_git(false)
-        .sort_by_file_name(OsStr::cmp)
-        .filter_entry(|entry| !is_skipped(entry))
-        .build();
-    let mut entries: Vec<Entry> = Vec::new();
-    for item in walker {
-        match item {
-            Ok(entry) => entries.extend(to_entry(root, &entry)),
-            Err(error) => warnings.extend(walk_warning(&error)),
+        .threads(par::threads())
+        .filter_entry(|entry| !is_skipped(entry));
+    builder.build_parallel().run(|| {
+        let sender = sender.clone();
+        Box::new(move |item: Result<DirEntry, ignore::Error>| {
+            if let Some(found) = found_of(root, item) {
+                // The receiver is read after every walker thread has ended, so a send cannot fail.
+                let _ = sender.send(found);
+            }
+            WalkState::Continue
+        })
+    });
+    drop(sender);
+    let (mut entries, mut failures) = (Vec::new(), Vec::new());
+    for found in items {
+        match found {
+            Ok(entry) => entries.push(entry),
+            Err(failure) => failures.push(failure),
         }
     }
+    // A path orders its components, so this puts each warning where the depth-first walk gave it: a folder's before its children's.
+    failures.sort_by(|left, right| left.0.cmp(&right.0));
+    warnings.extend(failures.into_iter().map(|(_, text)| text));
     entries.sort_by(|left, right| left.rel.cmp(&right.rel));
     entries
 }
 
-/// The warning for a walk error that names the path it failed on and an io failure (design §4.2). None for any other error,
-/// such as an ignore file that does not parse.
-fn walk_warning(error: &ignore::Error) -> Option<String> {
+/// What one walk item gives: its entry, or its warning with the path that it names. None for an item that is neither.
+fn found_of(
+    root: &Path,
+    item: Result<DirEntry, ignore::Error>,
+) -> Option<Result<Entry, (PathBuf, String)>> {
+    match item {
+        Ok(entry) => to_entry(root, &entry).map(Ok),
+        Err(error) => walk_warning(&error).map(Err),
+    }
+}
+
+/// The path that a walk error names, with the warning for it (design §4.2). None for any other error, such as an ignore file
+/// that does not parse.
+fn walk_warning(error: &ignore::Error) -> Option<(PathBuf, String)> {
     let (path, failure) = named_failure(error)?;
     let message = Error::io(&format!("cannot read {}", slash(path)), failure).message;
-    Some(format!("memex: warning: {message}"))
+    Some((path.to_path_buf(), format!("memex: warning: {message}")))
 }
 
 /// The path that a walk error names, and the io failure under it. The walk wraps a failure in its path and its depth, in

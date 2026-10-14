@@ -1,4 +1,4 @@
-//! Builds the citation index once per load (design §2.3): each doc's cites and the backlinks they give.
+//! Builds the citation index (design §2.3): each doc's cites and the backlinks they give.
 //! Cases: CITE-BARE-01, CITE-BARE-02, CITE-BARE-03, CITE-PREFIX-01, CITE-PREFIX-02, CITE-COLL-01, CITE-COLL-02, CITE-COLL-03, CITE-COLL-04, CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-04, CITE-PATH-05, CITE-PATH-06, CITE-LINK-01, CITE-LINK-02, CITE-LINK-03, CITE-LINK-05, CITE-MAN-01, CITE-UNRES-01, CITE-FOLDER-01, CITE-FOLDER-02, CITE-FENCE-01, CITE-SELF-01, CITE-BACK-01, CITE-BACK-02, CITE-BACK-03, CITE-BACK-04, CITE-BACK-05, SRCH-ORPHAN-01, SRCH-ORPHAN-02
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -7,6 +7,7 @@ use super::paths::{self, Named};
 use super::tokens::{self, Token};
 use super::{Cite, Citer};
 use crate::corpus::{label_of, parent_of, Corpus, Doc};
+use crate::par;
 
 /// The collections of intent docs, which have a file and a folder. Their path tokens resolve from their own folder first.
 const INTENT: [&str; 3] = ["readmes", "headers", "cases"];
@@ -57,16 +58,17 @@ struct Gathered {
 }
 
 impl Index {
-    /// The index of every doc in `corpus`: each doc's citations, and the backlinks of every target.
+    /// The index of every doc in `corpus`: each doc's citations, and the backlinks of every target. The docs are scanned on several
+    /// threads, then recorded in the order of `all_docs`, so the backlinks come out as a sequential scan gives them.
     pub fn build(corpus: &Corpus) -> Index {
         let docs: Vec<&Doc> = corpus.all_docs().collect();
         let names = Names::of(&docs);
+        let hits = par::map(&docs, |doc| hits_of(corpus, doc, &names));
         let mut index = Index {
             manifest: names.manifest.clone(),
             ..Index::default()
         };
-        for doc in docs {
-            let hits = hits_of(corpus, doc, &names);
+        for (doc, hits) in docs.into_iter().zip(hits) {
             index.record(corpus, doc, hits);
         }
         for citers in index.citers.values_mut() {

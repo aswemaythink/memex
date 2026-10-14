@@ -5,11 +5,15 @@ pub mod bm25;
 pub mod filter;
 pub mod fuzzy;
 pub mod tokenize;
+mod vocab;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::ops::Bound;
 
 use rust_stemmers::{Algorithm, Stemmer};
+
+use crate::par;
+use vocab::{Posting, Vocab};
 
 /// The shortest query word that may match by prefix (PLAN §4).
 const PREFIX_MIN: usize = 3;
@@ -54,15 +58,9 @@ pub struct Index {
     labels: Vec<String>,
     norms: Vec<[f64; 3]>,
     vocab: BTreeMap<String, Vec<Posting>>,
-    stems: BTreeMap<String, Vec<String>>,
+    stems: HashMap<String, Vec<String>>,
     stemmer: Stemmer,
     weights: [f64; 3],
-}
-
-/// A doc that has a term, with the term's count in each field.
-struct Posting {
-    doc: usize,
-    tf: [u32; 3],
 }
 
 /// What one query word matched in one doc: its best tier, the weighted frequency of its terms in that tier, and the fuzzy terms.
@@ -92,15 +90,14 @@ impl Totals {
 }
 
 impl Index {
-    /// Indexes the sources in order. Each doc's tokens are counted per field, and the field lengths give the normalisers. The
-    /// group ranks with `weights`, the field weights of its manifest or the defaults (design §4.2).
+    /// Indexes the sources in order. Each doc's tokens are counted per field, and the field lengths give the normalisers. The docs
+    /// are cut into runs, one per thread, which are counted at once and then joined in order. The group ranks with `weights`, the
+    /// field weights of its manifest or the defaults (design §4.2).
     pub fn build(sources: &[Source], weights: [f64; 3]) -> Index {
         let stemmer = Stemmer::create(Algorithm::English);
-        let mut vocab: BTreeMap<String, Vec<Posting>> = BTreeMap::new();
-        let mut lengths = Vec::with_capacity(sources.len());
-        for (doc, source) in sources.iter().enumerate() {
-            lengths.push(add_doc(&mut vocab, doc, source));
-        }
+        let runs = par::map(&runs_of(sources), |(first, run)| count_run(*first, run));
+        let (terms, lengths) = join_runs(runs);
+        let vocab = terms.into_map();
         Index {
             labels: sources
                 .iter()
@@ -234,30 +231,58 @@ impl Index {
 }
 
 /// Adds one doc's terms to the vocabulary, and returns its token count in each field.
-fn add_doc(vocab: &mut BTreeMap<String, Vec<Posting>>, doc: usize, source: &Source) -> [f64; 3] {
-    let mut counts: BTreeMap<String, [u32; 3]> = BTreeMap::new();
+fn add_doc(terms: &mut Vocab, doc: usize, source: &Source) -> [f64; 3] {
     let mut length = [0.0; 3];
     for (field, text) in [source.id, source.title, source.body]
         .into_iter()
         .enumerate()
     {
-        for token in tokenize::tokens(text) {
+        tokenize::for_each_token(text, |token| {
             length[field] += 1.0;
-            counts.entry(token).or_insert([0; 3])[field] += 1;
-        }
-    }
-    for (term, tf) in counts {
-        vocab.entry(term).or_default().push(Posting { doc, tf });
+            terms.count(doc, field, token);
+        });
     }
     length
+}
+
+/// The sources cut into runs of consecutive docs, one run per thread, each with the position of its first doc.
+fn runs_of<'a, 'b>(sources: &'a [Source<'b>]) -> Vec<(usize, &'a [Source<'b>])> {
+    let size = sources.len().div_ceil(par::threads()).max(1);
+    sources
+        .chunks(size)
+        .enumerate()
+        .map(|(run, docs)| (run * size, docs))
+        .collect()
+}
+
+/// The vocabulary of one run of docs, and the token count of each doc in it, with its docs numbered from `first`.
+fn count_run(first: usize, sources: &[Source]) -> (Vocab, Vec<[f64; 3]>) {
+    let mut terms = Vocab::default();
+    let lengths = sources
+        .iter()
+        .enumerate()
+        .map(|(offset, source)| add_doc(&mut terms, first + offset, source))
+        .collect();
+    (terms, lengths)
+}
+
+/// The runs joined in order: one vocabulary, and the token count of every doc.
+fn join_runs(runs: Vec<(Vocab, Vec<[f64; 3]>)>) -> (Vocab, Vec<[f64; 3]>) {
+    let mut terms = Vocab::default();
+    let mut lengths = Vec::new();
+    for (run, counts) in runs {
+        terms.append(run);
+        lengths.extend(counts);
+    }
+    (terms, lengths)
 }
 
 /// The plain terms of the vocabulary by their stem, so that a query word finds its stem-mates in one lookup.
 fn stem_map(
     vocab: &BTreeMap<String, Vec<Posting>>,
     stemmer: &Stemmer,
-) -> BTreeMap<String, Vec<String>> {
-    let mut stems: BTreeMap<String, Vec<String>> = BTreeMap::new();
+) -> HashMap<String, Vec<String>> {
+    let mut stems: HashMap<String, Vec<String>> = HashMap::new();
     for term in vocab.keys().filter(|term| !tokenize::is_whole(term)) {
         stems
             .entry(stemmer.stem(term).into_owned())

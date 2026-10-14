@@ -3,25 +3,21 @@
 //! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, INT-NAME-01, INT-NAME-02, INT-CHAIN-01, INT-BOM-01, MAN-LOAD-02, REF-AMBIG-02, REF-AMBIG-03, REF-RESERVED-03, REF-RESERVED-04
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs::File;
-use std::io::{self, Read, Write};
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, PoisonError};
+use std::sync::{Mutex, OnceLock, PoisonError};
 use std::thread;
 
 use crate::cite;
 use crate::collections::frontmatter::Value;
 use crate::collections::manifest;
 use crate::error::Error;
-use crate::intent::{self, cases, header, readme};
+use crate::intent::files::file_docs;
 use crate::logs::read::load as load_logs;
-use crate::root::slash;
+use crate::par;
 use crate::walk::{self, Entry};
 
 pub use crate::root::root_of;
-
-/// The most bytes of a file that header detection reads (design §2.1).
-const HEAD_BYTES: u64 = 8 * 1024;
 
 /// One indexed doc: an intent doc labelled by its path, or a collection doc labelled `collection:id` (design §3.1 and §3.6).
 #[derive(Debug, Clone, PartialEq)]
@@ -71,11 +67,12 @@ pub struct Corpus {
     /// Every doc by label, in load order. A label holds more than one doc when two files declare the same id.
     docs: BTreeMap<String, Vec<Doc>>,
     kinds: BTreeMap<String, Kind>,
-    children: BTreeMap<String, Vec<Child>>,
+    /// The children of each folder, built the first time they are asked for.
+    children: OnceLock<BTreeMap<String, Vec<Child>>>,
     /// The streams of the log store, which `logs:` reads across (design §3.1).
     streams: BTreeSet<String>,
-    /// The citations of every doc and the backlinks they give, built once when the corpus loads (design §2.3).
-    citations: cite::Index,
+    /// The citations of every doc and the backlinks they give, built the first time they are asked for (design §2.3).
+    citations: OnceLock<cite::Index>,
     /// The warnings of the files, folders and log entries that could not be read as the corpus loaded (design §4.2). `info` lists
     /// them in its JSON.
     pub read_warnings: Vec<String>,
@@ -109,28 +106,29 @@ impl Corpus {
         Ok((corpus, store))
     }
 
-    /// The intent layer under `root`: every walked entry, the docs of its files, and the docs of its manifests. A file that
-    /// cannot be read is skipped with its warning, and the rest of the layer loads (design §4.2).
+    /// The intent layer under `root`: every walked entry, the docs of its files, and the docs of its manifests. The files are read on
+    /// several threads, and their docs are added in the walk's order. A file that cannot be read is skipped with its warning, and
+    /// the rest of the layer loads (design §4.2).
     fn intent(root: &Path) -> Result<Corpus, Error> {
         let mut corpus = Corpus {
             root: root.to_path_buf(),
             docs: BTreeMap::new(),
             kinds: BTreeMap::from([(String::new(), Kind::Dir)]),
-            children: BTreeMap::new(),
+            children: OnceLock::new(),
             streams: BTreeSet::new(),
-            citations: cite::Index::default(),
+            citations: OnceLock::new(),
             read_warnings: Vec::new(),
         };
-        for entry in walk::walk_warned(root, &mut corpus.read_warnings) {
+        let entries = walk::walk_warned(root, &mut corpus.read_warnings);
+        let read = par::map(&entries, read_entry);
+        for (entry, docs) in entries.iter().zip(read) {
             let kind = if entry.is_dir { Kind::Dir } else { Kind::File };
             corpus.kinds.insert(entry.rel.clone(), kind);
-            if !entry.is_dir {
-                match file_docs(&entry) {
-                    Ok(docs) => docs.into_iter().for_each(|doc| corpus.insert(doc)),
-                    Err(error) => corpus
-                        .read_warnings
-                        .push(format!("memex: warning: {}", error.message)),
-                }
+            match docs {
+                Ok(docs) => docs.into_iter().for_each(|doc| corpus.insert(doc)),
+                Err(error) => corpus
+                    .read_warnings
+                    .push(format!("memex: warning: {}", error.message)),
             }
         }
         let mut warnings = Vec::new();
@@ -144,7 +142,7 @@ impl Corpus {
         Ok(corpus)
     }
 
-    /// Adds the logs of the store, when there is one, then builds the folder index and the citations.
+    /// Adds the logs of the store, when there is one. The folder index and the citations wait until they are asked for.
     fn finish(&mut self, store: Option<&Path>) -> Result<(), Error> {
         if let Some(store) = store {
             let before = self.read_warnings.len();
@@ -155,8 +153,6 @@ impl Corpus {
                 self.insert(doc);
             }
         }
-        self.index_children();
-        self.citations = cite::Index::build(self);
         Ok(())
     }
 
@@ -201,17 +197,19 @@ impl Corpus {
         self.kinds.get(rel).copied()
     }
 
-    /// The children of a folder, sorted by name. Empty for a file and for a path the walk did not find.
+    /// The children of a folder, sorted by name. Empty for a file and for a path the walk did not find. The folder index is built
+    /// the first time it is asked for, so a verb that does not list folders never pays for it.
     pub fn children(&self, rel: &str) -> &[Child] {
-        match self.children.get(rel) {
+        match self.children.get_or_init(|| self.index_children()).get(rel) {
             Some(list) => list,
             None => &[],
         }
     }
 
-    /// The citations of every doc and the backlinks they give (design §2.3).
+    /// The citations of every doc and the backlinks they give (design §2.3). They are built on the first call, so a verb that does
+    /// not cite, such as `info` or a words search, never pays for them.
     pub fn citations(&self) -> &cite::Index {
-        &self.citations
+        self.citations.get_or_init(|| cite::Index::build(self))
     }
 
     /// Adds a doc under its label. Every doc is kept, so a label that two files declare is seen as ambiguous, not guessed.
@@ -220,7 +218,7 @@ impl Corpus {
     }
 
     /// Builds the folder index: every walked entry becomes a child of its parent folder.
-    fn index_children(&mut self) {
+    fn index_children(&self) -> BTreeMap<String, Vec<Child>> {
         let mut index: BTreeMap<String, Vec<Child>> = BTreeMap::new();
         for (rel, kind) in &self.kinds {
             let Some(parent) = parent_of(rel) else {
@@ -234,7 +232,7 @@ impl Corpus {
             };
             index.entry(parent.to_string()).or_default().push(child);
         }
-        self.children = index;
+        index
     }
 
     /// The one-liner of a walked entry: its README's for a folder, its own doc's for a file.
@@ -292,74 +290,10 @@ fn name_of(rel: &str) -> String {
     rel.rsplit('/').next().unwrap_or(rel).to_string()
 }
 
-/// The docs one walked file gives: its README, the cases of a CASES.md, or its header. A file that cannot be read is an error.
-fn file_docs(entry: &Entry) -> Result<Vec<Doc>, Error> {
-    match entry.path.file_name().and_then(|name| name.to_str()) {
-        Some("README.md") => readme::doc(&entry.rel, &entry.path).map(|doc| vec![doc]),
-        Some("CASES.md") => cases::read(&entry.rel, &entry.path),
-        _ => Ok(header_doc(entry)?.into_iter().collect()),
+/// The docs of one walked entry: none for a folder, and those of its file otherwise (design §2 and §4.2).
+fn read_entry(entry: &Entry) -> Result<Vec<Doc>, Error> {
+    if entry.is_dir {
+        return Ok(Vec::new());
     }
-}
-
-/// The doc of a file's header, when the file has one.
-fn header_doc(entry: &Entry) -> Result<Option<Doc>, Error> {
-    let head = read_head(&entry.path)?;
-    let Some(text) = header::header(&entry.path, &head) else {
-        return Ok(None);
-    };
-    Ok(Some(Doc {
-        label: entry.rel.clone(),
-        collection: "headers".to_string(),
-        id: entry.rel.clone(),
-        path: Some(entry.rel.clone()),
-        title: intent::lead(&text),
-        text,
-        fields: Vec::new(),
-    }))
-}
-
-/// The first bytes of a file, at most `HEAD_BYTES`.
-fn read_head(path: &Path) -> Result<Vec<u8>, Error> {
-    let file = File::open(path).map_err(|failure| io_error(path, &failure))?;
-    let mut head = Vec::new();
-    file.take(HEAD_BYTES)
-        .read_to_end(&mut head)
-        .map_err(|failure| io_error(path, &failure))?;
-    Ok(head)
-}
-
-/// A read failure, naming the path and the io kind and never the OS text (design §4.4).
-fn io_error(path: &Path, failure: &io::Error) -> Error {
-    Error::io(&format!("cannot read {}", slash(path)), failure)
-}
-
-#[cfg(all(test, unix))]
-mod tests {
-    use std::fs;
-    use std::os::unix::fs::PermissionsExt;
-
-    use super::*;
-
-    #[test]
-    fn an_unreadable_header_file_is_an_error_naming_its_path() {
-        let dir = tempfile::tempdir().expect("a temp folder");
-        let path = dir.path().join("locked.rs");
-        fs::write(&path, "//! Locked.\n").expect("a file");
-        fs::set_permissions(&path, fs::Permissions::from_mode(0o000)).expect("a mode");
-        if fs::read(&path).is_ok() {
-            // Running as root reads any file, so there is nothing to check.
-            return;
-        }
-        let entry = Entry {
-            rel: "locked.rs".to_string(),
-            path,
-            is_dir: false,
-        };
-        let error = file_docs(&entry).expect_err("an unreadable header file");
-        assert!(
-            error.message.ends_with("locked.rs (PermissionDenied)"),
-            "{}",
-            error.message
-        );
-    }
+    file_docs(entry)
 }

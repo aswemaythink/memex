@@ -7,32 +7,49 @@ pub fn is_whole(term: &str) -> bool {
     term.bytes().any(|byte| !byte.is_ascii_alphanumeric())
 }
 
-/// The tokens of a doc's text: for each run of letters, digits, dashes, dots and slashes, the whole run when it is an id or a
-/// path, then its lowercase words. `NAME-001` gives `name-001`, `name` and `001`.
-pub fn tokens(text: &str) -> Vec<String> {
-    runs(text, true)
+/// Hands each token of a doc's text to `emit`, in order: for each run of letters, digits, dashes, dots and slashes, the whole run
+/// when it is an id or a path, then its lowercase words. `NAME-001` gives `name-001`, `name` and `001`. A token is valid only
+/// during its call, since a capital is lowercased in a buffer that the next token reuses.
+pub fn for_each_token(text: &str, mut emit: impl FnMut(&str)) {
+    visit(text, true, &mut emit);
 }
 
 /// The tokens of a query term. A whole id or path stands alone, without its words, so that `NAME-001` matches that id and
-/// no other. Any other run gives its lowercase words, as `tokens` does.
+/// no other. Any other run gives its lowercase words, as `for_each_token` does.
 pub fn query_tokens(text: &str) -> Vec<String> {
-    runs(text, false)
+    let mut found = Vec::new();
+    visit(text, false, &mut |token: &str| {
+        found.push(token.to_string())
+    });
+    found
 }
 
-/// The tokens of each run of a text. `with_words` says whether a whole id or path also gives its words.
-fn runs(text: &str, with_words: bool) -> Vec<String> {
-    let mut found = Vec::new();
+/// Hands each token of a text to `emit`, lowercased. `with_words` says whether a whole id or path also gives its words.
+fn visit(text: &str, with_words: bool, emit: &mut dyn FnMut(&str)) {
+    let mut lower = String::new();
     for run in text.split(|ch: char| !is_run_char(ch)) {
         let run = run.trim_matches(|ch: char| matches!(ch, '-' | '/' | '.'));
         if is_id_or_path(run) {
-            found.push(run.to_ascii_lowercase());
+            emit_lowercase(run, &mut lower, emit);
             if !with_words {
                 continue;
             }
         }
-        found.extend(words(run));
+        for word in words(run) {
+            emit_lowercase(word, &mut lower, emit);
+        }
     }
-    found
+}
+
+/// Hands `token` to `emit` in lowercase: as it is when it has no capital, else as a lowercase copy made in `lower`.
+fn emit_lowercase(token: &str, lower: &mut String, emit: &mut dyn FnMut(&str)) {
+    if token.bytes().any(|byte| byte.is_ascii_uppercase()) {
+        lower.clear();
+        lower.extend(token.chars().map(|ch| ch.to_ascii_lowercase()));
+        emit(lower.as_str());
+    } else {
+        emit(token);
+    }
 }
 
 /// The characters that can make up a run: letters, digits, and the dash, dot and slash of ids and paths.
@@ -49,16 +66,22 @@ fn is_id_or_path(run: &str) -> bool {
             .any(|pair| pair[0] == b'.' && pair[1].is_ascii_alphabetic())
 }
 
-/// The lowercase words of a run: its maximal runs of letters and digits.
-fn words(run: &str) -> impl Iterator<Item = String> + '_ {
+/// The words of a run, as written: its maximal runs of letters and digits.
+fn words(run: &str) -> impl Iterator<Item = &str> + '_ {
     run.split(|ch: char| !ch.is_ascii_alphanumeric())
         .filter(|word| !word.is_empty())
-        .map(str::to_ascii_lowercase)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The tokens of a text, as strings.
+    fn tokens(text: &str) -> Vec<String> {
+        let mut found = Vec::new();
+        for_each_token(text, |token| found.push(token.to_string()));
+        found
+    }
 
     #[test]
     fn an_id_is_a_whole_token_and_its_words_too() {
