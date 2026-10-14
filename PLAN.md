@@ -446,17 +446,9 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [ ] S8.3
 - [ ] Site
 
-## 12. Tidy backlog (for the post-Phase-2 refiner pass)
-- `.memex` found by `is_dir` probes (src/root.rs, tests/harness/sandbox.rs); design §4.4 Name matching wants listing-based matching.
-- BOM drop is only in log bodies; design §4.4 says every read. Move it into one shared text-read helper (headers, READMEs, CASES.md, frontmatter, manifests).
-- `corpus::root_of` repeats root discovery from root.rs: export one.
-- `src/verbs/log.rs` header `Cases:` line is missing LOG-STREAM-04/05, LOG-BODY-06 and LOG-WRITE-15.
-- Header first sentences over 100 chars: add a gate to tests/quality.rs and shorten the existing ones.
-- A README with no H1 and no prose has an empty one-liner, which text output prints as `(no README)`; that misreports a README that exists. Print nothing after the name instead.
-- Header: implement the design §2.1 additions (markup prologues `<?xml`, `<!DOCTYPE`, `<?php` skipped as pragmas; a license block ends at its first blank line), each with an HDR case.
-- Header 60-line index cut: lands with the search index (S3.3).
-- JSON key order: enable serde_json `preserve_order`, delete the hand-rolled order-keeping `Tree` visitor in src/collections/json.rs, re-bless the goldens it moves (SHOW-JSON-*, MAN-MD-*, CASE-JSON-01, INT-NAME-01, INT-LINE-05, MAN-MD-09 sidecar order). Fields then follow source order everywhere.
-- Unparseable collection data files (a folder marker, a json data file) are skipped silently: warn like an invalid manifest (MANK-FOLDER-09, MANK-JSON-07). A folder whose marker lacks the id field: warn too (MANK-FOLDER-06).
-- A json entry's default one-liner is its first string field, often its id: skip the id field when choosing the title (MANK-JSON-02).
-- Stale "waits for S2.5" comments: src/README.md, src/collections/mod.rs.
-- info reads manifests a second time for counts and JSON warnings (corpus.rs was full): use the corpus once T1 shrinks it.
+## 12. Tidy backlog
+Cleared by T1 (2026-10-14): header first sentences of 100 chars or fewer, gated; one BOM-dropping text reader; listing-based `.memex` discovery; one root discovery; header prologue and license rules; `preserve_order` JSON fields; collection warnings; stale comments.
+Open:
+- info reads manifests a second time for counts and JSON warnings: use the corpus (corpus.rs is now 338 lines).
+- Out-of-root `show` sections print `(none)` for cites and cited by; needs absolute refs decided first.
+- Perf leftovers from the S3.3 refiner: `tokenize::tokens` allocates a String per token (about 14ms); `Git::probe` runs `git rev-parse` twice (about 15ms). S5.3 decides.
