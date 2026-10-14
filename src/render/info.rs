@@ -262,9 +262,9 @@ fn here_value(here: &HereLine) -> String {
 fn collections_json(atlas: &Atlas) -> Vec<Json> {
     let intent = &atlas.intent;
     let mut list = vec![
-        builtin("readmes", intent.readmes),
-        builtin("headers", intent.headers),
-        builtin("cases", intent.cases),
+        builtin(crate::corpus::READMES, intent.readmes),
+        builtin(crate::corpus::HEADERS, intent.headers),
+        builtin(crate::corpus::CASES, intent.cases),
     ];
     list.extend(atlas.collections.iter().map(|collection| {
         json!({

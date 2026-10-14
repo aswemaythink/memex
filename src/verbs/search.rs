@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 
 use crate::cli::Verb;
 use crate::clock::{self, Timestamp};
-use crate::corpus::{Corpus, Doc};
+use crate::corpus::{Corpus, Doc, CASES, HEADERS, LOGS, READMES};
 use crate::error::Error;
 use crate::index::bm25;
 use crate::index::filter::{self, time_of, Filter};
@@ -28,14 +28,6 @@ const ROSTER_LIMIT: usize = 50;
 
 /// The lines of a header that the index reads; `show` prints the whole header (design §2.1).
 const HEADER_LINES: usize = 60;
-
-/// The built-in groups of the intent layer, which are also collection names (design §3.1).
-const READMES: &str = "readmes";
-const HEADERS: &str = "headers";
-const CASES: &str = "cases";
-
-/// The group that holds every log stream (design §3.2).
-const LOGS: &str = "logs";
 
 /// The length of the stamp that starts a log's file name: `YYYYMMDD-HHMMSS` (design §4.3).
 const STAMP_LEN: usize = 15;

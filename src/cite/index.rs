@@ -6,15 +6,12 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::paths::{self, Named};
 use super::tokens::{self, Token};
 use super::{Cite, Citer};
-use crate::corpus::{label_of, parent_of, Corpus, Doc};
+use crate::corpus::{label_of, parent_of, Corpus, Doc, CASES, HEADERS, READMES, RESERVED};
 use crate::fence;
 use crate::par;
 
 /// The collections of intent docs, which have a file and a folder. Their path tokens resolve from their own folder first.
-const INTENT: [&str; 3] = ["readmes", "headers", "cases"];
-
-/// The reserved collection names (design §3.1). A `collection:id` label may always use them, whether or not a doc holds them.
-const RESERVED: [&str; 4] = ["readmes", "headers", "cases", "logs"];
+const INTENT: [&str; 3] = [READMES, HEADERS, CASES];
 
 /// The citations of every doc, and the backlinks of every target.
 #[derive(Debug, Default)]
@@ -211,33 +208,12 @@ fn token_hits(corpus: &Corpus, base: &str, names: &Names, token: Token, hits: &m
 
 /// Adds the hits of a `collection:id` label: each doc it names, or an unresolved ref when it names none.
 fn label_hits(corpus: &Corpus, label: String, hits: &mut Vec<Hit>) {
-    let named = named_docs(corpus, &label);
+    let named = corpus.named(&label);
     if named.is_empty() {
         hits.push(Hit::Unresolved(label));
     } else {
         hits.extend(named.into_iter().map(|doc| Hit::Target(doc.label.clone())));
     }
-}
-
-/// The docs that a `collection:id` label names, read as `show` reads a label (design §3.1): the docs that hold the label, or
-/// else the docs that a reserved spelling names. `readmes:` and `headers:` name a doc by its path, and `logs:` names the entry
-/// of every stream that holds the id, so one id can name several entries.
-fn named_docs<'a>(corpus: &'a Corpus, label: &str) -> Vec<&'a Doc> {
-    let held = corpus.labelled(label);
-    if !held.is_empty() {
-        return held.iter().collect();
-    }
-    let Some((collection, id)) = label.split_once(':') else {
-        return Vec::new();
-    };
-    corpus
-        .all_docs()
-        .filter(|doc| match collection {
-            "logs" => corpus.is_log(doc) && doc.id == id,
-            "readmes" | "headers" => doc.collection == collection && doc.id == id,
-            _ => false,
-        })
-        .collect()
 }
 
 /// Adds the hits of a word: the docs that declare it when it is a bare id, and otherwise the walked entry that it names as a
@@ -274,7 +250,7 @@ fn base_folder(doc: &Doc) -> String {
 /// The label of the folder that a README is the doc of. A README never cites its own folder (design §2.3, self-citation).
 fn own_folder(doc: &Doc) -> Option<String> {
     let path = doc.path.as_deref()?;
-    (doc.collection == "readmes").then(|| label_of(parent_of(path).unwrap_or("")))
+    (doc.collection == READMES).then(|| label_of(parent_of(path).unwrap_or("")))
 }
 
 /// Reduces one doc's hits: each target once, in first-appearance order, with the doc's own label and folder left out.

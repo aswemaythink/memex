@@ -6,7 +6,7 @@ use std::io::{self, Read};
 use std::path::Path;
 
 use super::{cases, header, lead, readme};
-use crate::corpus::Doc;
+use crate::corpus::{Doc, HEADERS};
 use crate::error::Error;
 use crate::root::slash;
 use crate::walk::Entry;
@@ -36,7 +36,7 @@ fn header_doc(entry: &Entry) -> Result<Option<Doc>, Error> {
     };
     Ok(Some(Doc {
         label: entry.rel.clone(),
-        collection: "headers".to_string(),
+        collection: HEADERS.to_string(),
         id: entry.rel.clone(),
         path: Some(entry.rel.clone()),
         title: lead(&text),

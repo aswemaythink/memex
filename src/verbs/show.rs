@@ -237,7 +237,7 @@ fn doc_section(corpus: &Corpus, doc: &Doc, options: &Options) -> Section {
         fields: Some(doc_fields(corpus, doc)),
         children: None,
         // A case shows cited by and no cites (design §3.3 Case), so its JSON cites list is empty too.
-        cites: if doc.collection == cases::COLLECTION {
+        cites: if doc.collection == corpus::CASES {
             Vec::new()
         } else {
             cites_of(corpus, &doc.label)
@@ -250,7 +250,7 @@ fn doc_section(corpus: &Corpus, doc: &Doc, options: &Options) -> Section {
 /// The fields of a doc: a case's group and the evidence its text names that the walk holds (design §2.2), or the
 /// frontmatter of any other doc.
 fn doc_fields(corpus: &Corpus, doc: &Doc) -> Fields {
-    if doc.collection == cases::COLLECTION {
+    if doc.collection == corpus::CASES {
         Fields::Case(CaseParts {
             group: cases::group_of(doc),
             evidence: cases::evidence(doc, |rel| corpus.kind(rel) == Some(Kind::File)),

@@ -11,13 +11,10 @@ use ignore::overrides::OverrideBuilder;
 use serde_json::{Map, Value as Json};
 
 use super::{folder, json, markdown};
-use crate::corpus::Doc;
+use crate::corpus::{Doc, RESERVED};
 use crate::root::{lists, slash};
 use crate::text;
 use crate::walk::rel_string;
-
-/// The names that belong to the built-in collections, which no manifest may take (design §3.1).
-const RESERVED: [&str; 4] = ["readmes", "headers", "cases", "logs"];
 
 /// How a manifest's roots are read (design §4.2 `kind`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

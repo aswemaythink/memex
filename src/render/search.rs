@@ -3,14 +3,11 @@
 
 use std::collections::BTreeMap;
 
-use serde_json::{json, Map, Value as Json};
+use serde_json::{json, Value as Json};
 
 use super::text::clip;
 use crate::collections::frontmatter::Value;
-use crate::corpus::Doc;
-
-/// The group of the log store, whose hit lines carry the age, agent and branch of an entry (design §3.2).
-const LOGS: &str = "logs";
+use crate::corpus::{Doc, LOGS};
 
 /// The separator between the parts of a log's meta column (design §3.2).
 const DOT: &str = " · ";
@@ -157,7 +154,7 @@ fn hit_json(hit: &Hit) -> Json {
         "id": doc.id,
         "path": doc.path,
         "title": doc.title,
-        "fields": fields(&doc.fields),
+        "fields": super::json::pairs(&doc.fields),
         "score": hit.score.map(round3),
         "snippet": doc.title,
         "fuzzy": hit.fuzzy,
@@ -166,19 +163,6 @@ fn hit_json(hit: &Hit) -> Json {
         value["cited_by"] = json!(cited);
     }
     value
-}
-
-/// The fields of a doc as a JSON object: a string as a string, a list as an array of strings.
-fn fields(list: &[(String, Value)]) -> Json {
-    let mut map = Map::new();
-    for (key, value) in list {
-        let item = match value {
-            Value::Str(text) => Json::String(text.clone()),
-            Value::List(items) => json!(items),
-        };
-        map.insert(key.clone(), item);
-    }
-    Json::Object(map)
 }
 
 /// A score rounded to 3 decimals, as the JSON document prints it (design §3.6).

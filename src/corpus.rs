@@ -38,6 +38,18 @@ pub struct Doc {
     pub fields: Vec<(String, Value)>,
 }
 
+/// The built-in collection of READMEs, whose docs are labelled by their path (design §3.1).
+pub const READMES: &str = "readmes";
+/// The built-in collection of headers, whose docs are labelled by their path (design §3.1).
+pub const HEADERS: &str = "headers";
+/// The built-in collection of case docs, which are labelled `cases:ID` (design §3.1).
+pub const CASES: &str = "cases";
+/// The built-in name of the log store: `logs:` names an entry of any stream (design §3.1).
+pub const LOGS: &str = "logs";
+/// The built-in collection names (design §3.1), which no manifest or stream may take. A `collection:id` label may always use
+/// them, whether or not a doc holds them.
+pub const RESERVED: [&str; 4] = [READMES, HEADERS, CASES, LOGS];
+
 /// Whether a walked entry is a folder or a file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
@@ -183,6 +195,26 @@ impl Corpus {
         }
     }
 
+    /// The docs that a label names, as `show` reads one (design §3.1): the docs that hold the label, or else the docs that a
+    /// reserved spelling names. `readmes:` and `headers:` name a doc by its path, and `logs:` names the entry of every stream
+    /// that holds the id, so one id can name several entries.
+    pub fn named(&self, label: &str) -> Vec<&Doc> {
+        let held = self.labelled(label);
+        if !held.is_empty() {
+            return held.iter().collect();
+        }
+        let Some((collection, id)) = label.split_once(':') else {
+            return Vec::new();
+        };
+        self.all_docs()
+            .filter(|doc| match collection {
+                LOGS => self.is_log(doc) && doc.id == id,
+                READMES | HEADERS => doc.collection == collection && doc.id == id,
+                _ => false,
+            })
+            .collect()
+    }
+
     /// Every doc, in label order.
     pub fn all_docs(&self) -> impl Iterator<Item = &Doc> {
         self.docs.values().flatten()
@@ -239,7 +271,7 @@ impl Corpus {
                 continue;
             };
             let child = Child {
-                name: name_of(rel),
+                name: name_of(rel).to_string(),
                 rel: rel.clone(),
                 kind: *kind,
                 title: self.title_of(rel, *kind),
@@ -300,8 +332,8 @@ fn warn(lines: &[String]) {
 }
 
 /// The last component of a root-relative path.
-fn name_of(rel: &str) -> String {
-    rel.rsplit('/').next().unwrap_or(rel).to_string()
+pub fn name_of(rel: &str) -> &str {
+    rel.rsplit('/').next().unwrap_or(rel)
 }
 
 /// The docs of one walked entry: none for a folder, and those of its file otherwise (design §2 and §4.2).

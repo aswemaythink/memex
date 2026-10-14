@@ -111,7 +111,7 @@ pub fn check_in(corpus: &Corpus, names: &[String]) -> Result<(), Error> {
         .map(|doc| doc.collection.as_str())
         .collect();
     for name in names {
-        let builtin = ["readmes", "headers", "cases", "logs"].contains(&name.as_str());
+        let builtin = crate::corpus::RESERVED.contains(&name.as_str());
         let manifest = corpus
             .manifests
             .iter()

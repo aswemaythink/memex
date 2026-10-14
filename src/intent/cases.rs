@@ -4,13 +4,10 @@
 use std::path::Path;
 
 use crate::collections::frontmatter::Value;
-use crate::corpus::{parent_of, Doc};
+use crate::corpus::{parent_of, Doc, CASES};
 use crate::error::Error;
 use crate::root::slash;
 use crate::text::{self, strip_bom};
-
-/// The collection of case docs. Their labels are `cases:ID`, and `show` takes them that way (design §3.1).
-pub const COLLECTION: &str = "cases";
 
 /// The case docs of the CASES.md at `rel`, whose text is `text`, in the order they are written (design §2.2). A leading
 /// byte order mark is dropped (design §4.4), and `\r\n` line ends are read like `\n`.
@@ -191,8 +188,8 @@ impl Item {
             lines.join("\n")
         };
         Doc {
-            label: format!("{COLLECTION}:{}", self.id),
-            collection: COLLECTION.to_string(),
+            label: format!("{CASES}:{}", self.id),
+            collection: CASES.to_string(),
             id: self.id,
             path: Some(rel.to_string()),
             title: self.claim,

@@ -46,7 +46,7 @@ fn fields(section_fields: Option<&Fields>) -> Json {
 }
 
 /// The frontmatter fields as a JSON object; a list is an array of strings.
-fn pairs(list: &[(String, Value)]) -> Json {
+pub fn pairs(list: &[(String, Value)]) -> Json {
     let mut map = Map::new();
     for (key, value) in list {
         let item = match value {

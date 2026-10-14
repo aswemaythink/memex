@@ -7,12 +7,10 @@ use std::io;
 use std::path::Path;
 
 use crate::cli::Verb;
+use crate::corpus::RESERVED;
 use crate::error::Error;
 use crate::root::{lists, nearest_memex, slash};
 use crate::scan::fail;
-
-/// The built-in collection names, which no stream may take (design §3.1).
-const RESERVED: [&str; 4] = ["readmes", "headers", "cases", "logs"];
 
 /// The Windows device names, which no stream may take on any OS, so a store stays portable (design §3.4). Windows
 /// refuses them as folder names; the grammar allows no dot, so only the bare names can arrive.

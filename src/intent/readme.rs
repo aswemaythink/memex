@@ -4,7 +4,7 @@
 use std::path::Path;
 
 use super::sentence;
-use crate::corpus::Doc;
+use crate::corpus::{Doc, READMES};
 use crate::error::Error;
 use crate::root::slash;
 use crate::text;
@@ -16,7 +16,7 @@ pub fn doc(rel: &str, path: &Path) -> Result<Doc, Error> {
         .map_err(|failure| Error::io(&format!("cannot read {}", slash(path)), &failure))?;
     Ok(Doc {
         label: rel.to_string(),
-        collection: "readmes".to_string(),
+        collection: READMES.to_string(),
         id: rel.to_string(),
         path: Some(rel.to_string()),
         title: one_liner(&contents),

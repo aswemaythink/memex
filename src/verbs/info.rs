@@ -10,18 +10,13 @@ use crate::cli::Verb;
 use crate::clock::{self, Timestamp};
 use crate::collections::frontmatter::Value;
 use crate::collections::manifest::{Kind, Loaded};
-use crate::corpus::{label_of, parent_of, readme_label, Corpus, Doc};
+use crate::corpus::{label_of, parent_of, readme_label, Corpus, Doc, CASES, HEADERS, READMES};
 use crate::error::Error;
-use crate::intent::cases::COLLECTION as CASES;
 use crate::logs::values;
 use crate::render::info::{self as render, Atlas, Collection, HereLine, Intent, Stream, ToCount};
 use crate::root::slash;
 use crate::scan::fail;
 use crate::verbs::here::{self, Here};
-
-/// The built-in collection of READMEs and the one of headers (design §3.1).
-const READMES: &str = "readmes";
-const HEADERS: &str = "headers";
 
 /// A stream entry is new when it is no more than this many seconds old: 24 hours (design §3.5 `new_24h`).
 const NEW_SECONDS: i64 = 24 * 3_600;

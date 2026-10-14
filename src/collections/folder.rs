@@ -11,7 +11,7 @@ use super::frontmatter::{self, Value};
 use super::globs;
 use super::json::{doc, field_text, read_json, scalar_fields, warn};
 use super::manifest::{self, Manifest};
-use crate::corpus::{parent_of, Doc};
+use crate::corpus::{name_of, parent_of, Doc};
 use crate::intent::header;
 use crate::text;
 use crate::walk::{self, Entry};
@@ -160,11 +160,6 @@ fn folder_name(base: &Path, folder: &str) -> String {
     } else {
         name_of(folder).to_string()
     }
-}
-
-/// The last component of a root-relative path.
-fn name_of(rel: &str) -> &str {
-    rel.rsplit('/').next().unwrap_or(rel)
 }
 
 /// The extension of a path, when it is UTF-8.

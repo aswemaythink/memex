@@ -1,19 +1,14 @@
 //! Resolves a ref that is not a path: a label, a bare id or a basename (design §3.1, steps 3 to 6).
 //! Cases: REF-COLL-01, REF-COLL-02, REF-AMBIG-02, REF-AMBIG-03, REF-BARE-01, REF-BARE-02, REF-BARE-03, REF-BASE-01, REF-BASE-02, REF-BASE-03, REF-CAND-01, REF-RESERVED-01, REF-RESERVED-02, REF-RESERVED-03, REF-RESERVED-04, REF-TRIP-01, REF-REL-05, CASE-DUP-01, CASE-BARE-01
 
-use crate::corpus::{Corpus, Doc, Kind};
+use crate::corpus::{name_of, Corpus, Doc, Kind, HEADERS, READMES};
 
 use super::{Outcome, Target};
 
-/// The outcome for a ref that is not a path: the docs it names as a label, else as a bare id, else the one walked file with
-/// that basename. A ref that matches nothing is not found.
+/// The outcome for a ref that is not a path: the docs it names as a label (design §3.1), else as a bare id, else the one walked
+/// file with that basename. A ref that matches nothing is not found.
 pub fn by_name<'a>(corpus: &'a Corpus, arg: &str) -> Outcome<'a> {
-    let labelled: Vec<&'a Doc> = corpus.labelled(arg).iter().collect();
-    let named = if labelled.is_empty() {
-        reserved(corpus, arg)
-    } else {
-        labelled
-    };
+    let named = corpus.named(arg);
     if !named.is_empty() {
         return pick(corpus, named);
     }
@@ -22,22 +17,6 @@ pub fn by_name<'a>(corpus: &'a Corpus, arg: &str) -> Outcome<'a> {
         return pick(corpus, bare);
     }
     basename(corpus, arg)
-}
-
-/// The docs that a reserved spelling names (design §3.1): `readmes:` and `headers:` by their path, and `logs:` by an id in
-/// whichever stream holds it. Any other spelling names no doc here.
-fn reserved<'a>(corpus: &'a Corpus, arg: &str) -> Vec<&'a Doc> {
-    let Some((collection, id)) = arg.split_once(':') else {
-        return Vec::new();
-    };
-    corpus
-        .all_docs()
-        .filter(|doc| match collection {
-            "logs" => corpus.is_log(doc) && doc.id == id,
-            "readmes" | "headers" => doc.collection == collection && doc.id == id,
-            _ => false,
-        })
-        .collect()
 }
 
 /// The docs whose id is the ref: the exact matches, or when none match, the ones that differ from it only in case (design
@@ -57,7 +36,7 @@ fn bare_id<'a>(corpus: &'a Corpus, arg: &str) -> Vec<&'a Doc> {
 
 /// True for a README or a header: an intent doc, whose id is its path (design §3.1).
 fn is_intent(doc: &Doc) -> bool {
-    matches!(doc.collection.as_str(), "readmes" | "headers")
+    matches!(doc.collection.as_str(), READMES | HEADERS)
 }
 
 /// The outcome for the docs that one ref names: the target of the only one, or else every one as a candidate.
@@ -76,7 +55,7 @@ fn pick<'a>(corpus: &Corpus, docs: Vec<&'a Doc>) -> Outcome<'a> {
 /// The target of a doc: a README or a header is its file, which `show` prints as a path; any other doc is a doc.
 fn target_of(doc: &Doc) -> Target<'_> {
     match doc.collection.as_str() {
-        "readmes" | "headers" => Target::Path {
+        READMES | HEADERS => Target::Path {
             rel: doc.id.clone(),
             kind: Kind::File,
         },
@@ -111,9 +90,4 @@ fn basename<'a>(corpus: &Corpus, arg: &str) -> Outcome<'a> {
         }),
         _ => Outcome::Ambiguous(found),
     }
-}
-
-/// The last component of a root-relative path.
-fn name_of(rel: &str) -> &str {
-    rel.rsplit('/').next().unwrap_or(rel)
 }
