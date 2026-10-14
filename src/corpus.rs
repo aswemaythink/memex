@@ -1,7 +1,7 @@
 //! Loads the read model (design §3.1 and §3.6): every walked file and folder, the docs of READMEs, headers, CASES.md, manifests and logs, the label map, and the folder index.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, INT-NAME-01, INT-NAME-02, INT-CHAIN-01, MAN-LOAD-02
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, INT-NAME-01, INT-NAME-02, INT-CHAIN-01, MAN-LOAD-02, REF-AMBIG-02, REF-AMBIG-03, REF-RESERVED-03, REF-RESERVED-04
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File};
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
@@ -59,13 +59,16 @@ pub struct Child {
     pub title: Option<String>,
 }
 
-/// The read model: every doc by label, every walked entry, and the children of every folder.
+/// The read model: every doc by label, every walked entry, the children of every folder, and the log streams.
 pub struct Corpus {
     /// The root the intent layer is read from.
     pub root: PathBuf,
-    docs: BTreeMap<String, Doc>,
+    /// Every doc by label, in load order. A label holds more than one doc when two files declare the same id.
+    docs: BTreeMap<String, Vec<Doc>>,
     kinds: BTreeMap<String, Kind>,
     children: BTreeMap<String, Vec<Child>>,
+    /// The streams of the log store, which `logs:` reads across (design §3.1).
+    streams: BTreeSet<String>,
 }
 
 impl Corpus {
@@ -76,6 +79,7 @@ impl Corpus {
             docs: BTreeMap::new(),
             kinds: BTreeMap::from([(String::new(), Kind::Dir)]),
             children: BTreeMap::new(),
+            streams: BTreeSet::new(),
         };
         for entry in walk::walk(root) {
             let kind = if entry.is_dir { Kind::Dir } else { Kind::File };
@@ -94,7 +98,9 @@ impl Corpus {
         }
         warn(&warnings);
         if let Some(store) = store {
-            for doc in load_logs(store)? {
+            let logs = load_logs(store)?;
+            corpus.streams = logs.iter().map(|doc| doc.collection.clone()).collect();
+            for doc in logs {
                 corpus.insert(doc);
             }
         }
@@ -102,9 +108,35 @@ impl Corpus {
         Ok(corpus)
     }
 
-    /// The doc with this label, if there is one.
+    /// The first doc with this label, which titles and text are read from. `labelled` gives every doc with it.
     pub fn doc(&self, label: &str) -> Option<&Doc> {
-        self.docs.get(label)
+        self.labelled(label).first()
+    }
+
+    /// Every doc with this label, in load order: one, or several when two files declare the same id (design §4.2).
+    pub fn labelled(&self, label: &str) -> &[Doc] {
+        match self.docs.get(label) {
+            Some(docs) => docs,
+            None => &[],
+        }
+    }
+
+    /// Every doc, in label order.
+    pub fn all_docs(&self) -> impl Iterator<Item = &Doc> {
+        self.docs.values().flatten()
+    }
+
+    /// True for a log entry: a doc with no path whose collection is a stream of the log store (design §3.1, `logs`).
+    pub fn is_log(&self, doc: &Doc) -> bool {
+        doc.path.is_none() && self.streams.contains(&doc.collection)
+    }
+
+    /// The root-relative paths of the walked files, in label order.
+    pub fn files(&self) -> impl Iterator<Item = &str> {
+        self.kinds
+            .iter()
+            .filter(|(_, kind)| **kind == Kind::File)
+            .map(|(rel, _)| rel.as_str())
     }
 
     /// What the walk found at this root-relative path: a folder, a file, or nothing.
@@ -120,9 +152,9 @@ impl Corpus {
         }
     }
 
-    /// Adds a doc under its label. The first doc with a label wins.
+    /// Adds a doc under its label. Every doc is kept, so a label that two files declare is seen as ambiguous, not guessed.
     fn insert(&mut self, doc: Doc) {
-        self.docs.entry(doc.label.clone()).or_insert(doc);
+        self.docs.entry(doc.label.clone()).or_default().push(doc);
     }
 
     /// Builds the folder index: every walked entry becomes a child of its parent folder.
@@ -149,7 +181,7 @@ impl Corpus {
             Kind::Dir => readme_label(rel),
             Kind::File => rel.to_string(),
         };
-        self.docs.get(&label).map(|doc| doc.title.clone())
+        self.doc(&label).map(|doc| doc.title.clone())
     }
 }
 

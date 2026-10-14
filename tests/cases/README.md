@@ -98,6 +98,7 @@ When any rule fails, the case trials are not created, and only the failing rules
 - [caseindex](caseindex/README.md): `CASE-*`, design §2.2.
 - [manifest](manifest/README.md): `MAN-*`, design §4.2 (loading and the markdown kind).
 - [manifest-kinds](manifest-kinds/README.md): `MANK-*`, design §4.2 (the folder and json kinds).
+- [ref](ref/README.md): `REF-*`, design §3.1 (ref resolution).
 
 ## Choices where PLAN §2 is silent
 

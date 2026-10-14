@@ -1,0 +1,26 @@
+$ memex show ../wt/src
+exit 0
+stdout
+| === $SANDBOX/wt/src ===
+| # src
+| 
+| The source of the demo.
+| 
+| children
+|   cli.rs  Parses the demo arguments.
+|   deep/  (no README)
+|   showing 2 of 2 (--limit 2 for all)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)

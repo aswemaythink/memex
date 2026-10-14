@@ -1,0 +1,7 @@
+$ memex show cli.rs
+exit 1
+stdout (empty)
+stderr
+| memex: ambiguous: cli.rs
+|   src/cli.rs
+|   tools/cli.rs

@@ -1,0 +1,24 @@
+$ memex show cli.rs
+exit 0
+stdout
+| === src/cli.rs ===
+| Parses the demo arguments.
+| It has two lines so that the body shows both.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| chain
+| --- src/README.md
+| # src
+| 
+| The source of the demo.
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)

@@ -1,0 +1,7 @@
+$ memex show cases:DUP-001
+exit 1
+stdout (empty)
+stderr
+| memex: ambiguous: cases:DUP-001
+|   CASES.md
+|   sub/CASES.md

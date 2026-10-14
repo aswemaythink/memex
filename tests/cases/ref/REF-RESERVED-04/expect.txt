@@ -1,0 +1,7 @@
+$ memex show logs:20261013-120000-same-stem
+exit 1
+stdout (empty)
+stderr
+| memex: ambiguous: logs:20261013-120000-same-stem
+|   impl:20261013-120000-same-stem
+|   review:20261013-120000-same-stem

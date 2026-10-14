@@ -1,0 +1,5 @@
+$ memex show deep
+exit 1
+stdout (empty)
+stderr
+| memex: not found: deep

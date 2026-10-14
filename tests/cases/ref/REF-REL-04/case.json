@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "../../repo/src/cli.rs"], "cwd": "repo/src"}]}

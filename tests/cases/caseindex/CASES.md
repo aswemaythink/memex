@@ -95,12 +95,12 @@ The caseindex family pins design §2.2, how a CASES.md becomes case docs, and th
 
 ## DUP
 
-- `CASE-DUP-01` (planned) Two entries with the same id make show cases:ID ambiguous, listing both CASES.md paths, with exit 1.
-  Scenario: two CASES.md files that each declare DUP-001; show cases:DUP-001 prints nothing on stdout and names both files on stderr. design §4.2 and §3.1 step 6. Needs every doc per label kept, and ambiguity in resolve.
+- `CASE-DUP-01` Two entries with the same id make show cases:ID ambiguous, listing both CASES.md paths, with exit 1.
+  Scenario: two CASES.md files that each declare DUP-001; show cases:DUP-001 prints nothing on stdout and names both files on stderr. design §4.2 and §3.1 step 6.
 - `CASE-DUP-02` (planned) A duplicate case id is an info warning, listed by memex info.
   Scenario: two entries with the same id; memex info lists the warning. design §4.2, built with INFO in S4.1.
 
 ## BARE
 
-- `CASE-BARE-01` (planned) A bare case id, as in memex show NAME-001, shows the same section as cases:NAME-001.
+- `CASE-BARE-01` A bare case id, as in memex show NAME-001, shows the same section as cases:NAME-001.
   Scenario: memex show NAME-001 with the item for NAME-001 in the fixture. design §3.1 step 4, built with REF in S3.2.

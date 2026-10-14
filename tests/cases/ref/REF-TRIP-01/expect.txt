@@ -1,0 +1,37 @@
+$ memex show 20261013-120000-show-walks-hub-readmes
+exit 0
+stdout
+| === impl:20261013-120000-show-walks-hub-readmes ===
+| # Show walks hub READMEs
+| 
+| fields
+|   stream: impl
+|   time: 2026-10-13T12:00:00Z
+|   agent: cook-2
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)
+
+$ memex show impl:20261013-120000-show-walks-hub-readmes
+exit 0
+stdout
+| === impl:20261013-120000-show-walks-hub-readmes ===
+| # Show walks hub READMEs
+| 
+| fields
+|   stream: impl
+|   time: 2026-10-13T12:00:00Z
+|   agent: cook-2
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)

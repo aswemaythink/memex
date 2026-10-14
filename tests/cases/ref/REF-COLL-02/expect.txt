@@ -1,0 +1,5 @@
+$ memex show doom:NAME-001
+exit 1
+stdout (empty)
+stderr
+| memex: not found: doom:NAME-001

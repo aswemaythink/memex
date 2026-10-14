@@ -1,0 +1,27 @@
+$ memex show cli.rs
+exit 1
+stdout (empty)
+stderr
+| memex: ambiguous: cli.rs
+|   src/cli.rs
+|   tools/cli.rs
+
+$ memex show tools/cli.rs
+exit 0
+stdout
+| === tools/cli.rs ===
+| (no header)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)

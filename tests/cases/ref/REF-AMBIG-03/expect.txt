@@ -1,0 +1,7 @@
+$ memex show NAME-001
+exit 1
+stdout (empty)
+stderr
+| memex: ambiguous: NAME-001
+|   cases:NAME-001
+|   doom:NAME-001

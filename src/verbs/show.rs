@@ -1,5 +1,5 @@
 //! Carries out `memex show` (design §3.3 and §3.6): resolves each ref, builds its section, and reports the sections, the misses and the exit status.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-SECT-01, CASE-JSON-01
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-SECT-01, CASE-JSON-01, REF-WT-01, REF-WT-02
 
 use std::env;
 use std::fs;
@@ -10,9 +10,8 @@ use crate::corpus::{self, parent_of, readme_label, Child, Corpus, Doc, Kind};
 use crate::error::{Code, Error};
 use crate::intent::cases;
 use crate::render::{self, CaseParts, Fields, Link, Listing, Miss, Ref, Section};
-use crate::resolve::{resolve, Outcome, Target};
+use crate::resolve::{resolve, Elsewhere, Outcome, Target};
 use crate::root::{self, slash};
-use crate::walk::rel_string;
 
 /// The `--limit` of a list when the flag is not given (design §3.3).
 const DEFAULT_LIMIT: usize = 50;
@@ -54,11 +53,6 @@ pub fn run(request: &Request) -> Result<Report, Error> {
     let store = store_of(&cwd)?;
     let root = corpus::root_of(&cwd);
     let corpus = Corpus::load(&root, store.as_deref())?;
-    let cwd_rel = cwd
-        .strip_prefix(&corpus.root)
-        .ok()
-        .and_then(rel_string)
-        .unwrap_or_default();
     let options = Options {
         up: request.up,
         limit: request.limit.unwrap_or(DEFAULT_LIMIT),
@@ -66,8 +60,9 @@ pub fn run(request: &Request) -> Result<Report, Error> {
     let mut sections = Vec::new();
     let mut misses = Vec::new();
     for arg in &request.refs {
-        match resolve(&corpus, &cwd_rel, arg) {
+        match resolve(&corpus, &cwd, store.as_deref(), arg)? {
             Outcome::Found(target) => sections.push(section_for(&corpus, &target, &options)?),
+            Outcome::Elsewhere(other) => sections.push(elsewhere_section(&other, &options)?),
             Outcome::NotFound => misses.push(Miss::not_found(arg)),
             Outcome::Ambiguous(candidates) => misses.push(Miss::ambiguous(arg, candidates)),
         }
@@ -103,6 +98,18 @@ fn store_of(cwd: &Path) -> Result<Option<PathBuf>, Error> {
         Err(error) if error.code == Code::NoRoot => Ok(None),
         Err(error) => Err(error),
     }
+}
+
+/// The section of an entry in another root: built from that root's own corpus, and labelled by its absolute path, which
+/// round-trips from anywhere (design §3.1).
+fn elsewhere_section(other: &Elsewhere, options: &Options) -> Result<Section, Error> {
+    let target = Target::Path {
+        rel: other.rel.clone(),
+        kind: other.kind,
+    };
+    let mut section = section_for(&other.corpus, &target, options)?;
+    section.label.clone_from(&other.label);
+    Ok(section)
 }
 
 /// The section of one resolved target.

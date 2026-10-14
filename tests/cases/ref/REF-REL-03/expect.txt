@@ -1,0 +1,5 @@
+$ memex show ../nope.rs
+exit 1
+stdout (empty)
+stderr
+| memex: not found: ../nope.rs

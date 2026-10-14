@@ -99,10 +99,10 @@
 
 - `CLI-EXIT-01` A text usage error writes nothing to stdout and exits 2.
   design §3.6 exit codes: 2 is a usage error. Run: memex log impl --frob.
-- `CLI-EXIT-02` (planned) `not_found` exits 1, and with `--json` prints its envelope on stdout.
-  design §3.6 exit codes. Pinned by the REF family, where a ref does not resolve (design §3.1).
-- `CLI-EXIT-03` (planned) `ambiguous` exits 1, and with `--json` prints its envelope on stdout.
-  design §3.6 exit codes. Pinned by the REF family, where several refs match (design §3.1).
+- `CLI-EXIT-02` `not_found` exits 1, and with `--json` prints its envelope on stdout.
+  design §3.6 exit codes. Pinned by the REF family, where a ref does not resolve (design §3.1). Run: memex show nope.rs --json. The envelope is the show document of §3.6, whose errors entry has code not_found, since no verb prints a fatal not_found.
+- `CLI-EXIT-03` `ambiguous` exits 1, and with `--json` prints its envelope on stdout.
+  design §3.6 exit codes. Pinned by the REF family, where several refs match (design §3.1). Run: memex show README.md --json with cwd repo/src. The envelope is the show document, whose errors entry has code ambiguous and its candidates.
 - `CLI-EXIT-04` (planned) `no_root` exits 3, and with `--json` prints its envelope on stdout.
   design §3.6 exit codes. Pinned by the DISC family, where log finds no `.memex/` store (design §4.1).
 - `CLI-EXIT-05` (planned) `io` exits 3, and names the io::ErrorKind, never the OS text.

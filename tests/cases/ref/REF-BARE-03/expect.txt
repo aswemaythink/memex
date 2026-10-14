@@ -1,0 +1,16 @@
+$ memex show note-a
+exit 0
+stdout
+| === notes:note-a ===
+| The second note.
+| 
+| fields
+|   code: note-a
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+stderr (empty)
