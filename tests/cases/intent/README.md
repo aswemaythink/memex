@@ -1,0 +1,3 @@
+# intent
+
+The intent family covers design §2 (the README one-liner) and design §4.1 item 2 (the walk over the intent layer): what `memex show` takes from a README, which entries of the tree the walk keeps, and which files count as a folder's README. Its prefix is `INT`. Each case is a folder named by its id, with a `repo/` fixture that carries a `.memex/` folder, and it observes the walk through `memex show` in text and with `--json`. One-liners are read from a parent folder's child lines and `--json` children, and the cases list only folders that have no README.md of their own.

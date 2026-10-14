@@ -1,0 +1,21 @@
+$ memex show .
+exit 0
+stdout
+| === . ===
+| (no README)
+| 
+| children
+|   delta/  The prose under a heading with no blank line gives the one-liner.
+|   gamma/  The prose after a blank line gives the one-liner.
+|   showing 2 of 2 (--limit 2 for all)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| chain
+|   (none)
+stderr (empty)

@@ -1,0 +1,42 @@
+$ memex show .
+exit 0
+stdout
+| === . ===
+| (no README)
+| 
+| children
+|   sub/  (no README)
+|   top.txt  (no header)
+|   showing 2 of 2 (--limit 2 for all)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show sub
+exit 0
+stdout
+| === sub ===
+| (no README)
+| 
+| children
+|   keep.txt  (no header)
+|   showing 1 of 1 (--limit 1 for all)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| chain
+|   (none)
+stderr (empty)

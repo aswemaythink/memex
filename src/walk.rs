@@ -1,5 +1,5 @@
-//! Walks the intent layer under the root: the files and folders that the ignore rules keep, with `/` labels, sorted (design §4.1 item 2).
-//! Cases: SHOW-FILE-01, SHOW-DIR-01, SHOW-ROOT-01
+//! Walks the intent layer: the entries under the root that the ignore rules keep (design §4.1 item 2).
+//! Cases: INT-IGNORE-01, INT-IGNORE-02, INT-IGNORE-03, INT-SKIP-01, INT-SKIP-02, SHOW-FILE-01, SHOW-DIR-01, SHOW-ROOT-01
 
 use std::ffi::OsStr;
 use std::path::{Component, Path, PathBuf};
@@ -68,4 +68,36 @@ fn to_entry(root: &Path, entry: &DirEntry) -> Option<Entry> {
         path: entry.path().to_path_buf(),
         is_dir: kind.is_dir(),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::{Path, PathBuf};
+
+    use super::rel_string;
+
+    #[test]
+    fn a_path_with_a_part_that_is_not_utf8_has_no_label() {
+        assert_eq!(rel_string(Path::new("a/b.md")).as_deref(), Some("a/b.md"));
+        assert_eq!(rel_string(&not_utf8()), None);
+    }
+
+    /// A path whose last part is not UTF-8: raw bytes on unix, an unpaired surrogate on Windows.
+    #[cfg(unix)]
+    fn not_utf8() -> PathBuf {
+        use std::ffi::OsStr;
+        use std::os::unix::ffi::OsStrExt;
+        PathBuf::from(OsStr::from_bytes(b"a/\xff.md"))
+    }
+
+    /// A path whose last part is not UTF-8: raw bytes on unix, an unpaired surrogate on Windows.
+    #[cfg(windows)]
+    fn not_utf8() -> PathBuf {
+        use std::ffi::OsString;
+        use std::os::windows::ffi::OsStringExt;
+        let mut wide: Vec<u16> = "a/".encode_utf16().collect();
+        wide.push(0xD800);
+        wide.extend(".md".encode_utf16());
+        PathBuf::from(OsString::from_wide(&wide))
+    }
 }

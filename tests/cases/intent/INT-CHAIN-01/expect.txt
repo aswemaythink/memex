@@ -1,0 +1,27 @@
+$ memex show a/b
+exit 0
+stdout
+| === a/b ===
+| (no README)
+| 
+| children
+|   c.txt  (no header)
+|   showing 1 of 1 (--limit 1 for all)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| chain
+| --- a/README.md
+| # A
+| 
+| The A folder.
+| --- README.md
+| # Root
+| 
+| The root of the fixture.
+stderr (empty)

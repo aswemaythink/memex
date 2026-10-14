@@ -1,0 +1,26 @@
+$ memex show .
+exit 0
+stdout
+| === . ===
+| (no README)
+| 
+| children
+|   lower/  (no README)
+|   showing 1 of 1 (--limit 1 for all)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0 (--limit 0 for all)
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show lower --json
+exit 0
+stdout
+| {"docs":[{"chain":[],"children":{"items":[{"kind":"file","path":"lower/readme.md","title":null}],"total":1},"cited_by":{"refs":[],"total":0},"cites":[],"collection":null,"fields":{},"id":null,"path":"lower","ref":"lower","text":null,"title":null}],"errors":[]}
+stderr (empty)

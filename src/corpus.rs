@@ -1,5 +1,5 @@
-//! Loads the read model (design §3.1 and §3.6): every walked file and folder, the docs of READMEs, headers, CASES.md, manifests and logs, the label map, and the folder index.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01
+//! Loads the read model (design §3.1, §3.6): the walked files and their docs, and the folder index.
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, INT-NAME-01, INT-NAME-02, INT-CHAIN-01
 
 use std::collections::BTreeMap;
 use std::fs::{self, File};
