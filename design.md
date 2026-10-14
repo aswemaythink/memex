@@ -186,7 +186,7 @@ use          memex show <path|ref> · memex search <words> · memex log <stream>
 
 ### 3.5b `init`
 
-The one-step setup, idempotent. Inside git it targets the toplevel; outside git, the root that discovery finds (§4.1 item 1: the nearest folder above with `.memex/`), else the cwd, so init never creates a second store that shadows one above it. It reports each action.
+The one-step setup, idempotent. Inside git it targets the toplevel; outside git, the root that discovery finds (§4.1 item 1: the nearest folder above with `.memex/`), else the cwd, so init never creates a second store that shadows one above it. When that root is above the cwd, init's report opens with the line `using the store at <root>; to start a new one here instead: mkdir .memex && memex init`, where `<root>` is the absolute, `/`-separated path; inside git, or when the target is the cwd, the line is not printed. A `.memex/` in `$HOME` is adopted like any other, and named the same way. It reports each action.
 
 1. Creates `.memex/` (never overwrites existing files):
    ```
