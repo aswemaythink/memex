@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<!--
+The memex project site: one static page that tells the story first, then shows memex.
+The story is STORY.md retold. The terminal samples are adapted from design.md §3 and the
+install lines are design.md §6.1. Styles are in style.css. There is no build step and no script.
+When the copy changes, change STORY.md or design.md first, then this page.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>memex: authored context compression</title>
+<meta name="description" content="Authored context compression: trails of intent for humans and agents. Vannevar Bush’s 1945 idea, as Markdown files and a CLI. No server, no LLM, no database.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#faf7f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141310" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="memex">
+<meta property="og:title" content="memex: authored context compression">
+<meta property="og:description" content="In 1945 Vannevar Bush imagined trails: associations made on purpose by someone who understood the material. memex brings them to repos and agents.">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23faf7f0'/%3E%3Cpath d='M8 21c5-1 6-9 10-9s4 6 6 5' fill='none' stroke='%239a3d17' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='8' cy='21' r='3' fill='%239a3d17'/%3E%3Ccircle cx='24' cy='17' r='3' fill='%239a3d17'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body id="top">
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="bar">
+  <div class="bar-in">
+    <a class="brand" href="#top"><svg class="mark" width="28" height="18" viewBox="2 8 28 18" aria-hidden="true" focusable="false"><path d="M6 21c5-1 6-9 10-9s4 6 6 5"/><circle cx="6" cy="21" r="3"/><circle cx="26" cy="17" r="3"/></svg>memex</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#s1945">Story</a>
+      <a class="opt" href="#verbs">Verbs</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/rynwhite/memex">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="hero col" aria-labelledby="hero-title">
+    <p class="kicker">memex: authored context compression</p>
+    <h1 id="hero-title">Good work was being lost, not because it was wrong, but because nobody could get back to it.</h1>
+  </section>
+
+  <div class="col trail">
+
+    <section id="s1945" aria-labelledby="h-1945">
+      <h2 id="h-1945">1945</h2>
+      <p class="lead">Vannevar Bush ran American science through the Second World War. When it ended, what kept him up at night wasn’t weapons. It was the record. Science was producing findings faster than anyone could find them again.</p>
+      <p>In July 1945 he published <a href="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">“As We May Think”</a> in <i>The Atlantic</i>. In it he imagined a desk: two slanted translucent screens, a keyboard, levers, and inside, on microfilm, every book, letter and note you owned. He called it the <strong>memex</strong>.</p>
+
+      <figure class="desk">
+        <svg width="640" height="340" viewBox="0 0 640 340" role="img" aria-labelledby="desk-title desk-desc" focusable="false">
+          <title id="desk-title">A memex desk, sketched</title>
+          <desc id="desk-desc">A desk with two slanted translucent screens side by side. A dotted trail joins a highlighted line on the left screen to a highlighted line on the right screen.</desc>
+          <g class="ink">
+            <path class="surface" d="M96 222h448l44 40H52z"/>
+            <rect class="surface" x="52" y="262" width="536" height="14" rx="2"/>
+            <rect class="surface" x="80" y="276" width="112" height="58"/>
+            <rect class="surface" x="448" y="276" width="112" height="58"/>
+            <path d="M80 305h112M448 305h112M122 290h28M122 320h28M490 290h28M490 320h28"/>
+            <path class="glass" d="M130 66h164l12 150H118z"/>
+            <path class="glass" d="M346 66h164l12 150H334z"/>
+            <path class="keys" d="M232 236h176M228 248h184"/>
+            <circle cx="468" cy="238" r="5"/>
+            <circle cx="488" cy="238" r="5"/>
+            <circle cx="508" cy="238" r="5"/>
+            <path d="M538 252l9-22"/>
+            <circle class="knob" cx="547" cy="229" r="4"/>
+          </g>
+          <g class="text">
+            <path d="M146 90h116M146 108h94M146 144h112M146 162h78M146 180h104M146 198h60"/>
+            <path d="M362 90h108M362 108h84M362 126h116M362 162h78M362 180h106M362 198h50"/>
+          </g>
+          <path class="hl" d="M146 126h86M362 144h90"/>
+          <path class="tie" d="M240 126C278 124 322 146 356 144"/>
+          <circle class="end" cx="240" cy="126" r="4.5"/>
+          <circle class="end" cx="356" cy="144" r="4.5"/>
+        </svg>
+        <figcaption>The memex, sketched: two documents side by side, tied together.</figcaption>
+      </figure>
+
+      <p>Storage wasn’t the point. The point was <strong>trails</strong>. Libraries index by alphabet and category; the human mind, Bush wrote, “operates by association.” On the memex you would put two documents side by side, press a button, and tie them together. Do it again and again, add your own notes, and you’ve laid a trail through the material: your reasoning, kept, so you or anyone you handed it to could walk it later.</p>
+
+      <figure class="quote">
+        <blockquote cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">
+          <p>The process of tying two items together is the important thing.</p>
+        </blockquote>
+        <figcaption>Vannevar Bush, <cite><a href="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">“As We May Think”</a></cite>, <i>The Atlantic</i>, July 1945</figcaption>
+      </figure>
+
+      <p>Bush predicted a new profession: <strong>trail blazers</strong>, people who take delight in making useful paths through the common record.</p>
+      <p>The memex was never built. But Douglas Engelbart read the essay in 1945 as a young radar technician and spent his life on it. That became the 1968 demo that gave us the mouse and hypertext. Ted Nelson named hypertext with Bush in mind. From there, the web. Every link you’ve ever clicked descends from that desk.</p>
+    </section>
+
+    <section id="camera" aria-labelledby="h-camera">
+      <h2 id="h-camera">The camera and the trail</h2>
+      <p>The same essay also imagines a walnut-sized camera strapped to a scientist’s forehead, photographing everything he sees. Capture everything and sort it out later.</p>
+      <p>Two ideas, one essay. The camera is the one we keep rebuilding. The trail is the one that changed the world: associations made <strong>on purpose</strong>, by someone who understood the material.</p>
+    </section>
+
+    <section id="now" aria-labelledby="h-now">
+      <h2 id="h-now">Now</h2>
+      <p>Eighty years later, the flood is back, and this time agents produce it. Every run writes logs, reports, notes and handoffs into folders nobody will open again. The answer the industry reached for is the camera: hooks that record everything, servers, vector stores, LLMs summarising the pile after the fact.</p>
+      <p class="pivot">memex takes Bush’s other idea.</p>
+    </section>
+
+    <section id="memex" aria-labelledby="h-memex">
+      <h2 id="h-memex">memex</h2>
+      <p class="lead">memex is <strong>authored context compression</strong>: trails of <strong>intent</strong>, for humans and agents.</p>
+      <p>Code records what a system does. The intent layer records what it’s <em>for</em>: a README says why a folder exists, a header says what a file is for, a case says what’s claimed and how it’s proven, and a log says what an agent was trying and what it found. Whoever understood it best compresses it, at the moment they understood it. Citations become trails, and memex walks them both ways.</p>
+
+      <figure class="layers">
+        <ul class="stack">
+          <li class="layer">
+            <span class="kind">READMEs</span>
+            <span class="says">Why a folder exists.</span>
+            <span class="where">One <code>README.md</code> per folder. Its first sentence is the one-liner.</span>
+          </li>
+          <li class="layer">
+            <span class="kind">Headers</span>
+            <span class="says">What a file is for.</span>
+            <span class="where">The comment block atop a file. Its first sentence is the purpose.</span>
+          </li>
+          <li class="layer">
+            <span class="kind">Cases</span>
+            <span class="says">What’s claimed, and how it’s proven.</span>
+            <span class="where"><code>CASES.md</code>: an id, a claim, the evidence. The id sits in the test’s name.</span>
+          </li>
+          <li class="layer">
+            <span class="kind">Collections</span>
+            <span class="says">Any other docs worth reading, indexed where they are.</span>
+            <span class="where">A manifest in <code>.memex/collections/</code> says where they live.</span>
+          </li>
+          <li class="layer scaffold">
+            <span class="kind">Logs</span>
+            <span class="says">What an agent was trying, and what it found.</span>
+            <span class="where"><code>.memex/logs/</code>. Kept a couple of days, then thrown away.</span>
+          </li>
+          <li class="layer base">
+            <span class="kind">Code</span>
+            <span class="says">What the system does.</span>
+            <span class="where">Read it with <code>rg</code>. memex reads only the comment atop a file.</span>
+          </li>
+        </ul>
+        <p class="strip">
+          <code>impl:20261013-214107-show-walks-hub-readmes</code>
+          <span aria-hidden="true">⇄</span>
+          <code>crates/namer/src/hash.rs</code>
+          <span aria-hidden="true">⇄</span>
+          <code>NAME-001</code>
+        </p>
+        <figcaption>The intent layer sits on top of the code. Cite an id, a path or a ref, and memex derives the links in both directions.</figcaption>
+      </figure>
+
+      <p>Developers and agents are the trail blazers. An agent that finishes a job compresses what it learned and cites what it touched; the next agent walks that trail instead of starting from zero. Logs are the camera’s film: kept a couple of days, then thrown away. What’s still true gets authored into the layer.</p>
+      <p>No server, no database, no model in the loop. Markdown files and a CLI. Because the compression was already done, by whoever understood it.</p>
+    </section>
+
+    <section id="why" aria-labelledby="h-why">
+      <h2 id="h-why">Why this matters to us</h2>
+      <p>When the story came together, the reaction was goosebumps. It wasn’t the history alone. It was recognising that the thing we’d been designing for practical reasons (READMEs everywhere, headers, case ids cited in prose, logs that expire, no automated capture) was Bush’s idea all along, and that it had been the right idea for eighty years.</p>
+      <p class="coda">The camera has always been tempting.<br><span>The trail has always been what mattered.</span></p>
+    </section>
+
+  </div>
+
+  <div class="docs">
+
+    <section id="verbs" aria-labelledby="h-verbs">
+      <div class="col">
+        <h2 id="h-verbs">Five verbs</h2>
+        <p class="lead">memex reads the layer back one level at a time: a one-liner with <code>search</code>, then the document with <code>show</code>, then the chain of READMEs above it. It starts, reads plain files live, prints, and exits.</p>
+      </div>
+
+      <article class="verb" aria-labelledby="v-info">
+        <div class="col">
+          <h3 id="v-info"><code>memex info</code> <span>Where things are</span></h3>
+          <p>The atlas: names, counts and the commands to get there, never their contents. It is the overview for humans and agents, and what the optional Claude Code start hook prints.</p>
+        </div>
+        <div class="wide">
+          <div class="term">
+            <div class="term-bar">repo/crates/namer</div>
+<pre tabindex="0" role="group" aria-label="Terminal sample: memex info"><code><span class="p">$</span> <span class="c">memex info --agent cook-2</span>
+<span class="g">memex</span>  /repo · log store .memex/logs/
+<span class="k">intent</span>       48 readmes · 912 headers · 214 cases
+<span class="k">collections</span>  doom 41 · neo-cases 294 · perf 212
+<span class="k">streams</span>      impl 12 (3 new in 24h) · review 3 (1 new) · drift 5
+<span class="k">to cook-2</span>    2 messages <span class="d">→</span> memex search to:cook-2
+<span class="k">here</span>         <span class="l">crates/namer</span> — Namer: turns atoms into stable class names.
+<span class="k">use</span>          memex show &lt;path|ref&gt; · memex search &lt;words&gt; · memex log &lt;stream&gt; &lt; body</code></pre>
+          </div>
+        </div>
+      </article>
+
+      <article class="verb" aria-labelledby="v-search">
+        <div class="col">
+          <h3 id="v-search"><code>memex search</code> <span>Find by words</span></h3>
+          <p>Words, or filters like <code>to:cook-2</code> and <code>since:2d</code>, over READMEs, headers, cases, collections and logs. Results come grouped, so a README is never drowned by log noise, and each hit is a one-liner. A hit found by a near-miss spelling is marked <code>[~variant]</code>. <code>rg</code> still finds symbols; memex finds meaning.</p>
+        </div>
+        <div class="wide">
+          <div class="term">
+            <div class="term-bar">repo</div>
+<pre tabindex="0" role="group" aria-label="Terminal sample: memex search"><code><span class="p">$</span> <span class="c">memex search namer --limit 2</span>
+<span class="g">readmes</span>  <span class="d">(showing 2 of 2)</span>
+  <span class="l">crates/namer/README.md</span>  Namer: turns atoms into stable class names.
+  <span class="l">crates/README.md</span>  The crates of the workspace.
+<span class="g">headers</span>  <span class="d">(showing 2 of 31)</span>
+  <span class="l">crates/namer/src/hash.rs</span>  FNV-1a over canonical atom strings.
+  <span class="l">crates/namer/src/class.rs</span>  Turns a hash into a short class name, and keeps collisions apart.
+<span class="g">cases</span>  <span class="d">(showing 2 of 6)</span>
+  <span class="l">cases:NAME-001</span>  Class names are stable across runs and platforms.
+  <span class="l">cases:NAME-002</span>  Two atoms with equal declarations share one class.  <span class="m">[~name]</span>
+<span class="g">logs</span>  <span class="d">(showing 1 of 1)</span>
+  <span class="l">impl:20261013-214107-show-walks-hub-readmes</span>  <span class="d">2h · cook-2 · feat/show</span>  show walks hub READMEs</code></pre>
+          </div>
+        </div>
+      </article>
+
+      <article class="verb" aria-labelledby="v-show">
+        <div class="col">
+          <h3 id="v-show"><code>memex show</code> <span>Read it, then walk the trail</span></h3>
+          <p>Takes a path or a ref. A file prints its header, what it cites (each with its target’s one-liner), who cites it, and the READMEs above it, nearest first. A folder lists its children. Nobody maintains a link table: citations come from the ids, paths and refs people already write, and are read in both directions.</p>
+        </div>
+        <div class="wide">
+          <div class="term">
+            <div class="term-bar">repo</div>
+<pre tabindex="0" role="group" aria-label="Terminal sample: memex show"><code><span class="p">$</span> <span class="c">memex show crates/namer/src/hash.rs --up 1</span>
+<span class="g">=== crates/namer/src/hash.rs ===</span>
+FNV-1a over canonical atom strings.
+Hash input is the canonical atom string, never object identity.
+Cases: NAME-001, NAME-002
+
+<span class="g">cites</span>
+  <span class="l">cases:NAME-001</span>  Class names are stable across runs and platforms.
+  <span class="l">cases:NAME-002</span>  Two atoms with equal declarations share one class.
+
+<span class="g">cited by</span>
+  <span class="l">crates/namer/README.md</span>  Namer: turns atoms into stable class names.
+  <span class="l">impl:20261013-214107-show-walks-hub-readmes</span>  show walks hub READMEs
+  <span class="d">showing 2 of 2</span>
+
+<span class="g">chain</span>
+<span class="d">---</span> <span class="l">crates/namer/README.md</span>
+# Namer
+
+Namer: turns atoms into stable class names. The same atom gets the same name on every run and every platform.
+
+- `src/hash.rs`: FNV-1a over canonical atom strings.
+- Cases: NAME-001 and NAME-002.</code></pre>
+          </div>
+        </div>
+      </article>
+
+      <article class="verb" aria-labelledby="v-log">
+        <div class="col">
+          <h3 id="v-log"><code>memex log</code> <span>Hand back a ref, not a report</span></h3>
+          <p>Reads a finding from stdin and prints its ref. An agent ends its run by logging the full report and returning one line, <code>report: &lt;ref&gt;</code>; the next reader runs <code>memex show</code> on it only when it needs the detail. Logs are immutable and expire after three days by default. What is still true belongs in a README, a header, a case or a collection.</p>
+        </div>
+        <div class="wide">
+          <div class="term">
+            <div class="term-bar">repo</div>
+<pre tabindex="0" role="group" aria-label="Terminal sample: memex log"><code><span class="p">$</span> <span class="c">memex log impl --agent cook-2 --tag namer,show &lt;&lt;'EOF'</span>
+<span class="c">show walks hub READMEs</span>
+<span class="c">`show &lt;file&gt;` now lists "cited by". crates/namer/src/hash.rs is reached</span>
+<span class="c">through crates/README.md, which cites NAME-*.</span>
+<span class="c">EOF</span>
+<span class="l">impl:20261013-214107-show-walks-hub-readmes</span></code></pre>
+          </div>
+        </div>
+      </article>
+
+      <article class="verb" aria-labelledby="v-init">
+        <div class="col">
+          <h3 id="v-init"><code>memex init</code> <span>Set it up once</span></h3>
+          <p>Safe to repeat. It creates <code>.memex/</code>, writes a short block into <code>AGENTS.md</code> that tells any agent to read intent before code (and points <code>CLAUDE.md</code> at it, if one exists), and prints the atlas. Reading works without it; only <code>log</code> needs a <code>.memex/</code>.</p>
+        </div>
+        <div class="wide">
+          <div class="term">
+            <div class="term-bar">project</div>
+<pre tabindex="0" role="group" aria-label="Terminal sample: memex init"><code><span class="p">$</span> <span class="c">memex init</span>
+created <span class="l">.memex/.gitignore</span>
+created <span class="l">.memex/config.json</span>
+created <span class="l">.memex/collections/.gitkeep</span>
+created <span class="l">AGENTS.md</span>
+updated <span class="l">CLAUDE.md</span>
+
+<span class="g">memex</span>  /home/you/project · log store .memex/logs/
+<span class="k">intent</span>  1 readme · 0 headers · 0 cases
+<span class="k">use</span>     memex show &lt;path|ref&gt; · memex search &lt;words&gt; · memex log &lt;stream&gt; &lt; body</code></pre>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section id="install" aria-labelledby="h-install">
+      <div class="col">
+        <h2 id="h-install">Install</h2>
+        <p>One step, for a human or an agent:</p>
+      </div>
+      <div class="col">
+        <p class="cmd"><span class="p" aria-hidden="true">$</span> <code>npx @rynwhite/memex init</code></p>
+        <p>That installs the binary (if needed), creates <code>.memex/</code>, wires <code>AGENTS.md</code> and <code>CLAUDE.md</code>, and prints the atlas. To uninstall, delete <code>.memex/</code> and the marked block in <code>AGENTS.md</code>.</p>
+        <details>
+          <summary>Other ways to install</summary>
+          <p>One command per toolchain, then <code>memex init</code>:</p>
+<pre tabindex="0" role="group" aria-label="Manual install commands"><code>brew install rynwhite/tap/memex
+cargo install agent-memex
+curl -LsSf https://github.com/rynwhite/memex/releases/latest/download/memex-installer.sh | sh
+powershell -c "irm https://github.com/rynwhite/memex/releases/latest/download/memex-installer.ps1 | iex"</code></pre>
+          <p>Or download a binary from <a href="https://github.com/rynwhite/memex/releases">GitHub Releases</a>. Every route comes from one cargo-dist release per tag.</p>
+          <p>On Claude Code, the plugin is optional:</p>
+<pre tabindex="0" role="group" aria-label="Claude Code plugin commands"><code>/plugin marketplace add rynwhite/memex
+/plugin install memex@memex</code></pre>
+        </details>
+      </div>
+    </section>
+
+    <section id="principles" aria-labelledby="h-principles">
+      <div class="col">
+        <h2 id="h-principles">Principles</h2>
+        <ul class="principles">
+          <li>
+            <h3>Markdown files and a CLI</h3>
+            <p>No server, daemon, MCP, LLM, vectors or database. memex starts, reads plain files live, prints and exits.</p>
+          </li>
+          <li>
+            <h3>Agent-agnostic</h3>
+            <p>Anything with a shell can use it. The Claude Code plugin only wraps the CLI.</p>
+          </li>
+          <li>
+            <h3>Conventions over configuration</h3>
+            <p>The intent layer needs zero config. The only config is collection manifests.</p>
+          </li>
+          <li>
+            <h3>memex reads intent, rg reads code</h3>
+            <p>memex never indexes code bodies, only the comment block at the top of a file.</p>
+          </li>
+          <li>
+            <h3>Bounded output</h3>
+            <p>Every list says <code>showing N of M</code>, and <code>--limit</code> works everywhere. Nothing is capped silently.</p>
+          </li>
+          <li>
+            <h3>Logs are scaffolding; knowledge is authored</h3>
+            <p>A log is useful for a couple of working days, then memex prunes it. Whatever is still true gets compressed into the layer by someone who understands it.</p>
+          </li>
+        </ul>
+        <p class="fine">A feature earns its place by removing friction an agent actually hit in a playtest.</p>
+      </div>
+    </section>
+
+    <section id="links" aria-labelledby="h-links">
+      <div class="col">
+        <h2 id="h-links">Read on</h2>
+        <ul class="links">
+          <li><a href="https://github.com/rynwhite/memex">github.com/rynwhite/memex</a> <span>The source and the releases.</span></li>
+          <li><a href="https://github.com/rynwhite/memex/blob/main/design.md">design.md</a> <span>The spec: how every verb behaves. It is authoritative.</span></li>
+          <li><a href="https://github.com/rynwhite/memex/blob/main/STORY.md">STORY.md</a> <span>The story, as first written.</span></li>
+        </ul>
+      </div>
+    </section>
+
+  </div>
+
+</main>
+
+<footer class="foot">
+  <div class="col">
+    <p>memex is dual-licensed under MIT or Apache-2.0.</p>
+  </div>
+</footer>
+
+</body>
+</html>
