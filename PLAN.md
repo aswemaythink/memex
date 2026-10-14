@@ -434,7 +434,7 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [x] S4.1
 - [x] S4.2 (self-init: all kept; refined 76addfe)
 - [x] S5.1
-- [x] S5.2 (20 findings, 1 HIGH; fixed in F1-F4)
+- [x] S5.2 (28 findings, 1 HIGH; fixed in F1-F4)
 - [x] S5.3 (reference-ui info 94, search 138, show 117 ms; no cache)
 - [x] S5.4 (whole-crate refine; coverage audit closed)
 - [x] S6.1 (enabling it for this repo needs user approval)
@@ -450,16 +450,8 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 ## 12. Tidy backlog
 Cleared by T1 (2026-10-14): header first sentences of 100 chars or fewer, gated; one BOM-dropping text reader; listing-based `.memex` discovery; one root discovery; header prologue and license rules; `preserve_order` JSON fields; collection warnings; stale comments.
 Cleared by F1-F4, G-A to G-C and S5.3: init PATH rule; `.memex` inner names by listing; 0644 file modes; plugin hook cwd; §6.1 plugin id; the stale cli README exit-3 note; perf leftovers.
-Open, for the S5.4 whole-crate refiner:
-- Corpus keeps the loaded manifests and their warnings, so info stops reading manifests twice.
-- src/collections/manifest.rs probes `.memex/collections` by path: match it by listing (design §4.4).
-- One ordinary-mode temp-file writer (src/logs/write.rs and src/verbs/init/files.rs both have one).
-- One fence scanner (src/cite/tokens.rs and src/verbs/init/fence.rs both have one).
-- tests/harness/env.rs: on Windows, also scrub `memex.cmd` from PATH.
-- `$MEMEX_NOW` is validated once at startup for every verb (design §3.6); add SRCH-NOW-01 and SHOW-NOW-01.
-- INFO-CAP-02: a unit test in src/render/info.rs.
-- tests/cases/cli/README.md: CLI-EXIT-04 is live.
-- Deferred, needs a design decision: out-of-root `show` sections print `(none)` for cites and cited by.
+Cleared by 28f100a, 7653f9e, 693d754, d8e06a0 and the 2026-10-14 hardening pass: the nine S5.4 items (manifests loaded once, collections probed by listing, init's writer, one fence scanner, Windows PATH scrub, `$MEMEX_NOW` validated once, INFO-CAP-02 pinned by a unit test as design §4.4 allows, CLI-EXIT-04 live, out-of-root `show` sections, now SHOW-OTHER-01).
+Open: none.
 
 ## 13. Rulings to review (made where design.md was silent)
 Each line is a design.md commit since S0.1; `git show <hash> -- design.md` shows the exact wording. Rulings made from here on are added to this list.
