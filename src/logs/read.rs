@@ -10,6 +10,7 @@ use crate::corpus::Doc;
 use crate::error::Error;
 use crate::logs::write::title_of;
 use crate::root::slash;
+use crate::text;
 
 /// Every entry in the store, as docs. A missing store has none. A store that cannot be read is an io error (exit 3).
 pub fn load(store: &Path) -> Result<Vec<Doc>, Error> {
@@ -54,8 +55,8 @@ fn entries(dir: &Path, folders: bool) -> Result<Vec<(String, PathBuf)>, Error> {
 
 /// One log entry as a doc: its frontmatter fields, its body as the text, and its title line.
 fn entry_doc(stream: &str, file: &str, path: &Path) -> Result<Doc, Error> {
-    let bytes = fs::read(path).map_err(|failure| io_error(path, &failure))?;
-    let document = split(&String::from_utf8_lossy(&bytes));
+    let contents = text::read(path).map_err(|failure| io_error(path, &failure))?;
+    let document = split(&contents);
     let id = file.strip_suffix(".md").unwrap_or(file).to_string();
     Ok(Doc {
         label: format!("{stream}:{id}"),

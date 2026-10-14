@@ -1,7 +1,6 @@
 //! Carries out `memex show` (design §3.3 and §3.6): resolves each ref, builds its section, and reports the sections, the misses and the exit status.
 //! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-SECT-01, CASE-JSON-01, REF-WT-01, REF-WT-02, CITE-PREFIX-01, CITE-PREFIX-02, CITE-UNRES-01, CITE-FOLDER-02, CITE-SELF-01, CITE-BACK-01, CITE-BACK-03, CITE-BACK-04, CITE-COLL-02, CITE-JSON-01, CITE-JSON-02
 
-use std::fs;
 use std::path::Path;
 
 use crate::cite::Cite;
@@ -11,6 +10,7 @@ use crate::intent::cases;
 use crate::render::{self, CaseParts, Fields, Link, Listing, Miss, Ref, Section};
 use crate::resolve::{resolve, Elsewhere, Outcome, Target};
 use crate::root::slash;
+use crate::text;
 use crate::verbs::here;
 
 /// The `--limit` of a list when the flag is not given (design §3.3).
@@ -260,11 +260,9 @@ fn cites_of(corpus: &Corpus, label: &str) -> Vec<Cite> {
     corpus.citations().cites(label).to_vec()
 }
 
-/// The whole text of a file, decoded lossily. A read failure is an io error (exit 3).
+/// The whole text of a file, read as the shared helper reads it. A read failure is an io error (exit 3).
 fn read_file(path: &Path) -> Result<String, Error> {
-    let bytes = fs::read(path)
-        .map_err(|failure| Error::io(&format!("cannot read {}", slash(path)), &failure))?;
-    Ok(String::from_utf8_lossy(&bytes).into_owned())
+    text::read(path).map_err(|failure| Error::io(&format!("cannot read {}", slash(path)), &failure))
 }
 
 /// True for a README.md, at the root or in a folder.

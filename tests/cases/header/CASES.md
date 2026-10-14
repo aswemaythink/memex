@@ -130,3 +130,5 @@
 
 - `HDR-BOM-01` A UTF-8 byte order mark at the start of a file is dropped, so the header after it is found.
   design §4.4 Text: a leading UTF-8 BOM is dropped on read. Run: memex show bom.rs --up 0.
+- `HDR-BOM-02` A UTF-8 byte order mark before a shebang is dropped, so the shebang is skipped and the `#` block after it is the header.
+  design §4.4 Text: the BOM is dropped before the header is read, and design §2.1 skips the shebang. Run: memex show bom-run.sh --up 0.

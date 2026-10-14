@@ -1,7 +1,6 @@
 //! Reads a markdown manifest's docs (design §4.2): frontmatter becomes fields, the body the text.
 //! Cases: MAN-MD-01, MAN-MD-02, MAN-MD-03, MAN-MD-04, MAN-MD-05, MAN-MD-06, MAN-MD-07, MAN-MD-08, MAN-MD-09, MAN-MD-10, MAN-MD-11, MAN-MD-12
 
-use std::fs;
 use std::path::Path;
 
 use serde_json::Value as Json;
@@ -9,6 +8,7 @@ use serde_json::Value as Json;
 use super::frontmatter::{split, Value};
 use super::manifest::{self, Manifest, Matched};
 use crate::corpus::Doc;
+use crate::text;
 
 /// The globs of a markdown manifest that names none (design §4.2 `include`).
 const DEFAULT_INCLUDE: &str = "**/*.md";
@@ -34,8 +34,7 @@ pub fn docs(manifest: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Vec
 
 /// One matched file as a doc: a `.json` file by its top-level scalars, and any other file by its frontmatter and body.
 fn read_doc(manifest: &Manifest, file: &Matched) -> Result<Doc, String> {
-    let bytes = fs::read(&file.path).map_err(|failure| manifest::unreadable(&failure))?;
-    let text = String::from_utf8_lossy(manifest::strip_bom(&bytes));
+    let text = text::read(&file.path).map_err(|failure| manifest::unreadable(&failure))?;
     let (fields, body) = if file.path.extension().is_some_and(|ext| ext == "json") {
         (sidecar_fields(&text)?, String::new())
     } else {

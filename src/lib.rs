@@ -18,6 +18,7 @@ mod render;
 mod resolve;
 mod root;
 mod scan;
+mod text;
 mod verbs;
 mod walk;
 

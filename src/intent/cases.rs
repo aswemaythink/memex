@@ -3,6 +3,7 @@
 
 use crate::collections::frontmatter::Value;
 use crate::corpus::{parent_of, Doc};
+use crate::text::strip_bom;
 
 /// The collection of case docs. Their labels are `cases:ID`, and `show` takes them that way (design §3.1).
 pub const COLLECTION: &str = "cases";
@@ -10,7 +11,7 @@ pub const COLLECTION: &str = "cases";
 /// The case docs of the CASES.md at `rel`, whose text is `text`, in the order they are written (design §2.2). A leading
 /// byte order mark is dropped (design §4.4), and `\r\n` line ends are read like `\n`.
 pub fn parse(rel: &str, text: &str) -> Vec<Doc> {
-    let text = text.strip_prefix('\u{feff}').unwrap_or(text);
+    let text = strip_bom(text);
     let mut reader = Reader::new(rel);
     for line in text.lines() {
         reader.line(line);

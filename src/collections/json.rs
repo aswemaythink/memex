@@ -3,7 +3,6 @@
 //! Cases: MANK-JSON-01, MANK-JSON-02, MANK-JSON-03, MANK-JSON-04, MANK-JSON-05, MANK-JSON-06, MANK-JSON-07, MANK-JSON-08
 
 use std::fmt;
-use std::fs;
 use std::path::Path;
 
 use ignore::overrides::OverrideBuilder;
@@ -15,6 +14,7 @@ use super::frontmatter::Value;
 use super::manifest::Manifest;
 use crate::corpus::Doc;
 use crate::intent::sentence;
+use crate::text;
 use crate::walk::{self, Entry};
 
 /// The docs of a json manifest: one per object, in each matched file, whose `id` field is text. A manifest with no `id` key
@@ -113,9 +113,9 @@ impl Tree {
 /// The items of the array that `at` points to in the JSON file at `path`. A file that is not JSON, or whose `at` does not
 /// reach an array, has none.
 fn items_at(path: &Path, at: &str) -> Vec<Tree> {
-    let document = fs::read(path)
+    let document = text::read(path)
         .ok()
-        .and_then(|bytes| serde_json::from_slice::<Tree>(&bytes).ok());
+        .and_then(|contents| serde_json::from_str::<Tree>(&contents).ok());
     match document.as_ref().and_then(|tree| tree.pointer(at)) {
         Some(Tree::Array(items)) => items.clone(),
         _ => Vec::new(),

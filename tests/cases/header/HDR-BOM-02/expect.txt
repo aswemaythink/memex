@@ -1,0 +1,13 @@
+$ memex show bom-run.sh --up 0
+exit 0
+stdout
+| === bom-run.sh ===
+| Header after a shebang.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

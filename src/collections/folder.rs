@@ -3,7 +3,7 @@
 //! Cases: MANK-FOLDER-01, MANK-FOLDER-02, MANK-FOLDER-03, MANK-FOLDER-04, MANK-FOLDER-05, MANK-FOLDER-06, MANK-FOLDER-07, MANK-FOLDER-08, MANK-FOLDER-09
 
 use std::collections::BTreeMap;
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
@@ -12,6 +12,7 @@ use super::json::{doc, field_text, glob_hits, scalar_fields, Tree};
 use super::manifest::Manifest;
 use crate::corpus::{parent_of, Doc};
 use crate::intent::header;
+use crate::text;
 use crate::walk::{self, Entry};
 
 /// The most bytes of a code file that a merge reads, for its header (design §2.1).
@@ -61,7 +62,7 @@ fn folder_doc(
 fn marker_fields(path: &Path) -> Option<(Vec<(String, Value)>, String)> {
     match extension(path) {
         Some("json") => {
-            let document: Tree = serde_json::from_slice(&fs::read(path).ok()?).ok()?;
+            let document: Tree = serde_json::from_str(&text::read(path).ok()?).ok()?;
             Some((scalar_fields(document.members()), String::new()))
         }
         Some("md") => {
@@ -141,11 +142,9 @@ fn extension(path: &Path) -> Option<&str> {
     path.extension()?.to_str()
 }
 
-/// The whole text of a file, decoded lossily, or None when it cannot be read.
+/// The whole text of a file, read as the shared helper reads it, or None when it cannot be read.
 fn read_text(path: &Path) -> Option<String> {
-    fs::read(path)
-        .ok()
-        .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
+    text::read(path).ok()
 }
 
 /// The first `HEAD_BYTES` of a file, or None when it cannot be read.

@@ -1,24 +1,22 @@
 //! Reads a file's header (design §2.1): its leading comment block, as the text that `show` prints.
-//! Cases: HDR-BOM-01, HDR-BIN-01, HDR-EXT-01, HDR-CAP-01, HDR-CAP-02, HDR-NONE-01, HDR-CRLF-01, HDR-LIMIT-01
+//! Cases: HDR-BOM-01, HDR-BOM-02, HDR-BIN-01, HDR-EXT-01, HDR-CAP-01, HDR-CAP-02, HDR-NONE-01, HDR-CRLF-01, HDR-LIMIT-01
 
 mod families;
 mod scan;
 
 use std::path::Path;
 
-/// The UTF-8 byte order mark, which is dropped on read (design §4.4).
-const BOM: &[u8] = b"\xEF\xBB\xBF";
+use crate::text;
 
 /// The header of the file at `path`, read from its first bytes (at most 8 KiB, see `corpus.rs`): the text of its leading comment
 /// block with the markers removed. None for a file with no comment family, a binary file (one with a NUL byte), and a file whose
 /// first block is absent.
 pub fn header(path: &Path, bytes: &[u8]) -> Option<String> {
     let family = families::family_of(path)?;
-    let bytes = bytes.strip_prefix(BOM).unwrap_or(bytes);
     if bytes.contains(&0) {
         return None;
     }
-    let text = String::from_utf8_lossy(bytes);
+    let text = text::decode(bytes);
     let lines: Vec<&str> = text.lines().collect();
     scan::header_text(family, &lines)
 }

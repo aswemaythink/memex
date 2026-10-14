@@ -7,6 +7,7 @@ use crate::cli::Verb;
 use crate::error::Error;
 use crate::logs::write::title_of;
 use crate::scan::fail;
+use crate::text;
 
 /// The most bytes a body may have, counted on the raw stdin bytes (design §3.4): 16 KiB.
 pub const LIMIT: usize = 16 * 1024;
@@ -16,9 +17,6 @@ const TERMINAL: &str = "log body comes from stdin: memex log <stream> <<'EOF' �
 
 /// The usage message for a body over `LIMIT`: a log holds findings, so artifacts are cited by path.
 const OVER: &str = "log body is over 16 KiB: logs are findings: cite artifacts by path";
-
-/// The UTF-8 byte order mark, which a shell may put at the start of a body. It is dropped on read (design §4.4 Text).
-const BOM: char = '\u{feff}';
 
 /// Reads the body that stdin carries, under the rules of `read`.
 pub fn read_stdin() -> Result<String, Error> {
@@ -41,12 +39,11 @@ pub fn read(terminal: bool, input: impl Read) -> Result<String, Error> {
     if bytes.len() > LIMIT {
         return Err(fail(Verb::Log, OVER.to_string()));
     }
-    let text = String::from_utf8_lossy(&bytes).replace("\r\n", "\n");
-    let body = text.strip_prefix(BOM).unwrap_or(&text);
+    let body = text::decode(&bytes).replace("\r\n", "\n");
     if body.trim().is_empty() {
         return Err(fail(Verb::Log, "log body is empty".to_string()));
     }
-    Ok(body.to_string())
+    Ok(body)
 }
 
 /// Refuses a body with no title: the first non-blank line after the agent block, with its `#`s and spaces removed,

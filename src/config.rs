@@ -9,6 +9,7 @@ use serde::Deserialize;
 
 use crate::clock;
 use crate::root::slash;
+use crate::text;
 
 /// The keep_logs default of design §4.3: entries older than three days are pruned.
 const DEFAULT_KEEP_LOGS: &str = "3d";
@@ -36,8 +37,8 @@ fn default_keep_logs() -> String {
 /// Reads `<owner>/.memex/config.json`. A missing file means the default, with no warning. A file that cannot be read or parsed, including one with an unknown key, means no pruning, with one warning naming the file and the reason.
 pub fn load(owner: &Path) -> Loaded {
     let path = owner.join(".memex").join("config.json");
-    let bytes = match fs::read(&path) {
-        Ok(bytes) => bytes,
+    let contents = match text::read(&path) {
+        Ok(contents) => contents,
         // A dangling symlink is present but unreadable, so it is not treated as a missing file.
         Err(failure) if failure.kind() == io::ErrorKind::NotFound && !is_symlink(&path) => {
             return judge(&path, DEFAULT_KEEP_LOGS);
@@ -47,7 +48,7 @@ pub fn load(owner: &Path) -> Loaded {
             return unusable(warning(&path, &reason));
         }
     };
-    match serde_json::from_slice::<File>(&bytes) {
+    match serde_json::from_str::<File>(&contents) {
         Ok(file) => judge(&path, &file.keep_logs),
         Err(failure) => unusable(warning(&path, &failure.to_string())),
     }

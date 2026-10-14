@@ -13,6 +13,7 @@ use serde_json::{Map, Value as Json};
 use super::{folder, json, markdown};
 use crate::corpus::Doc;
 use crate::root::slash;
+use crate::text;
 use crate::walk::rel_string;
 
 /// The names that belong to the built-in collections, which no manifest may take (design §3.1).
@@ -105,11 +106,6 @@ pub fn matched(manifest: &Manifest, root: &Path, globs: &[String]) -> Vec<Matche
     found
 }
 
-/// The bytes of a file without its UTF-8 byte-order mark, which is dropped on read (design §4.4).
-pub fn strip_bom(bytes: &[u8]) -> &[u8] {
-    bytes.strip_prefix(b"\xef\xbb\xbf").unwrap_or(bytes)
-}
-
 /// The warning line for a file that cannot be used: `memex: warning: <path>: <reason>` (design §4.2).
 pub fn warning(path: &Path, reason: &str) -> String {
     format!("memex: warning: {}: {reason}", slash(path))
@@ -143,9 +139,9 @@ fn listing(dir: &Path) -> Result<Vec<(String, PathBuf)>, String> {
 
 /// Reads and validates one manifest. Its name is checked against the file name without `.json`.
 fn read_one(path: &Path, file: &str) -> Result<Manifest, String> {
-    let bytes = fs::read(path).map_err(|failure| unreadable(&failure))?;
-    let value: Json = serde_json::from_slice(strip_bom(&bytes))
-        .map_err(|failure| format!("not valid JSON: {failure}"))?;
+    let text = text::read(path).map_err(|failure| unreadable(&failure))?;
+    let value: Json =
+        serde_json::from_str(&text).map_err(|failure| format!("not valid JSON: {failure}"))?;
     parse(file.strip_suffix(".json").unwrap_or(file), &value)
 }
 
