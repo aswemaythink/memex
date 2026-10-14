@@ -1,7 +1,7 @@
 //! Writes a new file through a dot-prefixed temp file, never over an old one (design §4.4).
-//! It is the one writer that log and init share. The temp file sits in the folder of the file it becomes and is made with an
-//! ordinary file's mode, so a persisted file is one.
-//! Cases: PORT-MODE-01, INIT-FRESH-01, LOG-WRITE-08, LOG-WRITE-15
+//! It is the one writer that log and init share, and `Failure::into_error` words its failures for both. The temp file sits in the
+//! folder of the file it becomes and is made with an ordinary file's mode, so a persisted file is one.
+//! Cases: PORT-MODE-01, INIT-FRESH-01, LOG-WRITE-08, LOG-WRITE-15, PORT-EXIT-01
 
 use std::fs;
 use std::io::{self, Write};
@@ -9,7 +9,9 @@ use std::path::{Path, PathBuf};
 
 use tempfile::NamedTempFile;
 
-/// The step of writing a new file that failed, with the I/O error of that step. Each caller names the step in its own words.
+use crate::error::Error;
+
+/// The step of writing a new file that failed, with the I/O error of that step. `into_error` words each step the same way for every caller.
 #[derive(Debug)]
 pub enum Failure {
     /// The temp file could not be made in the folder.
@@ -18,6 +20,21 @@ pub enum Failure {
     Write(io::Error),
     /// The temp file could not be persisted under the name, and the name is not taken.
     Persist(io::Error),
+}
+
+impl Failure {
+    /// The error that a failed write of `dir/name` reports, the same for every caller. A temp file that could not be made names its
+    /// folder; a write or a persist that failed names the file it was to become (design §4.4 Errors).
+    pub fn into_error(self, dir: &Path, name: &str) -> Error {
+        match self {
+            Failure::Create(failure) => {
+                Error::io_at("cannot create a temporary file in", dir, &failure)
+            }
+            Failure::Write(failure) | Failure::Persist(failure) => {
+                Error::io_at("cannot write", &dir.join(name), &failure)
+            }
+        }
+    }
 }
 
 /// Writes `bytes` to `dir/name` as a new file and returns its path. A name that is taken gives None and writes nothing, and the
@@ -144,5 +161,24 @@ mod tests {
         // A file that File::create makes gets 0o666 less the umask, which recovers the umask of this run.
         let umask = 0o666 & !mode(&dir.path().join("plain"));
         assert_eq!(mode(&dir.path().join("entry.md")), 0o644 & !umask);
+    }
+
+    #[test]
+    fn a_failed_step_is_worded_the_same_for_every_caller() {
+        let dir = Path::new("store/impl");
+        let denied = || io::Error::from(io::ErrorKind::PermissionDenied);
+        let message = |failure: Failure| failure.into_error(dir, "entry.md").message;
+        assert_eq!(
+            message(Failure::Create(denied())),
+            "cannot create a temporary file in store/impl (PermissionDenied)"
+        );
+        assert_eq!(
+            message(Failure::Write(denied())),
+            "cannot write store/impl/entry.md (PermissionDenied)"
+        );
+        assert_eq!(
+            message(Failure::Persist(denied())),
+            "cannot write store/impl/entry.md (PermissionDenied)"
+        );
     }
 }

@@ -65,15 +65,7 @@ pub fn create_new(dir: &Path, name: &str, bytes: &[u8]) -> Result<(), Error> {
             &target,
             &io::Error::from(io::ErrorKind::AlreadyExists),
         )),
-        Err(atomic::Failure::Create(failure)) => Err(Error::io_at(
-            "cannot create a temporary file in",
-            dir,
-            &failure,
-        )),
-        Err(atomic::Failure::Write(failure)) => Err(Error::io_at("cannot write", dir, &failure)),
-        Err(atomic::Failure::Persist(failure)) => {
-            Err(Error::io_at("cannot create", &target, &failure))
-        }
+        Err(failed) => Err(failed.into_error(dir, name)),
     }
 }
 

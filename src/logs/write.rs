@@ -179,8 +179,7 @@ fn make_folder(dir: &Path) -> Result<(), Error> {
 /// Writes `bytes` to `dir/name` as a new file, through a dot-prefixed temporary file, so a reader never sees a partial entry.
 /// Returns the path, or None when the name is already taken, in which case nothing is written.
 fn write_new(dir: &Path, name: &str, bytes: &[u8]) -> Result<Option<PathBuf>, Error> {
-    let target = dir.join(name);
-    retry_vanished(dir, &target, || atomic::persist_new(dir, name, bytes))
+    retry_vanished(dir, name, || atomic::persist_new(dir, name, bytes))
 }
 
 /// Runs `write` until it has an outcome. While `dir` is not listed under its parent, a failure to create the temporary file makes
@@ -188,7 +187,7 @@ fn write_new(dir: &Path, name: &str, bytes: &[u8]) -> Result<Option<PathBuf>, Er
 /// entries). A listed folder is not made again, and a failure after the create is never retried: each is returned as it is.
 fn retry_vanished(
     dir: &Path,
-    target: &Path,
+    name: &str,
     write: impl Fn() -> Result<Option<PathBuf>, atomic::Failure>,
 ) -> Result<Option<PathBuf>, Error> {
     let mut outcome = write();
@@ -201,14 +200,7 @@ fn retry_vanished(
             _ => break,
         }
     }
-    outcome.map_err(|failed| match failed {
-        atomic::Failure::Create(failure) => {
-            Error::io_at("cannot create a temporary file in", dir, &failure)
-        }
-        atomic::Failure::Write(failure) | atomic::Failure::Persist(failure) => {
-            Error::io_at("cannot write", target, &failure)
-        }
-    })
+    outcome.map_err(|failed| failed.into_error(dir, name))
 }
 
 /// True when `dir` is still listed under its parent by its exact name, which `store_listed` checks for any folder (design §4.4
@@ -302,7 +294,7 @@ mod tests {
     fn a_create_that_fails_while_the_folder_is_gone_is_tried_three_times() {
         let store = tempfile::tempdir().expect("a temporary store");
         let dir = store.path().join("impl");
-        let target = dir.join("20261013-120000-x.md");
+        let name = "20261013-120000-x.md";
         let calls = std::cell::Cell::new(0);
         // Each attempt finds the folder gone, as a prune that empties it leaves it.
         let gone = || -> Result<Option<PathBuf>, atomic::Failure> {
@@ -312,7 +304,7 @@ mod tests {
                 io::ErrorKind::InvalidInput,
             )))
         };
-        assert!(retry_vanished(&dir, &target, gone).is_err());
+        assert!(retry_vanished(&dir, name, gone).is_err());
         assert_eq!(calls.get(), 3);
     }
 
@@ -321,7 +313,7 @@ mod tests {
         let store = tempfile::tempdir().expect("a temporary store");
         let dir = store.path().join("impl");
         make_folder(&dir).expect("a stream folder");
-        let target = dir.join("20261013-120000-x.md");
+        let name = "20261013-120000-x.md";
         let calls = std::cell::Cell::new(0);
         let refused = || -> Result<Option<PathBuf>, atomic::Failure> {
             calls.set(calls.get() + 1);
@@ -329,7 +321,7 @@ mod tests {
                 io::ErrorKind::PermissionDenied,
             )))
         };
-        assert!(retry_vanished(&dir, &target, refused).is_err());
+        assert!(retry_vanished(&dir, name, refused).is_err());
         assert_eq!(calls.get(), 1);
     }
 }
