@@ -1,5 +1,5 @@
 //! Reads a `json` manifest's docs: each object of the array at `at` is one doc (design §4.2).
-//! It also holds the helpers that the folder kind shares with it: fields, one-liners and docs.
+//! It also holds the helpers that the folder and markdown kinds share with it: fields, one-liners and docs.
 //! Cases: MANK-JSON-01, MANK-JSON-02, MANK-JSON-03, MANK-JSON-04, MANK-JSON-05, MANK-JSON-06, MANK-JSON-07, MANK-JSON-08
 
 use std::path::Path;
@@ -166,46 +166,16 @@ fn is_heading(line: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
-    use std::fs;
-
     use super::docs;
     use crate::collections::frontmatter::Value;
     use crate::collections::manifest::{Kind, Manifest};
-    use crate::corpus::Doc;
+    use crate::collections::testing::{self, labels, tree};
 
     /// A json manifest named `cases` over `roots`, with `id` set to the entry field `name` and no other keys.
     fn manifest(roots: &[&str]) -> Manifest {
-        Manifest {
-            name: "cases".to_string(),
-            description: None,
-            owner: None,
-            kind: Kind::Json,
-            roots: roots.iter().map(|root| root.to_string()).collect(),
-            include: Vec::new(),
-            id: Some("name".to_string()),
-            title: None,
-            weights: BTreeMap::new(),
-            marker: None,
-            merge: Vec::new(),
-            at: None,
-        }
-    }
-
-    /// A temporary folder holding each `(path, text)` pair, with its folders made.
-    fn tree(files: &[(&str, &str)]) -> tempfile::TempDir {
-        let root = tempfile::tempdir().expect("a temporary folder");
-        for (rel, text) in files {
-            let path = root.path().join(rel);
-            fs::create_dir_all(path.parent().expect("a folder")).expect("a folder");
-            fs::write(path, text).expect("a file");
-        }
-        root
-    }
-
-    /// The labels of the docs, in order.
-    fn labels(found: &[Doc]) -> Vec<&str> {
-        found.iter().map(|doc| doc.label.as_str()).collect()
+        let mut found = testing::manifest(Kind::Json, roots);
+        found.id = Some("name".to_string());
+        found
     }
 
     /// MANK-JSON-01, MANK-JSON-02 and MANK-JSON-05: each object of the array at the pointer is one doc labelled by its id, and
@@ -309,6 +279,7 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn an_unreadable_json_file_warns_with_the_cannot_read_form() {
+        use std::fs;
         use std::os::unix::fs::PermissionsExt;
 
         let root = tree(&[

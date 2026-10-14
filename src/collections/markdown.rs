@@ -7,6 +7,7 @@ use serde_json::Value as Json;
 
 use super::frontmatter::{split, Value};
 use super::globs::{self, Matched};
+use super::json::scalar_fields;
 use super::manifest::{self, Manifest};
 use crate::corpus::Doc;
 use crate::fence;
@@ -54,23 +55,7 @@ fn read_doc(manifest: &Manifest, file: &Matched) -> Result<Doc, String> {
 fn sidecar_fields(text: &str) -> Result<Vec<(String, Value)>, String> {
     let json: Json =
         serde_json::from_str(text).map_err(|failure| format!("not valid JSON: {failure}"))?;
-    let Json::Object(fields) = json else {
-        return Ok(Vec::new());
-    };
-    Ok(fields
-        .iter()
-        .filter_map(|(key, value)| scalar_text(value).map(|text| (key.clone(), Value::Str(text))))
-        .collect())
-}
-
-/// A scalar as the text of a field: a string as it is, and a number or a boolean as written.
-fn scalar_text(value: &Json) -> Option<String> {
-    match value {
-        Json::String(text) => Some(text.clone()),
-        Json::Number(number) => Some(number.to_string()),
-        Json::Bool(flag) => Some(flag.to_string()),
-        Json::Null | Json::Array(_) | Json::Object(_) => None,
-    }
+    Ok(json.as_object().map_or_else(Vec::new, scalar_fields))
 }
 
 /// The doc of a matched file. Its label joins the manifest's name and the id; its path is its root-relative path.
@@ -168,41 +153,28 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn an_unreadable_doc_warns_with_the_cannot_read_form_and_the_others_load() {
-        use std::collections::BTreeMap;
         use std::fs;
         use std::os::unix::fs::PermissionsExt;
 
         use crate::collections::manifest::Kind;
+        use crate::collections::testing;
 
-        let dir = tempfile::tempdir().expect("a temporary folder");
-        fs::create_dir_all(dir.path().join("notes")).expect("a folder");
-        fs::write(dir.path().join("notes/open.md"), "# Open\n").expect("a doc");
+        let dir = testing::tree(&[
+            ("notes/open.md", "# Open\n"),
+            ("notes/locked.md", "# Locked\n"),
+        ]);
         let locked = dir.path().join("notes/locked.md");
-        fs::write(&locked, "# Locked\n").expect("a doc");
         fs::set_permissions(&locked, fs::Permissions::from_mode(0o000)).expect("a mode");
         if fs::read(&locked).is_ok() {
             // Running as root reads any file, so there is nothing to check.
             return;
         }
-        let manifest = Manifest {
-            name: "notes".to_string(),
-            description: None,
-            owner: None,
-            kind: Kind::Markdown,
-            roots: vec!["notes".to_string()],
-            include: Vec::new(),
-            id: None,
-            title: None,
-            weights: BTreeMap::new(),
-            marker: None,
-            merge: Vec::new(),
-            at: None,
-        };
+        let mut manifest = testing::manifest(Kind::Markdown, &["notes"]);
+        manifest.name = "notes".to_string();
         let mut warnings = Vec::new();
         let found = docs(&manifest, dir.path(), &mut warnings);
         fs::set_permissions(&locked, fs::Permissions::from_mode(0o644)).expect("restored");
-        let labels: Vec<&str> = found.iter().map(|doc| doc.label.as_str()).collect();
-        assert_eq!(labels, ["notes:open"]);
+        assert_eq!(testing::labels(&found), ["notes:open"]);
         assert_eq!(warnings.len(), 1, "{warnings:?}");
         assert!(
             warnings[0].starts_with("memex: warning: cannot read ")
