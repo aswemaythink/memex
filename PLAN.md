@@ -476,3 +476,4 @@ Each line is a design.md commit since S0.1; `git show <hash> -- design.md` shows
 - `ebbe4a0` design: settle the S5.4 audit's case/design contradictions (C1-C8)
 - `7829dd3` design: one fence definition everywhere; PLAN S5.4 done
 - `1e58663` design: fence closer rule, as fence.rs implements it
+- (hardening, 2026-10-14) design: R2 closed stdout is silent, exit 0 (§3.6); R3 a requested folder that can't be listed is that ref's io error (§3.3, extends e4a1323); R4 vanished log entries are skipped silently, writes re-create a removed stream folder (§4.3); R7 INFO-CAP-02 joins TTY as a unit-test-pinned exception; races and pipes are pinned by tests/stress (§4.4).

@@ -143,7 +143,7 @@ logs  (showing 1 of 1)
 
 ### 3.3 `show`
 
-It takes one or more refs and prints a section for each, separated by `=== <label> ===` lines. A ref repeated in one call prints once, at its first position. A requested file that can't be read is that ref's error (`io`), so `show` exits 1 as for any failed ref; unreadable files met while loading the corpus stay warnings (§4.2).
+It takes one or more refs and prints a section for each, separated by `=== <label> ===` lines. A ref repeated in one call prints once, at its first position. A requested file that can't be read, or a requested folder that can't be listed, is that ref's error (`io`), so `show` exits 1 as for any failed ref; unreadable files met while loading the corpus stay warnings (§4.2).
 
 - **File.** The header (full content for `.md`), then `cites`, then `cited by`, then the chain. `--up N` limits the depth; `--up 0` prints the file alone.
 - **Folder.** The folder's README if there is one; otherwise `(no README)`. Then the children (the folder's own README.md excluded, since it is already printed): subfolders with their README one-liners, and files with their header one-liners or `(no header)`. Then `cites`/`cited by` for the folder path, then the chain. A folder without a README lists its children and is not an error. `show .` is the map of the root.
@@ -214,7 +214,8 @@ With `--json`, stdout is always one JSON document, including errors. Without it,
   - 0: ok, including zero hits.
   - 1: not found or ambiguous.
   - 2: usage error.
-  - 3: environment error: no `.memex/` for `log` (§4.1), store not writable, or an I/O failure that stops the verb. A `show` ref that fails on I/O is that ref's error and exits 1 (§3.3).
+  - 3: environment error: no `.memex/` for `log` (§4.1), store not writable, or an I/O failure that stops the verb.
+- **Closed stdout.** If the reader closes stdout early (`memex search … | head -1`), memex stops writing, prints nothing on stderr and exits 0. A `show` ref that fails on I/O is that ref's error and exits 1 (§3.3).
 - **Determinism.** Lists are sorted (ties broken by ref) unless a rule gives another order: cites and evidence keep the order they are written in. `$MEMEX_NOW` is RFC 3339 UTC with `Z`, and it replaces the clock everywhere: log time, prune, `since:`, ages and `new_24h`. An invalid value exits 3. That lets fixtures compare stdout byte for byte.
 - **Ages.** Ages print as `Nm` below 60 minutes (`<60m`), `Nh` below 48 hours (`<48h`), else `Nd`.
 
@@ -287,6 +288,7 @@ show walks hub READMEs
 - **Concurrency.** There are no locks.
   - **Write.** memex writes a dot-prefixed temp file in the stream folder, then persists it to the final name without overwriting (`persist_noclobber`, atomic on all platforms). If the name exists, it retries with `-2`, `-3`, ….
   - **Read.** Readers ignore dotfiles, so a partial entry is never visible.
+  - **Vanished entries.** An entry or stream folder that disappears between listing and use (another process pruned it) is already gone: prune and readers skip it silently (`NotFound` never warns; every other error kind still does). A write whose stream folder is removed under it re-creates the folder and retries.
 - **Cleanup.** Logs go stale, so they're pruned. Every `memex log` deletes entries older than `keep_logs` (default `3d`; `"forever"` disables pruning) across the store. `keep_logs` takes `Nm`, `Nh`, `Nd`, `Nw` or `forever`. If the value is invalid, memex prints a warning on stderr and does not prune. It never deletes on config it can't read. The age of an entry comes from its filename timestamp, and only files matching `YYYYMMDD-HHMMSS-*.md` are ever deleted. Stream folders emptied by a prune are removed. There's no background process; pruning happens only on write. Anything worth keeping beyond that belongs in a collection, not a log. `rm -rf` still works.
 
 ### 4.4 Portability
@@ -302,7 +304,7 @@ One codebase for Linux, macOS and Windows, using only cross-platform APIs. No ma
 - **Encoding.** Non-UTF-8 file content is decoded lossily; non-UTF-8 path names are skipped.
 - **Errors.** Never print raw OS error strings. Print memex's message, the `io::ErrorKind` name and the path, so fixtures are identical across OSes.
 - **git.** Subprocess `git rev-parse`, no git library. If git is missing, treat the repo as non-git.
-- **TTY.** `std::io::IsTerminal`. TTY stdin for `log` is the one behaviour with no fixture case, since CI runners have no portable TTY; a unit test pins it.
+- **TTY.** `std::io::IsTerminal`. TTY stdin for `log` and INFO-CAP-02 are the behaviours with no fixture case (CI runners have no portable TTY; INFO-CAP-02's 3,000-byte boundary depends on the sandbox root's length, which differs by OS); unit tests pin them. Races and closed pipes are pinned by the opt-in stress suite (`tests/stress/`).
 - **Shell examples.** Docs use bash heredocs (Git Bash on Windows runs them); stdin piping works from any shell.
 
 ## 5. Usage patterns (the way of thinking)
