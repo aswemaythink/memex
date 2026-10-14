@@ -29,9 +29,6 @@ const ROSTER_LIMIT: usize = 50;
 /// The lines of a header that the index reads; `show` prints the whole header (design §2.1).
 const HEADER_LINES: usize = 60;
 
-/// The length of the stamp that starts a log's file name: `YYYYMMDD-HHMMSS` (design §4.3).
-const STAMP_LEN: usize = 15;
-
 /// The arguments of `memex search` once the grammar has passed them.
 pub struct Request {
     /// The words and filters, in the order given.
@@ -339,10 +336,7 @@ fn age_of(group: &str, doc: &Doc, now: Timestamp) -> Option<String> {
     if group != LOGS {
         return None;
     }
-    doc.id
-        .get(..STAMP_LEN)
-        .and_then(clock::parse_stamp)
-        .map(|stamp| render::age(now.seconds_since(stamp)))
+    clock::leading_stamp(&doc.id).map(|stamp| render::age(now.seconds_since(stamp)))
 }
 
 /// The words of a query: every token of every literal term in order, with no repeats. A term that holds no token adds none.

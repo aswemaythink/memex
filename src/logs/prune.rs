@@ -4,10 +4,11 @@
 
 use std::ffi::OsStr;
 use std::fs;
-use std::io::{self, Write};
+use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::clock::{self, Timestamp};
+use crate::error;
 use crate::root::slash;
 
 /// Deletes the entries of `store` whose stamps are more than `keep` seconds before `now`. A failure is a warning on stderr, never an error, so the entry that was just written stays and `log` still succeeds.
@@ -86,8 +87,11 @@ fn expired(path: &Path, keep: i64, now: Timestamp) -> bool {
 
 /// The stamp of a log entry name, `YYYYMMDD-HHMMSS-<slug>.md` (design §4.3). The name needs a slug of at least one character, and the stamp must be a real UTC date-time. Otherwise None.
 fn log_stamp(name: &str) -> Option<Timestamp> {
-    let stamp = name.get(..15)?;
-    let slug = name.get(15..)?.strip_prefix('-')?.strip_suffix(".md")?;
+    let stamp = name.get(..clock::STAMP_LEN)?;
+    let slug = name
+        .get(clock::STAMP_LEN..)?
+        .strip_prefix('-')?
+        .strip_suffix(".md")?;
     if slug.is_empty() || slug.contains('\n') {
         return None;
     }
@@ -134,12 +138,12 @@ fn remove_if_empty(dir: &Path) {
 
 /// Prints one warning line on stderr: `memex: warning: prune: <message> (<ErrorKind>) <path>`. A failed write is ignored, as there is nowhere left to report it.
 fn warn(message: &str, path: &Path, failure: &io::Error) {
-    let line = format!(
-        "memex: warning: prune: {message} ({:?}) {}",
+    let line = error::warning(&format!(
+        "prune: {message} ({:?}) {}",
         failure.kind(),
         slash(path)
-    );
-    let _ = writeln!(io::stderr().lock(), "{line}");
+    ));
+    error::warn(std::slice::from_ref(&line));
 }
 
 #[cfg(test)]

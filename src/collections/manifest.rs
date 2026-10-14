@@ -12,6 +12,7 @@ use serde_json::{Map, Value as Json};
 
 use super::{folder, json, markdown};
 use crate::corpus::{Doc, RESERVED};
+use crate::error;
 use crate::root::{lists, slash};
 use crate::text;
 use crate::walk::rel_string;
@@ -95,7 +96,7 @@ pub fn docs(manifest: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Vec
 
 /// The warning line for a file that cannot be used: `memex: warning: <path>: <reason>` (design §4.2).
 pub fn warning(path: &Path, reason: &str) -> String {
-    format!("memex: warning: {}: {reason}", slash(path))
+    error::warning(&format!("{}: {reason}", slash(path)))
 }
 
 /// The `.json` files of the collections folder `dir` by name: dot-named, non-UTF-8, symlink and folder entries are skipped. The

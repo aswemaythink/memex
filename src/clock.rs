@@ -9,6 +9,9 @@ use crate::error::Error;
 /// Seconds in a day, for splitting an instant into a day number and a time of day.
 const DAY: i64 = 86_400;
 
+/// The length of a log file's stamp, `YYYYMMDD-HHMMSS` (design §4.3).
+pub const STAMP_LEN: usize = 15;
+
 /// An instant in UTC, as whole seconds since 1970-01-01T00:00:00Z.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Timestamp(i64);
@@ -92,7 +95,7 @@ pub fn parse_rfc3339(text: &str) -> Option<Timestamp> {
 
 /// Parses a log file's stamp, `YYYYMMDD-HHMMSS`, as UTC (design §4.3). Any other shape, and any date or time that does not exist, is None.
 pub fn parse_stamp(text: &str) -> Option<Timestamp> {
-    let shaped = text.len() == 15 && text.as_bytes()[8] == b'-';
+    let shaped = text.len() == STAMP_LEN && text.as_bytes()[8] == b'-';
     if !shaped {
         return None;
     }
@@ -104,6 +107,12 @@ pub fn parse_stamp(text: &str) -> Option<Timestamp> {
         digits(text, 11..13)?,
         digits(text, 13..15)?,
     ])
+}
+
+/// The instant that the stamp at the start of `text` gives, as `parse_stamp` reads its first `STAMP_LEN` bytes, or None when
+/// there is no such stamp.
+pub fn leading_stamp(text: &str) -> Option<Timestamp> {
+    text.get(..STAMP_LEN).and_then(parse_stamp)
 }
 
 /// Parses a keep_logs duration (design §4.3): one to six digits with no leading zero, then `m`, `h`, `d` or `w`. Returns the length in seconds.

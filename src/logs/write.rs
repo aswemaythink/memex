@@ -76,7 +76,7 @@ pub fn title_of(body: &str) -> String {
 
 /// The slug of a title: its ASCII letters and digits in lowercase, each run of other characters as one
 /// dash, trimmed of dashes and at most 60 characters, or `entry` when nothing is left.
-pub fn slug_of(title: &str) -> String {
+fn slug_of(title: &str) -> String {
     let mut dashed = String::new();
     for ch in title.chars() {
         if ch.is_ascii_alphanumeric() {
@@ -135,7 +135,7 @@ fn prepare_store(place: &Place) -> Result<(), Error> {
         return Ok(());
     }
     fs::create_dir_all(&place.store)
-        .map_err(|failure| io_error("cannot create", &place.store, &failure))?;
+        .map_err(|failure| Error::io_at("cannot create", &place.store, &failure))?;
     match place.store.parent() {
         Some(memex_dir) if !place.in_git_dir => {
             write_new(memex_dir, ".gitignore", GITIGNORE).map(|_| ())
@@ -147,21 +147,22 @@ fn prepare_store(place: &Place) -> Result<(), Error> {
 /// True when the store is listed under its parent by its exact name and is a folder. A store listed as a file is not one, so
 /// the create that follows reports it as it always has (design §4.4 Name matching).
 fn store_exists(store: &Path) -> Result<bool, Error> {
-    let listed = store_listed(store).map_err(|failure| io_error("cannot read", store, &failure))?;
+    let listed =
+        store_listed(store).map_err(|failure| Error::io_at("cannot read", store, &failure))?;
     Ok(listed && store.is_dir())
 }
 
 /// Creates `dir` and everything above it, and refuses a `dir` that is a symlink: the store may be a link, but no folder
 /// below it is followed (the rule prune keeps too).
 fn make_folder(dir: &Path) -> Result<(), Error> {
-    fs::create_dir_all(dir).map_err(|failure| io_error("cannot create", dir, &failure))?;
+    fs::create_dir_all(dir).map_err(|failure| Error::io_at("cannot create", dir, &failure))?;
     match fs::symlink_metadata(dir) {
         Ok(meta) if meta.is_dir() => Ok(()),
         Ok(_) => Err(Error::io_message(format!(
             "cannot write to {}: it is a symlink, and memex follows none inside the store",
             slash(dir)
         ))),
-        Err(failure) => Err(io_error("cannot read", dir, &failure)),
+        Err(failure) => Err(Error::io_at("cannot read", dir, &failure)),
     }
 }
 
@@ -171,11 +172,11 @@ fn write_new(dir: &Path, name: &str, bytes: &[u8]) -> Result<Option<PathBuf>, Er
     let target = dir.join(name);
     let mut temp = temp_in(dir)?;
     temp.write_all(bytes)
-        .map_err(|failure| io_error("cannot write", &target, &failure))?;
+        .map_err(|failure| Error::io_at("cannot write", &target, &failure))?;
     match temp.persist_noclobber(&target) {
         Ok(_) => Ok(Some(target)),
         Err(failed) if taken(&target, &failed.error) => Ok(None),
-        Err(failed) => Err(io_error("cannot write", &target, &failed.error)),
+        Err(failed) => Err(Error::io_at("cannot write", &target, &failed.error)),
     }
 }
 
@@ -197,12 +198,7 @@ fn temp_in(dir: &Path) -> Result<NamedTempFile, Error> {
         }
         other => other,
     };
-    temp.map_err(|failure| io_error("cannot create a temporary file in", dir, &failure))
-}
-
-/// An I/O error that names what failed and the path, never the OS text (design §4.4).
-fn io_error(what: &str, path: &Path, failure: &io::Error) -> Error {
-    Error::io(&format!("{what} {}", slash(path)), failure)
+    temp.map_err(|failure| Error::io_at("cannot create a temporary file in", dir, &failure))
 }
 
 #[cfg(test)]

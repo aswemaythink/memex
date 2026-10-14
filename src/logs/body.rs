@@ -11,7 +11,7 @@ use crate::scan::fail;
 use crate::text;
 
 /// The most bytes a body may store, counted after the BOM is dropped, CRLF is read as LF and the bytes are decoded (design §3.4): 16 KiB.
-pub const LIMIT: usize = 16 * 1024;
+const LIMIT: usize = 16 * 1024;
 
 /// The most raw bytes a body may read. The BOM is three bytes, CRLF to LF at most halves the rest, and decoding never shrinks
 /// it, so a longer read stores as more than `LIMIT` bytes whatever it holds.
@@ -37,7 +37,7 @@ pub fn read_stdin() -> Result<String, Error> {
 /// The body that `input` carries, with CRLF turned into LF and a leading BOM dropped. `terminal` says whether `input` is a
 /// terminal, which is refused before anything is read. A body whose stored form is over `LIMIT` bytes, or one that is blank,
 /// is a usage error.
-pub fn read(terminal: bool, input: impl Read) -> Result<String, Error> {
+fn read(terminal: bool, input: impl Read) -> Result<String, Error> {
     if terminal {
         return Err(fail(Verb::Log, TERMINAL.to_string()));
     }

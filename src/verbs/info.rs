@@ -2,8 +2,6 @@
 //! Cases: INFO-HEAD-01, INFO-HEAD-02, INFO-INTENT-01, INFO-INTENT-02, INFO-INTENT-03, INFO-COLL-01, INFO-COLL-02, INFO-STREAM-01, INFO-STREAM-02, INFO-STREAM-03, INFO-STREAM-04, INFO-TO-01, INFO-TO-02, INFO-TO-03, INFO-TO-04, INFO-TO-05, INFO-HERE-01, INFO-HERE-02, INFO-HERE-03, INFO-HERE-04, INFO-USE-01, INFO-CAP-01, INFO-WARN-01, INFO-WARN-02, INFO-NOROOT-01, INFO-NOROOT-02, INFO-JSON-01, INFO-JSON-02, INFO-JSON-03, CASE-DUP-02, INIT-INFO-03
 
 use std::collections::BTreeMap;
-use std::env;
-use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 use crate::cli::Verb;
@@ -11,7 +9,7 @@ use crate::clock::{self, Timestamp};
 use crate::collections::frontmatter::Value;
 use crate::collections::manifest::{Kind, Loaded};
 use crate::corpus::{label_of, parent_of, readme_label, Corpus, Doc, CASES, HEADERS, READMES};
-use crate::error::Error;
+use crate::error::{self, Error};
 use crate::logs::values;
 use crate::render::info::{self as render, Atlas, Collection, HereLine, Intent, Stream, ToCount};
 use crate::root::slash;
@@ -20,9 +18,6 @@ use crate::verbs::here::{self, Here};
 
 /// A stream entry is new when it is no more than this many seconds old: 24 hours (design §3.5 `new_24h`).
 const NEW_SECONDS: i64 = 24 * 3_600;
-
-/// The length of the stamp that starts a log's file name, `YYYYMMDD-HHMMSS` (design §4.3).
-const STAMP_LEN: usize = 15;
 
 /// The arguments of `memex info` once the grammar has passed them.
 pub struct Request {
@@ -49,7 +44,7 @@ pub fn text_in(dir: PathBuf, now: Timestamp) -> Result<String, Error> {
 /// The atlas of `here` for `agent`, as text or as its JSON document. Each duplicate case id is warned on stderr.
 fn render_here(here: &Here, agent: Option<String>, now: Timestamp, json: bool) -> String {
     let duplicates = duplicate_warnings(&here.corpus);
-    warn(&duplicates);
+    error::warn(&duplicates);
     let atlas = atlas(here, agent, now, &duplicates);
     if json {
         render::document(&atlas)
@@ -60,14 +55,8 @@ fn render_here(here: &Here, agent: Option<String>, now: Timestamp, json: bool) -
 
 /// The agent id from `--agent`, else `$MEMEX_AGENT`, checked as `log` checks it (design §3.4). Its usage error names `info`.
 fn agent_of(flag: Option<&str>) -> Result<Option<String>, Error> {
-    values::agent(flag, env_agent().as_deref()).map_err(|error| fail(Verb::Info, error.message))
-}
-
-/// `$MEMEX_AGENT`, where an empty value counts as unset, as `log` reads it.
-fn env_agent() -> Option<String> {
-    env::var_os("MEMEX_AGENT")
-        .map(|value| value.to_string_lossy().into_owned())
-        .filter(|value| !value.is_empty())
+    values::agent(flag, values::env_agent().as_deref())
+        .map_err(|error| fail(Verb::Info, error.message))
 }
 
 /// The atlas of a run: the root and the store, the counts, the collections and streams, the `to` count, the `here` line, and the
@@ -224,7 +213,7 @@ impl Tally {
 
 /// The instant that a log's file name starts with (design §4.3), or None when the name has no stamp.
 fn stamp_of(doc: &Doc) -> Option<Timestamp> {
-    doc.id.get(..STAMP_LEN).and_then(clock::parse_stamp)
+    clock::leading_stamp(&doc.id)
 }
 
 /// The number of entries in the store that address the agent (design §3.5 `to` line), or None when there are none. The agent is
@@ -284,18 +273,7 @@ fn duplicate_warnings(corpus: &Corpus) -> Vec<String> {
         .into_iter()
         .filter(|(_, files)| files.len() > 1)
         .map(|(id, files)| {
-            format!(
-                "memex: warning: duplicate case id {id} in {}",
-                files.join(", ")
-            )
+            error::warning(&format!("duplicate case id {id} in {}", files.join(", ")))
         })
         .collect()
-}
-
-/// Prints each warning on its own stderr line. A failed write is ignored, as there is nowhere left to report it.
-fn warn(lines: &[String]) {
-    let mut stderr = io::stderr().lock();
-    for line in lines {
-        let _ = writeln!(stderr, "{line}");
-    }
 }

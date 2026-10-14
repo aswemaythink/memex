@@ -7,9 +7,8 @@ use std::sync::mpsc;
 
 use ignore::{DirEntry, WalkBuilder, WalkState};
 
-use crate::error::Error;
+use crate::error::{self, Error};
 use crate::par;
-use crate::root::slash;
 
 /// One file or folder of the intent layer.
 pub struct Entry {
@@ -78,8 +77,8 @@ fn found_of(
 /// that does not parse.
 fn walk_warning(error: &ignore::Error) -> Option<(PathBuf, String)> {
     let (path, failure) = named_failure(error)?;
-    let message = Error::io(&format!("cannot read {}", slash(path)), failure).message;
-    Some((path.to_path_buf(), format!("memex: warning: {message}")))
+    let message = Error::io_at("cannot read", path, failure).message;
+    Some((path.to_path_buf(), error::warning(&message)))
 }
 
 /// The path that a walk error names, and the io failure under it. The walk wraps a failure in its path and its depth, in

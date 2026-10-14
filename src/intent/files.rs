@@ -2,13 +2,12 @@
 //! Cases: HDR-CAP-01, HDR-CAP-04, HDR-BIN-01, HDR-EXT-01, INT-BOM-01, INT-LINE-01
 
 use std::fs::File;
-use std::io::{self, Read};
+use std::io::Read;
 use std::path::Path;
 
 use super::{cases, header, lead, readme};
 use crate::corpus::{Doc, HEADERS};
 use crate::error::Error;
-use crate::root::slash;
 use crate::walk::Entry;
 
 /// The most bytes of a file that header detection reads (design §2.1).
@@ -27,7 +26,8 @@ pub fn file_docs(entry: &Entry) -> Result<Vec<Doc>, Error> {
 /// still reports one that cannot be read (design §4.2).
 fn header_doc(entry: &Entry) -> Result<Option<Doc>, Error> {
     if !header::has_family(&entry.path) {
-        File::open(&entry.path).map_err(|failure| io_error(&entry.path, &failure))?;
+        File::open(&entry.path)
+            .map_err(|failure| Error::io_at("cannot read", &entry.path, &failure))?;
         return Ok(None);
     }
     let head = read_head(&entry.path)?;
@@ -47,17 +47,12 @@ fn header_doc(entry: &Entry) -> Result<Option<Doc>, Error> {
 
 /// The first bytes of a file, at most `HEAD_BYTES`.
 fn read_head(path: &Path) -> Result<Vec<u8>, Error> {
-    let file = File::open(path).map_err(|failure| io_error(path, &failure))?;
+    let file = File::open(path).map_err(|failure| Error::io_at("cannot read", path, &failure))?;
     let mut head = Vec::new();
     file.take(HEAD_BYTES)
         .read_to_end(&mut head)
-        .map_err(|failure| io_error(path, &failure))?;
+        .map_err(|failure| Error::io_at("cannot read", path, &failure))?;
     Ok(head)
-}
-
-/// A read failure, naming the path and the io kind and never the OS text (design §4.4).
-fn io_error(path: &Path, failure: &io::Error) -> Error {
-    Error::io(&format!("cannot read {}", slash(path)), failure)
 }
 
 #[cfg(all(test, unix))]

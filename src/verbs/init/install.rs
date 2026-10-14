@@ -7,7 +7,7 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use super::files::{io_error, label, lists, write_temp};
+use super::files::{label, lists, write_temp};
 use super::{Action, Report};
 use crate::error::Error;
 use crate::root::slash;
@@ -46,18 +46,19 @@ pub fn run(target: &Path, report: &mut Report) -> Result<(), Error> {
 fn running_binary() -> Result<Vec<u8>, Error> {
     let source = env::current_exe()
         .map_err(|failure| Error::io("cannot find the running memex", &failure))?;
-    fs::read(&source).map_err(|failure| io_error("cannot read", &source, &failure))
+    fs::read(&source).map_err(|failure| Error::io_at("cannot read", &source, &failure))
 }
 
 /// Writes the binary into `dir`: created when there is none, kept when the file holds the same bytes, and replaced when they differ.
 fn install(dir: &Path, bytes: &[u8]) -> Result<Action, Error> {
     let dest = dir.join(EXE);
     if !lists(dir, EXE)? {
-        fs::create_dir_all(dir).map_err(|failure| io_error("cannot create", dir, &failure))?;
+        fs::create_dir_all(dir).map_err(|failure| Error::io_at("cannot create", dir, &failure))?;
         write_binary(dir, bytes)?;
         return Ok(Action::Created);
     }
-    let current = fs::read(&dest).map_err(|failure| io_error("cannot read", &dest, &failure))?;
+    let current =
+        fs::read(&dest).map_err(|failure| Error::io_at("cannot read", &dest, &failure))?;
     if current == bytes {
         return Ok(Action::Kept);
     }
@@ -77,7 +78,7 @@ fn write_binary(dir: &Path, bytes: &[u8]) -> Result<(), Error> {
             let what = format!("cannot replace {}, which may be running", slash(&dest));
             Error::io(&what, &failed.error)
         } else {
-            io_error("cannot write", &dest, &failed.error)
+            Error::io_at("cannot write", &dest, &failed.error)
         }
     })?;
     Ok(())
@@ -112,7 +113,7 @@ fn env_dir(name: &str) -> Result<PathBuf, Error> {
 fn make_executable(path: &Path) -> Result<(), Error> {
     use std::os::unix::fs::PermissionsExt;
     fs::set_permissions(path, fs::Permissions::from_mode(0o755))
-        .map_err(|failure| io_error("cannot make executable", path, &failure))
+        .map_err(|failure| Error::io_at("cannot make executable", path, &failure))
 }
 
 /// A Windows program is run by its `.exe` name, so there is no mode to set.

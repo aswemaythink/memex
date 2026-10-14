@@ -6,7 +6,7 @@
 - `grammar.rs`: the grammar's tables: the flags each verb takes, what each flag takes after it, and the words each verb takes.
 - `scan.rs`: reads one verb's arguments against its row of `grammar.rs`, with each word and flag value checked as design §3 says.
 - `help.rs`: the help texts and the grammar block of design §3, with the usage lines that usage errors print.
-- `error.rs`: the fatal error of design §3.6, its codes and exit codes, and its text and JSON renderings.
+- `error.rs`: the fatal error of design §3.6, its codes and exit codes, and its text and JSON renderings; and the warning line of §4.2 with the stderr printer that prints each warning once per run.
 - `clock.rs`: `MEMEX_NOW` or the system clock, in UTC, and the RFC 3339 and log-stamp formats of design §3.6.
 - `root.rs`: where `log` writes (design §4.1): the nearest `.memex/`, the git toplevel and main checkout, and the store path, found through git subprocesses.
 - `atomic.rs`: the temp file that every atomic write goes through, dot-prefixed and with an ordinary file's mode (design §4.4).

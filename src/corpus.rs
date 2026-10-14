@@ -3,15 +3,14 @@
 //! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, INT-NAME-01, INT-NAME-02, INT-CHAIN-01, INT-BOM-01, MAN-LOAD-02, REF-AMBIG-02, REF-AMBIG-03, REF-RESERVED-03, REF-RESERVED-04
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::io::{self, Write};
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, OnceLock, PoisonError};
+use std::sync::OnceLock;
 use std::thread;
 
 use crate::cite;
 use crate::collections::frontmatter::Value;
 use crate::collections::manifest;
-use crate::error::Error;
+use crate::error::{self, Error};
 use crate::intent::files::file_docs;
 use crate::logs::read::load as load_logs;
 use crate::par;
@@ -145,9 +144,7 @@ impl Corpus {
             corpus.kinds.insert(entry.rel.clone(), kind);
             match docs {
                 Ok(docs) => docs.into_iter().for_each(|doc| corpus.insert(doc)),
-                Err(error) => corpus
-                    .read_warnings
-                    .push(format!("memex: warning: {}", error.message)),
+                Err(error) => corpus.read_warnings.push(error::warning(&error.message)),
             }
         }
         for found in manifest::load(root, &mut corpus.manifest_warnings) {
@@ -160,10 +157,10 @@ impl Corpus {
             });
             docs.into_iter().for_each(|doc| corpus.insert(doc));
         }
-        warn(&corpus.read_warnings);
-        warn(&corpus.manifest_warnings);
+        error::warn(&corpus.read_warnings);
+        error::warn(&corpus.manifest_warnings);
         for loaded in &corpus.manifests {
-            warn(&loaded.warnings);
+            error::warn(&loaded.warnings);
         }
         Ok(corpus)
     }
@@ -173,7 +170,7 @@ impl Corpus {
         if let Some(store) = store {
             let before = self.read_warnings.len();
             let logs = load_logs(store, &mut self.read_warnings);
-            warn(&self.read_warnings[before..]);
+            error::warn(&self.read_warnings[before..]);
             self.streams = logs.iter().map(|doc| doc.collection.clone()).collect();
             for doc in logs {
                 self.insert(doc);
@@ -315,19 +312,6 @@ pub fn readme_label(dir: &str) -> String {
         "README.md".to_string()
     } else {
         format!("{dir}/README.md")
-    }
-}
-
-/// Prints each warning on its own stderr line, once per run: a line that a second load of the same tree repeats, as an
-/// `elsewhere` ref loads a root again, is not printed again. A failed write is ignored, as there is nowhere left to report it.
-fn warn(lines: &[String]) {
-    static PRINTED: Mutex<BTreeSet<String>> = Mutex::new(BTreeSet::new());
-    let mut printed = PRINTED.lock().unwrap_or_else(PoisonError::into_inner);
-    let mut stderr = io::stderr().lock();
-    for line in lines {
-        if printed.insert(line.clone()) {
-            let _ = writeln!(stderr, "{line}");
-        }
     }
 }
 

@@ -8,7 +8,7 @@ pub mod header;
 pub mod readme;
 
 /// The paragraphs of a block: runs of non-blank lines, each joined with newlines. Blank lines separate them.
-pub fn paragraphs(text: &str) -> Vec<String> {
+fn paragraphs(text: &str) -> Vec<String> {
     let mut found = Vec::new();
     let mut run: Vec<&str> = Vec::new();
     for line in text.lines() {

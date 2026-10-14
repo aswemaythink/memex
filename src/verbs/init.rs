@@ -8,7 +8,7 @@ mod install;
 use std::path::PathBuf;
 
 use crate::clock::Timestamp;
-use crate::error::Error;
+use crate::error::{self, Error};
 use crate::root;
 use crate::verbs::{here, info};
 
@@ -57,7 +57,8 @@ impl Report {
 
     /// Records a warning on stderr, in memex's `memex: warning:` form.
     fn warn(&mut self, text: &str) {
-        self.stderr.push_str(&format!("memex: warning: {text}\n"));
+        self.stderr.push_str(&error::warning(text));
+        self.stderr.push('\n');
     }
 }
 

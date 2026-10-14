@@ -9,6 +9,7 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use crate::clock;
+use crate::error;
 use crate::root::{lists, slash};
 use crate::text;
 
@@ -104,7 +105,7 @@ fn judge(path: &Path, keep_logs: &str) -> Loaded {
 
 /// The stderr line for a config file that cannot be used, or holds a value that is not valid.
 fn warning(path: &Path, reason: &str) -> String {
-    format!("memex: warning: {}: {reason}", slash(path))
+    error::warning(&format!("{}: {reason}", slash(path)))
 }
 
 #[cfg(test)]

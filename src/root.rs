@@ -44,7 +44,7 @@ struct Git {
 /// Finds the place `log` writes from `cwd`. A missing `.memex/` is the `no_root` error (exit 3).
 pub fn locate(cwd: &Path) -> Result<Place, Error> {
     let canonical = dunce::canonicalize(cwd)
-        .map_err(|failure| Error::io(&format!("cannot resolve {}", slash(cwd)), &failure))?;
+        .map_err(|failure| Error::io_at("cannot resolve", cwd, &failure))?;
     let found = nearest_memex(&canonical);
     let git = Git::probe(&canonical);
     let toplevel = git.as_ref().and_then(|git| git.toplevel.clone());

@@ -6,14 +6,13 @@ use std::path::Path;
 use super::sentence;
 use crate::corpus::{Doc, READMES};
 use crate::error::Error;
-use crate::root::slash;
 use crate::text;
 
 /// The doc of the README at `path`, which the walk labels `rel`: its whole text, labelled by its path (design §3.1). A README
 /// that cannot be read is an error, which the corpus warns about and skips (design §4.2).
 pub fn doc(rel: &str, path: &Path) -> Result<Doc, Error> {
-    let contents = text::read(path)
-        .map_err(|failure| Error::io(&format!("cannot read {}", slash(path)), &failure))?;
+    let contents =
+        text::read(path).map_err(|failure| Error::io_at("cannot read", path, &failure))?;
     Ok(Doc {
         label: rel.to_string(),
         collection: READMES.to_string(),
@@ -27,7 +26,7 @@ pub fn doc(rel: &str, path: &Path) -> Result<Doc, Error> {
 
 /// The one-liner of a README: the first sentence of its first prose paragraph after the H1, or the H1 text when no
 /// paragraph follows it. A README whose first line is not an H1 is read from its top in the same way.
-pub fn one_liner(text: &str) -> String {
+fn one_liner(text: &str) -> String {
     let lines: Vec<&str> = text.lines().collect();
     let Some(first) = lines.iter().position(|line| !line.trim().is_empty()) else {
         return String::new();

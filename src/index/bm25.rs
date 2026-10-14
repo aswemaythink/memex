@@ -4,10 +4,10 @@
 use std::collections::BTreeMap;
 
 /// The saturation constant k1 (PLAN §4).
-pub const K1: f64 = 1.2;
+const K1: f64 = 1.2;
 
 /// The length normalisation constant b (PLAN §4).
-pub const B: f64 = 0.75;
+const B: f64 = 0.75;
 
 /// The weight of each field in the order id, title, body (PLAN §4): the defaults, which a manifest's `weights` replace.
 pub const WEIGHTS: [f64; 3] = [4.0, 3.0, 1.0];

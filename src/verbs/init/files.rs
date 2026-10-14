@@ -2,7 +2,7 @@
 //! Cases: INIT-FRESH-01, INIT-KEEP-01, INIT-KEEP-02, INIT-RERUN-01, INIT-IO-01, INIT-LINK-01, INIT-LINK-02
 
 use std::fs;
-use std::io::{self, Write};
+use std::io::Write;
 use std::path::Path;
 
 use tempfile::NamedTempFile;
@@ -22,7 +22,7 @@ pub fn store(target: &Path, report: &mut Report) -> Result<(), Error> {
     let memex = target.join(".memex");
     let collections = memex.join("collections");
     fs::create_dir_all(&collections)
-        .map_err(|failure| io_error("cannot create", &collections, &failure))?;
+        .map_err(|failure| Error::io_at("cannot create", &collections, &failure))?;
     // The logs and the cache stay out of git by default, with the bytes `log` writes beside a new store (design §4.1 item 4).
     place(target, &memex, ".gitignore", GITIGNORE, report)?;
     place(target, &memex, "config.json", CONFIG, report)?;
@@ -50,7 +50,7 @@ fn place(
 /// True when `dir` lists an entry named exactly `name`, as `root::lists` reads it, with a failed listing as the I/O error that
 /// names `dir`. Special names are never probed with `exists()` (design §4.4 Name matching).
 pub fn lists(dir: &Path, name: &str) -> Result<bool, Error> {
-    root::lists(dir, name).map_err(|failure| io_error("cannot read", dir, &failure))
+    root::lists(dir, name).map_err(|failure| Error::io_at("cannot read", dir, &failure))
 }
 
 /// Writes a new file `dir/name` through a temp file in `dir`, so no reader sees part of it. A name that is taken is an error, never
@@ -59,7 +59,7 @@ pub fn create_new(dir: &Path, name: &str, bytes: &[u8]) -> Result<(), Error> {
     let target = dir.join(name);
     let temp = write_temp(dir, bytes, None)?;
     temp.persist_noclobber(&target)
-        .map_err(|failed| io_error("cannot create", &target, &failed.error))?;
+        .map_err(|failed| Error::io_at("cannot create", &target, &failed.error))?;
     Ok(())
 }
 
@@ -80,7 +80,7 @@ pub fn replace(path: &Path, bytes: &[u8]) -> Result<(), Error> {
         )));
     };
     let permissions = fs::metadata(path)
-        .map_err(|failure| io_error("cannot read", path, &failure))?
+        .map_err(|failure| Error::io_at("cannot read", path, &failure))?
         .permissions();
     if permissions.readonly() {
         return Err(Error::io_message(format!(
@@ -90,7 +90,7 @@ pub fn replace(path: &Path, bytes: &[u8]) -> Result<(), Error> {
     }
     let temp = write_temp(dir, bytes, Some(permissions))?;
     temp.persist(path)
-        .map_err(|failed| io_error("cannot write", path, &failed.error))?;
+        .map_err(|failed| Error::io_at("cannot write", path, &failed.error))?;
     Ok(())
 }
 
@@ -99,12 +99,12 @@ pub fn replace(path: &Path, bytes: &[u8]) -> Result<(), Error> {
 pub fn is_link(path: &Path) -> Result<bool, Error> {
     fs::symlink_metadata(path)
         .map(|meta| meta.file_type().is_symlink())
-        .map_err(|failure| io_error("cannot read", path, &failure))
+        .map_err(|failure| Error::io_at("cannot read", path, &failure))
 }
 
 /// The text of the file at `path`, which must be UTF-8. A file that memex cannot read exactly is never rewritten (design §4.4 Encoding).
 pub fn read_text(path: &Path, target: &Path) -> Result<String, Error> {
-    let bytes = fs::read(path).map_err(|failure| io_error("cannot read", path, &failure))?;
+    let bytes = fs::read(path).map_err(|failure| Error::io_at("cannot read", path, &failure))?;
     String::from_utf8(bytes).map_err(|_| {
         Error::io_message(format!(
             "cannot update {}: it is not UTF-8",
@@ -121,9 +121,9 @@ pub fn write_temp(
     permissions: Option<fs::Permissions>,
 ) -> Result<NamedTempFile, Error> {
     let mut temp = atomic::temp_in(dir, permissions)
-        .map_err(|failure| io_error("cannot create a temporary file in", dir, &failure))?;
+        .map_err(|failure| Error::io_at("cannot create a temporary file in", dir, &failure))?;
     temp.write_all(bytes)
-        .map_err(|failure| io_error("cannot write", dir, &failure))?;
+        .map_err(|failure| Error::io_at("cannot write", dir, &failure))?;
     Ok(temp)
 }
 
@@ -133,11 +133,6 @@ pub fn label(target: &Path, path: &Path) -> String {
         Ok(rel) => slash(rel),
         Err(_) => slash(path),
     }
-}
-
-/// An I/O error that names what failed, the path and the io::ErrorKind, and never the OS text (design §4.4 Errors).
-pub fn io_error(what: &str, path: &Path, failure: &io::Error) -> Error {
-    Error::io(&format!("{what} {}", slash(path)), failure)
 }
 
 #[cfg(test)]

@@ -1,7 +1,12 @@
-//! The fatal error of design §3.6: its five codes, their exit codes, and the text and JSON renderings.
-//! Cases: CLI-EXIT-*, CLI-EXIT-01, CLI-JSON-*, CLI-JSON-01, CLI-JSON-02, CLI-JSON-05, DISC-ROOT-04, LOG-WRITE-11
+//! The fatal error of design §3.6 and the warning line of §4.2, with the stderr printer for warnings.
+//! Cases: CLI-EXIT-*, CLI-EXIT-01, CLI-JSON-*, CLI-JSON-01, CLI-JSON-02, CLI-JSON-05, DISC-ROOT-04, LOG-WRITE-11, INFO-WARN-01, INFO-WARN-02, MAN-LOAD-02
 
+use std::collections::BTreeSet;
 use std::io::{self, Write};
+use std::path::Path;
+use std::sync::{Mutex, PoisonError};
+
+use crate::root::slash;
 
 /// The code of a fatal error, as design §3.6 names them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -68,6 +73,11 @@ impl Error {
             message: format!("{what} ({:?})", error.kind()),
             notes: Vec::new(),
         }
+    }
+
+    /// An I/O error that names what failed and the path, never the OS text (design §4.4): `<what> <path> (<ErrorKind>)`.
+    pub fn io_at(what: &str, path: &Path, error: &io::Error) -> Error {
+        Error::io(&format!("{what} {}", slash(path)), error)
     }
 
     /// An environment error with a message memex wrote itself, such as an invalid MEMEX_NOW: exit 3, code `io`.
@@ -147,6 +157,24 @@ pub fn report(error: &Error, json: bool) -> i32 {
     error.exit_code()
 }
 
+/// The warning line for `text`: `memex: warning: <text>`, the form that every warning takes on stderr (design §4.2).
+pub fn warning(text: &str) -> String {
+    format!("memex: warning: {text}")
+}
+
+/// Prints each warning on its own stderr line, once per run: a line that a second load of the same tree repeats, as an
+/// `elsewhere` ref loads a root again, is not printed again. A failed write is ignored, as there is nowhere left to report it.
+pub fn warn(lines: &[String]) {
+    static PRINTED: Mutex<BTreeSet<String>> = Mutex::new(BTreeSet::new());
+    let mut printed = PRINTED.lock().unwrap_or_else(PoisonError::into_inner);
+    let mut stderr = io::stderr().lock();
+    for line in lines {
+        if printed.insert(line.clone()) {
+            let _ = writeln!(stderr, "{line}");
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -162,6 +190,22 @@ mod tests {
         assert_eq!(
             error.json(),
             r#"{"error":{"code":"usage","message":"unknown flag '--x'"}}"#
+        );
+    }
+
+    #[test]
+    fn io_at_names_what_failed_the_path_and_the_kind() {
+        let failure = io::Error::from(io::ErrorKind::NotFound);
+        let error = Error::io_at("cannot read", Path::new("a/b.md"), &failure);
+        assert_eq!(error.code, Code::Io);
+        assert_eq!(error.message, "cannot read a/b.md (NotFound)");
+    }
+
+    #[test]
+    fn a_warning_line_has_the_memex_prefix() {
+        assert_eq!(
+            warning("x.json: not valid"),
+            "memex: warning: x.json: not valid"
         );
     }
 }

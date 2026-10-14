@@ -6,7 +6,6 @@ use std::path::Path;
 use crate::collections::frontmatter::Value;
 use crate::corpus::{parent_of, Doc, CASES};
 use crate::error::Error;
-use crate::root::slash;
 use crate::text::{self, strip_bom};
 
 /// The case docs of the CASES.md at `rel`, whose text is `text`, in the order they are written (design §2.2). A leading
@@ -23,8 +22,8 @@ pub fn parse(rel: &str, text: &str) -> Vec<Doc> {
 /// The case docs of the CASES.md at `path`, which the walk labels `rel` (design §2.2). A file that cannot be read is an error,
 /// which the corpus warns about and skips (design §4.2).
 pub fn read(rel: &str, path: &Path) -> Result<Vec<Doc>, Error> {
-    let contents = text::read(path)
-        .map_err(|failure| Error::io(&format!("cannot read {}", slash(path)), &failure))?;
+    let contents =
+        text::read(path).map_err(|failure| Error::io_at("cannot read", path, &failure))?;
     Ok(parse(rel, &contents))
 }
 

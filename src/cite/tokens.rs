@@ -38,7 +38,7 @@ pub fn is_case_id(id: &str) -> bool {
 }
 
 /// True for a family prefix such as `NAME-` or `X-`: an id body followed by one dash (design §2.3).
-pub fn is_family_prefix(text: &str) -> bool {
+fn is_family_prefix(text: &str) -> bool {
     text.strip_suffix('-').is_some_and(is_id_body)
 }
 

@@ -9,7 +9,7 @@ use std::path::Path;
 use crate::cli::Verb;
 use crate::corpus::RESERVED;
 use crate::error::Error;
-use crate::root::{lists, nearest_memex, slash};
+use crate::root::{lists, nearest_memex};
 use crate::scan::fail;
 
 /// The Windows device names, which no stream may take on any OS, so a store stays portable (design §3.4). Windows
@@ -73,7 +73,8 @@ pub fn check_collections(stream: &str, cwd: &Path, owner: &Path) -> Result<(), E
 /// True when the `.memex/` folder `memex` lists a folder named exactly `collections`, and that folder lists a file named exactly
 /// `file`. The folder's name is matched against the listing before it is read, so `Collections/` is not the folder (design §4.4).
 fn lists_manifest(memex: &Path, file: &str) -> Result<bool, Error> {
-    let listed = lists(memex, "collections").map_err(|failure| io_error(memex, &failure))?;
+    let listed = lists(memex, "collections")
+        .map_err(|failure| Error::io_at("cannot read", memex, &failure))?;
     if !listed {
         return Ok(false);
     }
@@ -86,20 +87,15 @@ fn lists_file(dir: &Path, file: &str) -> Result<bool, Error> {
     let listing = match fs::read_dir(dir) {
         Ok(listing) => listing,
         Err(failure) if failure.kind() == io::ErrorKind::NotFound => return Ok(false),
-        Err(failure) => return Err(io_error(dir, &failure)),
+        Err(failure) => return Err(Error::io_at("cannot read", dir, &failure)),
     };
     for item in listing {
-        let item = item.map_err(|failure| io_error(dir, &failure))?;
+        let item = item.map_err(|failure| Error::io_at("cannot read", dir, &failure))?;
         if item.file_name().to_str() == Some(file) && item.path().is_file() {
             return Ok(true);
         }
     }
     Ok(false)
-}
-
-/// An I/O error that names the folder and the io::ErrorKind, never the OS text (design §4.4 Errors).
-fn io_error(dir: &Path, failure: &io::Error) -> Error {
-    Error::io(&format!("cannot read {}", slash(dir)), failure)
 }
 
 #[cfg(test)]

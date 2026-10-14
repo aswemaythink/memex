@@ -1,6 +1,8 @@
-//! Checks the values of `--to`, `--tag` and the agent id (design §3.4).
+//! Checks the values of `--to`, `--tag` and the agent id, and reads `$MEMEX_AGENT` (design §3.4).
 //! Each value matches one grammar, and a list drops its repeats, keeping the first place of each.
 //! Cases: LOG-FLAG-01, LOG-FLAG-02, LOG-FLAG-03, LOG-FLAG-04, LOG-FLAG-05, LOG-FLAG-06
+
+use std::env;
 
 use crate::cli::Verb;
 use crate::error::Error;
@@ -23,6 +25,13 @@ pub fn list(flag: &str, items: &[String]) -> Result<Vec<String>, Error> {
         }
     }
     Ok(kept)
+}
+
+/// `$MEMEX_AGENT`, where an empty value counts as unset, as `log` and `info` read it.
+pub fn env_agent() -> Option<String> {
+    env::var_os("MEMEX_AGENT")
+        .map(|value| value.to_string_lossy().into_owned())
+        .filter(|value| !value.is_empty())
 }
 
 /// The agent id: `--agent` when it is given, else `$MEMEX_AGENT` when it is set. Only the value that is used is checked.

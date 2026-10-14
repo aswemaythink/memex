@@ -8,9 +8,9 @@ use std::path::{Path, PathBuf};
 
 use crate::collections::frontmatter::split;
 use crate::corpus::Doc;
-use crate::error::Error;
+use crate::error::{self, Error};
 use crate::logs::write::title_of;
-use crate::root::{slash, store_listed};
+use crate::root::store_listed;
 use crate::text;
 
 /// Every entry in the store, as docs. A store that is not listed under its parent by its exact name, or is missing, has none.
@@ -30,7 +30,7 @@ pub fn load(store: &Path, warnings: &mut Vec<String>) -> Vec<Doc> {
         for (file, path) in entries(&folder, false, warnings) {
             match entry_doc(&stream, &file, &path) {
                 Ok(doc) => docs.push(doc),
-                Err(error) => warnings.push(format!("memex: warning: {}", error.message)),
+                Err(error) => warnings.push(error::warning(&error.message)),
             }
         }
     }
@@ -82,7 +82,8 @@ fn entries(dir: &Path, folders: bool, warnings: &mut Vec<String>) -> Vec<(String
 
 /// One log entry as a doc: its frontmatter fields, its body as the text, and its title line.
 fn entry_doc(stream: &str, file: &str, path: &Path) -> Result<Doc, Error> {
-    let contents = text::read(path).map_err(|failure| io_error(path, &failure))?;
+    let contents =
+        text::read(path).map_err(|failure| Error::io_at("cannot read", path, &failure))?;
     let document = split(&contents);
     let id = file.strip_suffix(".md").unwrap_or(file).to_string();
     Ok(Doc {
@@ -98,12 +99,7 @@ fn entry_doc(stream: &str, file: &str, path: &Path) -> Result<Doc, Error> {
 
 /// The warning for a path that cannot be read: memex's words, the io kind and the path (design §4.2 and §4.4).
 fn warning(path: &Path, failure: &io::Error) -> String {
-    format!("memex: warning: {}", io_error(path, failure).message)
-}
-
-/// A read failure, naming the path and the io kind and never the OS text (design §4.4).
-fn io_error(path: &Path, failure: &io::Error) -> Error {
-    Error::io(&format!("cannot read {}", slash(path)), failure)
+    error::warning(&Error::io_at("cannot read", path, failure).message)
 }
 
 #[cfg(all(test, unix))]
