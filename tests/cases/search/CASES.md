@@ -183,13 +183,21 @@
 
 - `SRCH-NOHITS-01` A query whose words match nothing prints nothing on stdout, exits 0, and prints `memex: no hits for <words>; try fewer or other words, or memex info` on stderr, with the words as typed and the filters left out.
   design §3.2 Zero hits. Fixture: a README. Run: memex search Zzqq tag:show.
-- `SRCH-NOHITS-02` A query with filters and no words that matches nothing prints nothing on stdout, exits 0, and prints `memex: no docs match <filters>; try fewer filters, or memex info` on stderr, with the filters as typed, both for a listing and for a roster narrowed by filters.
-  design §3.2 Zero hits (with filters only, whose tail design §3.2 gives as `try fewer filters, or memex info`, cdd8786). Fixture: a README. Run: memex search tag:nope, then memex search --in readmes agent:cook-2.
-- `SRCH-NOHITS-03` With `--json`, a query with no hits keeps stdout one valid document with an empty groups list, and stderr carries the hint of SRCH-NOHITS-01 for words or of SRCH-NOHITS-02 for filters, exit 0.
+- `SRCH-NOHITS-02` A query with two or more filters and no words that matches nothing prints nothing on stdout, exits 0, and prints `memex: no docs match <filters>; try fewer filters, or memex info` on stderr, with the filters as typed, both for a listing and for a roster narrowed by filters. One filter is worded by SRCH-NOHITS-04.
+  design §3.2 Zero hits (with filters only, whose tail design §3.2 gives as `try fewer filters, or memex info`, cdd8786). Fixture: a README. Run: memex search tag:nope agent:cook-2, then memex search --in readmes tag:nope agent:cook-2.
+- `SRCH-NOHITS-03` With `--json`, a query with no hits keeps stdout one valid document with an empty groups list, and stderr carries the hint of SRCH-NOHITS-01 for words or of SRCH-NOHITS-04 for a single filter, exit 0.
   design §3.2 Zero hits and §3.6 (the search document). Fixture: a README. Run: memex search Zzqq --json, then memex search tag:nope --json.
+- `SRCH-NOHITS-04` A query with one filter and no words that matches nothing prints nothing on stdout, exits 0, and prints `memex: no docs match <filter>; try another value, or memex info` on stderr, with the filter as typed, both for a listing and for a roster narrowed by that filter.
+  design §3.2 Zero hits (with a single filter it reads `try another value, or memex info`). Fixture: a README. Run: memex search tag:nope, then memex search --in readmes agent:cook-2.
 
 ## FOLD
 
 - `SRCH-FOLD-01` A filter value is compared as Unicode lowercasing gives it, so `tag:CAFÉ` and `tag:café` both find the log tagged `café`, while `tag:CAFE` finds nothing, since `é` is not `e`.
   design §3.2 Filters (`field:value` is exact and case-insensitive). Fixture: one log entry in stream `impl`, tagged `café`. Run: memex search tag:CAFÉ, then memex search tag:café, then memex search tag:CAFE.
->
+
+## LEGEND
+
+- `SRCH-LEGEND-01` A roster group's heading names its `<-N` marker, so `cases  (showing 2 of 52; <-N cited by N)`, while a search group's heading names no marker and reads `(showing N of M)`.
+  design §3.2 Markers (a roster group reads `cases  (showing 50 of 214; <-N cited by N)`). Fixture: the widget cases of SRCH-ORPHAN-01. Run: memex search --in cases --limit 2, then memex search widget --in cases --limit 2.
+- `SRCH-LEGEND-02` A group heading names each fuzzy variant its lines use, once each in alphabetical order as `[~w] fuzzy match on w`, and a group whose hits are all exact has no legend, so `readmes` names `grammer` and `grammir` while `cases` names nothing.
+  design §3.2 Markers (a group with a fuzzy hit adds `; [~w] fuzzy match on w`). Fixture: three READMEs holding `grammir`, `grammar` and `grammer`, and a CASES.md entry that says `grammar`. Run: memex search grammar.

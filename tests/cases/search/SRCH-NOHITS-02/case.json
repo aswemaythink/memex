@@ -1,1 +1,1 @@
-{"steps": [{"args": ["search", "tag:nope"]}, {"args": ["search", "--in", "readmes", "agent:cook-2"]}]}
+{"steps": [{"args": ["search", "tag:nope", "agent:cook-2"]}, {"args": ["search", "--in", "readmes", "tag:nope", "agent:cook-2"]}]}

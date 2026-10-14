@@ -1,7 +1,7 @@
 $ memex search grammar
 exit 0
 stdout
-| readmes  (showing 2 of 2)
+| readmes  (showing 2 of 2; [~grammer] fuzzy match on grammer)
 |   b/README.md  The grammar rules apply.
 |   a/README.md  The grammer rules apply.  [~grammer]
 stderr (empty)

@@ -1,11 +1,11 @@
-$ memex search tag:nope
+$ memex search tag:nope agent:cook-2
 exit 0
 stdout (empty)
 stderr
-| memex: no docs match tag:nope; try fewer filters, or memex info
+| memex: no docs match tag:nope agent:cook-2; try fewer filters, or memex info
 
-$ memex search --in readmes agent:cook-2
+$ memex search --in readmes tag:nope agent:cook-2
 exit 0
 stdout (empty)
 stderr
-| memex: no docs match agent:cook-2; try fewer filters, or memex info
+| memex: no docs match tag:nope agent:cook-2; try fewer filters, or memex info

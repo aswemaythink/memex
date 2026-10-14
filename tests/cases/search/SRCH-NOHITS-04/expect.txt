@@ -1,0 +1,11 @@
+$ memex search tag:nope
+exit 0
+stdout (empty)
+stderr
+| memex: no docs match tag:nope; try another value, or memex info
+
+$ memex search --in readmes agent:cook-2
+exit 0
+stdout (empty)
+stderr
+| memex: no docs match agent:cook-2; try another value, or memex info

@@ -10,4 +10,4 @@ exit 0
 stdout
 | {"query":"tag:nope","filters":{"tag":["nope"]},"groups":[]}
 stderr
-| memex: no docs match tag:nope; try fewer filters, or memex info
+| memex: no docs match tag:nope; try another value, or memex info

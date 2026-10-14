@@ -8,7 +8,7 @@ stderr (empty)
 $ memex search --in impl
 exit 0
 stdout
-| logs  (showing 1 of 1)
+| logs  (showing 1 of 1; <-N cited by N)
 |   impl:20261013-115000-widget-one  10m · cook-2  Widget one  <-0
 stderr (empty)
 

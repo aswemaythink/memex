@@ -1,7 +1,7 @@
 $ memex search --in logs
 exit 0
 stdout
-| logs  (showing 5 of 5)
+| logs  (showing 5 of 5; <-N cited by N)
 |   impl:20261013-115000-widget-plan  10m · cook-2 · feat/show  Widget plan  <-0
 |   impl:20261013-110000-widget-build  1h · cook-1 · feat/show  Widget build  <-0
 |   impl:20261013-110000-widget-tie  1h · cook-1 · main  Widget tie  <-0

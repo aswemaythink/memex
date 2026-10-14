@@ -1,0 +1,10 @@
+$ memex search grammar
+exit 0
+stdout
+| readmes  (showing 3 of 3; [~grammer] fuzzy match on grammer; [~grammir] fuzzy match on grammir)
+|   b/README.md  The grammar rules apply.
+|   a/README.md  The grammir rules apply.  [~grammir]
+|   c/README.md  The grammer rules apply.  [~grammer]
+| cases  (showing 1 of 1)
+|   cases:GRM-ONE-01  The grammar rules apply.
+stderr (empty)

@@ -1,7 +1,7 @@
 $ memex search --in cases
 exit 0
 stdout
-| cases  (showing 50 of 52)
+| cases  (showing 50 of 52; <-N cited by N)
 |   cases:WID-ONE-01  Widget case 01.  <-1
 |   cases:WID-ONE-02  Widget case 02.  <-2
 |   cases:WID-ONE-03  Widget case 03.  <-1

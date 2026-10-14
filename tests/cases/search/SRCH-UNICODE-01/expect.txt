@@ -8,6 +8,6 @@ stderr (empty)
 $ memex search naive
 exit 0
 stdout
-| readmes  (showing 1 of 1)
+| readmes  (showing 1 of 1; [~naïve] fuzzy match on naïve)
 |   a/README.md  The naïve rules apply.  [~naïve]
 stderr (empty)

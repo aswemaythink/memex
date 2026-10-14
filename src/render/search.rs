@@ -1,7 +1,7 @@
 //! Prints `search`'s groups as text (design §3.2) and as the `--json` document (design §3.6).
-//! Cases: SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-FUZZY-01, SRCH-LINE-01, SRCH-JSON-01, SRCH-JSON-02, SRCH-JSON-03, SRCH-FILTER-06, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01, SRCH-NOHITS-01, SRCH-NOHITS-02, SRCH-NOHITS-03
+//! Cases: SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-FUZZY-01, SRCH-LINE-01, SRCH-JSON-01, SRCH-JSON-02, SRCH-JSON-03, SRCH-FILTER-06, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01, SRCH-NOHITS-01, SRCH-NOHITS-02, SRCH-NOHITS-03, SRCH-NOHITS-04, SRCH-LEGEND-01, SRCH-LEGEND-02
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde_json::{json, Value as Json};
 
@@ -42,8 +42,8 @@ pub fn text(groups: &[Group]) -> String {
 }
 
 /// The stderr lines of a search with no hits (design §3.2 Zero hits). `terms` are every term as typed, and `words` are those
-/// that are not filters. With words, the hint names them as typed; with filters only, it names the filters; a query with neither,
-/// a roster with no filter, gets no hint, since design §3.2 gives none for it.
+/// that are not filters. With words, the hint names them as typed; with filters only, it names the filters, or with a single
+/// filter says to try another value; a query with neither, a roster with no filter, gets no hint, since design §3.2 gives none.
 pub fn no_hits(terms: &[String], words: &[String]) -> Vec<String> {
     if !words.is_empty() {
         let text = words.join(" ");
@@ -51,13 +51,16 @@ pub fn no_hits(terms: &[String], words: &[String]) -> Vec<String> {
             "memex: no hits for {text}; try fewer or other words, or memex info"
         )];
     }
-    if terms.is_empty() {
-        return Vec::new();
+    match terms {
+        [] => Vec::new(),
+        [only] => vec![format!(
+            "memex: no docs match {only}; try another value, or memex info"
+        )],
+        _ => vec![format!(
+            "memex: no docs match {}; try fewer filters, or memex info",
+            terms.join(" ")
+        )],
     }
-    vec![format!(
-        "memex: no docs match {}; try fewer filters, or memex info",
-        terms.join(" ")
-    )]
 }
 
 /// The age of an entry in the short form of design §3.6: `Nm` below an hour, `Nh` below 48 hours, else `Nd`. A negative age
@@ -89,16 +92,31 @@ pub fn document(query: &str, filters: &[(&str, &str)], groups: &[Group]) -> Stri
 
 /// One group's heading and hit lines, each line ending in a newline.
 fn group_text(group: &Group) -> String {
-    let mut out = format!(
-        "{}  (showing {} of {})\n",
-        group.name,
-        group.hits.len(),
-        group.total
-    );
+    let mut out = format!("{}  ({})\n", group.name, heading_parts(group).join("; "));
     for hit in &group.hits {
         out.push_str(&hit_line(hit, group.name == LOGS));
     }
     out
+}
+
+/// The parts inside a group heading's brackets: the count of hits shown, then a legend for each marker its lines use (design
+/// §3.2 Markers). A roster's `<-N` gets one legend, and each fuzzy variant gets one, in alphabetical order.
+fn heading_parts(group: &Group) -> Vec<String> {
+    let mut parts = vec![format!("showing {} of {}", group.hits.len(), group.total)];
+    if group.hits.iter().any(|hit| hit.cited_by.is_some()) {
+        parts.push("<-N cited by N".to_string());
+    }
+    let variants: BTreeSet<&str> = group
+        .hits
+        .iter()
+        .flat_map(|hit| hit.fuzzy.iter().map(String::as_str))
+        .collect();
+    parts.extend(
+        variants
+            .into_iter()
+            .map(|variant| format!("[~{variant}] fuzzy match on {variant}")),
+    );
+    parts
 }
 
 /// One hit's line: its label, then two spaces before each non-empty part. A log's parts start with its meta column; every
@@ -214,7 +232,11 @@ mod tests {
         );
         assert_eq!(
             no_hits(&terms(&["tag:x"]), &[]),
-            vec!["memex: no docs match tag:x; try fewer filters, or memex info"]
+            vec!["memex: no docs match tag:x; try another value, or memex info"]
+        );
+        assert_eq!(
+            no_hits(&terms(&["tag:x", "agent:y"]), &[]),
+            vec!["memex: no docs match tag:x agent:y; try fewer filters, or memex info"]
         );
         assert!(no_hits(&[], &[]).is_empty());
     }
