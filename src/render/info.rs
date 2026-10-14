@@ -21,7 +21,7 @@ pub struct Atlas {
     pub collections: Vec<Collection>,
     /// The log streams, newest entry first and then by name.
     pub streams: Vec<Stream>,
-    /// The entries addressed to the agent, when an agent is known and has some.
+    /// The entries addressed to the agent, whenever an agent is known, zero included (design §3.5).
     pub to: Option<ToCount>,
     /// The nearest README at or above the cwd, when the cwd is below the root and such a README exists.
     pub here: Option<HereLine>,

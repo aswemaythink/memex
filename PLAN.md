@@ -484,3 +484,4 @@ Each line is a design.md commit since S0.1; `git show <hash> -- design.md` shows
 - (round 2, P2) the index's term shards split by DefaultHasher with fixed keys (work split only, output order unchanged).
 - (round 2, orchestrator, after onboarding playtest 2) info's `to` line shows at zero, as §3.5 already said (code diverged); usage and info's `use` line show the heredoc form, not `< body`; two more messages name their next step (§3.5c); §3.2's fuzzy example is naïve/naive (café is under the 5-character floor).
 - (round 2) lists sort by byte (code point) order, never locale (§3.6), pinned by SHOW-ORDER-01.
+- (round 2, cook-polish) the to line at zero also shows with no store (INFO-NOROOT-01), the literal §3.5 rule; the Windows-only INIT-INSTALL-02, INIT-PATH-04/05 goldens were hand-edited for the heredoc use line and await a Windows run.
