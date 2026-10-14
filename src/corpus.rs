@@ -1,5 +1,6 @@
 //! Loads the read model (design §3.1 and §3.6): the walked entries and the docs built from them.
 //! The docs are READMEs, headers, CASES.md, manifests and logs, with the label map.
+//! The walked entries and the intent docs are bulk-built from sorted input; manifest and log docs are inserted one by one.
 //! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ORDER-01, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, SHOW-IO-02, INT-NAME-01, INT-NAME-02, INT-CHAIN-01, INT-BOM-01, MAN-LOAD-02, REF-AMBIG-02, REF-AMBIG-03, REF-RESERVED-03, REF-RESERVED-04
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -123,31 +124,36 @@ impl Corpus {
     }
 
     /// The intent layer under `root`: every walked entry, the docs of its files, and the docs of its manifests, which are kept with
-    /// their counts and warnings for `info` and `search`. The files are read on several threads, and their docs are added in the
-    /// walk's order. A file that cannot be read is skipped with its warning, and a folder that cannot be listed is kept as
-    /// unlistable (design §3.3). The rest of the layer loads (design §4.2).
+    /// their counts and warnings for `info` and `search`. The files are read on several threads. The walk's entries are sorted, so
+    /// the kinds are bulk-built from them, and the docs are grouped by label in one pass that keeps the walk's order within each
+    /// label. A file that cannot be read is skipped with its warning, and a folder that cannot be listed is kept as unlistable
+    /// (design §3.3). The rest of the layer loads (design §4.2).
     fn intent(root: &Path) -> Corpus {
+        let (mut read_warnings, mut unlistable) = (Vec::new(), BTreeMap::new());
+        let entries = walk::walk_warned(root, &mut read_warnings, &mut unlistable);
+        let read = par::map(&entries, read_entry);
+        let mut kinds = Vec::with_capacity(entries.len() + 1);
+        kinds.push((String::new(), Kind::Dir));
+        let mut docs = Vec::new();
+        for (entry, found) in entries.into_iter().zip(read) {
+            let kind = if entry.is_dir { Kind::Dir } else { Kind::File };
+            kinds.push((entry.rel, kind));
+            match found {
+                Ok(found) => docs.extend(found),
+                Err(error) => read_warnings.push(error::warning(&error.message)),
+            }
+        }
         let mut corpus = Corpus {
             root: root.to_path_buf(),
-            docs: BTreeMap::new(),
-            kinds: BTreeMap::from([(String::new(), Kind::Dir)]),
-            unlistable: BTreeMap::new(),
+            docs: by_label(docs),
+            kinds: kinds.into_iter().collect(),
+            unlistable,
             streams: BTreeSet::new(),
             citations: OnceLock::new(),
-            read_warnings: Vec::new(),
+            read_warnings,
             manifests: Vec::new(),
             manifest_warnings: Vec::new(),
         };
-        let entries = walk::walk_warned(root, &mut corpus.read_warnings, &mut corpus.unlistable);
-        let read = par::map(&entries, read_entry);
-        for (entry, docs) in entries.iter().zip(read) {
-            let kind = if entry.is_dir { Kind::Dir } else { Kind::File };
-            corpus.kinds.insert(entry.rel.clone(), kind);
-            match docs {
-                Ok(docs) => docs.into_iter().for_each(|doc| corpus.insert(doc)),
-                Err(error) => corpus.read_warnings.push(error::warning(&error.message)),
-            }
-        }
         for found in manifest::load(root, &mut corpus.manifest_warnings) {
             let mut warnings = Vec::new();
             let docs = manifest::docs(&found, root, &mut warnings);
@@ -325,6 +331,20 @@ pub fn name_of(rel: &str) -> &str {
 fn direct_child_of(path: &str, prefix: &str) -> bool {
     path.strip_prefix(prefix)
         .is_some_and(|name| !name.is_empty() && !name.contains('/'))
+}
+
+/// The intent docs grouped by label (design §3.1). The sort is stable, so each label's docs keep the order they were read in, and
+/// the groups go to the map in one pass.
+fn by_label(mut docs: Vec<Doc>) -> BTreeMap<String, Vec<Doc>> {
+    docs.sort_by(|left, right| left.label.cmp(&right.label));
+    let mut groups: Vec<(String, Vec<Doc>)> = Vec::new();
+    for doc in docs {
+        match groups.last_mut() {
+            Some((label, group)) if *label == doc.label => group.push(doc),
+            _ => groups.push((doc.label.clone(), vec![doc])),
+        }
+    }
+    groups.into_iter().collect()
 }
 
 /// The docs of one walked entry: none for a folder, and those of its file otherwise (design §2 and §4.2).

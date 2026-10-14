@@ -77,7 +77,8 @@ pub fn walk_warned(
     }
     // A path orders its components, so this puts each warning where the depth-first walk gave it: a folder's before its children's.
     failures.sort_by(|left, right| left.path.cmp(&right.path));
-    entries.sort_by(|left, right| left.rel.cmp(&right.rel));
+    // Each path is walked once, so its label is unique and an unstable sort gives the one order.
+    entries.sort_unstable_by(|left, right| left.rel.cmp(&right.rel));
     for failure in &failures {
         if let Some(rel) = unlistable_rel(root, &entries, failure) {
             unlistable.insert(rel, failure.kind);

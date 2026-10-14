@@ -1,9 +1,11 @@
 //! Loads what a reading verb works on: the canonical cwd, its log store, and the corpus of its root.
 //! `load_in` takes a folder in place of the cwd, for init.
 //! The store is found from the cwd, and the root is the one that `root_of` names (design §4.1 item 1).
+//! The corpus is never freed: `Here` holds it in a `ManuallyDrop`, since the process exits after the verb.
 //! Cases: none (shared loading; show and search cite their own cases)
 
 use std::env;
+use std::mem::ManuallyDrop;
 use std::path::{Path, PathBuf};
 
 use crate::corpus::{self, Corpus};
@@ -16,8 +18,8 @@ pub struct Here {
     pub cwd: PathBuf,
     /// The log store, or None when there is no `.memex/`. Reads work without one.
     pub store: Option<PathBuf>,
-    /// The intent layer of the cwd's root and the logs of the store.
-    pub corpus: Corpus,
+    /// The intent layer of the cwd's root and the logs of the store. Never dropped: the process exits after the verb.
+    pub corpus: ManuallyDrop<Corpus>,
 }
 
 /// Loads the corpus of the cwd's root. The store is found (which runs git) while the intent layer is read.
@@ -30,7 +32,11 @@ pub fn load() -> Result<Here, Error> {
 pub fn load_in(cwd: PathBuf) -> Result<Here, Error> {
     let root = corpus::root_of(&cwd);
     let (corpus, store) = Corpus::load_finding(&root, || store_of(&cwd))?;
-    Ok(Here { cwd, store, corpus })
+    Ok(Here {
+        cwd,
+        store,
+        corpus: ManuallyDrop::new(corpus),
+    })
 }
 
 /// The cwd, canonical.
