@@ -258,6 +258,7 @@ assets/agents-snippet.md   included with include_str!; the single source for ini
 **DONE(F)**, run by every slice:
 ```
 cargo fmt --check && cargo clippy --all-targets --locked -- -D warnings
+cargo clippy --all-targets --locked --target x86_64-pc-windows-msvc -- -D warnings   # Windows arms compile clean
 cargo test --locked                                  # whole suite stays green
 cargo test --locked --test conformance -- F          # the slice's cases, each listed
 git show --stat HEAD                                 # only the brief's files + its tests/cases/<family>/
@@ -411,6 +412,7 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [x] S0.2
 - [x] S0.3
 - [x] S0.4
+- [x] P0 cross-platform audit (2026-10-14; rulings in design §3.4/§4.4; fixes in P1)
 - [x] Q0 quality gates (user request 2026-10-13: ≤365 lines/file, headers, READMEs, clippy complexity; tests/quality.rs)
 - [x] Spike 1 (confirmed at G1: S1.2 cook's worktree log landed in main and survived worktree removal)
 - [x] Spike 2

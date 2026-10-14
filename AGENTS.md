@@ -47,4 +47,5 @@ Golden policy (PLAN.md §2, Bless):
 - Each folder has a README.md whose first paragraph says what the folder is.
 - Functions have at most 60 lines and cognitive complexity 15, and take at most 6 arguments.
 - No `#[allow]` or `#[expect]` in src/: fix the code instead. tests/ may use `#[allow(dead_code)]` only.
+- Portable by construction: paths in labels and JSON go through one `/` normaliser, special names are matched against directory listings (never `exists()`), `cfg` code has both arms, and `cargo clippy --all-targets --locked --target x86_64-pc-windows-msvc -- -D warnings` is part of every done check.
 - CI enforces all of it: clippy with `-D warnings` (lints in Cargo.toml, thresholds in clippy.toml) and `tests/quality.rs`.
