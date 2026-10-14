@@ -121,10 +121,12 @@
 
 ## NEST
 
-- `INIT-NEST-01` Outside git, init run from `repo/outer/inner` targets `repo/outer`, the nearest folder above it with a `.memex/`: its `.memex/` files are reported `kept`, AGENTS.md is created there, and nothing is created in `inner`, exit 0.
-  Scenario: `repo/outer/.memex/` is complete and `repo/outer/inner/` holds one file, with no git repo above the sandbox; the snapshot shows `inner` as it was and the store unchanged. design §3.5b (outside git, the root that discovery finds from the cwd, so init never shadows a store above it) and §4.1 item 1.
+- `INIT-NEST-01` Outside git, init run from `repo/outer/inner` targets `repo/outer`, the nearest folder above it with a `.memex/`: its report opens with the line `using the store at <root>; to start a new one here instead: mkdir .memex && memex init`, with `<root>` the absolute, `/`-separated path of `repo/outer`; its `.memex/` files are reported `kept`, AGENTS.md is created there, and nothing is created in `inner`, exit 0.
+  Scenario: `repo/outer/.memex/` is complete and `repo/outer/inner/` holds one file, with no git repo above the sandbox; the snapshot shows `inner` as it was and the store unchanged. design §3.5b (outside git, the root that discovery finds from the cwd, so init never shadows a store above it, and the report names that root on its first line when it is above the cwd) and §4.1 item 1.
 - `INIT-NEST-02` Inside git, init run from a subfolder writes into the git toplevel even when a `.memex/` sits above the repo, so the store above is left as it is, exit 0.
   Scenario: the sandbox root holds `.memex/config.json` above the git repo `repo/`, and the cwd is `repo/sub`; `repo/sub/.memex` stays missing, `repo/.memex/` is created, and the store above is unchanged. design §3.5b (inside git, the toplevel).
+- `INIT-NEST-03` Outside git, init run from `$HOME/project` adopts the complete `.memex/` in `$HOME`: its report opens with the same line, naming `$HOME` as `<root>`, AGENTS.md is created in `$HOME`, and nothing is created in `project`, exit 0.
+  Scenario: `home/.memex/` is complete (the sandbox's `$HOME` is `home/`) and `home/project/` holds one file, with no git repo above the sandbox; the snapshot shows `project` as it was and the store unchanged. design §3.5b (a `.memex/` in `$HOME` is adopted like any other, and named the same way) and §4.1 item 1 (outside git the walk reaches `$HOME`).
 
 ## PASTE
 

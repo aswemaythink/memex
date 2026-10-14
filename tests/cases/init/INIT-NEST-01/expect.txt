@@ -1,6 +1,7 @@
 $ memex init  [cwd repo/outer/inner]
 exit 0
 stdout
+| using the store at $SANDBOX/repo/outer; to start a new one here instead: mkdir .memex && memex init
 | kept .memex/.gitignore
 | kept .memex/config.json
 | kept .memex/collections/.gitkeep
