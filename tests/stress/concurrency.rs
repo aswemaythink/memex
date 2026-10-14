@@ -1,5 +1,6 @@
 //! Concurrency tests: many memex processes at once on one store, run by the stress suite.
 //! Each test starts real processes of the built binary behind a barrier, so that they race for the same files.
+//! The worktree test is in conc_worktrees.rs, which uses the helpers this file shares with it.
 //! Cases: none (stress)
 
 use std::collections::BTreeSet;
@@ -24,10 +25,7 @@ const EXPIRED_STAMP: &str = "20260701-120000";
 const SLOTS: usize = 32;
 
 /// One memex process for `run_together`: its command, and the text it reads on stdin (None for a reader).
-struct Job(Command, Option<String>);
-
-/// The jobs of the worktree test, with each writer's body in the same order.
-type Plan = (Vec<Job>, Vec<String>);
+pub(crate) struct Job(Command, Option<String>);
 
 #[test]
 #[ignore = "stress suite: run with cargo test --release --test stress -- --ignored"]
@@ -98,52 +96,8 @@ fn emptied_folder_round() {
     assert_store(sandbox.path(), &want);
 }
 
-/// Ten writers in the main checkout and in each linked worktree log at once; all 40 survive `git worktree remove`.
-#[test]
-#[ignore = "stress suite: run with cargo test --release --test stress -- --ignored"]
-fn conc_worktrees() {
-    let sandbox = repo();
-    let root = sandbox.path();
-    let holder = tempfile::tempdir().unwrap_or_else(|e| panic!("cannot make a folder: {e}"));
-    let worktrees = ["wt-1", "wt-2", "wt-3"].map(|name| holder.path().join(name));
-    for path in &worktrees {
-        let arg = path.to_string_lossy().into_owned();
-        must_succeed(&git(root, &["worktree", "add", "--detach", &arg]), "add");
-    }
-    let (jobs, bodies) = worktree_jobs(&sandbox, &worktrees);
-    let outputs = run_together(jobs);
-    let want = check_writes(root, &outputs, &bodies);
-    let refs: Vec<String> = outputs.iter().map(printed_ref).collect();
-    assert_store(root, &want);
-    for path in &worktrees {
-        let arg = path.to_string_lossy().into_owned();
-        must_succeed(&git(root, &["worktree", "remove", &arg]), "remove");
-    }
-    assert_store(root, &want);
-    for (reference, body) in refs.iter().zip(&bodies) {
-        assert_body(root, reference, body);
-    }
-}
-
-/// The 40 writers of the worktree test: ten from the main checkout, then ten from each linked worktree.
-fn worktree_jobs(sandbox: &Sandbox, worktrees: &[PathBuf]) -> Plan {
-    let mut sources: Vec<(String, Option<&Path>)> = vec![("main".to_string(), None)];
-    for (k, path) in worktrees.iter().enumerate() {
-        sources.push((format!("wt-{}", k + 1), Some(path.as_path())));
-    }
-    let (mut jobs, mut bodies) = (Vec::new(), Vec::new());
-    for (name, dir) in &sources {
-        for n in 1..=10 {
-            let body = format!("# Entry from {name} {n:02}\n\nWriter {n:02} ran in {name}.\n");
-            jobs.push(log_job(sandbox, "impl", &body, *dir));
-            bodies.push(body);
-        }
-    }
-    (jobs, bodies)
-}
-
 /// A fresh git repository with one empty commit and `memex init` run in it, as a real project is.
-fn repo() -> Sandbox {
+pub(crate) fn repo() -> Sandbox {
     let sandbox = Sandbox::new();
     must_succeed(&sandbox.git_init(), "git init");
     let commit = git(sandbox.path(), &["commit", "--allow-empty", "-qm", "init"]);
@@ -153,7 +107,7 @@ fn repo() -> Sandbox {
 }
 
 /// Runs `git args` in `dir` with a fixed identity, and without the GIT_DIR, GIT_WORK_TREE and GIT_INDEX_FILE a hook sets.
-fn git(dir: &Path, args: &[&str]) -> Output {
+pub(crate) fn git(dir: &Path, args: &[&str]) -> Output {
     let mut command = Command::new("git");
     command
         .args(["-c", "user.name=stress", "-c", "user.email=stress@x.test"])
@@ -170,7 +124,7 @@ fn git(dir: &Path, args: &[&str]) -> Output {
 }
 
 /// Starts every job's process at once: a thread per job waits at a barrier, then runs its command to the end.
-fn run_together(jobs: Vec<Job>) -> Vec<Output> {
+pub(crate) fn run_together(jobs: Vec<Job>) -> Vec<Output> {
     let dir = tempfile::tempdir().unwrap_or_else(|e| panic!("cannot make a folder: {e}"));
     let barrier = Arc::new(Barrier::new(jobs.len()));
     let slots = Arc::new((0..SLOTS).map(|_| Mutex::new(())).collect::<Vec<_>>());
@@ -235,7 +189,7 @@ fn stdio(path: &Path, write: bool) -> Stdio {
 }
 
 /// A writer: `memex log <stream>` with `body` on stdin, run from `dir` when one is given.
-fn log_job(sandbox: &Sandbox, stream: &str, body: &str, dir: Option<&Path>) -> Job {
+pub(crate) fn log_job(sandbox: &Sandbox, stream: &str, body: &str, dir: Option<&Path>) -> Job {
     let mut command = cmd(sandbox);
     command.arg("log").arg(stream);
     if let Some(dir) = dir {
@@ -277,7 +231,7 @@ fn write_expired(root: &Path, count: usize) {
 }
 
 /// Checks the writers: each exited 0 with an empty stderr, and its entry holds its body. Returns the keys they wrote.
-fn check_writes(root: &Path, outputs: &[Output], bodies: &[String]) -> BTreeSet<String> {
+pub(crate) fn check_writes(root: &Path, outputs: &[Output], bodies: &[String]) -> BTreeSet<String> {
     let mut keys = BTreeSet::new();
     for (index, (output, body)) in outputs.iter().zip(bodies).enumerate() {
         assert_clean(output, &format!("writer {index}"));
@@ -289,7 +243,7 @@ fn check_writes(root: &Path, outputs: &[Output], bodies: &[String]) -> BTreeSet<
 }
 
 /// Panics unless the store holds exactly the files in `want`. A hidden name such as a temp file is extra.
-fn assert_store(root: &Path, want: &BTreeSet<String>) {
+pub(crate) fn assert_store(root: &Path, want: &BTreeSet<String>) {
     let found = store_files(root);
     let diff: Vec<&String> = found.symmetric_difference(want).take(5).collect();
     assert!(diff.is_empty(), "the store differs at {diff:?}");
@@ -318,7 +272,7 @@ fn list(dir: &Path) -> Vec<String> {
 }
 
 /// Panics unless the entry `reference` ends with `body`: a body is stored whole, after its frontmatter.
-fn assert_body(root: &Path, reference: &str, body: &str) {
+pub(crate) fn assert_body(root: &Path, reference: &str, body: &str) {
     let path = entry_file(root, reference);
     let text = read(&path);
     let shown = path.display();
@@ -326,20 +280,20 @@ fn assert_body(root: &Path, reference: &str, body: &str) {
 }
 
 /// Panics unless `output` exited 0 and wrote nothing to stderr. `what` names the process in the message.
-fn assert_clean(output: &Output, what: &str) {
+pub(crate) fn assert_clean(output: &Output, what: &str) {
     let stderr = output_text(&output.stderr);
     let ok = output.status.success() && stderr.is_empty();
     assert!(ok, "{what} exited {}: {stderr:?}", output.status);
 }
 
 /// Panics unless `output` exited 0. `what` names the command, and its stderr says why not.
-fn must_succeed(output: &Output, what: &str) {
+pub(crate) fn must_succeed(output: &Output, what: &str) {
     let stderr = output_text(&output.stderr);
     assert!(output.status.success(), "{what} failed: {stderr}");
 }
 
 /// The ref that a `log` process printed on stdout, without its newline.
-fn printed_ref(output: &Output) -> String {
+pub(crate) fn printed_ref(output: &Output) -> String {
     output_text(&output.stdout).trim_end().to_string()
 }
 
@@ -352,10 +306,10 @@ fn store_key(reference: &str) -> String {
     format!("{}.md", reference.replacen(':', "/", 1))
 }
 
-fn entry_file(root: &Path, reference: &str) -> PathBuf {
+pub(crate) fn entry_file(root: &Path, reference: &str) -> PathBuf {
     store(root).join(store_key(reference))
 }
 
-fn read(path: &Path) -> String {
+pub(crate) fn read(path: &Path) -> String {
     fs::read_to_string(path).unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()))
 }

@@ -9,6 +9,7 @@
 mod support;
 
 mod budget;
+mod conc_worktrees;
 mod concurrency;
 mod fuzz;
 mod fuzz_parse;
