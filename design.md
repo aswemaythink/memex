@@ -47,7 +47,7 @@ The comment syntax is chosen by extension from a built-in table. Files with unkn
 
 - **Header rule.** After blank lines, a shebang, encoding/pragma lines (`# -*-`, `//go:build`, `"use client"`, and markup prologues `<?xml …?>`, `<!DOCTYPE …>`, `<?php`) and one leading license block (a block containing `SPDX-License-Identifier` or starting with `Copyright`); a license block ends at its first blank line, so a header must be separated from it by one, the next comment block is the header. It ends at the first line that is neither comment nor blank.
 - **Limits.** The index keeps the first 60 lines; `show` prints the whole block. A file with no header shows as `(no header)` in listings. That gap is itself a signal.
-- **Files read.** Only the first 8 KiB of each file is read. Binary files are skipped.
+- **Files read.** Only the first 8 KiB of each file is read. Binary files are skipped. A header still open at the 8 KiB cut is shown with a final line `… (header cut at 8 KiB)`, never silently.
 
 ### 2.2 The case index: `CASES.md`
 
@@ -73,7 +73,7 @@ There is one standard: a Markdown file named `CASES.md`, placed anywhere (by con
 
 ### 2.3 Citations and derived backlinks
 
-memex scans every indexed doc (READMEs, headers, CASES.md entries, manifest docs, logs) for citations. Citations are never extracted from fenced code blocks. Self-citations are dropped.
+memex scans every indexed doc (READMEs, headers, CASES.md entries, manifest docs, logs) for citations. Citations are never extracted from fenced code blocks (a fence is a line of three or more backticks or tildes indented at most three spaces; an unclosed fence runs to the end of the doc). Self-citations are dropped.
 
 | Form | Matches |
 |---|---|
@@ -110,12 +110,12 @@ memex --help | --version
 - **Other docs** are labelled `collection:id`: `cases:NAME-001`, `doom:2026-09-20-jettison`, `impl:20261013-214107-show-chain`.
 - **Resolution order.**
   1. Absolute path.
-  2. Relative path: tried against both the cwd and the root. If exactly one exists, it wins. If both exist and differ, the result is `ambiguous`. `.` is the exception: it is the root's own label, so it always means the root.
+  2. Relative path: tried against both the cwd and the root. "Exists" means present in the walked set, matched case-sensitively, so `readme.md` never finds `README.md` on a case-insensitive filesystem. If exactly one exists, it wins. If both exist and differ, the result is `ambiguous`. `.` is the exception: it is the root's own label, so it always means the root.
   3. `collection:id`, exact.
   4. A bare id that is unique across collections, matched exactly, then case-insensitively.
   5. A unique basename.
   6. If several still match, memex lists candidates and exits 1. It never guesses.
-- **Other worktrees.** A path outside the current root resolves against *its own* nearest root. `memex show ../wt-cook-3/src/x.rs` reads that worktree's intent layer, so no `@worktree` suffix is needed. Logs are shared anyway.
+- **Other worktrees.** A path outside the current root resolves against *its own* nearest root (a `.memex/` or git toplevel above it). With neither, its root is the path itself for a folder, or its parent for a file; memex never walks the enclosing filesystem. `memex show ../wt-cook-3/src/x.rs` reads that worktree's intent layer, so no `@worktree` suffix is needed. Logs are shared anyway.
 - **Built-in collections.** The names `readmes`, `headers`, `cases` and `logs` are reserved. `logs` means every stream.
 
 ### 3.2 `search`
@@ -128,6 +128,7 @@ memex --help | --version
   - **Why groups.** Grouping is why READMEs and headers can be in global search: thousands of headers cannot drown a README, and log noise stays in its own group.
 - **Filters without words.** Lists matching docs, newest first for logs.
 - **`--in X` with no words.** Prints the roster: every doc's one-liner, logs newest first, everything else by id. Each roster line carries `<-N`, its cited-by count (prefix citations excluded), so `search --in cases` *is* the orphan audit (`<-0`). Default limit 50.
+- **`--in` names.** Built-in collections, manifest names and stream names. An unknown name is a usage error (exit 2), never a silently empty result.
 
 ```
 readmes  (showing 2 of 2)
@@ -154,9 +155,9 @@ It takes one or more refs and prints a section for each, separated by `=== <labe
 
 ### 3.4 `log`
 
-- **Body.** Read from stdin, required and non-empty. If stdin is a TTY, memex exits 2. The maximum is 16 KiB, which exits 2 with the message "logs are findings: cite artifacts by path". The title is the first non-blank body line after any frontmatter, with leading `#`s and spaces stripped. If the title is empty, memex exits 2. The slug is made from the title: lowercase ASCII alphanumerics, other runs become `-`, trimmed, at most 60 chars, or `entry` if empty.
+- **Body.** Read from stdin, required and non-empty. If stdin is a TTY, memex exits 2. The maximum is 16 KiB, measured on the body as stored (after the BOM is dropped, CRLF becomes LF and the bytes are decoded), which exits 2 with the message "logs are findings: cite artifacts by path". The title is the first non-blank body line after any frontmatter, with leading `#`s and spaces stripped. If the title is empty, memex exits 2. The slug is made from the title: lowercase ASCII alphanumerics, other runs become `-`, trimmed, at most 60 chars, or `entry` if empty.
 - **Store.** `log` is allowed if the root or the main checkout has `.memex/`. With neither, it exits 3 with "run `memex init`" (§4.1).
-- **Extra fields.** An optional leading `---` frontmatter block in the body is merged in. Collisions with memex-owned keys exit 2.
+- **Extra fields.** An optional leading `---` frontmatter block in the body is merged in. Collisions with memex-owned keys exit 2. Keys compare case-insensitively, both against memex's keys and against each other, so `To:` cannot forge a `to` field.
 - **Stream name.** `[a-z0-9][a-z0-9-]{0,39}`. It must not be a reserved name, a Windows device name (`con`, `prn`, `aux`, `nul`, `com0`–`com9`, `lpt0`–`lpt9`; refused on every OS so a store stays portable), or an existing manifest name (matched against the listed file names in `.memex/collections/`, exactly, never by probing). Streams need no declaration.
 - **Agent id.** Taken from `--agent`, then `$MEMEX_AGENT`; otherwise it is omitted. No harness exposes a per-agent id in the environment (Spike 2), so there is no third source.
 - **Output.** stdout is exactly the ref on one line, so `ref=$(memex log impl <<'EOF' … EOF)` works. With `--json`, the output is `{"ref","path"}`.
@@ -193,7 +194,7 @@ The one-step setup, idempotent. Inside git it targets the toplevel; outside git,
      config.json         # {"keep_logs": "3d"}
      collections/        # manifests go here (empty)
    ```
-2. Writes the AGENTS.md snippet (§6) into `AGENTS.md` between `<!-- memex:begin -->` / `<!-- memex:end -->` markers, creating the file if missing and replacing the block on re-run. If `CLAUDE.md` exists without `@AGENTS.md`, it appends `@AGENTS.md` as a final line. CLAUDE.md is never created.
+2. Writes the AGENTS.md snippet (§6) into `AGENTS.md` between `<!-- memex:begin -->` / `<!-- memex:end -->` markers, creating the file if missing and replacing the block on re-run. If `CLAUDE.md` exists without `@AGENTS.md`, it appends `@AGENTS.md` as a final line. CLAUDE.md is never created. Markers and the `@AGENTS.md` line count only outside fenced code blocks. memex never writes through a symlinked `AGENTS.md` or `CLAUDE.md`: it warns and leaves them alone.
 3. If no `memex` executable is on PATH (e.g. run via `npx`; PATH entries inside a `node_modules/.bin` folder are ignored, since that is npx's temporary shim, while a global npm install counts, and on Windows `memex.exe` or `memex.cmd` count), copies its own binary to `~/.local/bin` (`%LOCALAPPDATA%\Programs\memex` on Windows) and prints the plain line `add to PATH: <dir>` if that folder isn't on PATH. The install dir comes from the `$HOME` / `%LOCALAPPDATA%` env vars, not the known-folder API, so tests can redirect it. An installed binary is replaced only if its bytes differ.
 4. Prints `memex info`.
 
@@ -259,6 +260,7 @@ With `--json`, stdout is always one JSON document, including errors. Without it,
 - **`folder`.** Each folder containing `marker` is one doc. The marker's fields come from top-level JSON scalars, or from frontmatter for a `.md` marker. Each `merge` file adds its full text if it is Markdown, or **only its header** if it is code, so memex still never reads code bodies.
 - **`json`.** Each entry of the array at `at`, in every matched file, is one doc. Scalars become fields and strings are indexed as text.
 - **Frontmatter.** Flat YAML: `key: scalar`, `key: [a, b]`, or `- item` lists. Anything nested is kept as text and cannot be filtered. Frontmatter is optional, and missing fields simply don't score.
+- **Unreadable files.** A README, header, CASES.md or stream folder that can't be read is a warning (`memex: warning: cannot read <path> (<ErrorKind>)`) and is skipped. It never fails a read verb.
 - **Invalid manifests.** An invalid manifest or an unknown key is a warning, and that collection is skipped. It never makes the run fail. Warnings are printed once per run on stderr by every verb that loads them, in text and JSON modes. `info` also lists them, with duplicate ids, in its output.
 - **Duplicate case ids.** Reported as `info` warnings, and as `ambiguous` in `show`.
 
@@ -388,7 +390,7 @@ powershell -c "irm https://github.com/rynwhite/memex/releases/latest/download/me
 
 Or download a binary from GitHub Releases. All of these come from one cargo-dist release per tag.
 
-**Claude Code plugin (optional):** `/plugin marketplace add rynwhite/memex`, then `/plugin install memex`.
+**Claude Code plugin (optional):** `/plugin marketplace add rynwhite/memex`, then `/plugin install memex@memex`.
 
 ## 7. Non-goals
 
