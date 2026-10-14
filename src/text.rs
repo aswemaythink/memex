@@ -1,6 +1,6 @@
 //! Reads text for every reader (design §4.4): a BOM is dropped and CRLF line ends read as LF.
-//! Bytes that are not UTF-8 are decoded lossily.
-//! Cases: HDR-BOM-01, HDR-BOM-02, HDR-CRLF-01, LOG-BODY-06, PORT-CRLF-01, PORT-CRLF-02, PORT-CRLF-03, PORT-CRLF-04, PORT-CRLF-05, PORT-CRLF-06, PORT-BOM-01, PORT-BOM-02, PORT-DECODE-01, PORT-DECODE-02
+//! Bytes that are not UTF-8 are decoded lossily. `line_of` gives a line of split text without its line end, for the frontmatter splitters in `logs` and `collections`.
+//! Cases: HDR-BOM-01, HDR-BOM-02, HDR-CRLF-01, LOG-BODY-06, LOG-FRONT-01, LOG-FRONT-12, PORT-CRLF-01, PORT-CRLF-02, PORT-CRLF-03, PORT-CRLF-04, PORT-CRLF-05, PORT-CRLF-06, PORT-BOM-01, PORT-BOM-02, PORT-DECODE-01, PORT-DECODE-02
 
 use std::fs;
 use std::io;
@@ -20,9 +20,23 @@ pub fn read(path: &Path) -> io::Result<String> {
     fs::read(path).map(|bytes| decode(&bytes))
 }
 
+/// A piece's text without its line end: one `\n` and a `\r` before it. A `\r` anywhere else is kept.
+pub fn line_of(piece: &str) -> &str {
+    let line = piece.strip_suffix('\n').unwrap_or(piece);
+    line.strip_suffix('\r').unwrap_or(line)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_line_loses_its_line_end_and_a_carriage_return_inside_it_is_kept() {
+        assert_eq!(line_of("a\r\n"), "a");
+        assert_eq!(line_of("a\n"), "a");
+        assert_eq!(line_of("a"), "a");
+        assert_eq!(line_of("a\rb\n"), "a\rb");
+    }
 
     #[test]
     fn one_leading_byte_order_mark_is_dropped_and_the_rest_is_kept() {

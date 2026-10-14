@@ -2,6 +2,8 @@
 //! It reads the fields: `key: scalar`, `key: [a, b]`, `- item` lists, and nested text kept as written.
 //! Cases: SHOW-LOG-01, SHOW-JSON-03
 
+use crate::text::line_of;
+
 /// One frontmatter value: a scalar, or nested text kept as written, or a list.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Value {
@@ -52,12 +54,6 @@ fn whole(text: &str) -> Document {
         fields: Vec::new(),
         body: text.to_string(),
     }
-}
-
-/// A piece's text without its `\n`, and without a `\r` before it.
-fn line_of(piece: &str) -> &str {
-    let line = piece.strip_suffix('\n').unwrap_or(piece);
-    line.strip_suffix('\r').unwrap_or(line)
 }
 
 /// The fields of the frontmatter lines. Blank lines are skipped, a line that opens a key starts a field, and any other line

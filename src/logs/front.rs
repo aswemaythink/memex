@@ -5,6 +5,7 @@
 use crate::cli::Verb;
 use crate::error::Error;
 use crate::scan::fail;
+use crate::text::line_of;
 
 /// The keys memex writes itself (design §3.4 and §4.3). An agent block may not set them.
 const MEMEX_KEYS: [&str; 8] = [
@@ -28,7 +29,7 @@ pub struct Split {
 pub fn split(body: &str) -> Result<Split, Error> {
     let mut pieces = body.split_inclusive('\n');
     let first = pieces.next().unwrap_or("");
-    if fence_text(first) != FENCE {
+    if line_of(first) != FENCE {
         return Ok(Split {
             lines: Vec::new(),
             rest: body.to_string(),
@@ -38,7 +39,7 @@ pub fn split(body: &str) -> Result<Split, Error> {
     let mut lines = Vec::new();
     for piece in pieces {
         offset += piece.len();
-        let text = fence_text(piece);
+        let text = line_of(piece);
         if text == FENCE {
             check_keys(&lines)?;
             return Ok(Split {
@@ -59,12 +60,6 @@ pub fn split(body: &str) -> Result<Split, Error> {
         Verb::Log,
         "frontmatter block is not closed".to_string(),
     ))
-}
-
-/// A line's text without its line end: one `\n`, and a `\r` before it.
-fn fence_text(piece: &str) -> &str {
-    let line = piece.strip_suffix('\n').unwrap_or(piece);
-    line.strip_suffix('\r').unwrap_or(line)
 }
 
 /// Refuses a memex key, or a key that repeats, among the block's lines. Keys compare without ASCII case, both against memex's
