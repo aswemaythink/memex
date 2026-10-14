@@ -109,6 +109,7 @@ tests/cases/<family>/<ID>/<stdin file>   only if case.json names it in `stdin_fi
 - **`steps`.** At least one. Each takes `args`, `stdin` or `stdin_file` (default: empty stdin), `cwd` (relative to the sandbox, default `repo`) and `env`.
 - **`snapshot`.** Sandbox paths whose files are dumped after the last step.
 - **`platforms`.** Use only where a behaviour is truly OS-specific (permissions, install dirs).
+- **`chmod`** (added 2026-10-14, S5.4): `[{"path": "repo/x", "mode": "000"}]`, octal, sandbox-relative, applied after `setup` and before the steps. It is unix-only, so a case using it must say `"platforms": ["unix"]` (conformity rule 4). The runner restores 0o700/0o600 before deleting the sandbox, and skips such cases when running as root.
 
 **Sandbox.**
 - `fixture/` is copied to `$SANDBOX/`, created under `std::env::temp_dir()`. The runner fails fast if any ancestor holds `.memex/`.
