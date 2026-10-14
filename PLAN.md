@@ -435,7 +435,7 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [x] S4.2 (self-init: all kept; refined 76addfe)
 - [x] S5.1
 - [x] S5.2 (20 findings, 1 HIGH; fixed in F1-F4)
-- [ ] S5.3
+- [x] S5.3 (reference-ui info 94, search 138, show 117 ms; no cache)
 - [ ] S5.4
 - [x] S6.1 (enabling it for this repo needs user approval)
 - [ ] S6.2
