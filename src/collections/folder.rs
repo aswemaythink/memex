@@ -3,8 +3,6 @@
 //! Cases: MANK-FOLDER-01, MANK-FOLDER-02, MANK-FOLDER-03, MANK-FOLDER-04, MANK-FOLDER-05, MANK-FOLDER-06, MANK-FOLDER-07, MANK-FOLDER-08, MANK-FOLDER-09
 
 use std::collections::BTreeMap;
-use std::fs::File;
-use std::io::Read;
 use std::path::Path;
 
 use super::frontmatter::{self, Value};
@@ -15,9 +13,6 @@ use crate::corpus::{name_of, parent_of, Doc};
 use crate::intent::header;
 use crate::text;
 use crate::walk::{self, Entry};
-
-/// The most bytes of a code file that a merge reads, for its header (design §2.1).
-const HEAD_BYTES: u64 = 8 * 1024;
 
 /// The docs of a folder manifest: one per folder under its roots that holds the marker file. A marker that cannot be read or
 /// parsed, or whose `id` field is missing or empty, adds its warning to `warnings` and gives no doc.
@@ -122,7 +117,7 @@ fn merge_piece(path: &Path) -> Option<String> {
     if extension(path) == Some("md") {
         return read_text(path);
     }
-    header::header(path, &read_head(path)?)
+    header::header(path, &header::read_head(path).ok()?)
 }
 
 /// The files of a walk, grouped by the root-relative folder that holds them, in walk order.
@@ -170,17 +165,6 @@ fn extension(path: &Path) -> Option<&str> {
 /// The whole text of a file, read as the shared helper reads it, or None when it cannot be read.
 fn read_text(path: &Path) -> Option<String> {
     text::read(path).ok()
-}
-
-/// The first `HEAD_BYTES` of a file, or None when it cannot be read.
-fn read_head(path: &Path) -> Option<Vec<u8>> {
-    let mut head = Vec::new();
-    File::open(path)
-        .ok()?
-        .take(HEAD_BYTES)
-        .read_to_end(&mut head)
-        .ok()?;
-    Some(head)
 }
 
 #[cfg(test)]

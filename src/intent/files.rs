@@ -2,16 +2,11 @@
 //! Cases: HDR-CAP-01, HDR-CAP-04, HDR-BIN-01, HDR-EXT-01, INT-BOM-01, INT-LINE-01
 
 use std::fs::File;
-use std::io::Read;
-use std::path::Path;
 
 use super::{cases, header, lead, readme};
 use crate::corpus::{Doc, HEADERS};
 use crate::error::Error;
 use crate::walk::Entry;
-
-/// The most bytes of a file that header detection reads (design §2.1).
-const HEAD_BYTES: u64 = 8 * 1024;
 
 /// The docs one walked file gives: its README, the cases of a CASES.md, or its header. A file that cannot be read is an error.
 pub fn file_docs(entry: &Entry) -> Result<Vec<Doc>, Error> {
@@ -30,7 +25,8 @@ fn header_doc(entry: &Entry) -> Result<Option<Doc>, Error> {
             .map_err(|failure| Error::io_at("cannot read", &entry.path, &failure))?;
         return Ok(None);
     }
-    let head = read_head(&entry.path)?;
+    let head = header::read_head(&entry.path)
+        .map_err(|failure| Error::io_at("cannot read", &entry.path, &failure))?;
     let Some(text) = header::header(&entry.path, &head) else {
         return Ok(None);
     };
@@ -43,16 +39,6 @@ fn header_doc(entry: &Entry) -> Result<Option<Doc>, Error> {
         text,
         fields: Vec::new(),
     }))
-}
-
-/// The first bytes of a file, at most `HEAD_BYTES`.
-fn read_head(path: &Path) -> Result<Vec<u8>, Error> {
-    let file = File::open(path).map_err(|failure| Error::io_at("cannot read", path, &failure))?;
-    let mut head = Vec::new();
-    file.take(HEAD_BYTES)
-        .read_to_end(&mut head)
-        .map_err(|failure| Error::io_at("cannot read", path, &failure))?;
-    Ok(head)
 }
 
 #[cfg(all(test, unix))]

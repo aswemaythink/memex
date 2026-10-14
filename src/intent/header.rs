@@ -4,13 +4,24 @@
 mod families;
 mod scan;
 
-use std::fs;
+use std::fs::{self, File};
+use std::io::{self, Read};
 use std::path::Path;
 
 use crate::text;
 
+/// The most bytes of a file that header detection reads, which a merge reads of a code file too (design §2.1).
+const HEAD_BYTES: u64 = 8 * 1024;
+
 /// The last line of a header that is cut at the read limit. It follows a blank line, so it is never part of a one-liner.
 const CUT_NOTE: &str = "… (header cut at 8 KiB)";
+
+/// The first `HEAD_BYTES` of the file at `path`: the bytes that header detection reads, and no more (design §2.1).
+pub fn read_head(path: &Path) -> io::Result<Vec<u8>> {
+    let mut head = Vec::new();
+    File::open(path)?.take(HEAD_BYTES).read_to_end(&mut head)?;
+    Ok(head)
+}
 
 /// The header of the file at `path`, read from its first bytes (at most 8 KiB, see `corpus.rs`): the text of its leading comment
 /// block with the markers removed. A header still open at the read limit ends with the cut note (design §2.1). None for a file with
