@@ -1,5 +1,5 @@
 //! Finds a repository's toplevel by listing, and reads its layout as plain files, never by asking git.
-//! The toplevel bounds the walk for `.memex/` (design §4.1 item 1). The layout (design §4.4 git) is the `.git` entry, its `gitdir:` line, the git dir's `commondir` and its `HEAD`, each read only as a small regular file, so a hostile layout cannot block or flood the read; the listing helpers that match special names against a folder's listing (design §4.4 Name matching) live here too.
+//! `scan` finds the toplevel and the root's `.memex/` in one listing of each ancestor. The toplevel bounds the walk for `.memex/` (design §4.1 item 1). The layout (design §4.4 git) is the `.git` entry, its `gitdir:` line, the git dir's `commondir` and its `HEAD`, each read only as a small regular file, so a hostile layout cannot block or flood the read; the listing helpers that match special names against a folder's listing (design §4.4 Name matching) live here too.
 //! Cases: DISC-TOP-01, DISC-TOP-02, DISC-TOP-03, DISC-TOP-04, DISC-TOP-05, DISC-TOP-06, DISC-TOP-08, DISC-ROOT-05, DISC-GIT-01, DISC-GIT-02, DISC-GIT-03, DISC-NOGIT-04, DISC-NOGIT-05, DISC-NOGIT-06, DISC-NOGIT-07, INIT-NOGIT-01
 
 use std::ffi::OsStr;
@@ -7,28 +7,45 @@ use std::fs;
 use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 
-/// The toplevel of the repository holding `start`: the nearest folder at or above it whose listing has an entry named `.git`, of
-/// any kind (design §4.1 item 1). None when no `.git` lies above `start`. A folder whose listing fails lists nothing, as
-/// `holds_memex` reads it. The result is canonical when `start` is.
-pub fn toplevel(start: &Path) -> Option<PathBuf> {
-    start
-        .ancestors()
-        .find(|dir| lists(dir, ".git").unwrap_or(false))
-        .map(Path::to_path_buf)
-}
-
-/// The nearest folder from `cwd` up to `bound`, inclusive, that holds a `.memex/`. With no `bound` the walk runs to the
-/// filesystem root. For the bound to be reached, `cwd` and `bound` must both be canonical.
-pub fn nearest_within(cwd: &Path, bound: Option<&Path>) -> Option<PathBuf> {
-    for dir in cwd.ancestors() {
-        if holds_memex(dir) {
-            return Some(dir.to_path_buf());
+/// The toplevel of the repository holding `start` and the nearest folder with a `.memex/` within it (design §4.1 item 1), found by
+/// one walk that lists each ancestor once. The toplevel is the nearest folder at or above `start` whose listing has an entry named
+/// `.git`, of any kind; with none, the `.memex/` is searched up to the filesystem root. A folder whose listing fails lists nothing.
+/// The results are canonical when `start` is.
+pub fn scan(start: &Path) -> (Option<PathBuf>, Option<PathBuf>) {
+    let mut memex = None;
+    for dir in start.ancestors() {
+        let [git, has_memex] = listed_names(dir, [".git", ".memex"]);
+        if memex.is_none() && has_memex && dir.join(".memex").is_dir() {
+            memex = Some(dir.to_path_buf());
         }
-        if Some(dir) == bound {
-            break;
+        if git {
+            return (Some(dir.to_path_buf()), memex);
         }
     }
-    None
+    (None, memex)
+}
+
+/// Which of `names` the listing of `dir` holds, each matched exactly, from one read of the folder (design §4.4 Name matching). A
+/// folder that does not exist lists nothing, and a failing entry ends the read, so a name that the read did not reach is not held,
+/// as `lists` reads it.
+fn listed_names<const N: usize>(dir: &Path, names: [&str; N]) -> [bool; N] {
+    let mut held = [false; N];
+    let Ok(listing) = fs::read_dir(dir) else {
+        return held;
+    };
+    for item in listing {
+        let Ok(item) = item else {
+            break;
+        };
+        let file_name = item.file_name();
+        let Some(name) = file_name.to_str() else {
+            continue;
+        };
+        for (slot, wanted) in held.iter_mut().zip(names) {
+            *slot |= name == wanted;
+        }
+    }
+    held
 }
 
 /// True when `dir` lists a folder named exactly `.memex`. The name is matched against the listing, never probed on a guessed
@@ -58,6 +75,15 @@ pub fn entry_named(dir: &Path, name: &str) -> io::Result<Option<fs::DirEntry>> {
 /// `.memex/` are matched this way and never probed with `exists()` (design §4.4 Name matching).
 pub fn lists(dir: &Path, name: &str) -> io::Result<bool> {
     entry_named(dir, name).map(|entry| entry.is_some())
+}
+
+/// True when the store's own folder is listed under its parent by its exact name, as a folder, a file or a symlink. The writes
+/// and reads that use a listed store follow it (design §4.4 Name matching).
+pub fn store_listed(store: &Path) -> io::Result<bool> {
+    match (store.parent(), store.file_name().and_then(OsStr::to_str)) {
+        (Some(parent), Some(name)) => lists(parent, name),
+        _ => Ok(false),
+    }
 }
 
 /// The largest layout file (`.git`, `commondir`, `HEAD`) memex reads, in bytes. Each holds one short line; git itself refuses a
@@ -96,7 +122,7 @@ pub fn layout_of(top: &Path) -> Layout {
 
 /// True when the `.git` entry of `top` is a folder, which is a main checkout (design §4.4 git). The name was matched by the listing
 /// that found `top`.
-fn git_entry_is_folder(top: &Path) -> bool {
+pub fn git_entry_is_folder(top: &Path) -> bool {
     entry_named(top, ".git")
         .ok()
         .flatten()
@@ -197,8 +223,8 @@ mod tests {
         fs::create_dir_all(sub.join("deeper")).expect("folders below the repo");
         fs::write(repo.join(".git"), b"gitdir: missing\n").expect("a git file");
         fs::create_dir_all(sub.join(".git")).expect("a git folder");
-        assert_eq!(toplevel(&sub.join("deeper")), Some(sub));
-        assert_eq!(toplevel(&repo), Some(repo.clone()));
+        assert_eq!(scan(&sub.join("deeper")).0, Some(sub));
+        assert_eq!(scan(&repo).0, Some(repo.clone()));
     }
 
     #[test]
@@ -210,11 +236,38 @@ mod tests {
         fs::create_dir_all(top.join(".memex")).expect("a folder above the repo");
         fs::create_dir_all(&cwd).expect("a folder inside the repo");
         fs::create_dir_all(repo.join(".git")).expect("a git folder");
-        let bound = toplevel(&cwd);
-        assert_eq!(nearest_within(&cwd, bound.as_deref()), None);
-        assert_eq!(nearest_within(&cwd, None), Some(top.clone()));
+        assert_eq!(scan(&cwd), (Some(repo.clone()), None));
         fs::create_dir_all(repo.join(".memex")).expect("a store in the repo");
-        assert_eq!(nearest_within(&cwd, bound.as_deref()), Some(repo));
+        assert_eq!(scan(&cwd), (Some(repo.clone()), Some(repo)));
+    }
+
+    #[test]
+    fn outside_a_repo_the_walk_reaches_the_filesystem_root() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let top = dunce::canonicalize(dir.path()).expect("a canonical folder");
+        let cwd = top.join("plain").join("sub");
+        fs::create_dir_all(&cwd).expect("a folder with no repo");
+        fs::create_dir_all(top.join(".memex")).expect("a store above it");
+        assert_eq!(scan(&cwd), (None, Some(top)));
+    }
+
+    #[test]
+    fn a_store_is_listed_by_its_name_under_its_parent() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let store = dir.path().join(".memex").join("logs");
+        assert!(!store_listed(&store).expect("a listing"));
+        fs::create_dir_all(&store).expect("a store");
+        assert!(store_listed(&store).expect("a listing"));
+    }
+
+    #[test]
+    fn one_listing_holds_each_name_exactly_and_a_missing_folder_holds_none() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        fs::write(dir.path().join(".git"), b"x").expect("a file");
+        fs::create_dir_all(dir.path().join("Config.memex")).expect("a folder");
+        assert_eq!(listed_names(dir.path(), [".git", ".memex"]), [true, false]);
+        let missing = dir.path().join("missing");
+        assert_eq!(listed_names(&missing, [".git", ".memex"]), [false, false]);
     }
 
     #[test]

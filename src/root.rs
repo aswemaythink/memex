@@ -1,19 +1,18 @@
 //! Finds where `log` writes, per design §4.1: the root, the folder that owns the store, and the store.
-//! The root is the nearest `.memex/` above the cwd, bounded by its toplevel, which the listing finds (layout.rs); else the toplevel, else the cwd. The read verbs use the same root.
-//! git answers for the store's place and HEAD while it works; when it gives no answer, the layout (layout.rs) answers from plain files (design §4.4 git).
+//! The root is the nearest `.memex/` above the cwd, bounded by its toplevel, which one listing of the ancestors finds (layout.rs); else the toplevel, else the cwd. The read verbs use the same root.
+//! git answers for the store's place and HEAD while it works; when it gives no answer, the layout (layout.rs) answers from plain files (design §4.4 git). A cwd with no `.memex/` in reach whose toplevel is a `.git` folder or absent is not asked, since git cannot change that answer; `log` gets HEAD's branch in the probe's own call.
 //! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-ROOT-05, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-GIT-01, DISC-GIT-02, DISC-GIT-03, DISC-NOGIT-01, DISC-NOGIT-02, DISC-NOGIT-03, DISC-NOGIT-04, DISC-NOGIT-05, DISC-NOGIT-06, DISC-NOGIT-07, DISC-TOP-01, DISC-TOP-02, DISC-TOP-03, DISC-TOP-04, DISC-TOP-05, DISC-TOP-06, DISC-TOP-07, DISC-TOP-08, LOG-WRITE-06, LOG-WRITE-10
 
 use std::ffi::OsStr;
-use std::io;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 use crate::error::Error;
 use crate::layout::{
-    git_entry_is_file, head_branch, holds_memex, layout_of, nearest_within, toplevel, Layout,
+    git_entry_is_file, git_entry_is_folder, head_branch, holds_memex, layout_of, scan, Layout,
 };
 
-pub use crate::layout::lists;
+pub use crate::layout::{lists, store_listed};
 
 /// Where `log` writes: the root, the folder whose `.memex/` owns the store, and the store itself.
 pub struct Place {
@@ -27,8 +26,8 @@ pub struct Place {
     pub worktree: Option<PathBuf>,
 }
 
-/// The branch and short commit of HEAD. Each is None when it cannot be known: the commit needs git, and the branch is
-/// None for a detached HEAD.
+/// The branch and short commit of HEAD. Each is None when it cannot be known: the commit needs git, and the branch is None for a
+/// detached HEAD.
 pub struct Head {
     pub branch: Option<String>,
     pub commit: Option<String>,
@@ -54,45 +53,40 @@ enum Source {
     Unplaced,
 }
 
-/// The store as the reads and `log` see it, and whether the layout cannot place it.
+/// The store as the reads and `log` see it: the place, and for `log` what HEAD needs.
 struct Resolution {
     /// The place, or the `no_root` error when no `.memex/` is in reach, in which case the reads show no store.
     place: Result<Place, Error>,
-    /// True when the layout cannot place a linked worktree's store, so `log` refuses before it writes (design §4.4 git).
-    unplaced: bool,
+    /// git's `--abbrev-ref HEAD` line, when `log` asked for HEAD and git answered it.
+    abbrev: Option<String>,
+    /// The listing's toplevel, and the canonical cwd: where HEAD's layout fallback and its commit are read.
+    top: Option<PathBuf>,
+    canonical: PathBuf,
 }
 
 /// The refusal of `log` in a linked worktree whose store the layout cannot place (design §4.4 git).
 const UNPLACED: &str = "cannot find the main checkout's log store: git did not answer and this linked worktree's repository is not a .git folder; run memex log where git works";
 
-/// Finds the place the reads and `log` use from `cwd`. A missing `.memex/` is the `no_root` error (exit 3).
+/// The probe in one git call: the git dir, the common dir, and whether the common dir is bare (design §4.4 git).
+const PROBE: [&str; 4] = [
+    "rev-parse",
+    "--git-dir",
+    "--git-common-dir",
+    "--is-bare-repository",
+];
+
+/// Finds the place the reads use from `cwd`. A missing `.memex/` is the `no_root` error (exit 3).
 pub fn locate(cwd: &Path) -> Result<Place, Error> {
-    resolution_of(cwd)?.place
+    resolution_of(cwd, false)?.place
 }
 
-/// `locate` for `log`. A linked worktree whose store the layout cannot place is refused before anything is written, since its
-/// entry would be lost with the worktree (design §4.4 git).
-pub fn locate_for_write(cwd: &Path) -> Result<Place, Error> {
-    let found = resolution_of(cwd)?;
-    if found.unplaced {
-        return Err(Error::io_message(UNPLACED.to_string()));
-    }
-    found.place
-}
-
-/// The branch and short commit of HEAD, as git sees them from `cwd`. When git gives no branch, the branch is read from HEAD as a
-/// plain file, and the commit is omitted (design §4.4 git).
-pub fn head(cwd: &Path) -> Head {
-    match git_line(cwd, &["rev-parse", "--abbrev-ref", "HEAD"]) {
-        Some(name) => Head {
-            branch: Some(name).filter(|name| name != "HEAD"),
-            commit: git_line(cwd, &["rev-parse", "--short=7", "HEAD"]),
-        },
-        None => Head {
-            branch: toplevel(&resolved(cwd)).and_then(|top| head_branch(&top)),
-            commit: None,
-        },
-    }
+/// Finds where `log` writes, and HEAD for its entry, from `cwd`. `log` refuses a linked worktree whose store the layout cannot place
+/// before anything is written, since its entry would be lost with the worktree (design §4.4 git).
+pub fn locate_for_write(cwd: &Path) -> Result<(Place, Head), Error> {
+    let found = resolution_of(cwd, true)?;
+    let place = found.place?;
+    let head = head_of(&found.canonical, found.top.as_deref(), found.abbrev);
+    Ok((place, head))
 }
 
 /// A path as labels and JSON write it: `/` separators on every OS, and no change on Unix.
@@ -165,21 +159,23 @@ fn main_checkout(git: &Git) -> Option<PathBuf> {
     }
 }
 
-/// The store as the cwd's repository places it (design §4.1 item 3): git's answer while git gives one, else the layout's.
-fn resolution_of(cwd: &Path) -> Result<Resolution, Error> {
+/// The store as the cwd's repository places it (design §4.1 item 3): git's answer while git gives one, else the layout's. `for_write`
+/// (for `log`) asks HEAD in the probe's call too, and refuses an unplaced linked worktree (design §4.4 git).
+fn resolution_of(cwd: &Path, for_write: bool) -> Result<Resolution, Error> {
     let canonical = dunce::canonicalize(cwd)
         .map_err(|failure| Error::io_at("cannot resolve", cwd, &failure))?;
-    // The toplevel comes from the listing, so it is the same with git missing, failing or present (design §4.1 item 1).
-    let top = toplevel(&canonical);
-    let found = nearest_within(&canonical, top.as_deref());
+    // One listing of the ancestors gives the toplevel and the root's `.memex/`, the same with git missing, failing or present.
+    let (top, found) = scan(&canonical);
     let has_memex = found.is_some();
-    let source = source_of(&canonical, top.as_deref());
-    let unplaced = matches!(source, Source::Unplaced);
+    let (source, abbrev) = source_of(&canonical, top.as_deref(), has_memex, for_write);
+    if for_write && matches!(source, Source::Unplaced) {
+        return Err(Error::io_message(UNPLACED.to_string()));
+    }
     let worktree = match &source {
         Source::Repo(git) if git.linked => top.clone(),
         _ => None,
     };
-    let root = found.or_else(|| top.clone()).unwrap_or(canonical);
+    let root = found.or(top.clone()).unwrap_or(canonical.clone());
     let place = match source {
         Source::Repo(git) if git.bare => bare_place(root, &git, has_memex, worktree),
         Source::Repo(git) => checkout_place(root, top.as_deref(), Some(&git), has_memex, worktree),
@@ -187,19 +183,29 @@ fn resolution_of(cwd: &Path) -> Result<Resolution, Error> {
             checkout_place(root, top.as_deref(), None, has_memex, None)
         }
     };
-    Ok(Resolution { place, unplaced })
+    Ok(Resolution {
+        place,
+        abbrev,
+        top,
+        canonical,
+    })
 }
 
-/// Who places the store for the repository at `canonical`: git while it answers. Without git's answer the layout decides: a linked
-/// worktree whose common dir is a `.git` folder maps to its main checkout, and one it cannot place is `Unplaced` (design §4.4 git).
-/// git's answer counts as linked only when the toplevel's own `.git` is a file: a `.git` folder git skips, inside a linked worktree,
-/// keeps the root's own store (DISC-TOP-08).
-fn source_of(canonical: &Path, top: Option<&Path>) -> Source {
-    if let Some(mut git) = Git::probe(canonical) {
-        git.linked &= top.is_some_and(git_entry_is_file);
-        return Source::Repo(git);
+/// Who places the store, with git's `--abbrev-ref HEAD` line when the probe asked for it and git gave it.
+type Placed = (Source, Option<String>);
+
+/// Who places the store for the repository at `cwd` (design §4.4 git): git while it answers, else the layout. With no `.memex/` in reach
+/// and a toplevel that is a `.git` folder or absent, no place can be reached, so git is not asked (DISC-TOP-08 keeps the root's store).
+fn source_of(cwd: &Path, top: Option<&Path>, has_memex: bool, head: bool) -> Placed {
+    if !has_memex && top.is_none_or(git_entry_is_folder) {
+        return (Source::Own, None);
     }
-    match top.map(layout_of) {
+    let (git, abbrev) = Git::probe(cwd, head);
+    if let Some(mut git) = git {
+        git.linked &= top.is_some_and(git_entry_is_file);
+        return (Source::Repo(git), abbrev);
+    }
+    let source = match top.map(layout_of) {
         Some(Layout::Linked(common_dir)) => Source::Repo(Git {
             common_dir,
             bare: false,
@@ -207,29 +213,28 @@ fn source_of(canonical: &Path, top: Option<&Path>) -> Source {
         }),
         Some(Layout::Unplaced) => Source::Unplaced,
         Some(Layout::Own) | None => Source::Own,
-    }
+    };
+    (source, abbrev)
 }
 
 /// The nearest folder with a `.memex/` above `cwd`, within its toplevel (design §4.1 item 1). Outside a repo the walk is unbounded.
 /// No git is asked.
 pub fn nearest_memex(cwd: &Path) -> Option<PathBuf> {
-    let cwd = resolved(cwd);
-    let top = toplevel(&cwd);
-    nearest_within(&cwd, top.as_deref())
+    scan(&resolved(cwd)).1
 }
 
 /// The root that the read verbs, `show` and `search`, use for `cwd` (design §4.1 item 1): the nearest folder with a `.memex/`
 /// inside its toplevel, else the toplevel, else `cwd` itself. No git is asked.
 pub fn root_of(cwd: &Path) -> PathBuf {
     let cwd = resolved(cwd);
-    let top = toplevel(&cwd);
-    nearest_within(&cwd, top.as_deref()).or(top).unwrap_or(cwd)
+    let (top, found) = scan(&cwd);
+    found.or(top).unwrap_or(cwd)
 }
 
 /// The toplevel of the repository holding `cwd` (design §4.1 item 1), canonical and found by listing. None when no `.git` lies
 /// above `cwd`. No git is asked, so `init` targets the same folder whether git is missing, failing or present.
 pub fn toplevel_of(cwd: &Path) -> Option<PathBuf> {
-    toplevel(&resolved(cwd))
+    scan(&resolved(cwd)).0
 }
 
 /// `cwd` as the filesystem spells it, so that its ancestors compare equal with the canonical toplevel. A `cwd` that cannot be
@@ -238,29 +243,58 @@ fn resolved(cwd: &Path) -> PathBuf {
     dunce::canonicalize(cwd).unwrap_or_else(|_| cwd.to_path_buf())
 }
 
-/// True when the store's own folder is listed under its parent by its exact name, as a folder, a file or a symlink. The writes
-/// and reads that use a listed store follow it (design §4.4 Name matching).
-pub fn store_listed(store: &Path) -> io::Result<bool> {
-    match (store.parent(), store.file_name().and_then(OsStr::to_str)) {
-        (Some(parent), Some(name)) => lists(parent, name),
-        _ => Ok(false),
+/// HEAD of the repository at `canonical`: the branch and short commit that git gave, when it gave the branch (`abbrev`). Else the
+/// branch that the layout's `HEAD` names, with no commit (design §4.4 git).
+fn head_of(canonical: &Path, top: Option<&Path>, abbrev: Option<String>) -> Head {
+    match abbrev {
+        Some(name) => Head {
+            branch: Some(name).filter(|name| name != "HEAD"),
+            commit: git_line(canonical, &["rev-parse", "--short=7", "HEAD"]),
+        },
+        None => Head {
+            branch: top.and_then(head_branch),
+            commit: None,
+        },
     }
 }
 
 impl Git {
-    /// Asks git about `cwd`. Returns None when git is missing or fails, or `cwd` is not inside a repository. The toplevel is not
-    /// asked for: the listing finds it (design §4.1 item 1).
-    fn probe(cwd: &Path) -> Option<Git> {
-        let dirs = git_lines(cwd, &["rev-parse", "--git-dir", "--git-common-dir"])?;
-        let [git_dir, common] = dirs.as_slice() else {
-            return None;
-        };
-        let git_dir = resolve(cwd, git_dir)?;
+    /// Asks git about `cwd`: the probe, and with `head` HEAD's `--abbrev-ref` in the same call. An unborn HEAD fails that call, so the probe
+    /// is then asked alone, and HEAD only when the probe answered (one discovery fails both). The toplevel is not asked for (design §4.1).
+    fn probe(cwd: &Path, head: bool) -> (Option<Git>, Option<String>) {
+        if !head {
+            return (Git::probe_alone(cwd), None);
+        }
+        let args = [&PROBE[..], &["--abbrev-ref", "HEAD"][..]].concat();
+        if let Some([dir, common, bare, name]) = git_lines(cwd, &args).as_deref() {
+            return (Git::of(cwd, dir, common, bare), Some(name.clone()));
+        }
+        let git = Git::probe_alone(cwd);
+        let abbrev = git
+            .as_ref()
+            .and_then(|_| git_line(cwd, &["rev-parse", "--abbrev-ref", "HEAD"]));
+        (git, abbrev)
+    }
+
+    /// The probe in one git call, without HEAD. None when git is missing or fails, or `cwd` is not inside a repository.
+    fn probe_alone(cwd: &Path) -> Option<Git> {
+        match git_lines(cwd, &PROBE)?.as_slice() {
+            [dir, common, bare] => Git::of(cwd, dir, common, bare),
+            _ => None,
+        }
+    }
+
+    /// The git dir and common dir that git printed for `cwd`, resolved. A main checkout (git dir = common dir) keeps the call's bare
+    /// answer, which the call inside the repository gives as the common dir does; a linked worktree asks its common dir instead.
+    fn of(cwd: &Path, dir: &str, common: &str, bare: &str) -> Option<Git> {
+        let git_dir = resolve(cwd, dir)?;
         let common_dir = resolve(cwd, common)?;
-        // Asked from inside the common dir: a worktree of a bare repo answers false from its own cwd.
-        let bare = git_line(&common_dir, &["rev-parse", "--is-bare-repository"]).as_deref()
-            == Some("true");
         let linked = git_dir != common_dir;
+        let bare = if linked {
+            git_line(&common_dir, &["rev-parse", "--is-bare-repository"]).as_deref() == Some("true")
+        } else {
+            bare == "true"
+        };
         Some(Git {
             common_dir,
             bare,
@@ -297,33 +331,13 @@ fn git_lines(dir: &Path, args: &[&str]) -> Option<Vec<String>> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use std::fs;
-
-    #[test]
-    fn a_store_is_listed_by_its_name_under_its_parent() {
-        let dir = tempfile::tempdir().expect("a temporary folder");
-        let store = dir.path().join(".memex").join("logs");
-        assert!(!store_listed(&store).expect("a listing"));
-        fs::create_dir_all(&store).expect("a store");
-        assert!(store_listed(&store).expect("a listing"));
-    }
-
-    #[test]
-    fn the_root_is_the_toplevel_when_no_memex_lies_inside_it() {
-        let dir = tempfile::tempdir().expect("a temporary folder");
-        let repo = resolved(dir.path()).join("repo");
-        let cwd = repo.join("sub");
-        fs::create_dir_all(&cwd).expect("a folder inside the repo");
-        fs::create_dir_all(repo.join(".git")).expect("a git folder");
-        assert_eq!(root_of(&cwd), repo);
-        assert_eq!(toplevel_of(&cwd), Some(repo));
-    }
-
     /// With the git on PATH, `log` from a repo whose `.git` is a FIFO is refused without blocking, and HEAD gives nothing.
     #[cfg(unix)]
     #[test]
     fn a_fifo_git_entry_neither_blocks_nor_places_the_store() {
+        use super::*;
+        use std::fs;
+
         let dir = tempfile::tempdir().expect("a temporary folder");
         let repo = resolved(dir.path());
         fs::create_dir_all(repo.join(".memex")).expect("a store owner");
@@ -334,8 +348,11 @@ mod tests {
         assert!(made.success());
         let (sender, receiver) = std::sync::mpsc::channel();
         std::thread::spawn(move || {
-            let refused = locate_for_write(&repo).is_err();
-            sender.send((refused, head(&repo).branch))
+            let outcome = locate_for_write(&repo);
+            sender.send((
+                outcome.is_err(),
+                outcome.ok().and_then(|(_, head)| head.branch),
+            ))
         });
         let outcome = receiver.recv_timeout(std::time::Duration::from_secs(5));
         assert_eq!(outcome.expect("locate and head return"), (true, None));
