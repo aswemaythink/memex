@@ -51,10 +51,10 @@
 
 ## MERGE
 
-- `MANK-MERGE-01` A folder manifest's `merge` file that cannot be read gives its `cannot read` warning and adds nothing, and the doc still loads, for a Markdown merge file and for a code merge file alike, exit 0.
-  design §4.2 Unreadable files: a folder manifest's `merge` file that can't be read gets the same warning. Scenario: `mergewarn` merges `README.md`, `NOTES.md` and `spec.rs` into `MERGE-1`; `NOTES.md` and `spec.rs` are chmod 000, and `README.md` reads. Run: memex show mergewarn:MERGE-1 --json. Unix only, since the case uses chmod.
+- `MANK-MERGE-01` A folder manifest's `merge` file that cannot be read gives its `cannot read` warning and adds nothing, and the doc still loads, for a Markdown merge file and for a code merge file alike, exit 0, unix only.
+  design §4.2 Unreadable files: a folder manifest's `merge` file that can't be read gets the same warning. Scenario: `mergewarn` merges `README.md`, `NOTES.md` and `spec.rs` into `MERGE-1`; `NOTES.md` and `spec.rs` are chmod 000 (the case sets `platforms` to unix), and `README.md` reads. Run: memex show mergewarn:MERGE-1 --json.
 
 ## ROOTS
 
-- `MANK-ROOTS-01` A manifest root that is a symlink to a folder outside the repo is left out with the warning `<collection>: root <root> leads outside the repo; skipped`, while a symlink to a folder inside the repo still reads, and the outside doc is not found, exit 1.
-  design §4.2 Unreadable files: a manifest root that is a symlink resolving outside the repo root is skipped with that warning. Scenario: `links` names the roots `linked`, a symlink to `../outside` beside the repo, and `shortcut`, a symlink to `units`; `links.patch` makes both symlinks with `git apply`, since a fixture cannot hold a symlink. Run: memex show links:SHORT-1 links:Outside --json, then memex info. Unix only, since the symlinks need it.
+- `MANK-ROOTS-01` A manifest root that is a symlink to a folder outside the repo is left out with the warning `<collection>: root <root> leads outside the repo; skipped`, while a symlink to a folder inside the repo still reads, and the outside doc is not found, exit 1, unix only.
+  design §4.2 Unreadable files: a manifest root that is a symlink resolving outside the repo root is skipped with that warning. Scenario: `links` names the roots `linked`, a symlink to `../outside` beside the repo, and `shortcut`, a symlink to `units`; `links.patch` makes both symlinks with `git apply` in setup, since a fixture cannot hold a symlink, and that patch gives plain files on Windows. Run: memex show links:SHORT-1 links:Outside --json, then memex info.
