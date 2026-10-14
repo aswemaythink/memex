@@ -1,5 +1,5 @@
 //! Loads and validates the manifests of design §4.2 and matches the files under their roots. Each manifest's docs come from its kind's reader.
-//! Cases: MAN-LOAD-01, MAN-LOAD-02, MAN-LOAD-03, MAN-LOAD-04, MAN-LOAD-05, MAN-LOAD-06, MAN-LOAD-07, MAN-LOAD-08, MAN-LOAD-09, MAN-LOAD-10, MAN-LOAD-11, MAN-LOAD-12, MAN-MD-11
+//! Cases: MAN-LOAD-01, MAN-LOAD-02, MAN-LOAD-03, MAN-LOAD-04, MAN-LOAD-05, MAN-LOAD-06, MAN-LOAD-07, MAN-LOAD-08, MAN-LOAD-09, MAN-LOAD-10, MAN-LOAD-11, MAN-LOAD-12, MAN-MD-11, MAN-MD-13
 
 use std::collections::BTreeMap;
 use std::fs;
