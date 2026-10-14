@@ -458,3 +458,5 @@ Open:
 - tests/cases/cli/README.md still says exit 3 is planned for PORT.
 - Plugin hook: cd to the hook input's `cwd` before `memex info`, so a worktree sub-agent sees its own worktree's atlas (`here`). Test in tests/plugin_hook.rs.
 - design §6.1: the install id is `/plugin install memex@memex` (marketplace form); fix the line.
+- src/collections/manifest.rs probes `.memex/collections` by path: match it by listing (design §4.4).
+- The ordinary-mode temp-file writer exists twice (src/logs/write.rs and src/verbs/init/files.rs): one shared helper.
