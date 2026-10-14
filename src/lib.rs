@@ -40,7 +40,7 @@ pub fn run(args: Vec<OsString>) -> i32 {
 }
 
 /// Carries out a parsed command. Help, version, search, log and show do their work; the other verbs are not built yet. A search
-/// with `--in` and no words is the roster (design §3.2), which is not built yet.
+/// with `--in` and no words is the roster (design §3.2), which the search verb prints.
 fn dispatch(command: Command) -> i32 {
     match command {
         Command::Help(verb) => print_out(&help::text(verb)),
@@ -51,9 +51,6 @@ fn dispatch(command: Command) -> i32 {
             limit,
             json,
         } => {
-            if terms.is_empty() {
-                return not_implemented(Verb::Search);
-            }
             let request = verbs::search::Request {
                 terms,
                 in_,

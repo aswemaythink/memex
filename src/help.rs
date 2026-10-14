@@ -1,5 +1,5 @@
 //! The help texts and the grammar block of design §3, plus the usage lines that usage errors print.
-//! Cases: CLI-*
+//! Cases: CLI-*, CLI-HELP-01, CLI-HELP-02, CLI-HELP-03, CLI-HELP-04, CLI-HELP-05, CLI-HELP-06
 
 use crate::cli::Verb;
 

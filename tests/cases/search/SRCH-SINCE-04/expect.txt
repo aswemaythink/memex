@@ -1,0 +1,12 @@
+$ memex search since:yesterday
+exit 2
+stdout (empty)
+stderr
+| memex: bad value 'yesterday' for 'since:': expected Nm, Nh, Nd, Nw or YYYY-MM-DD
+| usage: memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]
+
+$ memex search since:2026-02-30 --json
+exit 2
+stdout
+| {"error":{"code":"usage","message":"bad value '2026-02-30' for 'since:': expected Nm, Nh, Nd, Nw or YYYY-MM-DD"}}
+stderr (empty)

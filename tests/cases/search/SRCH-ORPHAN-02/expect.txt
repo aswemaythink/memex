@@ -1,0 +1,30 @@
+$ memex search --in cases --limit 5
+exit 0
+stdout
+| cases  (showing 5 of 52)
+|   cases:WID-ONE-01  Widget case 01.  <-1
+|   cases:WID-ONE-02  Widget case 02.  <-2
+|   cases:WID-ONE-03  Widget case 03.  <-1
+|   cases:WID-ONE-04  Widget case 04.  <-0
+|   cases:WID-ONE-05  Widget case 05.  <-0
+stderr (empty)
+
+$ memex show cases:WID-ONE-04
+exit 0
+stdout
+| === cases:WID-ONE-04 ===
+| Widget case 04.
+| 
+| group
+|   ONE
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   README.md  The widget toolkit for each agent. (via WID-*)
+|   showing 1 of 1
+stderr (empty)

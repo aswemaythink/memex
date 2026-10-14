@@ -1,0 +1,1 @@
+{"steps": [{"args": ["search", "since:yesterday"]}, {"args": ["search", "since:2026-02-30", "--json"]}]}

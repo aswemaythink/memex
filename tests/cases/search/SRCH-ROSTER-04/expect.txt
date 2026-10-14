@@ -1,0 +1,5 @@
+$ memex search --in cases --limit 2 --json
+exit 0
+stdout
+| {"filters":{},"groups":[{"collection":"cases","hits":[{"cited_by":1,"collection":"cases","fields":{"group":"ONE"},"fuzzy":[],"id":"WID-ONE-01","path":"CASES.md","ref":"cases:WID-ONE-01","score":null,"snippet":"Widget case 01.","title":"Widget case 01."},{"cited_by":2,"collection":"cases","fields":{"group":"ONE"},"fuzzy":[],"id":"WID-ONE-02","path":"CASES.md","ref":"cases:WID-ONE-02","score":null,"snippet":"Widget case 02.","title":"Widget case 02."}],"total":52}],"query":""}
+stderr (empty)

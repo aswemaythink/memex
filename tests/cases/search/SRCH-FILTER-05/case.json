@@ -1,0 +1,1 @@
+{"steps": [{"args": ["search", "branch:feat/show"]}, {"args": ["search", "worktree:wt-cook-3"]}, {"args": ["search", "worktree:/work/wt-cook-2"]}]}

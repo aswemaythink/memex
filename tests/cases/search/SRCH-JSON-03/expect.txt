@@ -1,0 +1,5 @@
+$ memex search tag:show since:2d --json
+exit 0
+stdout
+| {"filters":{"since":["2d"],"tag":["show"]},"groups":[{"collection":"logs","hits":[{"collection":"impl","fields":{"agent":"cook-2","branch":"feat/show","stream":"impl","tags":["show","plan"],"time":"2026-10-13T11:50:00Z","to":["cook-1"],"worktree":"/work/wt-cook-2"},"fuzzy":[],"id":"20261013-115000-widget-plan","path":null,"ref":"impl:20261013-115000-widget-plan","score":null,"snippet":"Widget plan","title":"Widget plan"},{"collection":"impl","fields":{"agent":"cook-1","branch":"main","stream":"impl","tags":["build","show"],"time":"2026-10-13T11:00:00Z","to":["cook-1","cook-2"]},"fuzzy":[],"id":"20261013-110000-widget-tie","path":null,"ref":"impl:20261013-110000-widget-tie","score":null,"snippet":"Widget tie","title":"Widget tie"},{"collection":"impl","fields":{"agent":"cook-2","branch":"feat/show","stream":"impl","tags":["show"],"time":"2026-10-12T12:00:00Z"},"fuzzy":[],"id":"20261012-120000-widget-day","path":null,"ref":"impl:20261012-120000-widget-day","score":null,"snippet":"Widget day","title":"Widget day"}],"total":3}],"query":"tag:show since:2d"}
+stderr (empty)

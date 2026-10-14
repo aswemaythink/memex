@@ -1,11 +1,13 @@
-//! Carries out `memex search` (design §3.2 and §3.6): gathers, groups and ranks docs, then prints.
-//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-IN-01, SRCH-IN-02, SRCH-RANK-03, SRCH-TOKEN-03, SRCH-JSON-01, SRCH-JSON-02, SRCH-LINE-01
+//! Carries out `memex search` (design §3.2 and §3.6): filters, then ranks, lists or rosters docs.
+//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-IN-01, SRCH-IN-02, SRCH-RANK-03, SRCH-TOKEN-03, SRCH-JSON-01, SRCH-JSON-02, SRCH-LINE-01, SRCH-JSON-03, SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01, SRCH-ORPHAN-02, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04
 
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
 use crate::clock::{self, Timestamp};
 use crate::corpus::{Corpus, Doc};
 use crate::error::Error;
+use crate::index::filter::{self, time_of, Filter};
 use crate::index::tokenize::query_tokens;
 use crate::index::{Index, Source};
 use crate::render::search::{self as render, Group, Hit};
@@ -14,8 +16,11 @@ use crate::verbs::here;
 /// The `--limit` of each group when `--in` is not given (design §3.2).
 const DEFAULT_LIMIT: usize = 5;
 
-/// The `--limit` of each group when `--in` is given (design §3.2).
+/// The `--limit` of each group when `--in` is given with words (design §3.2).
 const IN_LIMIT: usize = 20;
+
+/// The `--limit` of each group of a roster, which is `--in` with no words (design §3.2).
+const ROSTER_LIMIT: usize = 50;
 
 /// The lines of a header that the index reads; `show` prints the whole header (design §2.1).
 const HEADER_LINES: usize = 60;
@@ -33,7 +38,7 @@ const STAMP_LEN: usize = 15;
 
 /// The arguments of `memex search` once the grammar has passed them.
 pub struct Request {
-    /// The words and filters, in the order given. Only words are searched until S3.4.
+    /// The words and filters, in the order given.
     pub terms: Vec<String>,
     /// The groups named by `--in`, if the flag was given.
     pub in_: Option<Vec<String>>,
@@ -43,11 +48,25 @@ pub struct Request {
     pub json: bool,
 }
 
-/// What a search asks of the index: its words, the groups it reads, the limit of each group, and the instant that log ages are
-/// measured from.
-struct Plan<'a> {
+/// What a query asks for (design §3.2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Mode {
+    /// Words are given: the docs that the filters keep are ranked by the words.
+    Words,
+    /// Filters are given with no words: the docs that they keep are listed.
+    Listing,
+    /// `--in` is given with no words: each group's docs are listed, with the count of docs that cite each one.
+    Roster,
+    /// No words, filters or `--in` are given: nothing is listed.
+    Nothing,
+}
+
+/// What a search asks of the index: its mode, its words and filters, the limit of each group, and the instant that log ages and
+/// `since:` are measured from.
+struct Plan {
+    mode: Mode,
     words: Vec<String>,
-    groups: Option<&'a [String]>,
+    filters: Vec<Filter>,
     limit: usize,
     now: Timestamp,
 }
@@ -56,22 +75,59 @@ struct Plan<'a> {
 /// text, and the exit status is 0 as usual.
 pub fn run(request: &Request) -> Result<String, Error> {
     let corpus = here::load()?.corpus;
-    let plan = Plan {
-        words: words_of(&request.terms),
-        groups: request.in_.as_deref(),
-        limit: request.limit.unwrap_or(if request.in_.is_some() {
-            IN_LIMIT
-        } else {
-            DEFAULT_LIMIT
-        }),
-        now: clock::now()?,
-    };
-    let groups = rank_groups(&corpus, &plan);
+    let scope = scope_of(&corpus, request.in_.as_deref());
+    let fields = filter::fields_of(scope.iter().flat_map(|(_, docs)| docs.iter().copied()));
+    let (filters, literals) = filter::read(&request.terms, &fields)?;
+    let plan = Plan::new(request, &literals, filters, clock::now()?);
+    let groups = rank_groups(&corpus, &plan, scope);
     Ok(if request.json {
-        render::document(&request.terms.join(" "), &groups)
+        let spelled: Vec<(&str, &str)> = plan.filters.iter().map(Filter::spelled).collect();
+        render::document(&request.terms.join(" "), &spelled, &groups)
     } else {
         render::text(&groups)
     })
+}
+
+impl Plan {
+    /// The plan of a request: its words are the tokens of its literal terms, its mode follows from what is given, and its limit is
+    /// the `--limit`, else the default of the mode.
+    fn new(request: &Request, literals: &[String], filters: Vec<Filter>, now: Timestamp) -> Plan {
+        let words = words_of(literals);
+        let mode = mode_of(
+            !words.is_empty(),
+            request.in_.is_some(),
+            !filters.is_empty(),
+        );
+        let default = match mode {
+            Mode::Words if request.in_.is_some() => IN_LIMIT,
+            Mode::Roster => ROSTER_LIMIT,
+            _ => DEFAULT_LIMIT,
+        };
+        Plan {
+            mode,
+            words,
+            filters,
+            limit: request.limit.unwrap_or(default),
+            now,
+        }
+    }
+
+    /// True when the doc passes every filter of the query.
+    fn keeps(&self, doc: &Doc) -> bool {
+        self.filters
+            .iter()
+            .all(|filter| filter.matches(doc, self.now))
+    }
+}
+
+/// The mode of a query: words rank the docs; otherwise `--in` makes a roster; otherwise filters list the docs they keep.
+fn mode_of(has_words: bool, in_given: bool, has_filters: bool) -> Mode {
+    match (has_words, in_given, has_filters) {
+        (true, _, _) => Mode::Words,
+        (false, true, _) => Mode::Roster,
+        (false, false, true) => Mode::Listing,
+        (false, false, false) => Mode::Nothing,
+    }
 }
 
 /// The group of a doc: `logs` for an entry of the log store, whose streams are all one group, and its collection otherwise,
@@ -84,29 +140,25 @@ fn group_of(corpus: &Corpus, doc: &Doc) -> String {
     }
 }
 
-/// The groups that hold hits, in the order of design §3.2. A group that `--in` leaves out is not searched, and a group with no
-/// hit is left out. With no words there are no hits.
-fn rank_groups<'a>(corpus: &'a Corpus, plan: &Plan) -> Vec<Group<'a>> {
-    if plan.words.is_empty() {
-        return Vec::new();
-    }
+/// The groups that the search reads, each with its docs, in the order of design §3.2. `--in` leaves out the groups that it does not
+/// name, and a group with no doc is left out.
+fn scope_of<'a>(corpus: &'a Corpus, in_: Option<&[String]>) -> Vec<(String, Vec<&'a Doc>)> {
     let mut groups: BTreeMap<(u8, String), Vec<&'a Doc>> = BTreeMap::new();
     for doc in corpus.first_docs() {
         let name = group_of(corpus, doc);
-        if wanted(plan, &name) {
+        if wanted(in_, &name) {
             groups.entry((rank(&name), name)).or_default().push(doc);
         }
     }
     groups
         .into_iter()
-        .filter_map(|((_, name), docs)| search_group(name, &docs, plan))
+        .map(|((_, name), docs)| (name, docs))
         .collect()
 }
 
 /// True when there is no `--in` list, or when the list names the group.
-fn wanted(plan: &Plan, name: &str) -> bool {
-    plan.groups
-        .is_none_or(|names| names.iter().any(|named| named.as_str() == name))
+fn wanted(in_: Option<&[String]>, name: &str) -> bool {
+    in_.is_none_or(|names| names.iter().any(|named| named.as_str() == name))
 }
 
 /// The place of a group in the output: 0 for readmes, 1 for headers, 2 for cases, 3 for a manifest's collection and 4 for logs.
@@ -120,7 +172,29 @@ fn rank(name: &str) -> u8 {
     }
 }
 
-/// The group of docs that the words search: its total, and its hits within the limit. None when no doc matches.
+/// The groups that hold hits or listed docs, in the order of design §3.2. Each group's docs are first narrowed by the filters, then
+/// ranked by the words, or listed. A query that asks for nothing has no groups.
+fn rank_groups<'a>(
+    corpus: &Corpus,
+    plan: &Plan,
+    scope: Vec<(String, Vec<&'a Doc>)>,
+) -> Vec<Group<'a>> {
+    if plan.mode == Mode::Nothing {
+        return Vec::new();
+    }
+    scope
+        .into_iter()
+        .filter_map(|(name, docs)| {
+            let kept: Vec<&'a Doc> = docs.into_iter().filter(|doc| plan.keeps(doc)).collect();
+            match plan.mode {
+                Mode::Words => search_group(name, &kept, plan),
+                _ => list_group(corpus, name, kept, plan),
+            }
+        })
+        .collect()
+}
+
+/// The group of docs that the words rank: its total, and its hits within the limit. None when no doc matches.
 fn search_group<'a>(name: String, docs: &[&'a Doc], plan: &Plan) -> Option<Group<'a>> {
     let sources: Vec<Source> = docs.iter().map(|doc| source_of(doc)).collect();
     let hits = Index::build(&sources).search(&plan.words);
@@ -135,9 +209,10 @@ fn search_group<'a>(name: String, docs: &[&'a Doc], plan: &Plan) -> Option<Group
             let doc = docs[hit.doc];
             Hit {
                 doc,
-                score: hit.score,
+                score: Some(hit.score),
                 fuzzy: hit.fuzzy,
                 age: age_of(&name, doc, plan.now),
+                cited_by: None,
             }
         })
         .collect();
@@ -146,6 +221,59 @@ fn search_group<'a>(name: String, docs: &[&'a Doc], plan: &Plan) -> Option<Group
         total,
         hits: shown,
     })
+}
+
+/// The listing of a group: the docs that the filters keep, in listing order, with the limit applied. A roster's hits carry the count
+/// of docs that cite each one. None when no doc is kept.
+fn list_group<'a>(
+    corpus: &Corpus,
+    name: String,
+    docs: Vec<&'a Doc>,
+    plan: &Plan,
+) -> Option<Group<'a>> {
+    if docs.is_empty() {
+        return None;
+    }
+    let total = docs.len();
+    let mut keyed: Vec<(Option<Timestamp>, &'a Doc)> = docs
+        .into_iter()
+        .map(|doc| (listed_time(corpus, doc), doc))
+        .collect();
+    keyed.sort_by(|left, right| {
+        compare_newest(left.0, right.0).then_with(|| left.1.label.cmp(&right.1.label))
+    });
+    let hits = keyed
+        .into_iter()
+        .take(plan.limit)
+        .map(|(_, doc)| Hit {
+            doc,
+            score: None,
+            fuzzy: Vec::new(),
+            age: age_of(&name, doc, plan.now),
+            cited_by: (plan.mode == Mode::Roster)
+                .then(|| corpus.citations().direct_count(&doc.label)),
+        })
+        .collect();
+    Some(Group { name, total, hits })
+}
+
+/// The time that orders a listed doc: a log's `time`. Every other doc has none, so the docs of a group are ordered by label.
+fn listed_time(corpus: &Corpus, doc: &Doc) -> Option<Timestamp> {
+    if corpus.is_log(doc) {
+        time_of(doc)
+    } else {
+        None
+    }
+}
+
+/// The order of two listed times, newest first: a later time comes before an earlier one, and a doc with no time comes last.
+fn compare_newest(left: Option<Timestamp>, right: Option<Timestamp>) -> Ordering {
+    match (left, right) {
+        (Some(left), Some(right)) => right.seconds_since(left).cmp(&0),
+        (Some(_), None) => Ordering::Less,
+        (None, Some(_)) => Ordering::Greater,
+        (None, None) => Ordering::Equal,
+    }
 }
 
 /// A doc as the index reads it. A header is cut to its first `HEADER_LINES` lines; the text of every other doc is read whole.
@@ -187,7 +315,7 @@ fn age_of(group: &str, doc: &Doc, now: Timestamp) -> Option<String> {
         .map(|stamp| render::age(now.seconds_since(stamp)))
 }
 
-/// The query's words: every token of every term in order, with no repeats. A term that holds no token adds none.
+/// The words of a query: every token of every literal term in order, with no repeats. A term that holds no token adds none.
 fn words_of(terms: &[String]) -> Vec<String> {
     let mut words: Vec<String> = Vec::new();
     for token in terms.iter().flat_map(|term| query_tokens(term)) {

@@ -1,0 +1,55 @@
+$ memex search --in cases
+exit 0
+stdout
+| cases  (showing 50 of 52)
+|   cases:WID-ONE-01  Widget case 01.  <-1
+|   cases:WID-ONE-02  Widget case 02.  <-2
+|   cases:WID-ONE-03  Widget case 03.  <-1
+|   cases:WID-ONE-04  Widget case 04.  <-0
+|   cases:WID-ONE-05  Widget case 05.  <-0
+|   cases:WID-ONE-06  Widget case 06.  <-0
+|   cases:WID-ONE-07  Widget case 07.  <-0
+|   cases:WID-ONE-08  Widget case 08.  <-0
+|   cases:WID-ONE-09  Widget case 09.  <-0
+|   cases:WID-ONE-10  Widget case 10.  <-0
+|   cases:WID-ONE-11  Widget case 11.  <-0
+|   cases:WID-ONE-12  Widget case 12.  <-0
+|   cases:WID-ONE-13  Widget case 13.  <-0
+|   cases:WID-ONE-14  Widget case 14.  <-0
+|   cases:WID-ONE-15  Widget case 15.  <-0
+|   cases:WID-ONE-16  Widget case 16.  <-0
+|   cases:WID-ONE-17  Widget case 17.  <-0
+|   cases:WID-ONE-18  Widget case 18.  <-0
+|   cases:WID-ONE-19  Widget case 19.  <-0
+|   cases:WID-ONE-20  Widget case 20.  <-0
+|   cases:WID-ONE-21  Widget case 21.  <-0
+|   cases:WID-ONE-22  Widget case 22.  <-0
+|   cases:WID-ONE-23  Widget case 23.  <-0
+|   cases:WID-ONE-24  Widget case 24.  <-0
+|   cases:WID-ONE-25  Widget case 25.  <-0
+|   cases:WID-ONE-26  Widget case 26.  <-0
+|   cases:WID-ONE-27  Widget case 27.  <-0
+|   cases:WID-ONE-28  Widget case 28.  <-0
+|   cases:WID-ONE-29  Widget case 29.  <-0
+|   cases:WID-ONE-30  Widget case 30.  <-0
+|   cases:WID-ONE-31  Widget case 31.  <-0
+|   cases:WID-ONE-32  Widget case 32.  <-0
+|   cases:WID-ONE-33  Widget case 33.  <-0
+|   cases:WID-ONE-34  Widget case 34.  <-0
+|   cases:WID-ONE-35  Widget case 35.  <-0
+|   cases:WID-ONE-36  Widget case 36.  <-0
+|   cases:WID-ONE-37  Widget case 37.  <-0
+|   cases:WID-ONE-38  Widget case 38.  <-0
+|   cases:WID-ONE-39  Widget case 39.  <-0
+|   cases:WID-ONE-40  Widget case 40.  <-0
+|   cases:WID-ONE-41  Widget case 41.  <-0
+|   cases:WID-ONE-42  Widget case 42.  <-0
+|   cases:WID-ONE-43  Widget case 43.  <-0
+|   cases:WID-ONE-44  Widget case 44.  <-0
+|   cases:WID-ONE-45  Widget case 45.  <-0
+|   cases:WID-ONE-46  Widget case 46.  <-0
+|   cases:WID-ONE-47  Widget case 47.  <-0
+|   cases:WID-ONE-48  Widget case 48.  <-0
+|   cases:WID-ONE-49  Widget case 49.  <-0
+|   cases:WID-ONE-50  Widget case 50.  <-0
+stderr (empty)

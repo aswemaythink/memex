@@ -1,5 +1,7 @@
 //! Prints `search`'s groups as text (design §3.2) and as the `--json` document (design §3.6).
-//! Cases: SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-FUZZY-01, SRCH-LINE-01, SRCH-JSON-01, SRCH-JSON-02
+//! Cases: SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-FUZZY-01, SRCH-LINE-01, SRCH-JSON-01, SRCH-JSON-02, SRCH-JSON-03, SRCH-FILTER-06, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01
+
+use std::collections::BTreeMap;
 
 use serde_json::{json, Map, Value as Json};
 
@@ -27,12 +29,14 @@ pub struct Group<'a> {
 pub struct Hit<'a> {
     /// The doc that matched.
     pub doc: &'a Doc,
-    /// The BM25F score, which the JSON document rounds to 3 decimals.
-    pub score: f64,
+    /// The BM25F score, which the JSON document rounds to 3 decimals; None for a listing or a roster, which ranks nothing.
+    pub score: Option<f64>,
     /// The index terms that matched by one edit, shown as `[~variant]`.
     pub fuzzy: Vec<String>,
     /// The age of a log entry, in the short form of `age`; None for any other doc, or for a log whose name has no stamp.
     pub age: Option<String>,
+    /// The direct cited-by count of a roster's hit, which its line ends with as `<-N`; None for any other hit.
+    pub cited_by: Option<usize>,
 }
 
 /// The text of the groups: each group's heading, then its hit lines. No groups give no text.
@@ -53,12 +57,17 @@ pub fn age(seconds: i64) -> String {
     }
 }
 
-/// The `--json` document: the query, the empty filters, and the groups (design §3.6), with one line break at the end.
-pub fn document(query: &str, groups: &[Group]) -> String {
+/// The `--json` document: the query, the filters, and the groups (design §3.6), with one line break at the end. Each filter's name
+/// holds the list of its values, in the order given.
+pub fn document(query: &str, filters: &[(&str, &str)], groups: &[Group]) -> String {
     let groups: Vec<Json> = groups.iter().map(group_json).collect();
+    let mut by_name: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
+    for &(name, value) in filters {
+        by_name.entry(name).or_default().push(value);
+    }
     format!(
         "{}\n",
-        json!({"query": query, "filters": {}, "groups": groups})
+        json!({"query": query, "filters": by_name, "groups": groups})
     )
 }
 
@@ -88,6 +97,9 @@ fn hit_line(hit: &Hit, is_log: bool) -> String {
     }
     if !hit.fuzzy.is_empty() {
         parts.push(markers(&hit.fuzzy));
+    }
+    if let Some(cited) = hit.cited_by {
+        parts.push(format!("<-{cited}"));
     }
     let mut line = format!("  {}", hit.doc.label);
     for part in parts {
@@ -135,21 +147,25 @@ fn group_json(group: &Group) -> Json {
     json!({"collection": group.name, "total": group.total, "hits": hits})
 }
 
-/// One hit as JSON: the doc's ref, collection, id, path, title and fields, then its score rounded to 3 decimals, its snippet
-/// (the full one-liner) and its fuzzy variants.
+/// One hit as JSON: the doc's ref, collection, id, path, title and fields, then its score rounded to 3 decimals (null in a listing
+/// or a roster), its snippet (the full one-liner), its fuzzy variants, and for a roster hit its `cited_by` count.
 fn hit_json(hit: &Hit) -> Json {
     let doc = hit.doc;
-    json!({
+    let mut value = json!({
         "ref": doc.label,
         "collection": doc.collection,
         "id": doc.id,
         "path": doc.path,
         "title": doc.title,
         "fields": fields(&doc.fields),
-        "score": round3(hit.score),
+        "score": hit.score.map(round3),
         "snippet": doc.title,
         "fuzzy": hit.fuzzy,
-    })
+    });
+    if let Some(cited) = hit.cited_by {
+        value["cited_by"] = json!(cited);
+    }
+    value
 }
 
 /// The fields of a doc as a JSON object: a string as a string, a list as an array of strings.

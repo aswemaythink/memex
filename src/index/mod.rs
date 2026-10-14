@@ -2,6 +2,7 @@
 //! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02
 
 pub mod bm25;
+pub mod filter;
 pub mod fuzzy;
 pub mod tokenize;
 

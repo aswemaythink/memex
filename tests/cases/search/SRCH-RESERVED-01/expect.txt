@@ -1,0 +1,4 @@
+$ memex search --in readmes agent:cook-2
+exit 0
+stdout (empty)
+stderr (empty)

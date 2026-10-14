@@ -1,0 +1,35 @@
+$ memex search since:30m
+exit 0
+stdout
+| logs  (showing 1 of 1)
+|   impl:20261013-115000-widget-plan  10m · cook-2 · feat/show  Widget plan
+stderr (empty)
+
+$ memex search since:6h
+exit 0
+stdout
+| logs  (showing 3 of 3)
+|   impl:20261013-115000-widget-plan  10m · cook-2 · feat/show  Widget plan
+|   impl:20261013-110000-widget-build  1h · cook-1 · feat/show  Widget build
+|   impl:20261013-110000-widget-tie  1h · cook-1 · main  Widget tie
+stderr (empty)
+
+$ memex search since:1w
+exit 0
+stdout
+| logs  (showing 4 of 4)
+|   impl:20261013-115000-widget-plan  10m · cook-2 · feat/show  Widget plan
+|   impl:20261013-110000-widget-build  1h · cook-1 · feat/show  Widget build
+|   impl:20261013-110000-widget-tie  1h · cook-1 · main  Widget tie
+|   impl:20261012-120000-widget-day  24h · cook-2 · feat/show  Widget day
+stderr (empty)
+
+$ memex search since:2026-10-12
+exit 0
+stdout
+| logs  (showing 4 of 4)
+|   impl:20261013-115000-widget-plan  10m · cook-2 · feat/show  Widget plan
+|   impl:20261013-110000-widget-build  1h · cook-1 · feat/show  Widget build
+|   impl:20261013-110000-widget-tie  1h · cook-1 · main  Widget tie
+|   impl:20261012-120000-widget-day  24h · cook-2 · feat/show  Widget day
+stderr (empty)

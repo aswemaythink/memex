@@ -1,0 +1,8 @@
+$ memex search agent:cook-2 tag:show
+exit 0
+stdout
+| logs  (showing 3 of 3)
+|   impl:20261013-115000-widget-plan  10m · cook-2 · feat/show  Widget plan
+|   impl:20261012-120000-widget-day  24h · cook-2 · feat/show  Widget day
+|   impl:20260930-090000-widget-old  13d · cook-2 · main  Old widget note
+stderr (empty)

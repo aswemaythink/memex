@@ -1,0 +1,56 @@
+# Widget cases
+
+## ONE
+
+- `WID-ONE-01` Widget case 01.
+- `WID-ONE-02` Widget case 02.
+- `WID-ONE-03` Widget case 03.
+- `WID-ONE-04` Widget case 04.
+- `WID-ONE-05` Widget case 05.
+- `WID-ONE-06` Widget case 06.
+- `WID-ONE-07` Widget case 07.
+- `WID-ONE-08` Widget case 08.
+- `WID-ONE-09` Widget case 09.
+- `WID-ONE-10` Widget case 10.
+- `WID-ONE-11` Widget case 11.
+- `WID-ONE-12` Widget case 12.
+- `WID-ONE-13` Widget case 13.
+- `WID-ONE-14` Widget case 14.
+- `WID-ONE-15` Widget case 15.
+- `WID-ONE-16` Widget case 16.
+- `WID-ONE-17` Widget case 17.
+- `WID-ONE-18` Widget case 18.
+- `WID-ONE-19` Widget case 19.
+- `WID-ONE-20` Widget case 20.
+- `WID-ONE-21` Widget case 21.
+- `WID-ONE-22` Widget case 22.
+- `WID-ONE-23` Widget case 23.
+- `WID-ONE-24` Widget case 24.
+- `WID-ONE-25` Widget case 25.
+- `WID-ONE-26` Widget case 26.
+- `WID-ONE-27` Widget case 27.
+- `WID-ONE-28` Widget case 28.
+- `WID-ONE-29` Widget case 29.
+- `WID-ONE-30` Widget case 30.
+- `WID-ONE-31` Widget case 31.
+- `WID-ONE-32` Widget case 32.
+- `WID-ONE-33` Widget case 33.
+- `WID-ONE-34` Widget case 34.
+- `WID-ONE-35` Widget case 35.
+- `WID-ONE-36` Widget case 36.
+- `WID-ONE-37` Widget case 37.
+- `WID-ONE-38` Widget case 38.
+- `WID-ONE-39` Widget case 39.
+- `WID-ONE-40` Widget case 40.
+- `WID-ONE-41` Widget case 41.
+- `WID-ONE-42` Widget case 42.
+- `WID-ONE-43` Widget case 43.
+- `WID-ONE-44` Widget case 44.
+- `WID-ONE-45` Widget case 45.
+- `WID-ONE-46` Widget case 46.
+- `WID-ONE-47` Widget case 47.
+- `WID-ONE-48` Widget case 48.
+- `WID-ONE-49` Widget case 49.
+- `WID-ONE-50` Widget case 50.
+- `WID-ONE-51` Widget case 51.
+- `WID-ONE-52` Widget case 52.

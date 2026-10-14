@@ -1,5 +1,5 @@
 //! Builds the citation index once per load (design §2.3): each doc's cites and the backlinks they give.
-//! Cases: CITE-BARE-01, CITE-BARE-02, CITE-BARE-03, CITE-PREFIX-01, CITE-PREFIX-02, CITE-COLL-01, CITE-COLL-02, CITE-COLL-03, CITE-COLL-04, CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-04, CITE-PATH-05, CITE-LINK-01, CITE-LINK-02, CITE-LINK-03, CITE-UNRES-01, CITE-FOLDER-01, CITE-FOLDER-02, CITE-FENCE-01, CITE-SELF-01, CITE-BACK-01, CITE-BACK-02, CITE-BACK-03, CITE-BACK-04
+//! Cases: CITE-BARE-01, CITE-BARE-02, CITE-BARE-03, CITE-PREFIX-01, CITE-PREFIX-02, CITE-COLL-01, CITE-COLL-02, CITE-COLL-03, CITE-COLL-04, CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-04, CITE-PATH-05, CITE-LINK-01, CITE-LINK-02, CITE-LINK-03, CITE-UNRES-01, CITE-FOLDER-01, CITE-FOLDER-02, CITE-FENCE-01, CITE-SELF-01, CITE-BACK-01, CITE-BACK-02, CITE-BACK-03, CITE-BACK-04, SRCH-ORPHAN-01, SRCH-ORPHAN-02
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -77,6 +77,15 @@ impl Index {
     /// `<-N` counts the entries with no prefix, since prefix citations are not counted there (design §2.3).
     pub fn cited_by(&self, label: &str) -> &[Citer] {
         self.citers.get(label).map_or(&[], Vec::as_slice)
+    }
+
+    /// The number of docs that cite a target directly: `cited_by` without its prefix citations, which is the `<-N` of a roster
+    /// (design §2.3).
+    pub fn direct_count(&self, label: &str) -> usize {
+        self.cited_by(label)
+            .iter()
+            .filter(|citer| citer.via.is_none())
+            .count()
     }
 
     /// Records one doc's citations and the backlinks they give. Docs that share a label are next to each other in the scan,

@@ -19,5 +19,5 @@
 - `intent/`: the readers of headers, READMEs and CASES.md, and the one-liner rule they share (design §2).
 - `collections/`: manifests, their flat-YAML frontmatter, and the three kinds; the frontmatter is used now, the kinds are stubs until S2.4 and S2.5 (design §4.2).
 - `verbs/`: the verbs that run; `log.rs` is `memex log`, `show.rs` is `memex show`, `search.rs` is `memex search`.
-- `index/`: the search index of design §3.2 and PLAN §4, built in memory per run: tokens, stems, BM25F, prefix and one-edit matches, and the ranking.
+- `index/`: the search index of design §3.2 and PLAN §4, built in memory per run: tokens, stems, BM25F, prefix and one-edit matches, and the ranking; and `filter.rs`, the `field:value` and `since:` filters that narrow the docs first.
 - `render/search.rs`: `search`'s groups as text, with the `(showing N of M)` headings, and as its `--json` document (design §3.2, §3.6).

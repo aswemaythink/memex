@@ -1,0 +1,7 @@
+$ memex search cases:WID-ONE-01 --in cases --limit 2
+exit 0
+stdout
+| cases  (showing 2 of 52)
+|   cases:WID-ONE-01  Widget case 01.
+|   cases:WID-ONE-02  Widget case 02.
+stderr (empty)

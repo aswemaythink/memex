@@ -1,0 +1,7 @@
+$ memex search to:cook-1
+exit 0
+stdout
+| logs  (showing 2 of 2)
+|   impl:20261013-115000-widget-plan  10m · cook-2 · feat/show  Widget plan
+|   impl:20261013-110000-widget-tie  1h · cook-1 · main  Widget tie
+stderr (empty)

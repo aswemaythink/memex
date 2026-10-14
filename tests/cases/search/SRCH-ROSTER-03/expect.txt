@@ -1,0 +1,17 @@
+$ memex search --in logs tag:show
+exit 0
+stdout
+| logs  (showing 4 of 4)
+|   impl:20261013-115000-widget-plan  10m · cook-2 · feat/show  Widget plan  <-0
+|   impl:20261013-110000-widget-tie  1h · cook-1 · main  Widget tie  <-0
+|   impl:20261012-120000-widget-day  24h · cook-2 · feat/show  Widget day  <-0
+|   impl:20260930-090000-widget-old  13d · cook-2 · main  Old widget note  <-0
+stderr (empty)
+
+$ memex search --in logs to:cook-1
+exit 0
+stdout
+| logs  (showing 2 of 2)
+|   impl:20261013-115000-widget-plan  10m · cook-2 · feat/show  Widget plan  <-0
+|   impl:20261013-110000-widget-tie  1h · cook-1 · main  Widget tie  <-0
+stderr (empty)

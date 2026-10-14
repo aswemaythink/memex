@@ -1,5 +1,5 @@
 //! The fatal error of design §3.6: its five codes, their exit codes, and the text and JSON renderings.
-//! Cases: CLI-EXIT-*, CLI-JSON-*, DISC-ROOT-04, LOG-WRITE-11
+//! Cases: CLI-EXIT-*, CLI-EXIT-01, CLI-JSON-*, CLI-JSON-01, CLI-JSON-02, CLI-JSON-05, DISC-ROOT-04, LOG-WRITE-11
 
 use std::io::{self, Write};
 
