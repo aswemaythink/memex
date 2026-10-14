@@ -204,7 +204,7 @@ fn with_newline(text: &str) -> String {
 }
 
 /// A one-liner cut to `CLIP` characters: the first `CLIP - 1` and an ellipsis, when it is longer.
-fn clip(text: &str) -> String {
+pub fn clip(text: &str) -> String {
     if text.chars().count() <= CLIP {
         return text.to_string();
     }

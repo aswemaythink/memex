@@ -3,11 +3,9 @@
 
 use serde_json::{json, Map, Value as Json};
 
+use super::text::clip;
 use crate::collections::frontmatter::Value;
 use crate::corpus::Doc;
-
-/// A one-liner is cut to this many characters, the ellipsis included (design §2).
-const CLIP: usize = 120;
 
 /// The group of the log store, whose hit lines carry the age, agent and branch of an entry (design §3.2).
 const LOGS: &str = "logs";
@@ -170,16 +168,6 @@ fn fields(list: &[(String, Value)]) -> Json {
 /// A score rounded to 3 decimals, as the JSON document prints it (design §3.6).
 fn round3(score: f64) -> f64 {
     (score * 1000.0).round() / 1000.0
-}
-
-/// A one-liner cut to `CLIP` characters: the first `CLIP - 1` and an ellipsis, when it is longer.
-fn clip(text: &str) -> String {
-    if text.chars().count() <= CLIP {
-        return text.to_string();
-    }
-    let mut cut: String = text.chars().take(CLIP - 1).collect();
-    cut.push('…');
-    cut
 }
 
 #[cfg(test)]

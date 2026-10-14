@@ -1,17 +1,17 @@
 //! Carries out `memex show` (design §3.3 and §3.6): resolves each ref, builds its section, and reports the sections, the misses and the exit status.
 //! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-SECT-01, CASE-JSON-01, REF-WT-01, REF-WT-02, CITE-PREFIX-01, CITE-PREFIX-02, CITE-UNRES-01, CITE-FOLDER-02, CITE-SELF-01, CITE-BACK-01, CITE-BACK-03, CITE-BACK-04, CITE-COLL-02, CITE-JSON-01, CITE-JSON-02
 
-use std::env;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::cite::Cite;
 use crate::corpus::{self, parent_of, readme_label, Child, Corpus, Doc, Kind};
-use crate::error::{Code, Error};
+use crate::error::Error;
 use crate::intent::cases;
 use crate::render::{self, CaseParts, Fields, Link, Listing, Miss, Ref, Section};
 use crate::resolve::{resolve, Elsewhere, Outcome, Target};
-use crate::root::{self, slash};
+use crate::root::slash;
+use crate::verbs::here;
 
 /// The `--limit` of a list when the flag is not given (design §3.3).
 const DEFAULT_LIMIT: usize = 50;
@@ -49,10 +49,7 @@ struct Options {
 /// Shows each ref in the order given. A ref that fails is reported and the others still print. A fatal problem, such as an
 /// unreadable cwd or a file that cannot be read, is an error.
 pub fn run(request: &Request) -> Result<Report, Error> {
-    let cwd = current_dir()?;
-    let store = store_of(&cwd)?;
-    let root = corpus::root_of(&cwd);
-    let corpus = Corpus::load(&root, store.as_deref())?;
+    let here::Here { cwd, store, corpus } = here::load()?;
     let options = Options {
         up: request.up,
         limit: request.limit.unwrap_or(DEFAULT_LIMIT),
@@ -81,23 +78,6 @@ pub fn run(request: &Request) -> Result<Report, Error> {
         stderr: render::text::misses(&misses),
         failed,
     })
-}
-
-/// The cwd, canonical, so that it compares with the canonical root.
-fn current_dir() -> Result<PathBuf, Error> {
-    let cwd = env::current_dir()
-        .map_err(|failure| Error::io("cannot read the current folder", &failure))?;
-    dunce::canonicalize(&cwd)
-        .map_err(|failure| Error::io("cannot resolve the current folder", &failure))
-}
-
-/// The log store that `log` would write to, or None when there is no `.memex/` (design §4.1). Reads work without one.
-fn store_of(cwd: &Path) -> Result<Option<PathBuf>, Error> {
-    match root::locate(cwd) {
-        Ok(place) => Ok(Some(place.store)),
-        Err(error) if error.code == Code::NoRoot => Ok(None),
-        Err(error) => Err(error),
-    }
 }
 
 /// The section of an entry in another root: built from that root's own corpus, and labelled by its absolute path, which

@@ -6,6 +6,7 @@ use std::fs::{self, File};
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::thread;
 
 use crate::cite;
 use crate::collections::frontmatter::Value;
@@ -77,6 +78,33 @@ pub struct Corpus {
 impl Corpus {
     /// Reads the intent layer under `root` and, when there is a store, the logs in it. A missing store has no logs.
     pub fn load(root: &Path, store: Option<&Path>) -> Result<Corpus, Error> {
+        let mut corpus = Corpus::intent(root)?;
+        corpus.finish(store)?;
+        Ok(corpus)
+    }
+
+    /// Like `load`, with the store found by `find_store`, which runs on its own thread while the intent layer is read, since
+    /// finding the store may run git. Returns the store too. An error in finding the store is reported before a read error.
+    pub fn load_finding<F>(root: &Path, find_store: F) -> Result<(Corpus, Option<PathBuf>), Error>
+    where
+        F: FnOnce() -> Result<Option<PathBuf>, Error> + Send,
+    {
+        let (intent, store) = thread::scope(|scope| {
+            let finder = scope.spawn(find_store);
+            let intent = Corpus::intent(root);
+            let store = finder
+                .join()
+                .unwrap_or_else(|panic| std::panic::resume_unwind(panic));
+            (intent, store)
+        });
+        let store = store?;
+        let mut corpus = intent?;
+        corpus.finish(store.as_deref())?;
+        Ok((corpus, store))
+    }
+
+    /// The intent layer under `root`: every walked entry, the docs of its files, and the docs of its manifests.
+    fn intent(root: &Path) -> Result<Corpus, Error> {
         let mut corpus = Corpus {
             root: root.to_path_buf(),
             docs: BTreeMap::new(),
@@ -101,16 +129,21 @@ impl Corpus {
             }
         }
         warn(&warnings);
+        Ok(corpus)
+    }
+
+    /// Adds the logs of the store, when there is one, then builds the folder index and the citations.
+    fn finish(&mut self, store: Option<&Path>) -> Result<(), Error> {
         if let Some(store) = store {
             let logs = load_logs(store)?;
-            corpus.streams = logs.iter().map(|doc| doc.collection.clone()).collect();
+            self.streams = logs.iter().map(|doc| doc.collection.clone()).collect();
             for doc in logs {
-                corpus.insert(doc);
+                self.insert(doc);
             }
         }
-        corpus.index_children();
-        corpus.citations = cite::Index::build(&corpus);
-        Ok(corpus)
+        self.index_children();
+        self.citations = cite::Index::build(self);
+        Ok(())
     }
 
     /// The first doc with this label, which titles and text are read from. `labelled` gives every doc with it.
@@ -129,6 +162,11 @@ impl Corpus {
     /// Every doc, in label order.
     pub fn all_docs(&self) -> impl Iterator<Item = &Doc> {
         self.docs.values().flatten()
+    }
+
+    /// The first doc of each label, in label order: the docs that `doc` finds, which `search` ranks.
+    pub fn first_docs(&self) -> impl Iterator<Item = &Doc> {
+        self.docs.values().filter_map(|docs| docs.first())
     }
 
     /// True for a log entry: a doc with no path whose collection is a stream of the log store (design §3.1, `logs`).

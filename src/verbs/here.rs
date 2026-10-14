@@ -1,0 +1,44 @@
+//! Loads what a reading verb works on: the canonical cwd, the log store found from it, and the corpus of its root.
+//! Cases: none (shared loading; show and search cite their own cases)
+
+use std::env;
+use std::path::{Path, PathBuf};
+
+use crate::corpus::{self, Corpus};
+use crate::error::{Code, Error};
+use crate::root;
+
+/// The place a reading verb runs in: the cwd, the log store, and the corpus of the cwd's root.
+pub struct Here {
+    /// The cwd, canonical, so that it compares with the canonical root.
+    pub cwd: PathBuf,
+    /// The log store, or None when there is no `.memex/`. Reads work without one.
+    pub store: Option<PathBuf>,
+    /// The intent layer of the cwd's root and the logs of the store.
+    pub corpus: Corpus,
+}
+
+/// Loads the corpus of the cwd's root. The store is found (which runs git) while the intent layer is read.
+pub fn load() -> Result<Here, Error> {
+    let cwd = current_dir()?;
+    let root = corpus::root_of(&cwd);
+    let (corpus, store) = Corpus::load_finding(&root, || store_of(&cwd))?;
+    Ok(Here { cwd, store, corpus })
+}
+
+/// The cwd, canonical.
+fn current_dir() -> Result<PathBuf, Error> {
+    let cwd = env::current_dir()
+        .map_err(|failure| Error::io("cannot read the current folder", &failure))?;
+    dunce::canonicalize(&cwd)
+        .map_err(|failure| Error::io("cannot resolve the current folder", &failure))
+}
+
+/// The log store that `log` would write to, or None when there is no `.memex/` (design §4.1).
+fn store_of(cwd: &Path) -> Result<Option<PathBuf>, Error> {
+    match root::locate(cwd) {
+        Ok(place) => Ok(Some(place.store)),
+        Err(error) if error.code == Code::NoRoot => Ok(None),
+        Err(error) => Err(error),
+    }
+}

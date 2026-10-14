@@ -1,23 +1,15 @@
 //! Carries out `memex search` (design §3.2 and §3.6): gathers, groups and ranks docs, then prints.
 //! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-IN-01, SRCH-IN-02, SRCH-RANK-03, SRCH-TOKEN-03, SRCH-JSON-01, SRCH-JSON-02, SRCH-LINE-01
 
-use std::collections::{BTreeMap, BTreeSet};
-use std::env;
-use std::ffi::OsStr;
-use std::fs;
-use std::path::{Path, PathBuf};
+use std::collections::BTreeMap;
 
 use crate::clock::{self, Timestamp};
-use crate::collections::manifest;
-use crate::corpus::{self, Corpus, Doc};
-use crate::error::{Code, Error};
+use crate::corpus::{Corpus, Doc};
+use crate::error::Error;
 use crate::index::tokenize::query_tokens;
 use crate::index::{Index, Source};
-use crate::intent::cases;
-use crate::logs::read as log_docs;
 use crate::render::search::{self as render, Group, Hit};
-use crate::root::{self, slash};
-use crate::walk;
+use crate::verbs::here;
 
 /// The `--limit` of each group when `--in` is not given (design §3.2).
 const DEFAULT_LIMIT: usize = 5;
@@ -63,10 +55,7 @@ struct Plan<'a> {
 /// Carries out a search and returns its stdout: the text of its groups, or the JSON document with `--json`. Zero hits give no
 /// text, and the exit status is 0 as usual.
 pub fn run(request: &Request) -> Result<String, Error> {
-    let cwd = current_dir()?;
-    let store = store_of(&cwd)?;
-    let root = corpus::root_of(&cwd);
-    let corpus = Corpus::load(&root, store.as_deref())?;
+    let corpus = here::load()?.corpus;
     let plan = Plan {
         words: words_of(&request.terms),
         groups: request.in_.as_deref(),
@@ -77,8 +66,7 @@ pub fn run(request: &Request) -> Result<String, Error> {
         }),
         now: clock::now()?,
     };
-    let docs = gather(&corpus, &root, store.as_deref())?;
-    let groups = rank_groups(docs, &plan);
+    let groups = rank_groups(&corpus, &plan);
     Ok(if request.json {
         render::document(&request.terms.join(" "), &groups)
     } else {
@@ -86,69 +74,25 @@ pub fn run(request: &Request) -> Result<String, Error> {
     })
 }
 
-/// Every doc of the intent layer and of the log store, each with its group. The readers of the docs give their labels, and each
-/// doc is then taken from `corpus`, so the text that a search reads is the text that `show` prints (design §3.1).
-fn gather<'a>(
-    corpus: &'a Corpus,
-    root: &Path,
-    store: Option<&Path>,
-) -> Result<Vec<(String, &'a Doc)>, Error> {
-    let mut labels = BTreeSet::new();
-    intent_labels(root, &mut labels)?;
-    let mut scratch = Vec::new();
-    let manifests = manifest::load(root, &mut scratch);
-    for found in &manifests {
-        let docs = manifest::docs(found, root, &mut scratch);
-        labels.extend(docs.into_iter().map(|doc| doc.label));
-    }
-    if let Some(store) = store {
-        labels.extend(log_docs::load(store)?.into_iter().map(|doc| doc.label));
-    }
-    let names: BTreeSet<&str> = manifests.iter().map(|found| found.name.as_str()).collect();
-    Ok(labels
-        .iter()
-        .filter_map(|label| corpus.doc(label))
-        .map(|doc| (group_of(doc, &names), doc))
-        .collect())
-}
-
-/// The labels of the intent layer's docs: a file's own path, which labels its README or its header, and the case ids of each
-/// CASES.md. A file with no doc adds a label that no doc has, which is skipped later.
-fn intent_labels(root: &Path, labels: &mut BTreeSet<String>) -> Result<(), Error> {
-    for entry in walk::walk(root).iter().filter(|entry| !entry.is_dir) {
-        if entry.path.file_name() == Some(OsStr::new("CASES.md")) {
-            let text = read_text(&entry.path)?;
-            labels.extend(
-                cases::parse(&entry.rel, &text)
-                    .into_iter()
-                    .map(|doc| doc.label),
-            );
-        } else {
-            labels.insert(entry.rel.clone());
-        }
-    }
-    Ok(())
-}
-
-/// The group of a doc: its collection when that is a built-in group or a manifest's name, and otherwise the log store, whose
-/// streams are all one group.
-fn group_of(doc: &Doc, manifests: &BTreeSet<&str>) -> String {
-    let built_in = [READMES, HEADERS, CASES].contains(&doc.collection.as_str());
-    if built_in || manifests.contains(doc.collection.as_str()) {
-        doc.collection.clone()
-    } else {
+/// The group of a doc: `logs` for an entry of the log store, whose streams are all one group, and its collection otherwise,
+/// which is a built-in group or a manifest's name.
+fn group_of(corpus: &Corpus, doc: &Doc) -> String {
+    if corpus.is_log(doc) {
         LOGS.to_string()
+    } else {
+        doc.collection.clone()
     }
 }
 
 /// The groups that hold hits, in the order of design §3.2. A group that `--in` leaves out is not searched, and a group with no
 /// hit is left out. With no words there are no hits.
-fn rank_groups<'a>(docs: Vec<(String, &'a Doc)>, plan: &Plan) -> Vec<Group<'a>> {
+fn rank_groups<'a>(corpus: &'a Corpus, plan: &Plan) -> Vec<Group<'a>> {
     if plan.words.is_empty() {
         return Vec::new();
     }
     let mut groups: BTreeMap<(u8, String), Vec<&'a Doc>> = BTreeMap::new();
-    for (name, doc) in docs {
+    for doc in corpus.first_docs() {
+        let name = group_of(corpus, doc);
         if wanted(plan, &name) {
             groups.entry((rank(&name), name)).or_default().push(doc);
         }
@@ -252,28 +196,4 @@ fn words_of(terms: &[String]) -> Vec<String> {
         }
     }
     words
-}
-
-/// The cwd, canonical, so that it compares with the canonical root.
-fn current_dir() -> Result<PathBuf, Error> {
-    let cwd = env::current_dir()
-        .map_err(|failure| Error::io("cannot read the current folder", &failure))?;
-    dunce::canonicalize(&cwd)
-        .map_err(|failure| Error::io("cannot resolve the current folder", &failure))
-}
-
-/// The log store, or None when there is no `.memex/`. A search reads the logs when there is a store, and needs none.
-fn store_of(cwd: &Path) -> Result<Option<PathBuf>, Error> {
-    match root::locate(cwd) {
-        Ok(place) => Ok(Some(place.store)),
-        Err(error) if error.code == Code::NoRoot => Ok(None),
-        Err(error) => Err(error),
-    }
-}
-
-/// The text of a file, decoded lossily. A read failure names the path and never the OS text (design §4.4).
-fn read_text(path: &Path) -> Result<String, Error> {
-    let bytes = fs::read(path)
-        .map_err(|failure| Error::io(&format!("cannot read {}", slash(path)), &failure))?;
-    Ok(String::from_utf8_lossy(&bytes).into_owned())
 }
