@@ -452,3 +452,4 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - `corpus::root_of` repeats root discovery from root.rs: export one.
 - `src/verbs/log.rs` header `Cases:` line is missing LOG-STREAM-04/05, LOG-BODY-06 and LOG-WRITE-15.
 - Header first sentences over 100 chars: add a gate to tests/quality.rs and shorten the existing ones.
+- A README with no H1 and no prose has an empty one-liner, which text output prints as `(no README)`; that misreports a README that exists. Print nothing after the name instead.
