@@ -1,9 +1,10 @@
 //! Loads the read model (design §3.1 and §3.6): the walked entries and the docs built from them.
-//! The docs are READMEs, headers, CASES.md, manifests and logs, with the label map and the folder index.
+//! The docs are READMEs, headers, CASES.md, manifests and logs, with the label map.
 //! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, SHOW-IO-02, INT-NAME-01, INT-NAME-02, INT-CHAIN-01, INT-BOM-01, MAN-LOAD-02, REF-AMBIG-02, REF-AMBIG-03, REF-RESERVED-03, REF-RESERVED-04
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::io;
+use std::ops::Bound;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 use std::thread;
@@ -72,7 +73,7 @@ pub struct Child {
     pub title: Option<String>,
 }
 
-/// The read model: every doc by label, every walked entry, the children of every folder, and the log streams.
+/// The read model: every doc by label, every walked entry, and the log streams. Folders list their children on request.
 pub struct Corpus {
     /// The root the intent layer is read from.
     pub root: PathBuf,
@@ -81,8 +82,6 @@ pub struct Corpus {
     kinds: BTreeMap<String, Kind>,
     /// The folders that the walk could not list, by root-relative path, with the kind of the failure (design §3.3).
     unlistable: BTreeMap<String, io::ErrorKind>,
-    /// The children of each folder, built the first time they are asked for.
-    children: OnceLock<BTreeMap<String, Vec<Child>>>,
     /// The streams of the log store, which `logs:` reads across (design §3.1).
     streams: BTreeSet<String>,
     /// The citations of every doc and the backlinks they give, built the first time they are asked for (design §2.3).
@@ -133,7 +132,6 @@ impl Corpus {
             docs: BTreeMap::new(),
             kinds: BTreeMap::from([(String::new(), Kind::Dir)]),
             unlistable: BTreeMap::new(),
-            children: OnceLock::new(),
             streams: BTreeSet::new(),
             citations: OnceLock::new(),
             read_warnings: Vec::new(),
@@ -168,7 +166,7 @@ impl Corpus {
         corpus
     }
 
-    /// Adds the logs of the store, when there is one. The folder index and the citations wait until they are asked for.
+    /// Adds the logs of the store, when there is one. The citations wait until they are asked for.
     fn finish(&mut self, store: Option<&Path>) {
         if let Some(store) = store {
             let before = self.read_warnings.len();
@@ -248,13 +246,25 @@ impl Corpus {
         self.unlistable.get(rel).copied()
     }
 
-    /// The children of a folder, sorted by name. Empty for a file and for a path the walk did not find. The folder index is built
-    /// the first time it is asked for, so a verb that does not list folders never pays for it.
-    pub fn children(&self, rel: &str) -> &[Child] {
-        match self.children.get_or_init(|| self.index_children()).get(rel) {
-            Some(list) => list,
-            None => &[],
-        }
+    /// The children of a folder, sorted by name: the walked entries directly under it. Empty for a file and for a path the walk did
+    /// not find. The entries under a folder are one range of `kinds`, and only its children get a title.
+    pub fn children(&self, rel: &str) -> Vec<Child> {
+        let prefix = if rel.is_empty() {
+            String::new()
+        } else {
+            format!("{rel}/")
+        };
+        self.kinds
+            .range::<str, _>((Bound::Included(prefix.as_str()), Bound::Unbounded))
+            .take_while(|(path, _)| path.starts_with(&prefix))
+            .filter(|(path, _)| direct_child_of(path, &prefix))
+            .map(|(path, kind)| Child {
+                name: name_of(path).to_string(),
+                rel: path.clone(),
+                kind: *kind,
+                title: self.title_of(path, *kind),
+            })
+            .collect()
     }
 
     /// The citations of every doc and the backlinks they give (design §2.3). They are built on the first call, so a verb that does
@@ -266,24 +276,6 @@ impl Corpus {
     /// Adds a doc under its label. Every doc is kept, so a label that two files declare is seen as ambiguous, not guessed.
     fn insert(&mut self, doc: Doc) {
         self.docs.entry(doc.label.clone()).or_default().push(doc);
-    }
-
-    /// Builds the folder index: every walked entry becomes a child of its parent folder.
-    fn index_children(&self) -> BTreeMap<String, Vec<Child>> {
-        let mut index: BTreeMap<String, Vec<Child>> = BTreeMap::new();
-        for (rel, kind) in &self.kinds {
-            let Some(parent) = parent_of(rel) else {
-                continue;
-            };
-            let child = Child {
-                name: name_of(rel).to_string(),
-                rel: rel.clone(),
-                kind: *kind,
-                title: self.title_of(rel, *kind),
-            };
-            index.entry(parent.to_string()).or_default().push(child);
-        }
-        index
     }
 
     /// The one-liner of a walked entry: its README's for a folder, its own doc's for a file.
@@ -326,6 +318,13 @@ pub fn readme_label(dir: &str) -> String {
 /// The last component of a root-relative path.
 pub fn name_of(rel: &str) -> &str {
     rel.rsplit('/').next().unwrap_or(rel)
+}
+
+/// True for a root-relative path that is directly under the folder `prefix`: `""` for the root, else `<folder>/`. The root's own
+/// empty path is no child, and a path with a `/` after the prefix lies deeper.
+fn direct_child_of(path: &str, prefix: &str) -> bool {
+    path.strip_prefix(prefix)
+        .is_some_and(|name| !name.is_empty() && !name.contains('/'))
 }
 
 /// The docs of one walked entry: none for a folder, and those of its file otherwise (design §2 and §4.2).

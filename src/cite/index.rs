@@ -2,6 +2,7 @@
 //! Cases: CITE-BARE-01, CITE-BARE-02, CITE-BARE-03, CITE-PREFIX-01, CITE-PREFIX-02, CITE-COLL-01, CITE-COLL-02, CITE-COLL-03, CITE-COLL-04, CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-04, CITE-PATH-05, CITE-PATH-06, CITE-LINK-01, CITE-LINK-02, CITE-LINK-03, CITE-LINK-05, CITE-MAN-01, CITE-UNRES-01, CITE-FOLDER-01, CITE-FOLDER-02, CITE-FENCE-01, CITE-SELF-01, CITE-BACK-01, CITE-BACK-02, CITE-BACK-03, CITE-BACK-04, CITE-BACK-05, SRCH-ORPHAN-01, SRCH-ORPHAN-02
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::ops::Bound;
 
 use super::paths::{self, Named};
 use super::tokens::{self, Token};
@@ -57,18 +58,20 @@ struct Gathered {
 }
 
 impl Index {
-    /// The index of every doc in `corpus`: each doc's citations, and the backlinks of every target. The docs are scanned on several
-    /// threads, then recorded in the order of `all_docs`, so the backlinks come out as a sequential scan gives them.
+    /// The index of every doc in `corpus`: each doc's citations, and the backlinks of every target. The docs are scanned and reduced
+    /// on several threads, then recorded in the order of `all_docs`, so the backlinks come out as a sequential scan gives them.
     pub fn build(corpus: &Corpus) -> Index {
         let docs: Vec<&Doc> = corpus.all_docs().collect();
         let names = Names::of(&docs);
-        let hits = par::map(&docs, |doc| hits_of(corpus, doc, &names));
+        let gathered = par::map(&docs, |doc| {
+            gather(corpus, doc, hits_of(corpus, doc, &names))
+        });
         let mut index = Index {
             manifest: names.manifest.clone(),
             ..Index::default()
         };
-        for (doc, hits) in docs.into_iter().zip(hits) {
-            index.record(corpus, doc, hits);
+        for (doc, gathered) in docs.into_iter().zip(gathered) {
+            index.record(doc, gathered);
         }
         for citers in index.citers.values_mut() {
             citers.sort_by(|left, right| left.label.cmp(&right.label));
@@ -102,10 +105,9 @@ impl Index {
             .count()
     }
 
-    /// Records one doc's citations and the backlinks they give. Docs that share a label are next to each other in the scan,
-    /// so a label's first doc keeps its citations and a repeat is not listed twice.
-    fn record(&mut self, corpus: &Corpus, doc: &Doc, hits: Vec<Hit>) {
-        let gathered = gather(corpus, doc, hits);
+    /// Records one doc's gathered citations and the backlinks they give. Docs that share a label are next to each other in the
+    /// scan, so a label's first doc keeps its citations and a repeat is not listed twice.
+    fn record(&mut self, doc: &Doc, gathered: Gathered) {
         for label in &gathered.direct {
             add_citer(self.citers.entry(label.clone()).or_default(), doc, None);
         }
@@ -163,11 +165,12 @@ impl Names {
             .unwrap_or_else(|| label_of(rel))
     }
 
-    /// The labels of every declared id that starts with `prefix`, in id order.
+    /// The labels of every declared id that starts with `prefix`, in id order. The ids with a prefix are one run of the sorted map,
+    /// which starts at the prefix itself.
     fn family(&self, prefix: &str) -> Vec<String> {
         self.declared
-            .iter()
-            .filter(|(id, _)| id.starts_with(prefix))
+            .range::<str, _>((Bound::Included(prefix), Bound::Unbounded))
+            .take_while(|(id, _)| id.starts_with(prefix))
             .flat_map(|(_, labels)| labels.iter().cloned())
             .collect()
     }
@@ -254,7 +257,8 @@ fn own_folder(doc: &Doc) -> Option<String> {
     (doc.collection == READMES).then(|| label_of(parent_of(path).unwrap_or("")))
 }
 
-/// Reduces one doc's hits: each target once, in first-appearance order, with the doc's own label and folder left out.
+/// Reduces one doc's hits: each target once, in first-appearance order, with the doc's own label and folder left out. It reads
+/// only the corpus, so the docs are reduced on the worker threads.
 fn gather(corpus: &Corpus, doc: &Doc, hits: Vec<Hit>) -> Gathered {
     let own = own_folder(doc);
     let is_self = |label: &str| label == doc.label || own.as_deref() == Some(label);
@@ -263,25 +267,8 @@ fn gather(corpus: &Corpus, doc: &Doc, hits: Vec<Hit>) -> Gathered {
     for hit in hits {
         match hit {
             Hit::Target(label) if is_self(&label) => {}
-            Hit::Target(label) => {
-                if seen.insert(label.clone()) {
-                    gathered.cites.push(Cite {
-                        title: paths::title_of(corpus, &label),
-                        reference: label.clone(),
-                        resolved: true,
-                    });
-                }
-                gathered.direct.insert(label);
-            }
-            Hit::Unresolved(raw) => {
-                if seen.insert(raw.clone()) {
-                    gathered.cites.push(Cite {
-                        reference: raw,
-                        title: String::new(),
-                        resolved: false,
-                    });
-                }
-            }
+            Hit::Target(label) => add_target(corpus, label, &mut gathered, &mut seen),
+            Hit::Unresolved(raw) => add_unresolved(raw, &mut gathered, &mut seen),
             Hit::Family { label, prefix } => {
                 if !is_self(&label) {
                     gathered.families.entry(label).or_insert(prefix);
@@ -290,6 +277,34 @@ fn gather(corpus: &Corpus, doc: &Doc, hits: Vec<Hit>) -> Gathered {
         }
     }
     gathered
+}
+
+/// Adds a target that the doc cites directly: its citation the first time it appears, and its label to the direct targets.
+fn add_target(
+    corpus: &Corpus,
+    label: String,
+    gathered: &mut Gathered,
+    seen: &mut BTreeSet<String>,
+) {
+    if seen.insert(label.clone()) {
+        gathered.cites.push(Cite {
+            title: paths::title_of(corpus, &label),
+            reference: label.clone(),
+            resolved: true,
+        });
+    }
+    gathered.direct.insert(label);
+}
+
+/// Adds an unresolved ref, as a citation that names nothing, the first time it appears.
+fn add_unresolved(raw: String, gathered: &mut Gathered, seen: &mut BTreeSet<String>) {
+    if seen.insert(raw.clone()) {
+        gathered.cites.push(Cite {
+            reference: raw,
+            title: String::new(),
+            resolved: false,
+        });
+    }
 }
 
 /// Adds the backlink that `doc` makes to a target's list, unless the previous entry is the same doc.

@@ -78,9 +78,8 @@ fn listed_children(corpus: &Corpus, rel: &str) -> Vec<Child> {
     let own = readme_label(rel);
     corpus
         .children(rel)
-        .iter()
+        .into_iter()
         .filter(|child| !(child.kind == Kind::File && child.rel == own))
-        .cloned()
         .collect()
 }
 
@@ -101,8 +100,7 @@ fn file_section(corpus: &Corpus, rel: &str, options: &Options) -> Result<Section
     } else {
         Some(folder)
     };
-    // A manifest doc's citations and backlinks are keyed by its label, not its path (design §2.3).
-    let key = corpus.citations().manifest_label(rel).unwrap_or(rel);
+    let key = file_key(corpus, options, rel);
     Ok(Section {
         label: rel.to_string(),
         title: doc.map(|doc| doc.title.clone()),
@@ -121,6 +119,15 @@ fn file_section(corpus: &Corpus, rel: &str, options: &Options) -> Result<Section
         ),
         chain: chain(corpus, start, options),
     })
+}
+
+/// The label that a file's citations and backlinks are keyed by: a manifest doc's `collection:id` label, else its path (design
+/// §2.3). Only a listed root's citations are read, so another root's index is never built for this lookup (design §3.1).
+fn file_key<'a>(corpus: &'a Corpus, options: &Options, rel: &'a str) -> &'a str {
+    match &options.other_root {
+        Some(_) => rel,
+        None => corpus.citations().manifest_label(rel).unwrap_or(rel),
+    }
 }
 
 /// The section of a doc, such as a log or a case: its text, its fields, and its citations, with no chain.
