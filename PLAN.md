@@ -433,7 +433,7 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [x] S4.1
 - [x] S4.2 (self-init: all kept; refined 76addfe)
 - [x] S5.1
-- [x] S5.2 (20 findings, 1 HIGH; fixes F1-F4 running)
+- [x] S5.2 (20 findings, 1 HIGH; fixed in F1-F4)
 - [ ] S5.3
 - [ ] S5.4
 - [x] S6.1 (enabling it for this repo needs user approval)
