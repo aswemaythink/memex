@@ -1,0 +1,1 @@
+{"git": "commit", "setup": [{"run": ["git", "config", "core.bare", "true"]}], "steps": [{"args": ["info"]}, {"args": ["log", "impl"], "stdin": "Bare flag in a checkout\n"}, {"args": ["log", "impl", "--json"], "stdin": "Bare flag in a checkout\n"}], "snapshot": ["repo/.memex", "repo/.git/memex"]}

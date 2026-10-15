@@ -94,3 +94,14 @@
 
 - `DISC-IGNORE-01` With git missing from PATH, a README that `.gitignore` names is absent from `search --in readmes`, and a README it does not name is found.
   design §4.1 item 2: the ignore walker honours `.gitignore` and `.ignore`, and §4.4 git: nothing in the walk needs git. Run: memex search secretword --in readmes, then search publicword --in readmes, with PATH=/nonexistent, unix only; the first README is git-ignored.
+
+## BAREDOT
+
+- `DISC-BAREDOT-01` A bare repo named `.git` does not move the store: `info`, then `log` in text and then --json, from its root, use the root's own `.memex/logs/`, and nothing is written under the bare repo's `memex/`; the entry takes HEAD's branch and no commit, as HEAD is unborn.
+  design §4.4 git: a `.git` folder means the root's own store, git is not asked for it, and a bare repo whose folder is named `.git` is an accepted limit. Run: memex info, then memex log impl, text and then --json, from repo, where repo/.git is a bare repo made by `git init --bare` on an unborn main; snapshots of repo/.memex and repo/.git/memex.
+- `DISC-BAREDOT-02` With `core.bare` set to true in a committed checkout, `info`, then `log` in text and then --json, from its root, use the root's own `.memex/logs/`, and nothing is written under `.git/memex/`; the entry still takes HEAD's branch and commit.
+  design §4.4 git: a `.git` folder means the root's own store, git is not asked for it, and `core.bare=true` is an accepted limit. Run: memex info, then memex log impl, text and then --json, from repo after `git config core.bare true`; snapshots of repo/.memex and repo/.git/memex.
+- `DISC-BAREDOT-03` With `GIT_DIR` set to a bare clone of a committed checkout, `info`, then `log` in text and then --json, from the checkout's root, use the root's own `.memex/logs/`, and nothing is written under the clone's `memex/`; the entry takes the clone's branch and commit, which are HEAD's.
+  design §4.1 item 1 and §4.4 git: git's environment is not consulted, `GIT_DIR` is an accepted limit, and a `.git` folder means the root's own store without a git call. Run: memex info, then memex log impl, text and then --json, from repo with GIT_DIR=../bare.git, a bare clone of repo; snapshots of repo/.memex and bare.git/memex.
+- `DISC-BAREDOT-04` With `GIT_DIR` set to a bare repo, and a `.memex/` in a folder with no `.git` entry above it, `info`, then `log` in text and then --json, from that folder, use its own `.memex/logs/`, and nothing is written under the bare repo's `memex/`.
+  design §4.4 git: no toplevel means the root's own store without a git call, and `GIT_DIR` is an accepted limit (§4.1 item 1). Run: memex info, then memex log impl, text and then --json, from repo/plain with GIT_DIR=../bare.git, an empty bare repo made in repo; snapshots of repo/plain/.memex and repo/bare.git/memex.

@@ -1,0 +1,43 @@
+$ memex info  [env GIT_DIR=../bare.git]
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent  0 readmes · 0 headers · 0 cases
+| use     memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+stderr (empty)
+
+$ memex log impl  [env GIT_DIR=../bare.git]
+exit 0
+stdout
+| impl:20261013-120000-git-dir-names-a-bare-clone
+stderr (empty)
+
+$ memex log impl --json  [env GIT_DIR=../bare.git]
+exit 0
+stdout
+| {"ref":"impl:20261013-120000-git-dir-names-a-bare-clone-2","path":"$SANDBOX/repo/.memex/logs/impl/20261013-120000-git-dir-names-a-bare-clone-2.md"}
+stderr (empty)
+== snapshot repo/.memex
+-- .gitignore
+| logs/
+| cache/
+-- config.json
+| {"keep_logs": "3d"}
+-- logs/impl/20261013-120000-git-dir-names-a-bare-clone-2.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| branch: main
+| commit: b3cbae2
+| ---
+| GIT_DIR names a bare clone
+-- logs/impl/20261013-120000-git-dir-names-a-bare-clone.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| branch: main
+| commit: b3cbae2
+| ---
+| GIT_DIR names a bare clone
+== snapshot bare.git/memex
+(missing)

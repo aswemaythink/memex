@@ -1,0 +1,1 @@
+{"setup": [{"run": ["git", "init", "--bare", "--quiet", "--initial-branch=main", ".git"]}], "steps": [{"args": ["info"]}, {"args": ["log", "impl"], "stdin": "Bare repo named git\n"}, {"args": ["log", "impl", "--json"], "stdin": "Bare repo named git\n"}], "snapshot": ["repo/.memex", "repo/.git/memex"]}

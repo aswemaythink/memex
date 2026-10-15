@@ -1,7 +1,7 @@
 //! Finds where `log` writes, per design §4.1: the root, the folder that owns the store, and the store.
 //! The root is the nearest `.memex/` above the cwd, bounded by its toplevel, which one listing of the ancestors finds (layout.rs); else the toplevel, else the cwd. The read verbs use the same root.
-//! git answers for the store's place and HEAD while it works; when it gives no answer, the layout (layout.rs) answers from plain files (design §4.4 git). A cwd with no `.memex/` in reach whose toplevel is a `.git` folder or absent is not asked, since git cannot change that answer; `log` gets HEAD's branch in the probe's own call.
-//! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-ROOT-05, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-GIT-01, DISC-GIT-02, DISC-GIT-03, DISC-NOGIT-01, DISC-NOGIT-02, DISC-NOGIT-03, DISC-NOGIT-04, DISC-NOGIT-05, DISC-NOGIT-06, DISC-NOGIT-07, DISC-TOP-01, DISC-TOP-02, DISC-TOP-03, DISC-TOP-04, DISC-TOP-05, DISC-TOP-06, DISC-TOP-07, DISC-TOP-08, LOG-WRITE-06, LOG-WRITE-10
+//! git answers for the store's place and HEAD while it works; when it gives no answer, the layout (layout.rs) answers from plain files (design §4.4 git). A toplevel that is a `.git` folder, or none, is the root's own store and git is not asked for it; `log` still asks git for HEAD, and asks nothing when no `.memex/` is in reach.
+//! Cases: DISC-ROOT-01, DISC-ROOT-02, DISC-ROOT-03, DISC-ROOT-04, DISC-ROOT-05, DISC-WT-01, DISC-WT-02, DISC-BARE-01, DISC-BAREDOT-01, DISC-BAREDOT-02, DISC-BAREDOT-03, DISC-BAREDOT-04, DISC-GIT-01, DISC-GIT-02, DISC-GIT-03, DISC-NOGIT-01, DISC-NOGIT-02, DISC-NOGIT-03, DISC-NOGIT-04, DISC-NOGIT-05, DISC-NOGIT-06, DISC-NOGIT-07, DISC-TOP-01, DISC-TOP-02, DISC-TOP-03, DISC-TOP-04, DISC-TOP-05, DISC-TOP-06, DISC-TOP-07, DISC-TOP-08, LOG-WRITE-06, LOG-WRITE-10
 
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
@@ -194,11 +194,11 @@ fn resolution_of(cwd: &Path, for_write: bool) -> Result<Resolution, Error> {
 /// Who places the store, with git's `--abbrev-ref HEAD` line when the probe asked for it and git gave it.
 type Placed = (Source, Option<String>);
 
-/// Who places the store for the repository at `cwd` (design §4.4 git): git while it answers, else the layout. With no `.memex/` in reach
-/// and a toplevel that is a `.git` folder or absent, no place can be reached, so git is not asked (DISC-TOP-08 keeps the root's store).
+/// Who places `cwd`'s store (design §4.4 git): git while it answers, else the layout; a `.git` folder or no toplevel is the root's own (DISC-BAREDOT-01 to 04).
 fn source_of(cwd: &Path, top: Option<&Path>, has_memex: bool, head: bool) -> Placed {
-    if !has_memex && top.is_none_or(git_entry_is_folder) {
-        return (Source::Own, None);
+    if top.is_none_or(git_entry_is_folder) {
+        let abbrev = (has_memex && head).then(|| Git::probe(cwd, true).1);
+        return (Source::Own, abbrev.flatten());
     }
     let (git, abbrev) = Git::probe(cwd, head);
     if let Some(mut git) = git {
