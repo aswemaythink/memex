@@ -1,7 +1,7 @@
 //! Budget tests: the read verbs against their timing budgets, run by the stress suite.
 //! `budget_info`, `budget_search` and `budget_show` time `memex info`, `memex search button` and `memex show packages` in
 //! the repository that MEMEX_STRESS_REPO names: a release build, three untimed warm-ups, then the median of nine timed runs
-//! against 120, 160 and 130 ms. Without the variable each test prints a skip line and passes. The commands only read that
+//! against 90, 115 and 95 ms. Without the variable each test prints a skip line and passes. The commands only read that
 //! repository; they run there with MEMEX_* removed, so the real clock is read, and with HOME unchanged.
 //! Cases: none (stress)
 
@@ -24,25 +24,25 @@ const WARM_UP: usize = 3;
 /// The timed runs of each command. Their median is the number that the budget judges.
 const RUNS: usize = 9;
 
-/// `memex info` in the reference repository stays within its 120 ms budget.
+/// `memex info` in the reference repository stays within its 90 ms budget.
 #[test]
 #[ignore = "stress suite: run with cargo test --release --test stress -- --ignored"]
 fn budget_info() {
-    check_budget("budget_info", &["info"], 120.0);
+    check_budget("budget_info", &["info"], 90.0);
 }
 
-/// `memex search button` in the reference repository stays within its 160 ms budget.
+/// `memex search button` in the reference repository stays within its 115 ms budget.
 #[test]
 #[ignore = "stress suite: run with cargo test --release --test stress -- --ignored"]
 fn budget_search() {
-    check_budget("budget_search", &["search", "button"], 160.0);
+    check_budget("budget_search", &["search", "button"], 115.0);
 }
 
-/// `memex show packages` in the reference repository stays within its 130 ms budget.
+/// `memex show packages` in the reference repository stays within its 95 ms budget.
 #[test]
 #[ignore = "stress suite: run with cargo test --release --test stress -- --ignored"]
 fn budget_show() {
-    check_budget("budget_show", &["show", "packages"], 130.0);
+    check_budget("budget_show", &["show", "packages"], 95.0);
 }
 
 /// Times `memex <args>` in the repository that MEMEX_STRESS_REPO names and asserts that its median is within `budget_ms`.

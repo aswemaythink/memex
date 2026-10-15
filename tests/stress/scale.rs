@@ -156,11 +156,11 @@ fn scale_100k_files() {
     let info_ms = time_verb(&sandbox, "info, 100k files", &["info"]);
     let search_ms = time_verb(&sandbox, "search cache, 100k files", &["search", "cache"]);
     let show_ms = time_verb(&sandbox, "show dir05000, 100k files", &["show", "dir05000"]);
-    // show <dir> loads the same corpus as info, so it shares info's 1.5 s budget (coordinator ruling).
+    // show <dir> loads the same corpus as info, so it shares info's 1.3 s budget (coordinator ruling).
     let timed = [
-        ("info", info_ms, 1_500.0),
-        ("search", search_ms, 2_000.0),
-        ("show", show_ms, 1_500.0),
+        ("info", info_ms, 1_300.0),
+        ("search", search_ms, 1_600.0),
+        ("show", show_ms, 1_300.0),
     ];
     let breaches = over_budget(&timed);
     assert!(breaches.is_empty(), "over budget: {breaches:?}");
