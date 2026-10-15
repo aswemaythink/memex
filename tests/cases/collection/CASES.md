@@ -16,7 +16,7 @@ memex: cases
 - `COLL-FRONT-05` A `memex:` key past the first 8 KiB of the file is not seen, so the file is no doc and `show decisions:0005-late` is not found, exit 1.
   design §2.2 (the key counts within the first 8 KiB). Run: memex show decisions:0005-late. A `pad:` line of 9,000 bytes comes before the key.
 - `COLL-FRONT-06` A `memex:` line that the 8 KiB limit cuts is not seen, so `show decisions:0006-cut` is not found, exit 1.
-  design §2.2 (the key counts within the first 8 KiB; the whole line must lie inside it, a ruling not yet in PLAN §13). Run: memex show decisions:0006-cut. The key starts at byte 8186, so the limit falls inside `memex: decisions`.
+  design §2.2 (the key counts within the first 8 KiB; the whole line must lie inside it, PLAN §13 R11). Run: memex show decisions:0006-cut. The key starts at byte 8186, so the limit falls inside `memex: decisions`.
 - `COLL-FRONT-07` A `memex:` key within the first 8 KiB makes a doc even when the file is longer than 8 KiB, and its text is the whole body, exit 0.
   design §2.2 and §2.1 (files read). Run: memex show decisions:0007-long. The key is at byte 4 and the closing fence comes after one 8,200-byte blank line, so the file is 8,266 bytes.
 - `COLL-FRONT-08` A Markdown file with no frontmatter is no doc, even when its body has a `memex:` line, so `show decisions:0008-body` is not found, exit 1.
