@@ -5,8 +5,29 @@ edition = "2021"
 rust-version = "1.85"
 license = "MIT OR Apache-2.0"
 description = "A CLI that indexes a repo's authored intent layer so agents read intent before code."
-repository = "https://github.com/rynwhite/memex"
-exclude = ["tests/", "site/", "plugins/"]
+repository = "https://github.com/aswemaythink/memex"
+homepage = "https://aswemaythink.github.io/memex"
+readme = "README.md"
+keywords = ["cli", "agents", "markdown", "documentation", "search"]
+categories = ["command-line-utilities", "development-tools"]
+# The crate ships what builds it and documents it. Tests, the site, plugins, CI, the repo's own
+# intent store and the build plan stay in the repository.
+exclude = [
+    "tests/",
+    "site/",
+    "plugins/",
+    ".github/",
+    ".memex/",
+    ".claude-plugin/",
+    "PLAN.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "clippy.toml",
+    "dist-workspace.toml",
+    ".gitattributes",
+    ".gitignore",
+    ".ignore",
+]
 
 [lib]
 name = "memex"
@@ -67,3 +88,8 @@ too_many_arguments = "warn"
 unwrap_used = "warn"
 dbg_macro = "warn"
 todo = "warn"
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
