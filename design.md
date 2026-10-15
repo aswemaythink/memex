@@ -8,10 +8,10 @@
 
 - **Markdown files and a CLI.** No server, daemon, auth, MCP, LLM, vectors or database. memex starts, reads plain files live, prints and exits.
 - **Agent-agnostic.** Anything with a shell can use it. Plugins only wrap it.
-- **Conventions over configuration.** The intent layer needs zero config. The only config is collection manifests.
+- **Conventions over configuration.** The intent layer needs zero config: a folder's README and a file's header are found by where they are, and a frontmatter line puts any Markdown file in a collection. Manifests exist only for structures that are not Markdown.
 - **memex reads intent, `rg` reads code.** memex never indexes code bodies, only the comment block at the top of a file.
 - **Bounded output.** Every list prints `showing N of M`, and `--limit` works everywhere. Nothing is capped silently.
-- **Logs are scaffolding; knowledge is authored.** A log is mechanical: what happened in a run, useful for a couple of working days, then junk. memex prunes it. Anything still true after that gets compressed into a README, a header, a case or a collection by someone who understands it. Automated memory tools try to keep everything forever; memex says most of it was never worth keeping.
+- **Logs are scaffolding; knowledge is authored.** A log is mechanical: what happened in a run, useful for a couple of working days, then junk. memex prunes it. Anything still true after that gets compressed into a README, a header or a collection doc by someone who understands it. Automated memory tools try to keep everything forever; memex says most of it was never worth keeping.
 - **A feature earns its place** by removing friction an agent actually hit in a playtest.
 
 ### Lineage
@@ -20,12 +20,20 @@ The name is Vannevar Bush's. In "As We May Think" (*The Atlantic*, July 1945) he
 
 This memex takes Bush's side. Citations and backlinks are the trails; developers and agents are the trail blazers; logs are the camera's film, kept a couple of days and then thrown away. Org: `aswemaythink` (pending).
 
-## 2. The intent layer: five conventions
+## 2. The intent layer: the graph and its dimensions
+
+The intent layer has two parts, tied together by citations.
+
+- **The graph** is attached to the tree and found by *where* it is: a README per folder and a header per file. `show <path>` walks it.
+- **Dimensions** cut across the tree and are found by *what* they are: cases, decisions, perf notes, playtests. Each is a collection, and any Markdown file joins one with a frontmatter line (§2.2). Anyone can start one; no config is needed.
+- **Citations** link the two both ways (§2.3). **Logs** are the time dimension: scaffolding that expires (§4.3).
+
+Five conventions:
 
 1. **README.md per unit folder.** Line 1 is `# Name`. The first paragraph says what the folder is and why it exists; its first sentence is the one-liner shown everywhere.
 2. **Header at the top of each non-trivial file.** It is the first comment block, and its first sentence states the file's purpose. That sentence is the file's one-liner.
-3. **Cases have ids and claims in `CASES.md`.** The test's own name contains the id.
-4. **Cite, don't copy.** Write case ids, paths and refs into READMEs, headers and logs. memex derives links both ways from them. There are no mapping files.
+3. **A frontmatter line joins a dimension.** `memex: <collection>` in a Markdown file's frontmatter makes it a doc in that collection (§2.2). Cases are the usual first one: a `CASES.md` with `memex: cases` lists test ids with their claims, and each test's own name contains its id.
+4. **Cite, don't copy.** Write ids, paths and refs into READMEs, headers, docs and logs. memex derives links both ways from them. There are no mapping files.
 5. **Intent ships with code.** A change to behaviour updates its header or README in the same commit.
 
 **One-liners.** A README's one-liner is the first sentence of the first paragraph after the H1, or the H1 text if there is no paragraph. A header's is the first sentence of the block. A sentence ends at `.`, `!` or `?` followed by whitespace or the end of the paragraph. Text output truncates a one-liner at 120 chars with `…`; JSON keeps the full text.
@@ -49,11 +57,28 @@ The comment syntax is chosen by extension from a built-in table. Files with unkn
 - **Limits.** The index keeps the first 60 lines; `show` prints the whole block. A file with no header shows as `(no header)` in listings. That gap is itself a signal.
 - **Files read.** Only the first 8 KiB of each file is read. Binary files are skipped. A header still open at the 8 KiB cut is shown with a final line `… (header cut at 8 KiB)`, never silently.
 
-### 2.2 The case index: `CASES.md`
+### 2.2 Collections: `memex: <name>`
 
-There is one standard: a Markdown file named `CASES.md`, placed anywhere (by convention next to the tests it indexes). Every list item at column 0 whose first element is a backticked case id is a case.
+A walked Markdown file (listed name ending in `.md`) whose frontmatter holds the key `memex` is a doc in the collection that key names. No manifest or config is needed. README.md is the exception: it is the graph's, so a `memex` key in its frontmatter is ignored with a warning that tells the user to move the content into its own file.
 
 ```markdown
+---
+memex: decisions
+status: accepted
+---
+# Logs live in the main checkout
+Worktrees are removed when a slice lands, so their logs would go with them.
+```
+
+- **Frontmatter.** The file's first line is `---` (after a BOM), the flat YAML of §4.2 follows, and the next `---` line closes it. The `memex` key counts only within the file's first 8 KiB, the limit headers use (§2.1).
+- **Name.** `[a-z0-9][a-z0-9-]{0,39}`, as for streams (§3.4). A file with any other value is a warning, `memex: warning: <path>: 'memex: <value>' is not a collection name; use a-z, 0-9 and -`, and is skipped. A name shared with the graph or a stream warns, never breaks (§4.2 Names).
+- **One file, one doc.** Its id is the `id` field, else the file stem; its title is the first heading (the §4.2 title rule); its fields are the frontmatter keys other than `memex`; its text is the body after the frontmatter. Its label is `<name>:<id>`.
+- **Entries: many docs in one file.** If a column-0 list item outside fenced code opens with a backticked id (the case-id grammar below), the file is an entry index: each such item is a doc, and the file itself is not one. This is how `CASES.md` works:
+
+```markdown
+---
+memex: cases
+---
 # Namer cases
 
 ## Stability
@@ -63,17 +88,18 @@ There is one standard: a Markdown file named `CASES.md`, placed anywhere (by con
 - `NAME-002` Two atoms with equal declarations share one class.
 ```
 
-- **Case id.** `[A-Z][A-Z0-9]*(-[A-Z0-9]+)+`, unique across the repo, for example `NAME-001`, `STT-WRAP-06` or `LIB-MEASURE-001`. A case keeps its id forever; retired ids are not reused.
-- **Claim.** The rest of the first line, as one sentence stating what the case proves.
-- **Detail.** Indented continuation lines (optional).
-- **Evidence.** Backticked paths inside the item that resolve to existing files (relative to the CASES.md folder first, then the root). This is optional, because the id in the test name already makes `rg NAME-001` exact.
-- **Group.** The nearest heading above the item, recorded as the `group` field.
-- **Planned cases.** A case written before its test exists is fine, and is README-driven development applied to tests. Say so in the claim, for example "(planned)".
-- **Existing case structures.** Case-per-folder layouts and JSON case arrays need no conversion. A manifest (§4.2) indexes them, and their ids follow the same citation rules.
+  - **Id.** `[A-Z][A-Z0-9]*(-[A-Z0-9]+)+`, for example `NAME-001`, `STT-WRAP-06` or `LIB-MEASURE-001`. An entry keeps its id forever; retired ids are not reused.
+  - **Claim.** The rest of the first line, as one sentence stating what the entry proves. It is the entry's title.
+  - **Detail.** Indented continuation lines (optional).
+  - **Evidence.** Backticked paths inside the item that resolve to existing files (relative to the file's folder first, then the root). Optional, because an id in a test name already makes `rg NAME-001` exact.
+  - **Group.** The nearest heading above the item, recorded as the `group` field. The file's frontmatter keys are not copied to its entries.
+  - **Planned entries.** An entry written before its test exists is fine, and is README-driven development applied to tests. Say so in the claim, for example "(planned)".
+- **Duplicate ids.** Ids are unique within a collection; a duplicate is an `info` warning, `duplicate id <name>:<id> in <paths>` (each path once), and `ambiguous` in `show`. Keep them unique across the repo too, so a bare id names one doc (§3.1).
+- **Existing structures.** Case-per-folder layouts and JSON case arrays need no conversion: a `folder` or `json` manifest (§4.2) indexes them, and their ids follow the same citation rules.
 
 ### 2.3 Citations and derived backlinks
 
-memex scans every indexed doc (READMEs, headers, CASES.md entries, manifest docs, logs) for citations. Citations are never extracted from fenced code blocks (a fence is a line of three or more backticks or tildes indented at most three spaces; an unclosed fence runs to the end of the doc). A fence closes at a line of the same mark, at least as long, with nothing else on it; a backtick opener's info string holds no backticks. This one fence definition applies everywhere memex skips fenced code: citations, CASES.md items, markdown docs and init's markers. Self-citations are dropped.
+memex scans every indexed doc (READMEs, headers, collection docs and entries, logs) for citations. Citations are never extracted from fenced code blocks (a fence is a line of three or more backticks or tildes indented at most three spaces; an unclosed fence runs to the end of the doc). A fence closes at a line of the same mark, at least as long, with nothing else on it; a backtick opener's info string holds no backticks. This one fence definition applies everywhere memex skips fenced code: citations, entries, titles and init's markers. Self-citations are dropped.
 
 | Form | Matches |
 |---|---|
@@ -116,7 +142,7 @@ memex --help | --version
   5. A unique basename.
   6. If several still match, memex lists candidates and exits 1. It never guesses.
 - **Other worktrees.** A path outside the current root resolves against *its own* nearest root (a `.memex/` or toplevel (§4.1) above it). With neither, its root is the path itself for a folder, or its parent for a file; memex never walks the enclosing filesystem. `memex show ../wt-cook-3/src/x.rs` reads that worktree's intent layer, so no `@worktree` suffix is needed. Its `cites` and `cited by` would name labels of that root, which don't resolve from the cwd, so text prints `(in another root: run show from <root>)` in place of each list and JSON gives `cites: null` and `cited_by: null`; nothing is dropped silently. Logs are shared anyway.
-- **Built-in collections.** The names `readmes`, `headers`, `cases` and `logs` are reserved. `logs` means every stream.
+- **Built-in names.** `readmes` and `headers` are the graph; `logs` means every stream. A collection may share one of these names, with a warning (§4.2 Names).
 
 ### 3.2 `search`
 
@@ -124,13 +150,13 @@ memex --help | --version
 - **Words.** Ranked BM25 with field weights, English stemming and prefix matching. Fuzzy matching allows one edit for words of 5 or more characters, and those hits are marked `[~variant]`. A word is a run of Unicode letters and digits, lowercased, so `naïve`, `café`, `Straße` and CJK runs are words. Word lengths and edits count characters (Unicode scalar values), not bytes, so `naïve` is one edit from `naive` (a word under 5 characters, like `café`, gets prefix matches but no fuzzy ones). Ids and paths are also kept as whole tokens, so `NAME-001` matches exactly. Any word may match; more matches rank higher. Scores are only comparable within one group. Ranking compares scores quantized to `1e-9`, then by ref, so libm differences across OSes cannot reorder results.
 - **Filters `field:value`.** Exact and case-insensitive, combined with AND. Reserved: `agent:`, `to:`, `tag:`, `branch:`, `worktree:` (basename or path), and `since:` (`30m`, `6h`, `2d`, `1w` or `2026-10-13`; it keeps only docs that have a `time`). Any other `x:` is a filter only if some doc in scope has field `x`; otherwise it is a literal word. That keeps `std::io` and refs searchable.
 - **Markers.** A group heading names the markers its lines use: a roster group's reads `cases  (showing 50 of 214; <-N cited by N)`, and a group with a fuzzy hit adds `; [~w] fuzzy match on w`. JSON is unchanged.
-- **Grouped output, always.** Each collection with hits is one group. The fixed order is `readmes`, `headers`, `cases`, manifest collections (alphabetical), then `logs` as one group. Empty groups are omitted.
+- **Grouped output, always.** Each collection with hits is one group. The fixed order is the graph (`readmes`, `headers`), then collections alphabetically, then `logs` as one group. Empty groups are omitted.
   - **Limits.** Without `--in`, `--limit` applies per group (default 5). With `--in`, the default is 20.
   - **Why groups.** Grouping is why READMEs and headers can be in global search: thousands of headers cannot drown a README, and log noise stays in its own group.
 - **Zero hits.** stdout stays empty and the exit is 0, so scripts are unaffected; stderr prints `memex: no hits for <words>; try fewer or other words, or memex info` (with filters only: `memex: no docs match <filters>; try fewer filters, or memex info`; with a single filter it reads `memex: no docs match <filter>; try another value, or memex info`), in text and JSON modes.
 - **Filters without words.** Lists matching docs, newest first for logs.
-- **`--in X` with no words.** Prints the roster: every doc's one-liner, logs newest first, everything else by id. Each roster line carries `<-N`, its cited-by count (prefix citations excluded), so `search --in cases` *is* the orphan audit (`<-0`). Default limit 50.
-- **`--in` names.** Built-in collections, manifest names and stream names. An unknown name is a usage error (exit 2), never a silently empty result.
+- **`--in X` with no words.** Prints the roster: every doc's one-liner, logs newest first, everything else by id. Each roster line carries `<-N`, its cited-by count (prefix citations excluded), so `<-0` marks docs that nothing cites. Default limit 50.
+- **`--in` names.** `readmes`, `headers`, `logs`, collection names and stream names. A name a collection shares with the graph or a stream means the graph or the stream (§4.2 Names). An unknown name is a usage error (exit 2), never a silently empty result.
 
 ```
 readmes  (showing 2 of 2)
@@ -150,8 +176,8 @@ It takes one or more refs and prints a section for each, separated by `=== <labe
 - **File.** The header (full content for `.md`), then `cites`, then `cited by`, then the chain. `--up N` limits the depth; `--up 0` prints the file alone.
 - **Folder.** The folder's README if there is one; otherwise `(no README)`. Then the children (the folder's own README.md excluded, since it is already printed): subfolders with their README one-liners, and files with their header one-liners or `(no header)`. Then `cites`/`cited by` for the folder path, then the chain. A folder without a README lists its children and is not an error. `show .` is the map of the root.
 - **Chain.** Ancestor READMEs in full, nearest first, root last. For a README.md itself, the chain starts at the folder above its own, since the file is already printed in full.
-- **Case.** Claim, detail, group, the defining `CASES.md`, evidence paths, and cited by.
-- **Log or collection doc.** The full text, its fields as a `key: value` block, cites, and cited by.
+- **Entry** (§2.2). Claim, detail, group, the defining file, evidence paths, and cited by.
+- **Log or other collection doc.** The full text, its fields as a `key: value` block, cites, and cited by.
 - **Limits.** The children and cited-by lists use `--limit` (default 50) and always print `showing N of M`, adding `(--limit M for all)` only when the list was cut (N < M).
 - **Gaps.** A section that prints `(no README)` or `(no header)`, as its body or on a child line, follows its children (a file section: its body) with one line for each placeholder it used, once: `(no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is` and `(no header): add a comment block atop the file; its first sentence states the file's purpose`. JSON is unchanged.
 - **Exit code.** If any ref fails, memex still prints the others and exits 1.
@@ -161,7 +187,7 @@ It takes one or more refs and prints a section for each, separated by `=== <labe
 - **Body.** Read from stdin, required and non-empty. If stdin is a TTY, memex exits 2. The maximum is 16 KiB, measured on the body as stored (after the BOM is dropped, CRLF becomes LF and the bytes are decoded), which exits 2 with the message "logs are findings: cite artifacts by path". The title is the first non-blank body line after any frontmatter, with leading `#`s and spaces stripped. If the title is empty, memex exits 2. The slug is made from the title: lowercase ASCII alphanumerics, other runs become `-`, trimmed, at most 60 chars, or `entry` if empty.
 - **Store.** `log` is allowed if the root or the main checkout has `.memex/`. With neither, it exits 3 with "run `memex init`" (§4.1).
 - **Extra fields.** An optional leading `---` frontmatter block in the body is merged in. Collisions with memex-owned keys exit 2. Keys compare case-insensitively, both against memex's keys and against each other, so `To:` cannot forge a `to` field. A value containing a lone carriage return exits 2. The block ends at its first `---` line, as in YAML, so a value cannot hold one (accepted limit).
-- **Stream name.** `[a-z0-9][a-z0-9-]{0,39}`. It must not be a reserved name, a Windows device name (`con`, `prn`, `aux`, `nul`, `com0`–`com9`, `lpt0`–`lpt9`; refused on every OS so a store stays portable), or an existing manifest name (matched against the listed file names in `.memex/collections/`, exactly, never by probing). Streams need no declaration.
+- **Stream name.** `[a-z0-9][a-z0-9-]{0,39}`. It must not be `readmes`, `headers` or `logs`, a Windows device name (`con`, `prn`, `aux`, `nul`, `com0`–`com9`, `lpt0`–`lpt9`; refused on every OS so a store stays portable), or an existing manifest name (matched against the listed file names in `.memex/collections/`, exactly, never by probing). The manifest-name check is unchanged (listed files in `.memex/collections/`); a frontmatter collection never blocks `log`, it only draws the shared-name warning on reads. Streams need no declaration.
 - **Agent id.** Taken from `--agent`, then `$MEMEX_AGENT`; otherwise it is omitted. No harness exposes a per-agent id in the environment (Spike 2), so there is no third source.
 - **Output.** stdout is exactly the ref on one line, so `ref=$(memex log impl <<'EOF' … EOF)` works. With `--json`, the output is `{"ref","path"}`.
 - **Immutable.** There is no edit verb. A correction is a new entry that cites the old ref, and the old entry then shows it under "cited by".
@@ -172,8 +198,8 @@ Where things are, never their contents. It prints no log bodies or titles, only 
 
 ```
 memex  /repo · log store .memex/logs/
-intent       48 readmes · 912 headers · 214 cases
-collections  doom 41 · neo-cases 294 · perf 212
+graph        48 readmes · 912 headers
+collections  cases 214 · doom 41 · neo-cases 294 · perf 212
 streams      impl 12 (3 new in 24h) · review 3 (1 new) · drift 5
 to cook-2    2 messages → memex search to:cook-2
 here         crates/namer — Namer: turns atoms into stable class names
@@ -181,7 +207,7 @@ use          memex show <path|ref> · memex search <words> · memex log <stream>
 ```
 
 - **Header.** The root, then the log store: root-relative when the store is inside the root, else absolute.
-- **Collections.** Name and doc count, alphabetical; `--json` adds kind, description and owner. Invalid manifests and duplicate case ids are listed as warnings.
+- **Collections.** Name and doc count, alphabetical, from frontmatter and manifests alike; `--json` adds kind, description and owner. Invalid manifests, invalid collection names, duplicate ids and shared names (§4.2) are listed as warnings.
 - **Streams.** Total entries and how many are new in the last 24 hours, ordered by most recent activity.
 - **`to` line.** A count only: every entry in the store addressed to the id. Shown when an agent id is known (`--agent`, `$MEMEX_AGENT`), including at zero (`to cook-2    0 messages → memex search to:cook-2`), so an agent can tell that it is wired up; JSON `to` is then always present.
 - **`here` line.** Shown only when the cwd is not the root: the nearest README's one-liner.
@@ -223,9 +249,9 @@ Exit codes and JSON codes are unchanged.
 
 With `--json`, stdout is always one JSON document, including errors. Without it, errors go to stderr as text.
 
-- **Doc:** `{ref, collection, id, path, title, fields:{…}}`. `fields` holds frontmatter and manifest fields; logs add `time, agent, to[], tags[], branch, worktree, commit`.
+- **Doc:** `{ref, collection, id, path, title, fields:{…}}`. `fields` holds frontmatter and manifest fields (an entry's are `group` and `evidence`); logs add `time, agent, to[], tags[], branch, worktree, commit`.
 - **`search` (with words or filters, or a roster):** `{query, filters:{…}, groups:[{collection, total, hits:[doc + {score|null, snippet, fuzzy:[]}]}]}`. Roster hits have `score: null` and `cited_by: N`, which, like `<-N`, excludes prefix citations. JSON scores are rounded to 3 decimals. The shape is the same with or without `--in`.
-- **`info`:** `{root, log_store, collections:[{name, kind, builtin, count, description, owner, new_24h?, newest?, error?}], to?:{agent, count}, here?:{path, title}, warnings:[]}`, where `kind` is `log` for streams.
+- **`info`:** `{root, log_store, collections:[{name, kind, builtin, count, description, owner, new_24h?, newest?, error?}], to?:{agent, count}, here?:{path, title}, warnings:[]}`, where `kind` is `null` for `readmes` and `headers` (`builtin: true`), `markdown` for a collection declared by frontmatter, the manifest's kind (`folder`, `json`) for one declared by a manifest, and `log` for streams.
 - **`show`:** `{docs:[doc + {text, cites:[{ref, title, resolved}], cited_by:{total, refs:[{ref, title, via?}]}, children?:{total, items:[{path, kind:"dir"|"file", title}]}, chain:[{path, text}]}], errors:[{arg, code, message, candidates?}]}`. `cites` and `cited_by` are `null` for an entry in another root (§3.1).
 - **`log`:** `{ref, path}`, where `path` is absolute and `/`-separated.
 - **Fatal errors:** `{error:{code, message}}`, where `code` is one of `usage | not_found | ambiguous | no_root | io`. `no_root` is `log` with no `.memex/` (§4.1).
@@ -247,7 +273,9 @@ With `--json`, stdout is always one JSON document, including errors. Without it,
 3. **Log store.** `.memex/logs/`, ignored by default (`.memex/.gitignore`). Inside a git worktree it resolves to the **main checkout's** `.memex/logs/` (the same root path in the main worktree, found via `git rev-parse --git-common-dir`, or without git from the layout, §4.4 git), so every worktree shares one store and logs survive `git worktree remove`. A bare repo has no main checkout, so its store is `<git-common-dir>/memex/logs/`; there `log` needs `.memex/` in the root only, and no `.gitignore` is written because the store is inside the git dir. `log` is allowed if the root or the main checkout has `.memex/`. With neither, it exits 3 with "run `memex init`". Creating the store also writes `.memex/.gitignore` when it's missing, so logs can never be committed by accident. memex creates the folder on the first `log`.
 4. **`.memex/` contents.** Committed: `collections/<name>.json` manifests, `config.json`, `.gitignore`. Ignored by default: `logs/` and `cache/`. A team that wants to keep logs removes `logs/` from the `.gitignore`; that's their choice. `config.json` has one key, `keep_logs`. It is read from the store owner's `.memex/config.json` (the main checkout's, for a worktree), and defaults to `3d`.
 
-### 4.2 Manifests and generic kinds
+### 4.2 Manifests
+
+A manifest indexes a structure that is not Markdown: one doc per folder that holds a marker file, or per entry of a JSON array. Markdown needs no manifest (§2.2).
 
 ```json
 {
@@ -266,23 +294,25 @@ With `--json`, stdout is always one JSON document, including errors. Without it,
 
 | Key | Kinds | Meaning |
 |---|---|---|
-| `name` | all | label prefix; must equal the file stem; reserved names rejected |
+| `name` | all | label prefix; must equal the file stem; `readmes`, `headers` and `logs` rejected |
 | `description`, `owner` | all | shown in `info`; `owner` names the skill that builds it |
 | `roots` | all | root-relative folders (required) |
-| `include` | markdown, json | globs under roots (markdown default `**/*.md`) |
-| `id` | all | markdown: `stem` (default) or `path` or a frontmatter field; folder: marker field or folder name (default); json: entry field (required) |
+| `include` | json | globs under roots |
+| `id` | all | folder: marker field or folder name (default); json: entry field (required) |
 | `title` | all | field for the one-liner (default, for every kind: the first ATX heading outside fenced code, 1–6 `#` then a space or tab, else the first non-blank line; an empty title field falls back to the default; no first-sentence cut) |
 | `weights` | all | per-field ranking boost (defaults: `id` 4, `title` 3, body 1) |
 | `marker`, `merge` | folder | marker file defines a doc; `merge` globs in that folder are appended to the body |
 | `at` | json | JSON Pointer to the entries array (default: document root) |
 
-- **`markdown`.** Each matched file is one doc, with frontmatter as fields and the body as text. Matched `.json` sidecars are docs too, with their top-level scalars as fields.
 - **`folder`.** Each folder containing `marker` is one doc. The marker's fields come from top-level JSON scalars, or from frontmatter for a `.md` marker. Each `merge` file adds its full text if it is Markdown, or **only its header** if it is code, so memex still never reads code bodies.
 - **`json`.** Each entry of the array at `at`, in every matched file, is one doc. Scalars become fields and strings are indexed as text.
 - **Frontmatter.** Flat YAML: `key: scalar`, `key: [a, b]`, or `- item` lists. Anything nested is kept as text and cannot be filtered. Frontmatter is optional, and missing fields simply don't score.
-- **Unreadable files.** A README, header, CASES.md or stream folder that can't be read is a warning (`memex: warning: cannot read <path> (<ErrorKind>)`) and is skipped. A path whose name memex skips (§4.4 Encoding) gets no warning either, nor does a walked file with no comment family (§2.1): the walk never opens it. A folder manifest's `merge` file is read by its manifest whatever its family, and warns as above; warnings print in the order they arise. A folder manifest's `merge` file that can't be read gets the same warning. A manifest root that is a symlink resolving outside the repo root is skipped with `memex: warning: <collection>: root <root> leads outside the repo; skipped`. It never fails a read verb.
+- **`kind: markdown`.** No longer a kind: the manifest is skipped with `memex: warning: <path>: kind 'markdown' is gone; add 'memex: <name>' to its files' frontmatter instead`.
+- **One collection, two sources.** A manifest and frontmatter files that name the same collection form one collection; `info` shows the manifest's kind, description and owner.
+- **Names.** A collection named like the graph (`readmes`, `headers`), like `logs`, or like a log stream still loads: its docs are indexed, appear in global search under their own group, and resolve in `show` as `<name>:<id>`. `--in <name>` keeps meaning the graph or the stream. A warning prints once per run in the form above, `memex: warning: collection '<name>' (in <path>) shares a name with the graph; --in <name> means the graph — rename it to reach it with --in` (for a stream: `shares a name with a log stream; --in <name> means the stream`), where `<path>` is its first file in byte order, and `info` lists it.
+- **Unreadable files.** A README, header, Markdown file or stream folder that can't be read is a warning (`memex: warning: cannot read <path> (<ErrorKind>)`) and is skipped. A path whose name memex skips (§4.4 Encoding) gets no warning either, nor does a walked file with no comment family (§2.1) that is not Markdown: the walk never opens it. A folder manifest's `merge` file is read by its manifest whatever its family, and warns as above; warnings print in the order they arise. A folder manifest's `merge` file that can't be read gets the same warning. A manifest root that is a symlink resolving outside the repo root is skipped with `memex: warning: <collection>: root <root> leads outside the repo; skipped`. It never fails a read verb.
 - **Invalid manifests.** An invalid manifest or an unknown key is a warning, and that collection is skipped. It never makes the run fail. Warnings are printed once per run on stderr by every verb that loads them, in text and JSON modes. `info` also lists them, with duplicate ids, in its output.
-- **Duplicate case ids.** Reported as `info` warnings, and as `ambiguous` in `show`.
+- **Duplicate ids.** Within one collection, reported as `info` warnings, and as `ambiguous` in `show` (§2.2).
 
 ### 4.3 Log files
 
@@ -319,8 +349,8 @@ One codebase for Linux, macOS and Windows, using only cross-platform APIs. No ma
 - **Atomic writes.** `tempfile` + `persist_noclobber` (atomic, never overwrites) on every platform, in place of raw `link()`. If persisting fails and the target name exists in any form (Windows reports a directory there differently), the name counts as taken and the `-2`, `-3` retry runs. Deletes that the OS refuses (on Windows, a file held open by another process) are warnings, never errors.
 - **Paths.** Labels and JSON always use `/`. Canonicalise with `dunce` (no `\\?\` prefixes). Compare paths case-sensitively in labels, since filesystem case behaviour varies.
 - **Filenames.** Log names have no colons. Slugs are `[a-z0-9-]`, max 60 chars. Windows reserved names are moot for entry files, because the timestamp prefix comes first; stream folders refuse them (§3.4).
-- **Name matching.** Special names (`README.md`, `CASES.md`, manifest files, `.memex` and everything memex reads inside it: `config.json`, `collections/`, `logs/`) are matched against directory listings, exactly. memex never decides by `exists()`, so case-insensitive filesystems behave like Linux.
-- **Text.** Accept `\r\n` everywhere (headers, CASES.md, frontmatter, log bodies). A leading UTF-8 BOM is dropped on read, so frontmatter still parses from shells that add one. Write `\n`, without a BOM. The exception is a user file memex edits in place (`AGENTS.md`, `CLAUDE.md`): it keeps that file's line endings.
+- **Name matching.** Special names (`README.md`, manifest files, `.memex` and everything memex reads inside it: `config.json`, `collections/`, `logs/`) are matched against directory listings, exactly. The `.md` extension is matched on the listed name, exactly (`NOTES.MD` is not Markdown). memex never decides by `exists()`, so case-insensitive filesystems behave like Linux.
+- **Text.** Accept `\r\n` everywhere (headers, Markdown docs, frontmatter, log bodies). A leading UTF-8 BOM is dropped on read, so frontmatter still parses from shells that add one. Write `\n`, without a BOM. The exception is a user file memex edits in place (`AGENTS.md`, `CLAUDE.md`): it keeps that file's line endings.
 - **Encoding.** Non-UTF-8 file content is decoded lossily; non-UTF-8 path names, and names containing a control character (U+0000–U+001F, U+007F), are skipped, since they cannot print as one-line labels.
 - **Errors.** Never print raw OS error strings. Print memex's message, the `io::ErrorKind` name and the path, so fixtures are identical across OSes.
 - **git.** An enhancement, never a requirement. The toplevel is found by listing (§4.1 item 1). The log store's place (§4.1 item 3) and an entry's `branch` and `commit` (§4.3) come from subprocess `git rev-parse`; there is no git library. When git is missing or fails (exits non-zero, as for a repo it refuses under `safe.directory`), memex reads the repository layout as plain files, and only these: the nearest `.git` entry; when it is a file, its `gitdir:` line (relative to the folder holding it); that git dir's `commondir` (relative to the git dir); and its `HEAD`. It never reads refs, `packed-refs`, objects, the index or config.
@@ -336,7 +366,7 @@ One codebase for Linux, macOS and Windows, using only cross-platform APIs. No ma
 
 - **Read the compression before the source.** Go one-liner, then doc, then chain. Open code only when the intent layer can't answer.
 - **Use the right tool.** `rg` finds symbols. memex finds meaning, cases and findings.
-- **Write it where the next reader will look.** If it's true of the code, it goes in the header or README. If it's true of this run, it goes in a log. If it's a claim a test proves, it goes in `CASES.md`.
+- **Write it where the next reader will look.** If it's true of the code, it goes in the header or README. If it's true of this run, it goes in a log. If it's a claim a test proves, it goes in `CASES.md` (`memex: cases`).
 - **Cite instead of copying.** An id or path is enough, because memex builds the links.
 
 **Orient.**
@@ -347,8 +377,7 @@ memex show crates/namer/src/hash.rs   # header, cites (with claims), cited by, c
 
 **Find the tests for X.**
 ```sh
-memex show crates/namer/src/hash.rs   # cites: NAME-001 — Class names are stable…
-memex search stable class names --in cases
+memex search stable class names --in cases   # the claims
 memex show NAME-001                   # claim, evidence, who cites it
 rg NAME-001                           # the test itself (id is in its name)
 ```
@@ -366,12 +395,12 @@ EOF
 **Check intent against code.**
 1. Run `memex show <dir>`, then read the code it describes.
 2. For each claim, does the code do it? Is there a cited case that proves it?
-3. Run `memex search --in cases`. Entries showing `<-0` are cases nobody cites; an `unresolved` entry in `show` is a broken citation.
-4. Fix the README, header or CASES.md in the same change, or log the mismatch to `drift` if it's out of scope.
+3. Run `memex show <dir>` and read its `cites`: an `unresolved` entry is a broken citation.
+4. Fix the README, header or collection doc in the same change, or log the mismatch to `drift` if it's out of scope.
 
 **Change code.** In the same commit, update the header or README you invalidated, add or adjust case lines, and put the id in new test names.
 
-**Promote a stream.** When a stream has proven durable, copy its files into the repo, add a `markdown` manifest, and give the owning skill the instructions.
+**Promote a stream.** When a stream has proven durable, copy its files into the repo and add `memex: <name>` to their frontmatter; give the owning skill the instructions.
 
 ## 6. Agent integration
 
@@ -379,15 +408,16 @@ EOF
 
 ```markdown
 ## memex: read intent before code
-This repo keeps an intent layer: README.md per folder, a header comment atop each file
-(first line = purpose), and CASES.md listing test ids with their claims (ids appear in test names).
-- Overview: `memex info`: where everything is (collections, streams, what's new, messages for you).
-- Orient: `memex show <path>`: header, cited cases, who cites it, README chain; folders list children.
-- Find: `memex search <words>` over READMEs, headers, cases, collections and logs. Use `rg` for symbols.
-- Tests for X: `memex show <file>` lists cited case ids; `memex show <ID>` gives claim and evidence.
+This repo keeps an intent layer. The graph: README.md per folder and a header comment atop each file
+(first line = purpose). Dimensions: any Markdown file with `memex: <collection>` in its frontmatter
+joins that collection, such as CASES.md (`memex: cases`): test ids with their claims (ids appear in test names).
+- Overview: `memex info`: where everything is (graph, collections, streams, messages for you).
+- Orient: `memex show <path>`: header, cites, who cites it, README chain; folders list children.
+- Find: `memex search <words>` over READMEs, headers, collections and logs. Use `rg` for symbols.
+- Tests for X: `memex search <words> --in cases`; `memex show <ID>` gives claim and evidence; `rg <ID>` finds the test.
 - Findings: `memex log <stream> [--to <agent>] <<'EOF' … EOF` prints a ref. Hand back the ref, not the report.
 - Messages to you: `memex search to:<your-id>`.
-- When you change code, update its header/README in the same change and cite the case ids it relies on.
+- When you change code, update its header/README in the same change. Cite ids and paths; don't copy.
 ```
 
 **Claude Code plugin (optional).** The memex repo is its own marketplace. The plugin contains exactly:
@@ -430,7 +460,7 @@ Or download a binary from GitHub Releases. All of these come from one cargo-dist
 ## 8. Overrides of plan.md
 
 1. **`init` verb.** Creates `.memex/` with its own `.gitignore` (logs and cache ignored) and `config.json`. Logs stay in the main checkout's `.memex/logs/`, as plan.md had it, with the git common dir only as the bare-repo fallback.
-2. **Built-ins renamed.** The `graph` label (opaque) becomes `readmes`, `headers` and `cases` (new), plus `logs` for all streams. reference-ui's `cases` manifest is renamed `neo-cases`.
+2. **Built-ins renamed.** The `graph` label (opaque) becomes `readmes`, `headers` and `cases` (new), plus `logs` for all streams. reference-ui's `cases` manifest is renamed `neo-cases`. (PLAN §15, 2026-10-15: `cases` became an ordinary collection declared by frontmatter, §2.2.)
 3. **Global search covers the intent layer.** This settles the plan's open question. Grouped output solves the drowning problem that made the prototype keep the graph targeted-only.
 4. **New verb `info`: the atlas.** Where things are, never contents. It replaces bare `search` as the one overview, and it's the start hook's single, size-capped call.
 5. **Log body limits.** 16 KiB cap; bodies may carry their own frontmatter; logs are immutable.
@@ -440,9 +470,9 @@ Or download a binary from GitHub Releases. All of these come from one cargo-dist
 1. **Spike 1: can an agent in a sandboxed worktree write to the main checkout's `.memex/logs/`?** Recommended fallback if not: write to the worktree's local `.memex/logs/`, and have reads merge across `git worktree list`.
 2. **Spike 2: agent ids.** If the harness exposes no id, keep `--agent`/`$MEMEX_AGENT` and have the skill tell agents to pass their role name. Never invent ids.
 3. **A `check` verb for drift?** Not yet. Roster `<-N` counts plus `unresolved` cover it. Add it only if playtest 2 shows agents computing orphans by hand.
-4. **Cache.** None until cold start exceeds 200 ms on the largest proving ground. Then add an mtime-keyed cache in `.memex/cache/` (ignored), with no CLI change.
-5. **Other Markdown (`docs/`, `SPEC.md`) as intent?** No built-in. Add a `markdown` manifest per repo; READMEs stay the convention.
+4. **Cache.** Settled for now (oracle, 2026-10-15): none. Opening every walked `.md` for frontmatter costs reference-ui +1-2% (info 54 → 55 ms, search 67 → 68, show 60 → 61; budgets 90/115/95) and the 100k tree +2-4% with 3% Markdown, +7-8% with 10%. Revisit when cold start exceeds 200 ms on the largest proving ground; then the stat-keyed cache of PLAN §15, with no CLI change.
+5. **Other Markdown (`docs/`, `SPEC.md`) as intent?** Settled: a `memex:` frontmatter line puts any of it in a collection (§2.2). READMEs stay the graph.
 6. **Log retention.** Settled: prune on write, `keep_logs` default 3 days (a couple of working days). Revisit the default after playtests.
 7. **Stemming.** English only. Ids and paths are never stemmed.
-8. **Case-id grammar too strict (for example lowercase ids in existing suites)?** Keep it strict. Manifests can still index non-conforming ids under `coll:id`; they just aren't citable bare.
+8. **Case-id grammar too strict (for example lowercase ids in existing suites)?** Keep it strict. Collections can still hold non-conforming ids under `coll:id`; they just aren't citable bare.
 9. **Windows.** Normalise to `/` in labels. Support it, but don't prioritise it before the first push.

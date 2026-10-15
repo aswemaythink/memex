@@ -495,6 +495,7 @@ Each line is a design.md commit since S0.1; `git show <hash> -- design.md` shows
 - (round 2 perf, orchestrator) a no-family file is never opened by the walk, but a merge file is read by its manifest and still warns; warning order follows the order they arise (MANK-MERGE-01 re-blessed for order only).
 - (round 2 perf, orchestrator, P-GIT2) with no toplevel, git is asked for the store only when a .memex/ is in reach, keeping §4.1 item 3's bare-repo store; a .git folder never asks git.
 - (round 2 perf) P-FUSE (reads inside the walker callback) measured and discarded: byte-identical but no consistent gain at 8 threads (reference-ui 0.96-1.13, tree100k 0.99-1.03); patch kept in the session scratchpad only.
+- (PLAN §15 rulings R1-R10, oracle, 2026-10-15; U1-U3 and R1 user-approved 2026-10-15) R1 README.md never joins a collection (the graph's own; a `memex` key in its frontmatter is ignored with a warning that tells the user to move the content into its own file), since a stem id would make every README `README`; R2 collection names use the stream grammar `[a-z0-9][a-z0-9-]{0,39}`, and any other value warns and the file is skipped; R3 the key counts only within the first 8 KiB (the header limit, §2.1); R4 entries do not inherit the file's frontmatter, and an entry index is not itself a doc; R5 a manifest and frontmatter files with one name form one collection, and `info` shows the manifest's kind, description and owner; R6 frontmatter `fields` omit `memex`, and `id` stays a field; R7 JSON kind `markdown` for frontmatter collections; R8 `kind: markdown` manifests are skipped with a warning that names the fix; R9 duplicate ids warn per collection (manifest docs now warn too), each path named once; R10 `logs` as a collection name warns like the graph names.
 
 ## 14. Proposed: `memex check` (planned 2026-10-15; not approved; design.md unchanged)
 
@@ -574,3 +575,5 @@ Expected: reference-ui `info` about 55 → 25–30 ms; 100k about 1 s → 0.4–
 4. Then §14 `check` on the new model. Then a cold playtest.
 
 **Approved by the user (2026-10-15).** The model and the `memex:` key; many docs per file via id-led list items; drop the built-in `cases`, this repo's `Cases:` header rule and the selfhost citation gate; the cache is built only on the oracle's numbers.
+
+Design applied in commit "design: the graph and its dimensions (PLAN §15, user-approved)"; U1-U3 and R1 approved by the user 2026-10-15.
