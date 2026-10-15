@@ -513,14 +513,15 @@ Answers design §9.3 ("a `check` verb for drift?"). The user's motivation: encod
   one-liners 1 over 100     src/y.rs 131
   thin       5 lowest       src/big.rs 1:306 · src/q.rs 1:140 · …
   cites      2 unresolved   src/z.rs → NAME-404 · docs/README.md → ../gone.md
-  cases      4 uncited      NAME-007 · NAME-009 · …
-  ids        1 duplicate    NAME-003 (2 places)
+  ids        1 duplicate    cases:NAME-003 (2 places)
   ```
   The `(no …)` legends of §3.3 Gaps are reused as each kind's fix line. JSON is `{scope, counts, findings:[{kind, ref, detail}]}`.
 - **Header ratio (reported, not enforced).** For each file with a header: header lines against total lines. `check <file>` prints it; the `thin` kind lists the lowest ratios among files over a small floor (say 80 lines), worst first, with no pass/fail threshold. It is a pointer to where intent is thin, not a rule.
 - **Why lines stand in for complexity.** A file kept under 365 lines trends toward simple code, and growth pushes the complex part into its own file with its own header, which is what memex wants. So `check` measures lines and header ratio, never parsed complexity.
 - **One verb, every kind.** All findings roll into this single check; there are no sub-verbs or per-kind flags.
 - Thresholds are fixed defaults in v1: a file flags at **over 500 code lines** (user, 2026-10-15). Code lines are total lines minus the leading header block and any license block (§2.1); blank lines and inline comments still count. A header can easily run 50 lines, and counting it would reward thinner intent, the opposite of memex's goal (user, 2026-10-15). `thin` still uses total lines against header lines, so a generous header only helps. memex's own 365-line bar is this repo's house style, too opinionated for everyone; 500 is where a file clearly needs splitting. One-liners flag over 100 chars. Config keys only if a playtest asks for them, since §4.1 item 4 keeps config.json to one key.
+
+**Not a kind (user, 2026-10-15): uncited cases.** Hand-kept links from code to cases are maintenance that rots; agents infer them. `check` never asks for them. Duplicate ids are checked per collection (see §15).
 
 **Out of scope (decided).** Cyclomatic complexity, function length and any other parsed-code metric: they need per-language parsers, which breaks §1 ("memex reads intent, `rg` reads code; never indexes code bodies") and the small-on-purpose surface. Language linters own them; the AGENTS.md snippet may point to them. No auto-fix and no new log behaviour (`memex log quality` already works as a stream).
 
@@ -539,3 +540,40 @@ Answers design §9.3 ("a `check` verb for drift?"). The user's motivation: encod
 3. Does the AGENTS.md snippet tell agents to run `memex check` before they finish? Rec.: yes, one line, so the habit forms.
 4. Settled: `length` counts code lines (header and license blocks excluded). Once `check` exists, tests/quality.rs's 365 gate should use the same count (separate change).
 5. `thin` floor and list size: rec. files of 80+ lines, the lowest 10 by header ratio (bounded by `--limit`).
+
+## 15. Proposed: the graph and its dimensions (planned 2026-10-15; not approved; design.md unchanged)
+
+A design change from discussion with the user. It replaces cases as a built-in with collections declared in frontmatter, and adds a stat-keyed cache gated on measurement. Sequence it before §14, since `check` builds on it.
+
+**The model.**
+- **The graph:** READMEs (one per folder) and headers (one per file), attached to the tree and found by *where* they are. `show <path>` walks it.
+- **Dimensions:** collections that cut across the graph and are found by *what* they are (cases, perf notes, decisions, playtests). Bush's trail-blazer patterns, which anyone can start.
+- **Citations** tie the two together, both ways. **Logs** are the time dimension, scaffolding that expires (unchanged).
+
+**Rule: a frontmatter line joins a dimension.** Any Markdown file whose frontmatter has `memex: <collection-name>` (user, 2026-10-15) is a doc in that collection, with no manifest and no config. It is local, so an agent can follow it and check it in the file it is editing.
+- One file is one doc: id = `id:` field, else the file stem; title = the first heading; the other frontmatter keys are filterable fields (§4.2 markdown rules, without the manifest).
+- Many docs per file (OPEN, rec. yes): if the file's column-0 list items start with a backticked id, each item is a doc (today's CASES.md rule, made generic). `CASES.md` with `memex: cases` then keeps working and stops being special.
+- Citations unchanged: ids matching the case-id grammar stay citable bare; any doc is citable as `<collection>:<id>`; backlinks as today.
+- Search groups: the graph (`readmes`, `headers`), then dimensions alphabetically, then `logs`.
+
+**Names (user, 2026-10-15): warn, never break.** A collection named like the graph (`readmes`, `headers`) or like a log stream still loads. Its docs are indexed, appear in global search under their own group, and resolve in `show`. `--in <name>` keeps meaning the graph or the stream. A warning prints once per run in the §4.2 form, `memex: warning: collection '<name>' (in <path>) shares a name with the graph; --in <name> means the graph — rename it to reach it with --in`, and `info` lists it. A one-doc collection (likely a typo) is something `check` can report.
+
+**What goes.** The built-in `cases` collection; the `markdown` manifest kind (frontmatter covers it); the house rule that every header carries a `Cases:` line and the selfhost gate `every_case_is_cited_directly` (separate repo-level change, user decides; ids and claims stay). **What stays:** manifests of kind `folder` and `json`, for structures that are not Markdown (e.g. reference-ui's `case.json` folders).
+
+**Change detection (gated on measurement; design §9.4).** memex builds everything per run today, so nothing is "rebuilt". The cost is open(), about 13 µs here against 2.5 µs for stat (oracle review:20261014-233020). If frontmatter discovery's extra `.md` opens cost too much, or big monorepos need under ~0.5 s:
+- walk and stat everything as now; keep a per-file record in `.memex/cache/` (reserved and gitignored by design) keyed by path, size, mtime and inode, holding the extracted header block, the frontmatter `memex:` value, the one-liner and the citation tokens;
+- re-open only files whose stat changed; build the search index per query from the records (after P-IDX it is cheap);
+- racy rule as git does it: a file modified within ~2 s of the cache write counts as changed; atomic writes via `atomic::persist_new`; a read writes only when something changed; no CLI change; repos without `.memex/` stay on the cold path;
+- not git's index (`git status` is 81 ms here and misses untracked files and non-git repos), and no watcher (a daemon, §1).
+Expected: reference-ui `info` about 55 → 25–30 ms; 100k about 1 s → 0.4–0.5 s. Output must stay byte-identical (IDENT).
+
+**Order of work.**
+1. Oracle: measure frontmatter discovery on reference-ui, the 100k tree and this repo (how many `.md` files, open cost, warm vs cold). Draft the design.md rewrite (§2 conventions around graph and dimensions, §2.2, §3.2 groups, §4.2) and the case plan (a new `collection` family; migration of the cases family). Rule on whether the cache is needed now, with numbers. The user approves.
+2. Cooks: frontmatter collections (discovery, docs, entries rule, name warnings); migrate this repo's CASES.md files (one frontmatter line each); remove the built-in `cases` and the markdown manifest kind. Then a refiner pass.
+3. If the oracle rules yes: the stat-keyed cache, with a refiner on correctness (racy edits, concurrent writers) and a BENCH.
+4. Then §14 `check` on the new model. Then a cold playtest.
+
+**Open questions (recommendations first).**
+1. Many docs per file via id-led list items: yes (rec.) or one file, one doc.
+2. Drop this repo's `Cases:` header rule and the selfhost citation gate: yes, after §15 lands (rec.), or keep.
+3. Cache: build only on the oracle's numbers (rec.), or build it regardless for monorepo speed.
