@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Intent cases
 
 ## LINE

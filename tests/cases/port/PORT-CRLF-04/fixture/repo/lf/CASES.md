@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # CRL cases
 
 ## TOPIC

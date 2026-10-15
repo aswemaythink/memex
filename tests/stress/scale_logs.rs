@@ -131,7 +131,7 @@ fn scale_50mb_readme_show() {
 #[test]
 #[ignore = "stress suite: cargo test --release --test stress -- --ignored scale_"]
 fn scale_50mb_cases_info() {
-    let mut text = String::from("# Big cases\n");
+    let mut text = String::from("---\nmemex: cases\n---\n# Big cases\n");
     for index in 0..200_000 {
         if index % 100 == 0 {
             text.push_str(&format!("\n## Group {}\n\n", index / 100 + 1));

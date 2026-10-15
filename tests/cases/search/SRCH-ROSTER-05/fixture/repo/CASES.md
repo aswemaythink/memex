@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Order cases
 
 ## Order

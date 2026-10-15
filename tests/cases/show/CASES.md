@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Show cases
 
 ## FILE

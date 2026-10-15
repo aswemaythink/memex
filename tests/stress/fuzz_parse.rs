@@ -198,9 +198,15 @@ fn fence_line() -> impl Strategy<Value = String> {
     ]
 }
 
-/// Writes the blocks as CASES.md lines, and collects the ids that the items declare.
+/// Writes the blocks as CASES.md lines behind a `memex: cases` frontmatter block, and collects the ids that the items declare.
 fn build_cases(blocks: &[Block], tail: Option<&[String]>, crlf: bool, bom: bool) -> CasesDoc {
-    let mut lines = vec!["# Generated cases".to_string(), String::new()];
+    let mut lines = vec![
+        "---".to_string(),
+        "memex: cases".to_string(),
+        "---".to_string(),
+        "# Generated cases".to_string(),
+        String::new(),
+    ];
     let mut declared = Vec::new();
     for block in blocks {
         lines.extend(block_lines(block, declared.len() + 1, &mut declared));

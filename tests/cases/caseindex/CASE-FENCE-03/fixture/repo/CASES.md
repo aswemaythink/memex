@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Fence cases
 
 - `INDENT-001` An item before an indented fence.

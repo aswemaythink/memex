@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Info cases
 
 ## HEAD

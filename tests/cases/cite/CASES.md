@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Cite cases
 
 ## BARE

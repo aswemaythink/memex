@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # One case
 
 ## ONE

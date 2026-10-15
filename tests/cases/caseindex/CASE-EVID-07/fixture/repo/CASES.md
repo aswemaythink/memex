@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Evidence cases
 
 - `EVID-007` Each evidence file is listed once.

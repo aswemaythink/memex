@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Discovery cases
 
 ## ROOT

@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Ref cases
 
 The ref family pins design §3.1: how a ref becomes the file, folder or doc it names. The topics follow the resolution order, then the duplicate and reserved-name rules, then the round trip of printed labels.

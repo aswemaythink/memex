@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Fence cases
 
 - `TICK-001` An item before a line with a backtick in its info string.

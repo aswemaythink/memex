@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Grammar cases
 
 ## ONE

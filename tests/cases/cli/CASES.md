@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # CLI cases
 
 ## VERSION

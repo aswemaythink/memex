@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Log cases
 
 ## WRITE

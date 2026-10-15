@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Fence cases
 
 - `DETAIL-001` The claim of an item with a fence in its detail.

@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Caseindex cases
 
 The caseindex family pins design §2.2, how a CASES.md becomes case docs, and the case section of §3.3 and §3.6. Every case folder is a small fixture repo whose CASES.md holds the entries under test.

@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Detail cases
 
 - `ENDS-001` The item ends at a column-0 line.

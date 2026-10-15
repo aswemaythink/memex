@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Grammar cases
 
 - `NODASH` No dash, so not a case id.

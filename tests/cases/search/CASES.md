@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Search cases
 
 ## RANK

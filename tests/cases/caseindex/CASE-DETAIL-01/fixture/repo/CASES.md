@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Detail cases
 
 - `DETAIL-001` The claim comes first.

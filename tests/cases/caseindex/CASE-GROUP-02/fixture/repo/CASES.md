@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 - `TOP-001` An item above every heading has no group.
 
 # Later

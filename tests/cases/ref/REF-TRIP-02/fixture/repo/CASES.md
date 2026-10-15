@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Trip cases
 
 ## TRIP

@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Init cases
 
 ## FRESH

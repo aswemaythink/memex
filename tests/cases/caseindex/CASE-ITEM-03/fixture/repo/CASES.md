@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Item cases
 
 - `PARENT-001` The parent item.

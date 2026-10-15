@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Demo cases
 
 ## NAME

@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Grammar cases
 
 - `STT-WRAP-06` Several dash-separated parts and a digit suffix.

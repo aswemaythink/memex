@@ -21,6 +21,9 @@ An id is `PREFIX-TOPIC-NN`: capitals, a dash, capitals, a dash, and two digits, 
 ## Entries (CASES.md)
 
 ```
+---
+memex: cases
+---
 # CLI cases
 
 ## VERSION

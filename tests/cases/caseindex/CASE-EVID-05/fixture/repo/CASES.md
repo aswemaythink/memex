@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Evidence cases
 
 - `EVID-005` Words and commands are not paths.

@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Detail cases
 
 - `BLANK-001` The claim, then detail after a blank line.

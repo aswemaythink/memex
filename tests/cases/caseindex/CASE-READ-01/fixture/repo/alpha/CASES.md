@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Alpha cases
 
 ## TOPIC

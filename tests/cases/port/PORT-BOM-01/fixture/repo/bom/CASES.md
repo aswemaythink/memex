@@ -1,4 +1,7 @@
-﻿# BOM cases
+﻿---
+memex: cases
+---
+# BOM cases
 
 ## TOPIC
 

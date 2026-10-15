@@ -256,9 +256,9 @@ fn source_text(rng: &mut Prng, cite: Option<String>) -> String {
     format!("{header}\n\npub const VALUE: u64 = {};\n", rng.next_u64())
 }
 
-/// The CASES.md of `cases` entries: a `## Group` heading per `GROUP` entries, and each entry a backticked id and a claim.
+/// The CASES.md of `cases` entries, opened by its `memex: cases` frontmatter: a `## Group` heading per `GROUP` entries, and each entry a backticked id and a claim.
 fn cases_md(rng: &mut Prng, cases: usize) -> String {
-    let mut text = String::from("# Generated cases\n");
+    let mut text = String::from("---\nmemex: cases\n---\n# Generated cases\n");
     for index in 0..cases {
         if index % GROUP == 0 {
             text.push_str(&format!("\n## Group {}\n\n", index / GROUP + 1));

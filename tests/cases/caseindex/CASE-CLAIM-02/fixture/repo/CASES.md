@@ -1,3 +1,6 @@
+---
+memex: cases
+---
 # Claim cases
 
 ## Empty
