@@ -1,7 +1,7 @@
 $ memex info  [cwd repo/plain]  [env GIT_DIR=../bare.git]
 exit 0
 stdout
-| memex  $SANDBOX/repo/plain · log store .memex/logs/
+| memex  $SANDBOX/repo/plain · log store $SANDBOX/repo/bare.git/memex/logs
 | intent  0 readmes · 0 headers · 0 cases
 | use     memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr (empty)
@@ -15,14 +15,12 @@ stderr (empty)
 $ memex log impl --json  [cwd repo/plain]  [env GIT_DIR=../bare.git]
 exit 0
 stdout
-| {"ref":"impl:20261013-120000-plain-folder-with-a-bare-git-dir-2","path":"$SANDBOX/repo/plain/.memex/logs/impl/20261013-120000-plain-folder-with-a-bare-git-dir-2.md"}
+| {"ref":"impl:20261013-120000-plain-folder-with-a-bare-git-dir-2","path":"$SANDBOX/repo/bare.git/memex/logs/impl/20261013-120000-plain-folder-with-a-bare-git-dir-2.md"}
 stderr (empty)
 == snapshot repo/plain/.memex
--- .gitignore
-| logs/
-| cache/
 -- config.json
 | {"keep_logs": "3d"}
+== snapshot repo/bare.git/memex
 -- logs/impl/20261013-120000-plain-folder-with-a-bare-git-dir-2.md
 | ---
 | stream: impl
@@ -35,5 +33,3 @@ stderr (empty)
 | time: 2026-10-13T12:00:00Z
 | ---
 | Plain folder with a bare git dir
-== snapshot repo/bare.git/memex
-(missing)
