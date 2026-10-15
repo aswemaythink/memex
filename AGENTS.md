@@ -54,5 +54,5 @@ Golden policy (PLAN.md §2, Bless):
 
 - Shared files belong to the orchestrator, not to parallel slices: `tests/cases/README.md` (the hub), `src/README.md`, `src/lib.rs` dispatch lines, and any family README or CASES.md that another running slice also touches. A brief names which of these, if any, the slice may edit.
 - A slice that adds cases to a family another slice is also extending adds them under its own new `## TOPIC` heading, never inside an existing topic.
-- Read-path slices (corpus, walk, index, cite, resolve, any verb) carry a timing budget in DONE: release `memex info` and `memex search <word>` in /Users/ryn/Developer/reference-ui (read-only) under 120 ms and 160 ms.
+- Read-path slices (corpus, walk, index, cite, resolve, any verb) carry a timing budget in DONE: release `memex info` and `memex search <word>` in /Users/ryn/Developer/reference-ui (read-only) under 90 ms and 115 ms (and `memex show packages` under 95 ms), the budgets tests/stress/budget.rs enforces; on a loaded machine, judge by an interleaved A/B against main's binary instead.
 - Rulings made where design.md was silent are listed in PLAN.md §13 as well as committed to design.md, so the user can review them in one place.
