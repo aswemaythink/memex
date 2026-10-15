@@ -1,5 +1,6 @@
 //! Carries out `memex show` (design §3.3 and §3.6).
 //! It resolves each ref, takes its section from `show/section.rs`, and reports the sections, the misses and the exit status.
+//! Every ref is resolved before any section is built, so that one citation index serves the sections of all of them.
 //! Cases: SHOW-DUP-01, SHOW-DUP-02, SHOW-ERR-01, SHOW-ERR-02, SHOW-ERR-03, SHOW-IO-01, SHOW-IO-02, SHOW-JSON-01, SHOW-JSON-04, SHOW-JSON-05, SHOW-SEP-01, REF-WT-01, REF-WT-02, SHOW-OTHER-01
 
 mod section;
@@ -9,6 +10,7 @@ use std::io;
 use std::path::Path;
 
 use self::section::{section_for, Options};
+use crate::cite;
 use crate::cli::Verb;
 use crate::corpus::Corpus;
 use crate::error::Error;
@@ -63,15 +65,22 @@ fn show_in(corpus: &Corpus, cwd: &Path, store: Option<&Path>, request: &Request)
         limit: request.limit.unwrap_or(DEFAULT_LIMIT),
         other_root: None,
     };
+    let outcomes: Vec<(&str, Outcome<'_>)> = distinct(&request.refs)
+        .into_iter()
+        .map(|arg| (arg, resolve(corpus, cwd, store, arg)))
+        .collect();
+    let index = {
+        let targets: Vec<&Target<'_>> = outcomes
+            .iter()
+            .filter_map(|(_, outcome)| found(outcome))
+            .collect();
+        section::index_for(corpus, &targets, &options)
+    };
     let mut sections = Vec::new();
     let mut misses = Vec::new();
-    let mut seen = BTreeSet::new();
-    for arg in &request.refs {
-        if !seen.insert(arg.as_str()) {
-            continue;
-        }
-        let built = match resolve(corpus, cwd, store, arg) {
-            Outcome::Found(target) => section_for(corpus, &target, &options),
+    for (arg, outcome) in outcomes {
+        let built = match outcome {
+            Outcome::Found(target) => section_for(corpus, &target, &options, &index),
             Outcome::Elsewhere(other) => elsewhere_section(&other, &options),
             Outcome::NotFound => {
                 misses.push(Miss::not_found(arg));
@@ -103,6 +112,23 @@ fn show_in(corpus: &Corpus, cwd: &Path, store: Option<&Path>, request: &Request)
     }
 }
 
+/// The refs of a request, each once at its first position: a repeat prints nothing (design §3.3).
+fn distinct(refs: &[String]) -> Vec<&str> {
+    let mut seen = BTreeSet::new();
+    refs.iter()
+        .map(String::as_str)
+        .filter(|arg| seen.insert(*arg))
+        .collect()
+}
+
+/// The target of a ref that names one in the current root, if it does.
+fn found<'o, 'a>(outcome: &'o Outcome<'a>) -> Option<&'o Target<'a>> {
+    match outcome {
+        Outcome::Found(target) => Some(target),
+        _ => None,
+    }
+}
+
 /// The section of an entry in another root: built from that root's own corpus, and labelled by its absolute path, which
 /// round-trips from anywhere (design §3.1). Its cites and cited by name labels of that root, which do not round-trip from
 /// the cwd, so they are not computed: the section names that root in their place.
@@ -115,7 +141,8 @@ fn elsewhere_section(other: &Elsewhere, options: &Options) -> Result<Section, io
         other_root: Some(slash(&other.corpus.root)),
         ..options.clone()
     };
-    let mut section = section_for(&other.corpus, &target, &scoped)?;
+    // The entry reads no citations, so it is given an empty index and no scan runs for it.
+    let mut section = section_for(&other.corpus, &target, &scoped, &cite::Index::default())?;
     section.label.clone_from(&other.label);
     Ok(section)
 }

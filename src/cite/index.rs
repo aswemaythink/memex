@@ -1,6 +1,6 @@
 //! Builds the citation index (design §2.3): each doc's cites and the backlinks they give.
-//! `build` is the full index that search's roster reads. `for_show` is what one `show` section reads: its target's backlinks and
-//! one doc's cites, found by a scan that resolves only the tokens that can name the target (`paths::Wanted`).
+//! `build` is the full index that search's roster reads. `for_show` is what `show` reads: the backlinks of its targets and the cites
+//! of its docs, found by one scan that resolves only the tokens that can name a target (`paths::Wanted`).
 //! Cases: CITE-BARE-01, CITE-BARE-02, CITE-BARE-03, CITE-PREFIX-01, CITE-PREFIX-02, CITE-COLL-01, CITE-COLL-02, CITE-COLL-03, CITE-COLL-04, CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-04, CITE-PATH-05, CITE-PATH-06, CITE-LINK-01, CITE-LINK-02, CITE-LINK-03, CITE-LINK-05, CITE-MAN-01, CITE-UNRES-01, CITE-FOLDER-01, CITE-FOLDER-02, CITE-FENCE-01, CITE-SELF-01, CITE-BACK-01, CITE-BACK-02, CITE-BACK-03, CITE-BACK-04, CITE-BACK-05, SRCH-ORPHAN-01, SRCH-ORPHAN-02
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -41,19 +41,24 @@ impl Index {
         });
         let mut index = Index::default();
         for (doc, gathered) in docs.into_iter().zip(gathered) {
-            index.record(doc, gathered);
+            index.record(doc, &gathered, |_| true);
         }
         index
     }
 
-    /// The index that one `show` section reads (design §2.3): the cites of the doc labelled `cites`, when there is one, and the
-    /// backlinks of the target labelled `cited_by`. Each doc's tokens are scanned once, on several threads, and only those that can
-    /// name the target are resolved; the cites doc's tokens are all resolved. The backlinks are those that `build` lists for the
-    /// same target, and the cites are those a full scan of the doc makes.
-    pub fn for_show(corpus: &Corpus, cites: Option<&str>, cited_by: &str) -> Index {
+    /// The index that the `show` sections of several targets read (design §2.3): the cites of each doc labelled in `cites`, and the
+    /// backlinks of each target labelled in `cited_by`. Each doc's tokens are scanned once, on several threads, and only those that
+    /// can name one of the targets are resolved; the cites docs' tokens are all resolved. The backlinks are those that `build` lists
+    /// for the same targets, and the cites are those a full scan of the doc makes. With no labels, no scan runs.
+    pub fn for_show(corpus: &Corpus, cites: &[&str], cited_by: &[&str]) -> Index {
+        let mut index = Index::default();
+        if cites.is_empty() && cited_by.is_empty() {
+            return index;
+        }
         let docs: Vec<&Doc> = corpus.all_docs().collect();
         let names = Names::of(&docs);
-        let wanted = Wanted::of(corpus, &names, cited_by);
+        let targets: BTreeSet<&str> = cited_by.iter().copied().collect();
+        let wanted = Wanted::of(corpus, &names, &targets);
         let gathered = par::map(&docs, |doc| {
             gather(
                 corpus,
@@ -61,15 +66,11 @@ impl Index {
                 paths::hits_of(corpus, doc, &names, Some(&wanted)),
             )
         });
-        let mut citers = Vec::new();
         for (doc, gathered) in docs.iter().zip(&gathered) {
-            if let Some(via) = via_of(gathered, cited_by) {
-                add_citer(&mut citers, doc, via);
-            }
+            index.record(doc, gathered, |label| targets.contains(label));
         }
-        let mut index = Index::default();
-        index.citers.insert(cited_by.to_string(), citers);
-        if let Some(label) = cites {
+        let cited: BTreeSet<&str> = cites.iter().copied().collect();
+        for label in cited {
             if let Some(list) = cites_of(corpus, &names, label) {
                 index.cites.insert(label.to_string(), list);
             }
@@ -113,16 +114,17 @@ impl Index {
             .count()
     }
 
-    /// Records one doc's backlinks: a direct citation, or a prefix citation that the doc makes no direct one for. Docs that share a
-    /// label are next to each other in the scan, so a label's first doc keeps its backlink and a repeat is not listed twice.
-    fn record(&mut self, doc: &Doc, gathered: Gathered) {
-        for label in &gathered.direct {
+    /// Records the backlinks that one doc's hits give to the targets that `keep` admits: a direct citation, or a prefix citation
+    /// that the doc makes no direct one for. Docs that share a label are next to each other in the scan, so a label's first doc
+    /// keeps its backlink and a repeat is not listed twice.
+    fn record(&mut self, doc: &Doc, gathered: &Gathered, keep: impl Fn(&str) -> bool) {
+        for label in gathered.direct.iter().filter(|label| keep(label)) {
             add_citer(self.citers.entry(label.clone()).or_default(), doc, None);
         }
-        for (label, prefix) in gathered.families {
-            if !gathered.direct.contains(&label) {
+        for (label, prefix) in &gathered.families {
+            if keep(label) && !gathered.direct.contains(label) {
                 let via = Some(format!("{prefix}*"));
-                add_citer(self.citers.entry(label).or_default(), doc, via);
+                add_citer(self.citers.entry(label.clone()).or_default(), doc, via);
             }
         }
     }
@@ -136,19 +138,6 @@ fn cites_of(corpus: &Corpus, names: &Names, label: &str) -> Option<Vec<Cite>> {
         .iter()
         .map(|doc| gather(corpus, doc, paths::hits_of(corpus, doc, names, None)).cites)
         .find(|cites| !cites.is_empty())
-}
-
-/// How a doc cites a target: directly (`None`), or else by the prefix that names it, as `NAME-*` (design §2.3). None when the doc
-/// does not cite the target.
-fn via_of(gathered: &Gathered, label: &str) -> Option<Option<String>> {
-    if gathered.direct.contains(label) {
-        Some(None)
-    } else {
-        gathered
-            .families
-            .get(label)
-            .map(|prefix| Some(format!("{prefix}*")))
-    }
 }
 
 /// The label of the folder that a README is the doc of. A README never cites its own folder (design §2.3, self-citation).
@@ -237,24 +226,33 @@ mod tests {
         corpora
     }
 
+    /// The labels that a `show` can print in a corpus: every doc's, and every walked entry's with its folders.
+    fn every_label(corpus: &Corpus) -> Vec<String> {
+        let mut labels: BTreeSet<String> = corpus.all_docs().map(|doc| doc.label.clone()).collect();
+        for rel in corpus.files() {
+            labels.insert(rel.to_string());
+            let mut at = rel;
+            while let Some(parent) = parent_of(at) {
+                labels.insert(label_of(parent));
+                at = parent;
+            }
+        }
+        labels.into_iter().collect()
+    }
+
     #[test]
-    fn a_targeted_index_lists_each_target_backlinks_as_the_full_index_does() {
+    fn a_batched_index_lists_each_target_as_the_full_index_and_a_single_target_index_do() {
         let mut checked = 0;
         for corpus in fixtures() {
             let full = Index::build(&corpus);
-            let mut labels: BTreeSet<String> =
-                corpus.all_docs().map(|doc| doc.label.clone()).collect();
-            for rel in corpus.files() {
-                labels.insert(rel.to_string());
-                let mut at = rel;
-                while let Some(parent) = parent_of(at) {
-                    labels.insert(label_of(parent));
-                    at = parent;
-                }
-            }
+            let labels = every_label(&corpus);
+            let refs: Vec<&str> = labels.iter().map(String::as_str).collect();
+            let batched = Index::for_show(&corpus, &refs, &refs);
             for label in &labels {
-                let targeted = Index::for_show(&corpus, None, label);
-                assert_eq!(targeted.cited_by(label), full.cited_by(label), "{label}");
+                let single = Index::for_show(&corpus, &[label.as_str()], &[label.as_str()]);
+                assert_eq!(batched.cited_by(label), full.cited_by(label), "{label}");
+                assert_eq!(batched.cited_by(label), single.cited_by(label), "{label}");
+                assert_eq!(batched.cites(label), single.cites(label), "{label}");
                 checked += 1;
             }
         }

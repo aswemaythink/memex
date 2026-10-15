@@ -1,9 +1,9 @@
 //! Resolves the tokens of a doc to the docs and walked entries that they name (design §2.3).
 //! A path or link resolves from the citing folder, then the root, never above it; a label, a bare id or a prefix resolves against
 //! the names of the scan, and a target's one-liner is read here too.
-//! A scan for one target (`Wanted`) skips every token that cannot name it, a necessary condition: a bare id or a prefix must be
-//! an id of a doc that holds the target's label; a label must be the target's, or name such a doc by its id; a path must end in
-//! a name that the target's paths end in, unless it ends in `..` or in nothing, when it is always resolved (`last_name`).
+//! A scan for some targets (`Wanted`) skips every token that cannot name any of them, a necessary condition: a bare id or a prefix
+//! must be an id of a doc that holds a target's label; a label must be a target's, or name such a doc by its id; a path must end in
+//! a name that a target's paths end in, unless it ends in `..` or in nothing, when it is always resolved (`last_name`).
 //! Cases: CITE-BARE-01, CITE-BARE-02, CITE-BARE-03, CITE-PREFIX-01, CITE-PREFIX-02, CITE-COLL-01, CITE-COLL-02, CITE-COLL-03, CITE-COLL-04, CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-04, CITE-PATH-05, CITE-PATH-06, CITE-LINK-01, CITE-LINK-02, CITE-LINK-03, CITE-LINK-05, CITE-MAN-01, CITE-UNRES-01, CITE-FOLDER-01, CITE-FOLDER-02
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -51,18 +51,18 @@ pub struct Names<'a> {
     manifest: BTreeMap<&'a str, &'a str>,
 }
 
-/// One target that a targeted scan looks for, with the tokens that can name it. A token that cannot name the target is skipped
-/// before it is resolved; every other token is resolved as a full scan resolves it, so the target's hits are the same. Its tests
-/// are necessary conditions: a bare id or a family prefix must be the id of a doc that holds the label; a label must be the
-/// target's, or name a doc of the target by its id; a path must end in a name that the target's paths end in, unless it ends in
-/// `..` or in nothing, when it is always resolved (`last_name`).
+/// The targets that a targeted scan looks for, with the tokens that can name them. A token that cannot name any of them is skipped
+/// before it is resolved; every other token is resolved as a full scan resolves it, so the targets' hits are the same. Its tests
+/// are necessary conditions: a bare id or a family prefix must be the id of a doc that holds a target's label; a label must be a
+/// target's, or name a doc of a target by its id; a path must end in a name that a target's paths end in, unless it ends in `..`
+/// or in nothing, when it is always resolved (`last_name`).
 pub struct Wanted<'a> {
-    /// The label of the target.
-    label: &'a str,
-    /// The ids of the docs that hold the label.
-    ids: Vec<&'a str>,
-    /// The last names that the target's paths end in: its own, and those of the manifest paths that label it.
-    names: Vec<&'a str>,
+    /// The labels of the targets.
+    labels: BTreeSet<&'a str>,
+    /// The ids of the docs that hold a target's label.
+    ids: BTreeSet<&'a str>,
+    /// The last names that the targets' paths end in: their own, and those of the manifest paths that label them.
+    names: BTreeSet<&'a str>,
 }
 
 impl<'a> Names<'a> {
@@ -118,46 +118,56 @@ impl<'a> Names<'a> {
 }
 
 impl<'a> Wanted<'a> {
-    /// The filter for the target `label`: the ids of its docs, and the last names of its path and of the manifest paths that label
-    /// it (design §2.3).
-    pub fn of(corpus: &'a Corpus, names: &Names<'a>, label: &'a str) -> Wanted<'a> {
-        let mut last = vec![name_of(label)];
-        for (path, held) in &names.manifest {
-            if *held == label {
-                last.push(name_of(path));
+    /// The filter for the targets `labels`: the ids of their docs, and the last names of their paths and of the manifest paths that
+    /// label them (design §2.3).
+    pub fn of(corpus: &'a Corpus, names: &Names<'a>, labels: &BTreeSet<&'a str>) -> Wanted<'a> {
+        let mut wanted = Wanted {
+            labels: labels.clone(),
+            ids: BTreeSet::new(),
+            names: BTreeSet::new(),
+        };
+        for &label in labels {
+            wanted.names.insert(name_of(label));
+            wanted
+                .ids
+                .extend(corpus.labelled(label).iter().map(|doc| doc.id.as_str()));
+        }
+        for (&path, held) in &names.manifest {
+            if labels.contains(held) {
+                wanted.names.insert(name_of(path));
             }
         }
-        Wanted {
-            label,
-            ids: corpus
-                .labelled(label)
-                .iter()
-                .map(|doc| doc.id.as_str())
-                .collect(),
-            names: last,
-        }
+        wanted
     }
 
-    /// True for a token that can name the target: every token that the scan must resolve.
+    /// True for a token that can name a target: every token that the scan must resolve.
     fn admits(&self, token: &Token<'_>) -> bool {
         match *token {
             Token::Word(word) => {
-                self.ids.contains(&word) || (is_path_token(word) && self.may_name(word))
+                self.ids.contains(word) || (is_path_token(word) && self.may_name(word))
             }
             Token::Link(raw) => self.may_name(raw),
             Token::Label(label) => {
-                label == self.label
+                self.labels.contains(label)
                     || label
                         .split_once(':')
-                        .is_some_and(|(_, id)| self.ids.contains(&id))
+                        .is_some_and(|(_, id)| self.ids.contains(id))
             }
-            Token::Prefix(prefix) => self.ids.iter().any(|id| id.starts_with(prefix)),
+            Token::Prefix(prefix) => self.has_id_from(prefix),
         }
     }
 
-    /// True when a path token's last name is one of the target's, or the token climbs out of its folder and is always resolved.
+    /// True when some id of a target's doc starts with `prefix`. The ids are sorted, so the first id from `prefix` on decides it.
+    fn has_id_from(&self, prefix: &str) -> bool {
+        self.ids
+            .range::<str, _>((Bound::Included(prefix), Bound::Unbounded))
+            .next()
+            .is_some_and(|id| id.starts_with(prefix))
+    }
+
+    /// True when a path token's last name is one of the targets', or the token climbs out of its folder and is always resolved.
     fn may_name(&self, raw: &str) -> bool {
-        last_name(raw).is_none_or(|name| self.names.contains(&name))
+        last_name(raw).is_none_or(|name| self.names.contains(name))
     }
 }
 
