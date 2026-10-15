@@ -1,0 +1,38 @@
+$ memex show .
+exit 0
+stdout
+| === . ===
+| # Demo
+| 
+| The demo repo for header reads.
+| 
+| children
+|   data.json  (no header)
+|   showing 1 of 1
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex search demo
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   README.md  The demo repo for header reads.
+stderr (empty)
+
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store none (run memex init)
+| intent  1 readme · 0 headers · 0 cases
+| use     memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+stderr (empty)

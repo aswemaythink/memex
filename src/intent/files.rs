@@ -1,14 +1,13 @@
 //! Reads one walked file into its docs: a README, a CASES.md's cases, or a header (design §2).
-//! Cases: HDR-CAP-01, HDR-CAP-04, HDR-BIN-01, HDR-EXT-01, INT-BOM-01, INT-LINE-01
-
-use std::fs::File;
+//! Cases: HDR-CAP-01, HDR-CAP-04, HDR-BIN-01, HDR-EXT-01, INT-BOM-01, INT-LINE-01, HDR-READ-01, HDR-READ-02
 
 use super::{cases, header, lead, readme};
 use crate::corpus::{Doc, HEADERS};
 use crate::error::Error;
 use crate::walk::Entry;
 
-/// The docs one walked file gives: its README, the cases of a CASES.md, or its header. A file that cannot be read is an error.
+/// The docs one walked file gives: its README, the cases of a CASES.md, or its header. A file that cannot be read is an error,
+/// except a file with no comment family, which is never opened (design §4.2).
 pub fn file_docs(entry: &Entry) -> Result<Vec<Doc>, Error> {
     match entry.path.file_name().and_then(|name| name.to_str()) {
         Some("README.md") => readme::doc(&entry.rel, &entry.path).map(|doc| vec![doc]),
@@ -17,12 +16,10 @@ pub fn file_docs(entry: &Entry) -> Result<Vec<Doc>, Error> {
     }
 }
 
-/// The doc of a file's header, when the file has one. A file with no comment family has no header, so it is only opened, which
-/// still reports one that cannot be read (design §4.2).
+/// The doc of a file's header, when the file has one. A file with no comment family has no header and is never opened, so it
+/// gives no warning even when it cannot be read (design §4.2). A file named by its family, such as `Makefile`, is opened.
 fn header_doc(entry: &Entry) -> Result<Option<Doc>, Error> {
     if !header::has_family(&entry.path) {
-        File::open(&entry.path)
-            .map_err(|failure| Error::io_at("cannot read", &entry.path, &failure))?;
         return Ok(None);
     }
     let head = header::read_head(&entry.path)
@@ -76,7 +73,7 @@ mod tests {
     }
 
     #[test]
-    fn an_unreadable_file_with_no_header_family_is_still_an_error() {
+    fn an_unreadable_file_with_no_header_family_is_never_opened() {
         let dir = tempfile::tempdir().expect("a temp folder");
         let path = dir.path().join("locked.zzz");
         fs::write(&path, "data\n").expect("a file");
@@ -85,11 +82,31 @@ mod tests {
             // Running as root reads any file, so there is nothing to check.
             return;
         }
-        let error = file_docs(&entry_at(path, "locked.zzz")).expect_err("an unreadable file");
-        assert!(
-            error.message.ends_with("locked.zzz (PermissionDenied)"),
-            "{}",
-            error.message
-        );
+        let docs = file_docs(&entry_at(path, "locked.zzz"))
+            .expect("a file with no comment family is never opened, so it is no error");
+        assert!(docs.is_empty());
+    }
+
+    #[test]
+    fn an_unreadable_file_named_by_its_family_is_still_an_error() {
+        for name in ["Makefile", "Dockerfile"] {
+            let dir = tempfile::tempdir().expect("a temp folder");
+            let path = dir.path().join(name);
+            fs::write(&path, "# Build.\n").expect("a file");
+            fs::set_permissions(&path, fs::Permissions::from_mode(0o000)).expect("a mode");
+            if fs::read(&path).is_ok() {
+                // Running as root reads any file, so there is nothing to check.
+                return;
+            }
+            let error =
+                file_docs(&entry_at(path, name)).expect_err("an unreadable file with a family");
+            assert!(
+                error
+                    .message
+                    .ends_with(&format!("{name} (PermissionDenied)")),
+                "{}",
+                error.message
+            );
+        }
     }
 }

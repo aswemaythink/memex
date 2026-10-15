@@ -149,6 +149,8 @@
 
 - `HDR-READ-01` A header file that cannot be read is one stderr warning, and its folder lists it as `(no header)`, while `show .`, `show sub`, `search` and `info` still exit 0.
   design §4.2 (an unreadable header is a warning that is skipped) and §2.1 Header detection. Run: memex show ., memex show sub, memex search demo and memex info, with sub/locked.rs at mode 000.
+- `HDR-READ-02` A file with no comment family that cannot be read gives no warning, since memex never opens it, while `show .`, `search` and `info` exit 0 with nothing on stderr.
+  design §4.2 (a walked file with no comment family is never opened by the walk, so it gives no warning) and §2.1 Header detection. Run: memex show ., memex search demo and memex info, with repo/data.json at mode 000.
 ## TABLE
 - `HDR-TABLE-01` Every extension in the comment table of design §2.1 reads its header with its own comment syntax, so each folder listing shows one sample's one-liner per extension.
   design §2.1 table: one sample per extension, one folder per row family; the docstring row is HDR-DOC-01 to HDR-DOC-04. Run: memex show slash, then hash, dash, semi, percent, markup and paren.

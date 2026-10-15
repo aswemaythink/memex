@@ -1,0 +1,1 @@
+{"chmod": [{"path": "repo/data.json", "mode": "000"}], "platforms": ["unix"], "steps": [{"args": ["show", "."]}, {"args": ["search", "demo"]}, {"args": ["info"]}]}
