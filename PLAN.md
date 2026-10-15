@@ -542,7 +542,7 @@ Answers design §9.3 ("a `check` verb for drift?"). The user's motivation: encod
 4. Settled: `length` counts code lines (header and license blocks excluded). Once `check` exists, tests/quality.rs's 365 gate should use the same count (separate change).
 5. `thin` floor and list size: rec. files of 80+ lines, the lowest 10 by header ratio (bounded by `--limit`).
 
-## 15. The graph and its dimensions (approved 2026-10-15; design.md rewrite pending)
+## 15. The graph and its dimensions (approved 2026-10-15; design.md applied 2026-10-16)
 
 A design change from discussion with the user. It replaces cases as a built-in with collections declared in frontmatter, and adds a stat-keyed cache gated on measurement. Sequence it before §14, since `check` builds on it.
 

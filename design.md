@@ -59,7 +59,7 @@ The comment syntax is chosen by extension from a built-in table. Files with unkn
 
 ### 2.2 Collections: `memex: <name>`
 
-A walked Markdown file (listed name ending in `.md`) whose frontmatter holds the key `memex` is a doc in the collection that key names. No manifest or config is needed. README.md is the exception: it is the graph's, so a `memex` key in its frontmatter is ignored with a warning that tells the user to move the content into its own file.
+A walked Markdown file (listed name ending in `.md`) whose frontmatter holds the key `memex` is a doc in the collection that key names. No manifest or config is needed. README.md is the exception: it is the graph's, so a `memex` key in its frontmatter is ignored with the warning `memex: warning: <path> is a README, which belongs to the graph; its memex: key is ignored — move that content into its own file`.
 
 ```markdown
 ---
