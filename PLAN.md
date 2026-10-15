@@ -509,7 +509,7 @@ Answers design §9.3 ("a `check` verb for drift?"). The user's motivation: encod
   check  src/  148 files · 12 folders
   headers    3 missing      src/a.rs · src/b.rs · src/c.rs
   readmes    1 missing      src/util/
-  length     1 over 500     src/big.rs 612
+  length     1 over 500     src/big.rs 612 code lines
   one-liners 1 over 100     src/y.rs 131
   thin       5 lowest       src/big.rs 1:306 · src/q.rs 1:140 · …
   cites      2 unresolved   src/z.rs → NAME-404 · docs/README.md → ../gone.md
@@ -520,7 +520,7 @@ Answers design §9.3 ("a `check` verb for drift?"). The user's motivation: encod
 - **Header ratio (reported, not enforced).** For each file with a header: header lines against total lines. `check <file>` prints it; the `thin` kind lists the lowest ratios among files over a small floor (say 80 lines), worst first, with no pass/fail threshold. It is a pointer to where intent is thin, not a rule.
 - **Why lines stand in for complexity.** A file kept under 365 lines trends toward simple code, and growth pushes the complex part into its own file with its own header, which is what memex wants. So `check` measures lines and header ratio, never parsed complexity.
 - **One verb, every kind.** All findings roll into this single check; there are no sub-verbs or per-kind flags.
-- Thresholds are fixed defaults in v1: a file flags at **over 500 lines** (user, 2026-10-15). memex's own 365-line bar is this repo's house style, too opinionated for everyone; 500 is where a file clearly needs splitting. One-liners flag over 100 chars. Config keys only if a playtest asks for them, since §4.1 item 4 keeps config.json to one key.
+- Thresholds are fixed defaults in v1: a file flags at **over 500 code lines** (user, 2026-10-15). Code lines are total lines minus the leading header block and any license block (§2.1); blank lines and inline comments still count. A header can easily run 50 lines, and counting it would reward thinner intent, the opposite of memex's goal (user, 2026-10-15). `thin` still uses total lines against header lines, so a generous header only helps. memex's own 365-line bar is this repo's house style, too opinionated for everyone; 500 is where a file clearly needs splitting. One-liners flag over 100 chars. Config keys only if a playtest asks for them, since §4.1 item 4 keeps config.json to one key.
 
 **Out of scope (decided).** Cyclomatic complexity, function length and any other parsed-code metric: they need per-language parsers, which breaks §1 ("memex reads intent, `rg` reads code; never indexes code bodies") and the small-on-purpose surface. Language linters own them; the AGENTS.md snippet may point to them. No auto-fix and no new log behaviour (`memex log quality` already works as a stream).
 
@@ -537,5 +537,5 @@ Answers design §9.3 ("a `check` verb for drift?"). The user's motivation: encod
 1. Name: `check` (rec.; matches §9.3, short, reads as a tool) or `quality`.
 2. Exit code with findings: 0 always (rec. for v1; it's a report, and agents read the text) or a non-zero code for CI gating, which needs a new code in §3.6.
 3. Does the AGENTS.md snippet tell agents to run `memex check` before they finish? Rec.: yes, one line, so the habit forms.
-4. Is `length` measured in lines (rec.; simple and matches how editors count) or non-blank lines?
+4. Settled: `length` counts code lines (header and license blocks excluded). Once `check` exists, tests/quality.rs's 365 gate should use the same count (separate change).
 5. `thin` floor and list size: rec. files of 80+ lines, the lowest 10 by header ratio (bounded by `--limit`).
