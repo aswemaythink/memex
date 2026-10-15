@@ -495,3 +495,42 @@ Each line is a design.md commit since S0.1; `git show <hash> -- design.md` shows
 - (round 2 perf, orchestrator) a no-family file is never opened by the walk, but a merge file is read by its manifest and still warns; warning order follows the order they arise (MANK-MERGE-01 re-blessed for order only).
 - (round 2 perf, orchestrator, P-GIT2) with no toplevel, git is asked for the store only when a .memex/ is in reach, keeping §4.1 item 3's bare-repo store; a .git folder never asks git.
 - (round 2 perf) P-FUSE (reads inside the walker callback) measured and discarded: byte-identical but no consistent gain at 8 threads (reference-ui 0.96-1.13, tree100k 0.99-1.03); patch kept in the session scratchpad only.
+
+## 14. Proposed: `memex check` (planned 2026-10-15; not approved; design.md unchanged)
+
+Answers design §9.3 ("a `check` verb for drift?"). The user's motivation: encode what makes memex work well, so the intent layer stays granular enough to build good topologies from it. Small files keep the header-to-code ratio tight; units without intent can't be cited.
+
+**Goal.** One verb that reports how healthy the intent layer is for a file, a folder, a glob or the whole root, so an agent can see where intent is thin and fix it. It reports facts memex already knows, plus one plain-text measure (line count).
+
+**Shape (to approve in design.md first).**
+- `memex check [<path|glob>...] [--limit N] [--json]`. With no argument it checks the root (discovery as §4.1). A glob matches walked labels, the same matcher as manifest `include`.
+- Text output is grouped by finding kind, in a fixed order, each `showing N of M` (§1 bounded output):
+  ```
+  check  src/  148 files · 12 folders
+  headers    3 missing      src/a.rs · src/b.rs · src/c.rs
+  readmes    1 missing      src/util/
+  length     2 over 365     src/big.rs 412 · src/x.rs 380
+  one-liners 1 over 100     src/y.rs 131
+  cites      2 unresolved   src/z.rs → NAME-404 · docs/README.md → ../gone.md
+  cases      4 uncited      NAME-007 · NAME-009 · …
+  ids        1 duplicate    NAME-003 (2 places)
+  ```
+  The `(no …)` legends of §3.3 Gaps are reused as each kind's fix line. JSON is `{scope, counts, findings:[{kind, ref, detail}]}`.
+- Thresholds are fixed defaults in v1: 365 lines and a 100-char one-liner (the repo's own quality bar). Config keys only if a playtest asks for them, since §4.1 item 4 keeps config.json to one key.
+
+**Out of scope (decided).** Cyclomatic complexity, function length and any other parsed-code metric: they need per-language parsers, which breaks §1 ("memex reads intent, `rg` reads code; never indexes code bodies") and the small-on-purpose surface. Language linters own them; the AGENTS.md snippet may point to them. No auto-fix and no new log behaviour (`memex log quality` already works as a stream).
+
+**Performance.** Line counts need whole-file reads (today memex reads only the first 8 KiB), so only `check` reads past 8 KiB. It counts newlines streaming, in parallel, only for files with a comment family (P-NOFAM's set), and never caches. `info`, `search` and `show` must not change (a BENCH gate against main). Budget: reference-ui `memex check` under 150 ms, 100k tree under 2 s.
+
+**Order of work.**
+1. Oracle: draft design.md text (§3.x `check`, §3.6 JSON, §9.3 resolved, exit codes) and a CASES family `check` (topics SCOPE, KINDS, LENGTH, LIMIT, JSON, GLOB). The user approves.
+2. Cook C1: verb skeleton, scope and glob, and the intent-layer kinds from the existing corpus and cite index (headers, readmes, one-liners, cites, cases, ids). No new reads.
+3. Cook C2: line counts (`length`), with its BENCH and the guard that the read verbs stay unchanged. It runs in parallel with C1 if FILES are disjoint (C1 holds the verb and render, C2 a counting module).
+4. Refiner on C1+C2 (hot path and bounded output). Then a cold playtest: does an agent in a fresh repo use `check` and fix what it says?
+5. Budgets go into tests/stress; README and AGENTS.md snippet lines; PLAN §11.
+
+**Open questions for the user (recommendations first).**
+1. Name: `check` (rec.; matches §9.3, short, reads as a tool) or `quality`.
+2. Exit code with findings: 0 always (rec. for v1; it's a report, and agents read the text) or a non-zero code for CI gating, which needs a new code in §3.6.
+3. Does the AGENTS.md snippet tell agents to run `memex check` before they finish? Rec.: yes, one line, so the habit forms.
+4. Is `length` measured in lines (rec.; it matches the 365 bar) or non-blank lines?
