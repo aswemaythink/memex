@@ -1,11 +1,12 @@
 //! Builds what `memex show` prints for one target: a folder, a file or a doc (design §3.3).
 //! A folder or a file that cannot be read gives its io error, which `show.rs` reports as that ref's error.
+//! Its cites and cited by come from the citation index of its one target (`cite::Index::for_show`), not from the index of every doc.
 //! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-LINE-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-IO-01, SHOW-IO-02, CASE-JSON-01, CASE-SECT-01, CITE-BACK-01, CITE-BACK-03, CITE-BACK-04, CITE-COLL-02, CITE-FOLDER-02, CITE-JSON-01, CITE-JSON-02, CITE-MAN-01, CITE-PREFIX-01, CITE-PREFIX-02, CITE-SELF-01, CITE-UNRES-01, SHOW-OTHER-01
 
 use std::fs::File;
 use std::io;
 
-use crate::cite::Cite;
+use crate::cite::{self, Citer};
 use crate::corpus::{self, parent_of, readme_label, Child, Corpus, Doc, Kind};
 use crate::intent::cases;
 use crate::render::{CaseParts, Citations, Fields, Link, Listing, Ref, Section};
@@ -114,19 +115,19 @@ fn file_section(corpus: &Corpus, rel: &str, options: &Options) -> Result<Section
         citations: citations(
             corpus,
             options,
-            Some(doc.map_or(key, |doc| doc.label.as_str())),
-            key,
+            Some(doc.map_or(key.as_str(), |doc| doc.label.as_str())),
+            &key,
         ),
         chain: chain(corpus, start, options),
     })
 }
 
 /// The label that a file's citations and backlinks are keyed by: a manifest doc's `collection:id` label, else its path (design
-/// §2.3). Only a listed root's citations are read, so another root's index is never built for this lookup (design §3.1).
-fn file_key<'a>(corpus: &'a Corpus, options: &Options, rel: &'a str) -> &'a str {
+/// §2.3). Only a listed root's citations are read, so another root's manifest is never looked up for this (design §3.1).
+fn file_key(corpus: &Corpus, options: &Options, rel: &str) -> String {
     match &options.other_root {
-        Some(_) => rel,
-        None => corpus.citations().manifest_label(rel).unwrap_or(rel),
+        Some(_) => rel.to_string(),
+        None => cite::Index::manifest_label(corpus, rel).unwrap_or_else(|| rel.to_string()),
     }
 }
 
@@ -188,29 +189,9 @@ fn chain(corpus: &Corpus, start: Option<&str>, options: &Options) -> Option<Vec<
     Some(links)
 }
 
-/// The docs that cite `label`, each with its one-liner and the prefix it cites by, with the limit applied.
-fn cited_by(corpus: &Corpus, label: &str, limit: usize) -> Listing<Ref> {
-    let refs: Vec<Ref> = corpus
-        .citations()
-        .cited_by(label)
-        .iter()
-        .map(|citer| Ref {
-            label: citer.label.clone(),
-            title: Some(citer.title.clone()),
-            via: citer.via.clone(),
-        })
-        .collect();
-    Listing::of(&refs, limit)
-}
-
-/// The citations of the doc with this label, in the order the index holds them.
-fn cites_of(corpus: &Corpus, label: &str) -> Vec<Cite> {
-    corpus.citations().cites(label).to_vec()
-}
-
 /// The citations of a target: the cites of the doc labelled `cites_label` (none for None, as for a case) and the refs that cite
-/// `cited_by_label`. For an entry of another root neither is computed, since they name labels of that root, so the root is
-/// printed in their place (design §3.1).
+/// `cited_by_label`, read from the index that `show` builds for this one target (design §2.3). For an entry of another root
+/// neither is computed, since they name labels of that root, so the root is printed in their place (design §3.1).
 fn citations(
     corpus: &Corpus,
     options: &Options,
@@ -219,11 +200,27 @@ fn citations(
 ) -> Citations {
     match &options.other_root {
         Some(root) => Citations::OtherRoot { root: root.clone() },
-        None => Citations::Listed {
-            cites: cites_label.map_or_else(Vec::new, |label| cites_of(corpus, label)),
-            cited_by: cited_by(corpus, cited_by_label, options.limit),
-        },
+        None => {
+            let index = cite::Index::for_show(corpus, cites_label, cited_by_label);
+            Citations::Listed {
+                cites: cites_label.map_or_else(Vec::new, |label| index.cites(label).to_vec()),
+                cited_by: cited_by(index.cited_by(cited_by_label), options.limit),
+            }
+        }
     }
+}
+
+/// The docs that cite a target, each with its one-liner and the prefix it cites by, with the limit applied.
+fn cited_by(citers: &[Citer], limit: usize) -> Listing<Ref> {
+    let refs: Vec<Ref> = citers
+        .iter()
+        .map(|citer| Ref {
+            label: citer.label.clone(),
+            title: Some(citer.title.clone()),
+            via: citer.via.clone(),
+        })
+        .collect();
+    Listing::of(&refs, limit)
 }
 
 /// True for a README.md, at the root or in a folder.

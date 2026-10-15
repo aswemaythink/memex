@@ -1,37 +1,37 @@
-//! Splits a line of a doc's text into the tokens that citations are made of (design §2.3).
+//! Splits a line into the borrowed tokens that citations are made of (design §2.3).
+//! Borrowing keeps the scan of every doc free of allocation, so a `show` that asks about one target can afford to read them all.
 //! Cases: CITE-BARE-01, CITE-BARE-02, CITE-PREFIX-01, CITE-COLL-01, CITE-COLL-03, CITE-PATH-04, CITE-LINK-01, CITE-LINK-02, CITE-LINK-04
 
 use crate::refs::is_id_body;
 
-/// One token of a line. Its kind fixes how it resolves, in the precedence of design §2.3.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Token {
+/// One token of a line, borrowed from it. Its kind fixes how it resolves, in the precedence of design §2.3.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Token<'a> {
     /// A markdown link destination that is not a URL or an anchor, with any `#fragment` removed.
-    Link(String),
+    Link(&'a str),
     /// A `collection:id` whose collection is known, as its label.
-    Label(String),
+    Label(&'a str),
     /// A family prefix: the `NAME-` of a `NAME-*` token.
-    Prefix(String),
+    Prefix(&'a str),
     /// A run of path characters, with trailing dots removed. It may be a bare id or a path.
-    Word(String),
+    Word(&'a str),
 }
 
-/// The tokens of one line, in order. `known` says whether a word names a collection, which makes `word:id` a label.
-pub fn tokens(line: &str, known: &dyn Fn(&str) -> bool) -> Vec<Token> {
+/// Appends the tokens of one line to `found`, in order. `known` says whether a word names a collection, which makes `word:id`
+/// a label.
+pub fn tokens<'a>(line: &'a str, known: &dyn Fn(&str) -> bool, found: &mut Vec<Token<'a>>) {
     let bytes = line.as_bytes();
     let last_close = line.rfind(')');
-    let mut found = Vec::new();
     let mut at = 0;
     while at < bytes.len() {
         at = if bytes[at] == b']' && bytes.get(at + 1) == Some(&b'(') {
-            link(line, at, last_close, &mut found)
+            link(line, at, last_close, found)
         } else if is_run(bytes[at]) {
-            word(line, at, known, &mut found)
+            word(line, at, known, found)
         } else {
             at + 1
         };
     }
-    found
 }
 
 /// True for a family prefix such as `NAME-` or `X-`: an id body followed by one dash (design §2.3).
@@ -42,7 +42,12 @@ fn is_family_prefix(text: &str) -> bool {
 /// The markdown link whose `](` is at `at`: its destination runs to the next `)`. Returns where scanning resumes.
 /// `last_close` is the line's last `)`. With none after the `](`, there is no link and nothing is searched for, so a
 /// line of many `](` takes time linear in its length.
-fn link(line: &str, at: usize, last_close: Option<usize>, found: &mut Vec<Token>) -> usize {
+fn link<'a>(
+    line: &'a str,
+    at: usize,
+    last_close: Option<usize>,
+    found: &mut Vec<Token<'a>>,
+) -> usize {
     let open = at + 2;
     let gap = match last_close {
         Some(close) if close >= open => line[open..].find(')'),
@@ -59,7 +64,7 @@ fn link(line: &str, at: usize, last_close: Option<usize>, found: &mut Vec<Token>
 
 /// The token of a link's inside, or None for a URL, an in-page anchor or an empty target. A destination in `<...>` is read
 /// to its `>`, and a title after a space is dropped.
-fn link_token(inside: &str) -> Option<Token> {
+fn link_token(inside: &str) -> Option<Token<'_>> {
     let inside = inside.trim();
     let dest = match inside.strip_prefix('<') {
         Some(rest) => rest.split('>').next()?,
@@ -69,7 +74,7 @@ fn link_token(inside: &str) -> Option<Token> {
         return None;
     }
     let path = dest.split_once('#').map_or(dest, |(path, _)| path);
-    (!path.is_empty()).then(|| Token::Link(path.to_string()))
+    (!path.is_empty()).then_some(Token::Link(path))
 }
 
 /// True for a destination that opens with a URL scheme, such as `https:` or `mailto:`.
@@ -83,42 +88,50 @@ fn has_scheme(dest: &str) -> bool {
 }
 
 /// The word, label, prefix or URL that starts at `start`. Returns where scanning resumes.
-fn word(line: &str, start: usize, known: &dyn Fn(&str) -> bool, found: &mut Vec<Token>) -> usize {
+fn word<'a>(
+    line: &'a str,
+    start: usize,
+    known: &dyn Fn(&str) -> bool,
+    found: &mut Vec<Token<'a>>,
+) -> usize {
     let end = start + run_len(&line.as_bytes()[start..]);
     if line[end..].starts_with("://") {
         return line[end..]
             .find(char::is_whitespace)
             .map_or(line.len(), |gap| end + gap);
     }
-    let run = &line[start..end];
-    if let Some((token, next)) = label_or_prefix(line, run, end, known) {
+    if let Some((token, next)) = label_or_prefix(line, start, end, known) {
         found.push(token);
         return next;
     }
-    let word = run.trim_end_matches('.');
+    let word = line[start..end].trim_end_matches('.');
     if !word.is_empty() {
-        found.push(Token::Word(word.to_string()));
+        found.push(Token::Word(word));
     }
     end
 }
 
-/// The `collection:id` label, when `run` is a known collection, or the `NAME-*` prefix, when `run` ends in a dash and a `*`
-/// follows it. `end` is the byte after the run. Returns the token and where scanning resumes after it.
-fn label_or_prefix(
-    line: &str,
-    run: &str,
+/// The `collection:id` label, when the run from `start` to `end` is a known collection, or the `NAME-*` prefix, when that run
+/// ends in a dash and a `*` follows it. Returns the token and where scanning resumes after it.
+fn label_or_prefix<'a>(
+    line: &'a str,
+    start: usize,
     end: usize,
     known: &dyn Fn(&str) -> bool,
-) -> Option<(Token, usize)> {
+) -> Option<(Token<'a>, usize)> {
+    let run = &line[start..end];
     let next = *line.as_bytes().get(end)?;
     match next {
         b':' if known(run) => {
             let id_start = end + 1;
             let id_len = run_len(&line.as_bytes()[id_start..]);
             let id = line[id_start..id_start + id_len].trim_end_matches('.');
-            (!id.is_empty()).then(|| (Token::Label(format!("{run}:{id}")), id_start + id.len()))
+            (!id.is_empty()).then(|| {
+                let stop = id_start + id.len();
+                (Token::Label(&line[start..stop]), stop)
+            })
         }
-        b'*' if is_family_prefix(run) => Some((Token::Prefix(run.to_string()), end + 1)),
+        b'*' if is_family_prefix(run) => Some((Token::Prefix(run), end + 1)),
         _ => None,
     }
 }
@@ -139,18 +152,18 @@ mod tests {
     use std::fs;
     use std::path::Path;
 
-    fn words(line: &str) -> Vec<Token> {
-        tokens(line, &|name: &str| name == "cases")
+    /// The tokens of a line, with the test's one collection, `cases`.
+    fn words(line: &str) -> Vec<Token<'_>> {
+        let mut found = Vec::new();
+        tokens(line, &|name: &str| name == "cases", &mut found);
+        found
     }
 
     #[test]
     fn a_trailing_dot_is_not_part_of_a_word() {
         assert_eq!(
             words("see NAME-001."),
-            vec![
-                Token::Word("see".to_string()),
-                Token::Word("NAME-001".to_string())
-            ]
+            vec![Token::Word("see"), Token::Word("NAME-001")]
         );
     }
 
@@ -159,9 +172,9 @@ mod tests {
         assert_eq!(
             words("cases:NAME-001 and NAME-*"),
             vec![
-                Token::Label("cases:NAME-001".to_string()),
-                Token::Word("and".to_string()),
-                Token::Prefix("NAME-".to_string())
+                Token::Label("cases:NAME-001"),
+                Token::Word("and"),
+                Token::Prefix("NAME-")
             ]
         );
     }
@@ -184,22 +197,16 @@ mod tests {
     fn a_bracket_paren_run_links_only_to_the_next_paren() {
         assert_eq!(
             words("a](b](c)"),
-            vec![
-                Token::Word("a".to_string()),
-                Token::Link("b](c".to_string())
-            ]
+            vec![Token::Word("a"), Token::Link("b](c")]
         );
-        assert_eq!(
-            words("[x](y)"),
-            vec![Token::Word("x".to_string()), Token::Link("y".to_string())]
-        );
+        assert_eq!(words("[x](y)"), vec![Token::Word("x"), Token::Link("y")]);
         assert_eq!(words("](](]("), Vec::new());
-        assert_eq!(words("x) ](](]("), vec![Token::Word("x".to_string())]);
-        assert_eq!(words("](](]()"), vec![Token::Link("](](".to_string())]);
+        assert_eq!(words("x) ](](]("), vec![Token::Word("x")]);
+        assert_eq!(words("](](]()"), vec![Token::Link("](](")]);
     }
 
     /// The tokens of the scan before `link` took `last_close`: each `](` searches for a `)` to the end of the line.
-    fn tokens_searching_to_end(line: &str, known: &dyn Fn(&str) -> bool) -> Vec<Token> {
+    fn tokens_searching_to_end<'a>(line: &'a str, known: &dyn Fn(&str) -> bool) -> Vec<Token<'a>> {
         let bytes = line.as_bytes();
         let mut found = Vec::new();
         let mut at = 0;
@@ -259,11 +266,9 @@ mod tests {
         );
         assert!(lines.len() > 100, "the cite fixtures were not found");
         for line in &lines {
-            assert_eq!(
-                tokens(line, &known),
-                tokens_searching_to_end(line, &known),
-                "{line:?}"
-            );
+            let mut found = Vec::new();
+            tokens(line, &known, &mut found);
+            assert_eq!(found, tokens_searching_to_end(line, &known), "{line:?}");
         }
     }
 }
