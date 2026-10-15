@@ -511,11 +511,14 @@ Answers design §9.3 ("a `check` verb for drift?"). The user's motivation: encod
   readmes    1 missing      src/util/
   length     2 over 365     src/big.rs 412 · src/x.rs 380
   one-liners 1 over 100     src/y.rs 131
+  thin       5 lowest       src/big.rs 1:206 · src/q.rs 1:140 · …
   cites      2 unresolved   src/z.rs → NAME-404 · docs/README.md → ../gone.md
   cases      4 uncited      NAME-007 · NAME-009 · …
   ids        1 duplicate    NAME-003 (2 places)
   ```
   The `(no …)` legends of §3.3 Gaps are reused as each kind's fix line. JSON is `{scope, counts, findings:[{kind, ref, detail}]}`.
+- **Header ratio (reported, not enforced).** For each file with a header: header lines against total lines. `check <file>` prints it; the `thin` kind lists the lowest ratios among files over a small floor (say 80 lines), worst first, with no pass/fail threshold. It is a pointer to where intent is thin, not a rule.
+- **Why lines stand in for complexity.** A file kept under 365 lines trends toward simple code, and growth pushes the complex part into its own file with its own header, which is what memex wants. So `check` measures lines and header ratio, never parsed complexity.
 - Thresholds are fixed defaults in v1: 365 lines and a 100-char one-liner (the repo's own quality bar). Config keys only if a playtest asks for them, since §4.1 item 4 keeps config.json to one key.
 
 **Out of scope (decided).** Cyclomatic complexity, function length and any other parsed-code metric: they need per-language parsers, which breaks §1 ("memex reads intent, `rg` reads code; never indexes code bodies") and the small-on-purpose surface. Language linters own them; the AGENTS.md snippet may point to them. No auto-fix and no new log behaviour (`memex log quality` already works as a stream).
@@ -534,3 +537,4 @@ Answers design §9.3 ("a `check` verb for drift?"). The user's motivation: encod
 2. Exit code with findings: 0 always (rec. for v1; it's a report, and agents read the text) or a non-zero code for CI gating, which needs a new code in §3.6.
 3. Does the AGENTS.md snippet tell agents to run `memex check` before they finish? Rec.: yes, one line, so the habit forms.
 4. Is `length` measured in lines (rec.; it matches the 365 bar) or non-blank lines?
+5. `thin` floor and list size: rec. files of 80+ lines, the lowest 10 by header ratio (bounded by `--limit`).
