@@ -1,0 +1,34 @@
+$ memex show README.md perf:PERF-001
+exit 0
+stdout
+| === README.md ===
+| # Repo
+| 
+| The perf budget is PERF-001.
+| 
+| cites
+|   perf:PERF-001  The search runs under 115 ms.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+| 
+| === perf:PERF-001 ===
+| The search runs under 115 ms.
+| 
+| group
+|   Budgets
+| 
+| defined in
+|   perf/budgets.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   README.md  The perf budget is PERF-001.
+|   showing 1 of 1
+stderr (empty)

@@ -1,0 +1,5 @@
+$ memex show NAME-001
+exit 1
+stdout (empty)
+stderr
+| memex: not found: NAME-001 (find refs with memex search <words>)

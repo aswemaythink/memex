@@ -1,0 +1,18 @@
+$ memex show decisions:0001-cache
+exit 0
+stdout
+| === decisions:0001-cache ===
+| # Cache in memory
+| 
+| Keep the index in memory.
+| 
+| fields
+|   status: accepted
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

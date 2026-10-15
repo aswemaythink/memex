@@ -99,6 +99,7 @@ When any rule fails, the case trials are not created, and only the failing rules
 - [log](log/README.md): `LOG-*`, design §3.4 and §4.3.
 - [header](header/README.md): `HDR-*`, design §2.1.
 - [intent](intent/README.md): `INT-*`, design §2 and §4.1.
+- [collection](collection/README.md): `COLL-*`, design §2.2 and §4.2 (frontmatter collections).
 - [caseindex](caseindex/README.md): `CASE-*`, design §2.2.
 - [manifest](manifest/README.md): `MAN-*`, design §4.2 (loading, unreadable-manifest warnings and the markdown kind).
 - [manifest-kinds](manifest-kinds/README.md): `MANK-*`, design §4.2 (the folder and json kinds).

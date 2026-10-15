@@ -1,0 +1,20 @@
+$ memex show perf:PERF-001 perf:budgets
+exit 1
+stdout
+| === perf:PERF-001 ===
+| The search runs under 115 ms.
+| 
+| group
+|   Budgets
+| 
+| defined in
+|   perf/budgets.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr
+| memex: not found: perf:budgets (find refs with memex search <words>)

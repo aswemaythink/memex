@@ -1,0 +1,5 @@
+$ memex show decisions:0006-cut
+exit 1
+stdout (empty)
+stderr
+| memex: not found: decisions:0006-cut (find refs with memex search <words>)

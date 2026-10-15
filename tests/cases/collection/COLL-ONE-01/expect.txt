@@ -1,0 +1,25 @@
+$ memex show decisions:ADR-001
+exit 0
+stdout
+| === decisions:ADR-001 ===
+| # Cache in memory
+| 
+| Keep the index in memory.
+| 
+| fields
+|   id: ADR-001
+|   status: accepted
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show decisions:0001-cache
+exit 1
+stdout (empty)
+stderr
+| memex: not found: decisions:0001-cache (find refs with memex search <words>)

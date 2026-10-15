@@ -9,7 +9,7 @@ use std::io;
 
 use crate::cite::{self, Citer};
 use crate::corpus::{self, parent_of, readme_label, Child, Corpus, Doc, Kind};
-use crate::intent::cases;
+use crate::intent::entries;
 use crate::render::{CaseParts, Citations, Fields, Link, Listing, Ref, Section};
 use crate::resolve::Target;
 use crate::text;
@@ -74,7 +74,7 @@ pub fn section_for(
 
 /// The labels that the section of `target` reads its citations by. A folder's cites are its README's, and its backlinks are those of
 /// its label. A file's cites are its doc's, and its backlinks those of its key: its manifest label when one holds its path (design
-/// §2.3). A doc's cites are its own, and a case has none.
+/// §2.3). A doc's cites are its own, and an entry has none.
 fn labels_of(corpus: &Corpus, target: &Target<'_>, options: &Options) -> CiteLabels {
     match target {
         Target::Path {
@@ -99,7 +99,7 @@ fn labels_of(corpus: &Corpus, target: &Target<'_>, options: &Options) -> CiteLab
             }
         }
         Target::Doc(doc) => CiteLabels {
-            cites: (doc.collection != corpus::CASES).then(|| doc.label.clone()),
+            cites: (!doc.is_entry()).then(|| doc.label.clone()),
             cited_by: doc.label.clone(),
         },
     }
@@ -217,13 +217,13 @@ fn doc_section(
     }
 }
 
-/// The fields of a doc: a case's group and the evidence its text names that the walk holds (design §2.2), or the
+/// The fields of a doc: an entry's group and the evidence its text names that the walk holds (design §2.2), or the
 /// frontmatter of any other doc.
 fn doc_fields(corpus: &Corpus, doc: &Doc) -> Fields {
-    if doc.collection == corpus::CASES {
+    if doc.is_entry() {
         Fields::Case(CaseParts {
-            group: cases::group_of(doc),
-            evidence: cases::evidence(doc, |rel| corpus.kind(rel) == Some(Kind::File)),
+            group: entries::group_of(doc),
+            evidence: entries::evidence(doc, |rel| corpus.kind(rel) == Some(Kind::File)),
         })
     } else {
         Fields::Pairs(doc.fields.clone())

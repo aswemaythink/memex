@@ -1,0 +1,6 @@
+$ memex search --in notes
+exit 0
+stdout
+| notes  (showing 1 of 1; <-N cited by N)
+|   notes:plain  A note with no heading.  <-0
+stderr (empty)

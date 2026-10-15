@@ -11,6 +11,7 @@ use super::globs;
 use super::manifest::{self, Manifest};
 use super::title;
 use crate::corpus::Doc;
+use crate::intent::Origin;
 use crate::text;
 use crate::walk::{self, Entry};
 
@@ -135,6 +136,7 @@ pub(super) fn doc(
         title,
         text,
         fields,
+        origin: Origin::Other,
     }
 }
 

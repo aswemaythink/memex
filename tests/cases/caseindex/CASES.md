@@ -67,7 +67,7 @@ The caseindex family pins design §2.2, how a CASES.md becomes case docs, and th
 
 - `CASE-CRLF-01` A CASES.md with CRLF line ends gives the same case, with no carriage return in its text.
   Scenario: a CRLF fixture with an item and one indented line; show cases:CRLF-001 prints both lines with no carriage return. design §4.4 Text.
-- `CASE-CRLF-02` A leading UTF-8 byte order mark is dropped, so an item on the first line is still a case.
+- `CASE-CRLF-02` A leading UTF-8 byte order mark is dropped, so the frontmatter after it still makes the file a collection, and its item is still a case.
   Scenario: a fixture whose first bytes are a byte order mark, then an item for BOM-001; show cases:BOM-001 prints it. design §4.4 Text.
 
 ## PLAN

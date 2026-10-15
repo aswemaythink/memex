@@ -1,36 +1,26 @@
-//! Reads a CASES.md into case docs (design §2.2): each column-0 item that opens with a case id.
-//! Cases: CASE-ITEM-01, CASE-ITEM-02, CASE-ITEM-03, CASE-ITEM-04, CASE-CLAIM-01, CASE-CLAIM-02, CASE-DETAIL-01, CASE-DETAIL-02, CASE-DETAIL-03, CASE-GROUP-01, CASE-GROUP-02, CASE-FENCE-01, CASE-FENCE-02, CASE-FENCE-03, CASE-FENCE-04, CASE-FENCE-05, CASE-FENCE-06, CASE-GRAMMAR-01, CASE-GRAMMAR-02, CASE-GRAMMAR-03, CASE-CRLF-01, CASE-CRLF-02, CASE-PLAN-01, CASE-EVID-01, CASE-EVID-02, CASE-EVID-03, CASE-EVID-04, CASE-EVID-05, CASE-EVID-06, CASE-EVID-07, CASE-EVID-08
+//! Reads an entry index into entry docs (design §2.2): each column-0 item that opens with a case id.
+//! Cases: CASE-ITEM-01, CASE-ITEM-02, CASE-ITEM-03, CASE-ITEM-04, CASE-CLAIM-01, CASE-CLAIM-02, CASE-DETAIL-01, CASE-DETAIL-02, CASE-DETAIL-03, CASE-GROUP-01, CASE-GROUP-02, CASE-FENCE-01, CASE-FENCE-02, CASE-FENCE-03, CASE-FENCE-04, CASE-FENCE-05, CASE-FENCE-06, CASE-GRAMMAR-01, CASE-GRAMMAR-02, CASE-GRAMMAR-03, CASE-CRLF-01, CASE-CRLF-02, CASE-PLAN-01, CASE-EVID-01, CASE-EVID-02, CASE-EVID-03, CASE-EVID-04, CASE-EVID-05, CASE-EVID-06, CASE-EVID-07, CASE-EVID-08, COLL-ENTRY-01, COLL-ENTRY-02, COLL-ENTRY-03, COLL-ENTRY-04
 
-use std::path::Path;
-
+use super::Origin;
 use crate::collections::frontmatter::Value;
-use crate::corpus::{parent_of, Doc, CASES};
-use crate::error::Error;
+use crate::corpus::{parent_of, Doc};
 use crate::fence;
 use crate::refs::{candidates, has_extension, is_case_id};
-use crate::text;
 
-/// The case docs of the CASES.md at `rel`, whose text is `text` as the one text reader gives it, with its byte order mark
-/// already dropped and CRLF read as LF (design §4.4), in the order they are written (design §2.2).
-fn parse(rel: &str, text: &str) -> Vec<Doc> {
+/// The entry docs of the file `rel` in collection `name`, whose body is `text` with its frontmatter already cut off, read with
+/// its byte order mark dropped and CRLF read as LF (design §4.4), in the order they are written (design §2.2). A file with no
+/// such item gives none, and is then one doc of its own (`front.rs`).
+pub fn docs(name: &str, rel: &str, text: &str) -> Vec<Doc> {
     let lines: Vec<&str> = text.lines().collect();
     let live = fence::scan(&lines).live;
-    let mut reader = Reader::new(rel);
+    let mut reader = Reader::new(name, rel);
     for (line, live) in lines.into_iter().zip(live) {
         reader.line(line, live);
     }
     reader.finish()
 }
 
-/// The case docs of the CASES.md at `path`, which the walk labels `rel` (design §2.2). A file that cannot be read is an error,
-/// which the corpus warns about and skips (design §4.2).
-pub fn read(rel: &str, path: &Path) -> Result<Vec<Doc>, Error> {
-    let contents =
-        text::read(path).map_err(|failure| Error::io_at("cannot read", path, &failure))?;
-    Ok(parse(rel, &contents))
-}
-
-/// The group of a case doc: the heading above its item, which the doc keeps as its `group` field (design §2.2).
+/// The group of an entry: the heading above its item, which the doc keeps as its `group` field (design §2.2).
 pub fn group_of(doc: &Doc) -> Option<String> {
     doc.fields.iter().find_map(|(key, value)| match value {
         Value::Str(text) if key == "group" => Some(text.clone()),
@@ -38,8 +28,8 @@ pub fn group_of(doc: &Doc) -> Option<String> {
     })
 }
 
-/// The evidence of a case (design §2.2): each backticked path in its claim or detail that names a file of the walk. A path
-/// resolves from the folder of its CASES.md first and then from the root, and each file is listed once, in the order it is
+/// The evidence of an entry (design §2.2): each backticked path in its claim or detail that names a file of the walk. A path
+/// resolves from the folder of its entry index first and then from the root, and each file is listed once, in the order it is
 /// first written. `is_file` says whether a root-relative path names a file of the walk.
 pub fn evidence(doc: &Doc, is_file: impl Fn(&str) -> bool) -> Vec<String> {
     let folder = doc.path.as_deref().and_then(parent_of).unwrap_or("");
@@ -58,22 +48,25 @@ pub fn evidence(doc: &Doc, is_file: impl Fn(&str) -> bool) -> Vec<String> {
     found
 }
 
-/// One pass over a CASES.md: the item being read and the heading above it.
+/// One pass over an entry index: the item being read and the heading above it.
 struct Reader<'a> {
-    /// The root-relative path of the CASES.md, which each case doc records as its path.
+    /// The collection that each entry joins, which is the name in the file's `memex:` key.
+    name: &'a str,
+    /// The root-relative path of the entry index, which each entry records as its path.
     rel: &'a str,
     /// The text of the last heading at column 0, which groups the items after it.
     group: Option<String>,
     /// The item whose detail lines may still follow.
     open: Option<Item>,
-    /// The case docs read so far, in order.
+    /// The entry docs read so far, in order.
     docs: Vec<Doc>,
 }
 
 impl<'a> Reader<'a> {
-    /// A reader for the CASES.md at `rel`, before its first line.
-    fn new(rel: &'a str) -> Self {
+    /// A reader for the entry index at `rel` in collection `name`, before its first line.
+    fn new(name: &'a str, rel: &'a str) -> Self {
         Reader {
+            name,
             rel,
             group: None,
             open: None,
@@ -120,7 +113,7 @@ impl<'a> Reader<'a> {
     /// Ends the open item, if there is one, and keeps its doc.
     fn close(&mut self) {
         if let Some(item) = self.open.take() {
-            self.docs.push(item.into_doc(self.rel));
+            self.docs.push(item.into_doc(self.name, self.rel));
         }
     }
 
@@ -173,8 +166,8 @@ impl Item {
         }
     }
 
-    /// The case doc of this item, labelled `cases:ID`: its claim is the title, and its claim and detail are the text.
-    fn into_doc(mut self, rel: &str) -> Doc {
+    /// The entry doc of this item, labelled `name:ID`: its claim is the title, and its claim and detail are the text.
+    fn into_doc(mut self, name: &str, rel: &str) -> Doc {
         if self.detail.last().is_some_and(String::is_empty) {
             self.detail.pop();
         }
@@ -187,8 +180,8 @@ impl Item {
             lines.join("\n")
         };
         Doc {
-            label: format!("{CASES}:{}", self.id),
-            collection: CASES.to_string(),
+            label: format!("{name}:{}", self.id),
+            collection: name.to_string(),
             id: self.id,
             path: Some(rel.to_string()),
             title: self.claim,
@@ -198,6 +191,7 @@ impl Item {
                 .map(|group| ("group".to_string(), Value::Str(group)))
                 .into_iter()
                 .collect(),
+            origin: Origin::Entry,
         }
     }
 }
@@ -240,26 +234,6 @@ fn resolve(folder: &str, token: &str, is_file: &impl Fn(&str) -> bool) -> Option
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[cfg(unix)]
-    #[test]
-    fn an_unreadable_cases_file_is_an_error_naming_its_path() {
-        use std::os::unix::fs::PermissionsExt;
-        let dir = tempfile::tempdir().expect("a temp folder");
-        let path = dir.path().join("CASES.md");
-        std::fs::write(&path, "- `NAME-001` A claim.\n").expect("a file");
-        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o000)).expect("a mode");
-        if std::fs::read(&path).is_ok() {
-            // Running as root reads any file, so there is nothing to check.
-            return;
-        }
-        let error = read("CASES.md", &path).expect_err("an unreadable CASES.md");
-        assert!(
-            error.message.ends_with("CASES.md (PermissionDenied)"),
-            "{}",
-            error.message
-        );
-    }
 
     #[test]
     fn a_path_token_needs_a_slash_or_an_extension() {

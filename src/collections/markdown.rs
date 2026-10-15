@@ -11,6 +11,7 @@ use super::json::scalar_fields;
 use super::manifest::{self, Manifest};
 use super::title;
 use crate::corpus::Doc;
+use crate::intent::Origin;
 use crate::text;
 
 /// The globs of a markdown manifest that names none (design §4.2 `include`).
@@ -69,6 +70,7 @@ fn doc_of(manifest: &Manifest, file: &Matched, fields: Vec<(String, Value)>, bod
         path: Some(file.rel.clone()),
         text: body,
         fields,
+        origin: Origin::Other,
     }
 }
 

@@ -1,0 +1,5 @@
+$ memex show decisions:0003-crlf --json
+exit 0
+stdout
+| {"docs":[{"ref":"decisions:0003-crlf","collection":"decisions","id":"0003-crlf","path":"decisions/0003-crlf.md","title":"Line ends","fields":{"status":"open"},"text":"# Line ends\n\nCRLF has no carriage return.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
+stderr (empty)

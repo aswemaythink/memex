@@ -1,0 +1,19 @@
+$ memex show perf:PERF-020
+exit 0
+stdout
+| === perf:PERF-020 ===
+| Status claim.
+| 
+| group
+|   Now
+| 
+| defined in
+|   perf/status.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

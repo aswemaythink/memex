@@ -52,7 +52,7 @@ fn section(section: &Section) -> String {
     let mut out = format!("=== {} ===\n", section.label);
     body(&mut out, section);
     if let Some(Fields::Case(case)) = &section.fields {
-        // A case has no cites block: design §3.3 lists its claim, detail, group, defining CASES.md, evidence and cited by.
+        // An entry has no cites block: design §3.3 lists its claim, detail, group, defining file, evidence and cited by.
         case_blocks(&mut out, section.path.as_deref(), case);
         cited_by_block(&mut out, &section.citations);
         return out;
@@ -113,7 +113,7 @@ fn fields_block(out: &mut String, fields: &[(String, Value)]) {
     }
 }
 
-/// The blocks of a case after its claim and detail: its group, the CASES.md that defines it, and its evidence. Each shows
+/// The blocks of an entry after its claim and detail: its group, the file that defines it, and its evidence. Each shows
 /// `(none)` when it has nothing.
 fn case_blocks(out: &mut String, defined_in: Option<&str>, case: &CaseParts) {
     start(out, "group");

@@ -1,7 +1,7 @@
 //! Loads the read model (design §3.1 and §3.6): the walked entries and the docs built from them.
-//! The docs are READMEs, headers, CASES.md, manifests and logs, with the label map.
+//! The docs are READMEs, headers, collection docs read from frontmatter, manifests and logs, with the label map.
 //! The walked entries and the intent docs are bulk-built from sorted input; manifest and log docs are inserted one by one.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ORDER-01, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, SHOW-IO-02, INT-NAME-01, INT-NAME-02, INT-CHAIN-01, INT-BOM-01, MAN-LOAD-02, REF-AMBIG-02, REF-AMBIG-03, REF-RESERVED-03, REF-RESERVED-04
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ORDER-01, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, SHOW-IO-02, INT-NAME-01, INT-NAME-02, INT-CHAIN-01, INT-BOM-01, MAN-LOAD-02, REF-AMBIG-02, REF-AMBIG-03, REF-RESERVED-03, REF-RESERVED-04, COLL-INFO-01, COLL-INFO-02
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::io;
@@ -14,10 +14,10 @@ use crate::cite;
 use crate::collections::frontmatter::Value;
 use crate::collections::manifest;
 use crate::error::{self, Error};
-use crate::intent::files::file_docs;
+use crate::intent::{files, front, Origin};
 use crate::logs::read::load as load_logs;
 use crate::par;
-use crate::walk::{self, Entry};
+use crate::walk;
 
 pub use crate::root::root_of;
 
@@ -38,6 +38,15 @@ pub struct Doc {
     pub text: String,
     /// The frontmatter fields, in the order the file gives them.
     pub fields: Vec<(String, Value)>,
+    /// Where the doc was read from (design §2.2 and §4.2).
+    pub origin: Origin,
+}
+
+impl Doc {
+    /// True for an entry of an entry index, whose claim is its title and whose path is that index (design §2.2).
+    pub fn is_entry(&self) -> bool {
+        self.origin == Origin::Entry
+    }
 }
 
 /// The built-in collection of READMEs, whose docs are labelled by their path (design §3.1).
@@ -90,7 +99,8 @@ pub struct Corpus {
     /// The warnings of the files, folders and log entries that could not be read as the corpus loaded (design §4.2). `info` lists
     /// them in its JSON.
     pub read_warnings: Vec<String>,
-    /// The manifests that loaded, in file-name order, each with its doc count and the warnings of its read (design §4.2).
+    /// The manifests that loaded, in file-name order, then the collections that only frontmatter names, each with its doc count and
+    /// the warnings of its read (design §2.2 and §4.2).
     pub manifests: Vec<manifest::Loaded>,
     /// The warnings of the manifest files that did not load, in file-name order.
     pub manifest_warnings: Vec<String>,
@@ -131,7 +141,7 @@ impl Corpus {
     fn intent(root: &Path) -> Corpus {
         let (mut read_warnings, mut unlistable) = (Vec::new(), BTreeMap::new());
         let entries = walk::walk_warned(root, &mut read_warnings, &mut unlistable);
-        let read = par::map(&entries, read_entry);
+        let read = par::map(&entries, files::read_entry);
         let mut kinds = Vec::with_capacity(entries.len() + 1);
         kinds.push((String::new(), Kind::Dir));
         let mut docs = Vec::new();
@@ -139,7 +149,10 @@ impl Corpus {
             let kind = if entry.is_dir { Kind::Dir } else { Kind::File };
             kinds.push((entry.rel, kind));
             match found {
-                Ok(found) => docs.extend(found),
+                Ok(found) => {
+                    docs.extend(found.docs);
+                    read_warnings.extend(found.warnings.iter().map(|line| error::warning(line)));
+                }
                 Err(error) => read_warnings.push(error::warning(&error.message)),
             }
         }
@@ -164,6 +177,8 @@ impl Corpus {
             });
             docs.into_iter().for_each(|doc| corpus.insert(doc));
         }
+        let counts = front::counts(corpus.all_docs());
+        front::join(counts, &mut corpus.manifests);
         error::warn(&corpus.read_warnings);
         error::warn(&corpus.manifest_warnings);
         for loaded in &corpus.manifests {
@@ -345,12 +360,4 @@ fn by_label(mut docs: Vec<Doc>) -> BTreeMap<String, Vec<Doc>> {
         }
     }
     groups.into_iter().collect()
-}
-
-/// The docs of one walked entry: none for a folder, and those of its file otherwise (design §2 and §4.2).
-fn read_entry(entry: &Entry) -> Result<Vec<Doc>, Error> {
-    if entry.is_dir {
-        return Ok(Vec::new());
-    }
-    file_docs(entry)
 }

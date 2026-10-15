@@ -1,0 +1,20 @@
+$ memex show decisions:0004-fields
+exit 0
+stdout
+| === decisions:0004-fields ===
+| # Fields
+| 
+| Body.
+| 
+| fields
+|   status: accepted
+|   owner: ryn
+|   tags: [cache, speed]
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

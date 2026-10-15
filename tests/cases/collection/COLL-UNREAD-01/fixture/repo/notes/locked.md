@@ -1,0 +1,6 @@
+---
+memex: notes
+---
+# Locked
+
+Unreadable.

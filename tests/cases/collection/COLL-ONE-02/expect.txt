@@ -1,0 +1,6 @@
+$ memex search --in notes
+exit 0
+stdout
+| notes  (showing 1 of 1; <-N cited by N)
+|   notes:retry  Retry policy  <-0
+stderr (empty)

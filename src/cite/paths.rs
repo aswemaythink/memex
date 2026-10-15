@@ -4,21 +4,16 @@
 //! A scan for some targets (`Wanted`) skips every token that cannot name any of them, a necessary condition: a bare id or a prefix
 //! must be an id of a doc that holds a target's label; a label must be a target's, or name such a doc by its id; a path must end in
 //! a name that a target's paths end in, unless it ends in `..` or in nothing, when it is always resolved (`last_name`).
-//! Cases: CITE-BARE-01, CITE-BARE-02, CITE-BARE-03, CITE-PREFIX-01, CITE-PREFIX-02, CITE-COLL-01, CITE-COLL-02, CITE-COLL-03, CITE-COLL-04, CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-04, CITE-PATH-05, CITE-PATH-06, CITE-LINK-01, CITE-LINK-02, CITE-LINK-03, CITE-LINK-05, CITE-MAN-01, CITE-UNRES-01, CITE-FOLDER-01, CITE-FOLDER-02
+//! Cases: CITE-BARE-01, CITE-BARE-02, CITE-BARE-03, CITE-PREFIX-01, CITE-PREFIX-02, CITE-COLL-01, CITE-COLL-02, CITE-COLL-03, CITE-COLL-04, CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-04, CITE-PATH-05, CITE-PATH-06, CITE-LINK-01, CITE-LINK-02, CITE-LINK-03, CITE-LINK-05, CITE-MAN-01, CITE-UNRES-01, CITE-FOLDER-01, CITE-FOLDER-02, COLL-CITE-01, COLL-CITE-02, COLL-CITE-03, COLL-CITE-04
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::Bound;
 
 use super::tokens::{self, Token};
-use crate::corpus::{
-    label_of, name_of, parent_of, readme_label, Corpus, Doc, Kind, CASES, HEADERS, READMES,
-    RESERVED,
-};
+use crate::corpus::{label_of, name_of, parent_of, readme_label, Corpus, Doc, Kind, RESERVED};
 use crate::fence;
+use crate::intent::Origin;
 use crate::refs::{candidates, has_extension, is_case_id};
-
-/// The collections of intent docs, which have a file and a folder. Their path tokens resolve from their own folder first.
-const INTENT: [&str; 3] = [READMES, HEADERS, CASES];
 
 /// Where a path names the walk.
 pub enum Named {
@@ -202,9 +197,10 @@ pub fn last_name(raw: &str) -> Option<&str> {
     (part != "..").then_some(part)
 }
 
-/// True for a doc of an intent collection, whose path is a file that the walk holds (design §2.3).
+/// True for an intent doc, whose path is a file that the walk holds: a README, a header or an entry (design §2.3). A whole file
+/// is labelled `collection:id` and is cited through its path, as a manifest's doc is.
 pub fn is_intent(doc: &Doc) -> bool {
-    INTENT.contains(&doc.collection.as_str())
+    matches!(doc.origin, Origin::Graph | Origin::Entry)
 }
 
 /// The one-liner of the target with this label: a folder's README, or the doc with the label. Empty when there is none.
@@ -238,11 +234,11 @@ pub fn hits_of(corpus: &Corpus, doc: &Doc, names: &Names, wanted: Option<&Wanted
     hits
 }
 
-/// The folder that a doc's path tokens resolve from first: the folder of its file for an intent doc, and the root for any
-/// other doc, which has no folder (design §2.3).
+/// The folder that a doc's path tokens resolve from first: the folder of its file for a doc read from a file (a README, a header,
+/// an entry or a whole file), and the root for a manifest's doc or a log, which has no folder of its own (design §2.3).
 fn base_folder(doc: &Doc) -> &str {
     match doc.path.as_deref() {
-        Some(path) if is_intent(doc) => parent_of(path).unwrap_or(""),
+        Some(path) if doc.origin != Origin::Other => parent_of(path).unwrap_or(""),
         _ => "",
     }
 }
@@ -303,12 +299,16 @@ mod tests {
             title: String::new(),
             text: String::new(),
             fields: Vec::new(),
+            origin: Origin::Other,
         }
     }
 
     #[test]
     fn a_manifest_doc_is_labelled_at_its_path_unless_an_intent_doc_holds_that_path() {
-        let readme = doc("README.md", "readmes", "README.md");
+        let readme = Doc {
+            origin: Origin::Graph,
+            ..doc("README.md", "readmes", "README.md")
+        };
         let copy = doc("docs:README", "docs", "README.md");
         let guide = doc("docs:guide", "docs", "guide.md");
         let names = Names::of(&[&readme, &copy, &guide]);

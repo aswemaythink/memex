@@ -1,0 +1,39 @@
+$ memex show README.md decisions/0001-cache.md
+exit 0
+stdout
+| === README.md ===
+| # Repo
+| 
+| The cache is [decided](decisions/0001-cache.md).
+| 
+| cites
+|   decisions:0001-cache  Cache in memory
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+| 
+| === decisions/0001-cache.md ===
+| ---
+| memex: decisions
+| ---
+| # Cache in memory
+| 
+| Keep the index in memory.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   README.md  The cache is [decided](decisions/0001-cache.md).
+|   showing 1 of 1
+| 
+| chain
+| --- README.md
+| # Repo
+| 
+| The cache is [decided](decisions/0001-cache.md).
+stderr (empty)

@@ -1,0 +1,11 @@
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| intent  0 readmes · 0 headers · 0 cases
+| use     memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+stderr
+| memex: warning: $SANDBOX/repo/bad/dash.md: 'memex: -decisions' is not a collection name; use a-z, 0-9 and -
+| memex: warning: $SANDBOX/repo/bad/long.md: 'memex: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' is not a collection name; use a-z, 0-9 and -
+| memex: warning: $SANDBOX/repo/bad/space.md: 'memex: two words' is not a collection name; use a-z, 0-9 and -
+| memex: warning: $SANDBOX/repo/bad/upper.md: 'memex: Decisions' is not a collection name; use a-z, 0-9 and -

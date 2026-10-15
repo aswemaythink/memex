@@ -1,0 +1,5 @@
+$ memex show decisions:0005-late
+exit 1
+stdout (empty)
+stderr
+| memex: not found: decisions:0005-late (find refs with memex search <words>)

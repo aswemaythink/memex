@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 use crate::collections::frontmatter::split;
 use crate::corpus::Doc;
 use crate::error::{self, Error};
+use crate::intent::Origin;
 use crate::logs::write::title_of;
 use crate::root::store_listed;
 use crate::text;
@@ -104,6 +105,7 @@ fn entry_doc(stream: &str, file: &str, path: &Path) -> Result<Option<Doc>, Error
         title: title_of(&document.body),
         text: document.body,
         fields: document.fields,
+        origin: Origin::Other,
     }))
 }
 

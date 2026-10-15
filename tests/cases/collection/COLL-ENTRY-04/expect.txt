@@ -1,0 +1,23 @@
+$ memex show perf:fenced perf:PERF-030
+exit 1
+stdout
+| === perf:fenced ===
+| # Fenced
+| 
+| ```
+| - `PERF-030` Inside a fence.
+| ```
+| 
+| Not an entry.
+| 
+| fields
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr
+| memex: not found: perf:PERF-030 (find refs with memex search <words>)

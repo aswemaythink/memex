@@ -1,0 +1,5 @@
+$ memex show decisions:0004-open
+exit 1
+stdout (empty)
+stderr
+| memex: not found: decisions:0004-open (find refs with memex search <words>)

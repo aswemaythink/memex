@@ -1,0 +1,19 @@
+$ memex show notes:open
+exit 0
+stdout
+| === notes:open ===
+| # Open
+| 
+| Readable.
+| 
+| fields
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr
+| memex: warning: cannot read $SANDBOX/repo/notes/locked.md (PermissionDenied)

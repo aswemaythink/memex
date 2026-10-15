@@ -1,11 +1,26 @@
 //! The readers of the intent layer and the one-liner rule they share (design §2).
-//! Paragraphs, the first sentence, and the one-liner of a block.
+//! Paragraphs, the first sentence, and the one-liner of a block; `Origin` tells the graph, entries, whole files and the rest apart.
 //! Cases: SHOW-DIR-01, SHOW-FILE-01, SHOW-LINE-01
 
-pub mod cases;
+pub mod entries;
 pub mod files;
+pub mod front;
 pub mod header;
 pub mod readme;
+
+/// Where a doc was read from (design §2.2 and §4.2): the graph's own docs, an entry of an entry index, a whole Markdown file, or
+/// the doc of a manifest or a log. Each reader sets it, and the citation scan and `show` read it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Origin {
+    /// A README or a header: the graph's doc, labelled by its path.
+    Graph,
+    /// An entry of an entry index (design §2.2), labelled `collection:ID`, with the index's path.
+    Entry,
+    /// A Markdown file that is one doc of its collection (design §2.2), labelled `collection:id`, with its path.
+    Whole,
+    /// A manifest's doc or a log entry (design §4.2 and §4.3).
+    Other,
+}
 
 /// The paragraphs of a block: runs of non-blank lines, each joined with newlines. Blank lines separate them.
 fn paragraphs(text: &str) -> Vec<String> {

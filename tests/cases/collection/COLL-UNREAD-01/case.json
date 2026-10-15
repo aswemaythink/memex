@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "notes:open"]}], "chmod": [{"path": "repo/notes/locked.md", "mode": "000"}], "platforms": ["unix"]}

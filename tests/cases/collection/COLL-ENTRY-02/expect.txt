@@ -1,0 +1,51 @@
+$ memex show perf:PERF-010 perf:PERF-011 perf:PERF-012
+exit 0
+stdout
+| === perf:PERF-010 ===
+| Before any heading.
+| 
+| group
+|   (none)
+| 
+| defined in
+|   perf/groups.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| === perf:PERF-011 ===
+| Search claim.
+| 
+| group
+|   Search
+| 
+| defined in
+|   perf/groups.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| === perf:PERF-012 ===
+| Info claim.
+| 
+| group
+|   Info
+| 
+| defined in
+|   perf/groups.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

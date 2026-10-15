@@ -3,5 +3,5 @@ exit 0
 stdout
 | {"docs":[{"ref":"mergewarn:MERGE-1","collection":"mergewarn","id":"MERGE-1","path":null,"title":"Readable merge","fields":{"status":"open"},"text":"# Readable merge\n\nFull text.","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
 stderr
-| memex: warning: cannot read $SANDBOX/repo/units/MERGE-1/spec.rs (PermissionDenied)
 | memex: warning: cannot read $SANDBOX/repo/units/MERGE-1/NOTES.md (PermissionDenied)
+| memex: warning: cannot read $SANDBOX/repo/units/MERGE-1/spec.rs (PermissionDenied)
