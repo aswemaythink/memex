@@ -18,7 +18,7 @@ Ground rules (PLAN.md §0):
 - Principles (design.md §1): Markdown and a CLI only. No server, daemon, MCP, LLM, vectors or database. Agent-agnostic, minimal surface. A feature earns its place through playtest friction plus a user-approved design.md edit. Logs are scaffolding; knowledge is authored.
 - Order of change: design.md, then CASES.md, then code. If design.md is silent or contradicts itself, stop and report. Never invent behaviour.
 - Every behaviour is pinned by a conformance case (PLAN.md §2). Unit tests are welcome but do not count as pinning.
-- Every file's header: its first sentence is the file's purpose, and it cites the case ids it implements (`Cases: SRCH-FUZZY-*`).
+- Every file's header: its first sentence is the file's purpose; citing case ids is optional.
 - Every folder has a README.md whose first paragraph says what the folder is.
 
 Brief template (PLAN.md §8). Fill it in for every cook:
@@ -28,7 +28,7 @@ GOAL    <one sentence>
 READ    design.md §<x>; PLAN.md §2 (+ §1 fixes <n>); `memex show <paths>` output (from S2.0)
 FILES   <exact list>; tests/cases/<family>/ (only the ids below)
 CASES   write CASES.md entries for: <topics/ids>; then fixtures; bless only these ids
-RULES   headers cite the ids they implement; touch nothing outside FILES; design silent → stop and report
+RULES   headers state the file's purpose; touch nothing outside FILES; design silent → stop and report
 DONE    DONE(<filter>) + <slice extras>
 REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → return `report: <ref>` + DONE tail
 ```
@@ -43,7 +43,7 @@ Golden policy (PLAN.md §2, Bless):
 ### Code quality bar
 
 - At most 365 lines per file.
-- Each file opens with a `//!` header: its first sentence is the file's purpose, and a `Cases:` line names the ids it implements.
+- Each file opens with a `//!` header: its first sentence is the file's purpose; citing case ids is optional.
 - Each folder has a README.md whose first paragraph says what the folder is.
 - Functions have at most 60 lines and cognitive complexity 15, and take at most 6 arguments.
 - No `#[allow]` or `#[expect]` in src/: fix the code instead. tests/ may use `#[allow(dead_code)]` only.

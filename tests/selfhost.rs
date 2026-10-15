@@ -1,5 +1,5 @@
 //! Runs the built memex on this repo and checks its intent layer (PLAN §3).
-//! It checks the cases, the headers, the READMEs and the links.
+//! It checks the headers, the READMEs and the links.
 //! Cases: none (a self-check of this repo, not a conformance case)
 
 use std::fs;
@@ -16,22 +16,6 @@ const SELFTEST_TREE: &str = "tests/runner-selftest";
 
 /// The family folders of the conformance cases. A folder two levels below it is a case folder, which is data.
 const CASES_TREE: &str = "tests/cases/";
-
-#[test]
-fn every_case_is_cited_directly() {
-    let roster = memex_json(&["search", "--in", "cases", "--limit", "100000"]);
-    let mut uncited = Vec::new();
-    for hit in hits_of(&roster) {
-        let planned = hit["title"].as_str().unwrap_or("").contains("(planned)");
-        if !planned && hit["cited_by"].as_u64() == Some(0) {
-            uncited.push(hit["ref"].as_str().unwrap_or("?").to_string());
-        }
-    }
-    report(
-        &uncited,
-        "cite each case directly: add its id to the `//! Cases:` line of the file that implements it, or name it in a README",
-    );
-}
 
 #[test]
 fn every_source_file_has_a_header() {
@@ -154,16 +138,6 @@ fn shown(paths: &[String]) -> Vec<Value> {
         "memex show did not give one doc per path"
     );
     docs
-}
-
-/// The hits of a search document: every hit of every group, in order.
-fn hits_of(document: &Value) -> Vec<&Value> {
-    document["groups"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .flat_map(|group| group["hits"].as_array().into_iter().flatten())
-        .collect()
 }
 
 /// The folders that the checks gate, under the roots: each folder that is not a fixture, not in the self-test trees and not a

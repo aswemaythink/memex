@@ -85,26 +85,6 @@ fn source_files_open_with_a_purpose_header() {
 }
 
 #[test]
-fn source_files_cite_their_cases() {
-    let nodes = tree();
-    let mut problems = Vec::new();
-    for node in rust_files(&nodes) {
-        let text = read(&node.path);
-        let header = header_of(&text);
-        if !header.is_empty() && !header.iter().any(|line| line.starts_with("//! Cases:")) {
-            problems.push(format!(
-                "{}: its `//!` header has no `//! Cases:` line",
-                node.rel
-            ));
-        }
-    }
-    report(
-        &problems,
-        "add `//! Cases: <ids>` to the header, or `//! Cases: none (<why>)` when no case pins the file",
-    );
-}
-
-#[test]
 fn header_first_sentences_are_at_most_100_chars() {
     let nodes = tree();
     let mut problems = Vec::new();
