@@ -444,7 +444,7 @@ REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → r
 - [ ] S6.3
 - [ ] Playtest 2: A
 - [ ] Playtest 2: B
-- [ ] S8.1
+- [x] S8.1 (2026-10-15, cargo-dist 0.32.0; publish dry run 100 files / 181.6 KiB; musl static smoke ok. Placeholders: org aswemaythink, npm @aswemaythink, tap aswemaythink/homebrew-tap. Open: installer files are named agent-memex-installer.* (from the crate name), so design §6.1 and README follow once names are final; an rc tag needs version 0.1.0-rc.1 committed; prerelease tags skip brew/npm unless publish-prereleases is turned on.)
 - [ ] S8.2
 - [ ] S8.3
 - [ ] Site (drafted 859b035; awaiting user copy sign-off; deploy held until release)
