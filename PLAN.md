@@ -541,7 +541,7 @@ Answers design §9.3 ("a `check` verb for drift?"). The user's motivation: encod
 4. Settled: `length` counts code lines (header and license blocks excluded). Once `check` exists, tests/quality.rs's 365 gate should use the same count (separate change).
 5. `thin` floor and list size: rec. files of 80+ lines, the lowest 10 by header ratio (bounded by `--limit`).
 
-## 15. Proposed: the graph and its dimensions (planned 2026-10-15; not approved; design.md unchanged)
+## 15. The graph and its dimensions (approved 2026-10-15; design.md rewrite pending)
 
 A design change from discussion with the user. It replaces cases as a built-in with collections declared in frontmatter, and adds a stat-keyed cache gated on measurement. Sequence it before §14, since `check` builds on it.
 
@@ -573,7 +573,4 @@ Expected: reference-ui `info` about 55 → 25–30 ms; 100k about 1 s → 0.4–
 3. If the oracle rules yes: the stat-keyed cache, with a refiner on correctness (racy edits, concurrent writers) and a BENCH.
 4. Then §14 `check` on the new model. Then a cold playtest.
 
-**Open questions (recommendations first).**
-1. Many docs per file via id-led list items: yes (rec.) or one file, one doc.
-2. Drop this repo's `Cases:` header rule and the selfhost citation gate: yes, after §15 lands (rec.), or keep.
-3. Cache: build only on the oracle's numbers (rec.), or build it regardless for monorepo speed.
+**Approved by the user (2026-10-15).** The model and the `memex:` key; many docs per file via id-led list items; drop the built-in `cases`, this repo's `Cases:` header rule and the selfhost citation gate; the cache is built only on the oracle's numbers.
