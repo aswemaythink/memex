@@ -384,7 +384,7 @@ GOAL    <one sentence>
 READ    design.md §<x>; PLAN.md §2 (+ §1 fixes <n>); `memex show <paths>` output (from S2.0)
 FILES   <exact list>; tests/cases/<family>/ (only the ids below)
 CASES   write CASES.md entries for: <topics/ids>; then fixtures; bless only these ids
-RULES   headers cite the ids they implement; touch nothing outside FILES; design silent → stop and report
+RULES   headers state the file's purpose; touch nothing outside FILES; design silent → stop and report
 DONE    DONE(<filter>) + <slice extras>
 REPORT  memex log impl --agent cook-<slice> --tag <family> <<'EOF' … EOF → return `report: <ref>` + DONE tail
 ```
@@ -577,3 +577,4 @@ Expected: reference-ui `info` about 55 → 25–30 ms; 100k about 1 s → 0.4–
 **Approved by the user (2026-10-15).** The model and the `memex:` key; many docs per file via id-led list items; drop the built-in `cases`, this repo's `Cases:` header rule and the selfhost citation gate; the cache is built only on the oracle's numbers.
 
 Design applied in commit "design: the graph and its dimensions (PLAN §15, user-approved)"; U1-U3 and R1 approved by the user 2026-10-15.
+- (§15, S15.G, user-approved) the `Cases:` header gate and the direct-citation selfhost gate are gone; citing case ids in headers is optional; existing `//! Cases:` lines stay as ordinary citations.
