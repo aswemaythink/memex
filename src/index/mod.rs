@@ -1,4 +1,7 @@
 //! The in-memory BM25F index of one group of docs, with stems, prefixes and one-edit matches.
+//! A query builds only what it needs: one scan over each run's distinct terms finds the candidates of every query word, and only
+//! those terms' postings are read, run by run in doc order. The full join of the runs into one vocabulary, and the stem map of
+//! every term, are gone (perf P-IDX); the matches, weights and ranking are the same.
 //! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, MAN-LOAD-13, SRCH-UNICODE-01, SRCH-UNICODE-02, SRCH-UNICODE-03
 
 pub mod bm25;
@@ -7,13 +10,12 @@ pub mod fuzzy;
 pub mod tokenize;
 mod vocab;
 
-use std::collections::{BTreeMap, HashMap};
-use std::ops::Bound;
+use std::mem::ManuallyDrop;
 
 use rust_stemmers::{Algorithm, Stemmer};
 
 use crate::par;
-use vocab::{Posting, Term, Vocab};
+use vocab::{Posting, Vocab};
 
 /// The shortest query word that may match by prefix (PLAN §4).
 const PREFIX_MIN: usize = 3;
@@ -52,13 +54,14 @@ pub struct Hit {
     pub fuzzy: Vec<String>,
 }
 
-/// The index of one group: the labels, the normalisers of each doc's fields, the postings of each term, the plain terms of
-/// each stem, and the field weights that the group ranks with.
-pub struct Index {
-    labels: Vec<String>,
+/// The index of one group: the labels, the normalisers of each doc's fields, the distinct terms of each run of docs with their
+/// postings, the stemmer that query words and terms are stemmed with, and the field weights that the group ranks with.
+pub struct Index<'a> {
+    labels: Vec<&'a str>,
     norms: Vec<[f64; 3]>,
-    vocab: BTreeMap<String, Vec<Posting>>,
-    stems: HashMap<String, Vec<String>>,
+    /// Never freed: a search builds one index per group and the verb ends with the process, and freeing the many small term strings
+    /// and postings of a large group costs about 20 ms for nothing (perf P-IDX).
+    runs: ManuallyDrop<Vec<Vocab>>,
     stemmer: Stemmer,
     weights: [f64; 3],
 }
@@ -78,6 +81,24 @@ struct Totals {
     fuzzy: Vec<Vec<String>>,
 }
 
+/// A term that query word `word` (its position in the query) may match at a tier, and where the term's postings are: its id in run `run`.
+struct Candidate<'a> {
+    word: usize,
+    tier: usize,
+    term: &'a str,
+    run: usize,
+    id: usize,
+}
+
+/// A query word as the scan reads it: its stem, which only a plain word has (a whole id or path matches only itself), and whether it
+/// may match by prefix or by one edit.
+struct Probe<'w> {
+    word: &'w str,
+    stem: Option<String>,
+    prefix: bool,
+    fuzzy: bool,
+}
+
 impl Totals {
     /// Empty totals for `docs` docs.
     fn new(docs: usize) -> Totals {
@@ -89,29 +110,19 @@ impl Totals {
     }
 }
 
-impl Index {
+impl<'a> Index<'a> {
     /// Indexes the sources in order. Each doc's tokens are counted per field, and the field lengths give the normalisers. The docs
-    /// are cut into runs, one per thread, which are counted at once; the runs' terms are then joined shard by shard, one thread a
-    /// shard, and the stems are found on the threads too. The group ranks with `weights`, the field weights of its manifest or the
-    /// defaults (design §4.2).
-    pub fn build(sources: &[Source], weights: [f64; 3]) -> Index {
-        let stemmer = Stemmer::create(Algorithm::English);
-        let shards = par::threads();
-        let runs = par::map(&runs_of(sources), |(first, run)| {
-            count_run(*first, run, shards)
-        });
-        let (buckets, counts): (Vec<_>, Vec<_>) = runs.into_iter().unzip();
-        let vocab = vocab::join(buckets, shards);
+    /// are cut into runs, one per thread, which are counted at once and kept as they are. The group ranks with `weights`, the field
+    /// weights of its manifest or the defaults (design §4.2).
+    pub fn build(sources: &[Source<'a>], weights: [f64; 3]) -> Index<'a> {
+        let counted = par::map(&runs_of(sources), |(first, run)| count_run(*first, run));
+        let (runs, counts): (Vec<Vocab>, Vec<Vec<[f64; 3]>>) = counted.into_iter().unzip();
         let lengths: Vec<[f64; 3]> = counts.into_iter().flatten().collect();
         Index {
-            labels: sources
-                .iter()
-                .map(|source| source.label.to_string())
-                .collect(),
+            labels: sources.iter().map(|source| source.label).collect(),
             norms: bm25::norms(&lengths),
-            stems: stem_map(&vocab, &stemmer),
-            vocab,
-            stemmer,
+            runs: ManuallyDrop::new(runs),
+            stemmer: Stemmer::create(Algorithm::English),
             weights,
         }
     }
@@ -119,15 +130,15 @@ impl Index {
     /// The hits of a query, best first, with ties broken by label. A doc that no word matches is not a hit.
     pub fn search(&self, words: &[String]) -> Vec<Hit> {
         let mut totals = Totals::new(self.labels.len());
-        for word in words {
-            self.score_word(word, &mut totals);
+        for candidates in self.candidates(words) {
+            let found = self.matches(&candidates);
+            self.score_word(found, &mut totals);
         }
         self.ranked(totals)
     }
 
-    /// Adds one query word's score to every doc that it matches.
-    fn score_word(&self, word: &str, totals: &mut Totals) {
-        let found = self.matches(word);
+    /// Adds one query word's score to every doc that it matches, given what the word matched in each doc.
+    fn score_word(&self, found: Vec<Match>, totals: &mut Totals) {
         let df = found.iter().filter(|hit| hit.tier.is_some()).count();
         let idf = bm25::idf(self.labels.len(), df);
         for (doc, found) in found.into_iter().enumerate() {
@@ -142,78 +153,92 @@ impl Index {
         }
     }
 
-    /// What a query word matches in each doc: its best tier, and the weighted frequency of its terms in that tier.
-    fn matches(&self, word: &str) -> Vec<Match> {
+    /// What a word's candidates match in each doc: its best tier, and the weighted frequency of its terms in that tier. The
+    /// candidates come in tier order and then byte order of their terms, so each doc's sum is taken in the same order as before.
+    fn matches(&self, candidates: &[Candidate]) -> Vec<Match> {
         let mut found = vec![Match::default(); self.labels.len()];
-        for (tier, terms) in self.candidates(word).iter().enumerate() {
-            for term in terms {
-                self.add_term(term, tier, &mut found);
-            }
+        for candidate in candidates {
+            let postings = self.runs[candidate.run].postings(candidate.id);
+            self.add_term(candidate, postings, &mut found);
         }
         found
     }
 
-    /// Adds the postings of one index term to the matches of its tier. A doc that a better tier already matched keeps that
+    /// Adds one candidate's postings in one run to the matches of its tier. A doc that a better tier already matched keeps that
     /// tier, so a prefix or a fuzzy match counts only where no exact or stem match exists (PLAN §4).
-    fn add_term(&self, term: &str, tier: usize, found: &mut [Match]) {
-        let Some(postings) = self.vocab.get(term) else {
-            return;
-        };
+    fn add_term(&self, candidate: &Candidate, postings: &[Posting], found: &mut [Match]) {
         for posting in postings {
             let known = &mut found[posting.doc];
-            if known.tier.is_some_and(|best| best < tier) {
+            if known.tier.is_some_and(|best| best < candidate.tier) {
                 continue;
             }
-            known.tier = Some(tier);
+            known.tier = Some(candidate.tier);
             known.weight += bm25::weight(posting.tf, self.norms[posting.doc], self.weights);
-            if tier == FUZZY {
-                known.fuzzy.push(term.to_string());
+            if candidate.tier == FUZZY {
+                known.fuzzy.push(candidate.term.to_string());
             }
         }
     }
 
-    /// The index terms that a query word may match, in three lists: the stem-mates (exact or stem), the prefixes, and the
-    /// one-edit variants. A whole id or path has only the exact list, which is the term itself.
-    fn candidates(&self, word: &str) -> [Vec<&str>; 3] {
-        if tokenize::is_whole(word) {
-            let exact = self
-                .vocab
-                .get_key_value(word)
-                .map(|(term, _)| term.as_str());
-            return [exact.into_iter().collect(), Vec::new(), Vec::new()];
+    /// The candidates of each query word: its terms in every run, sorted by tier, then by term in byte order, then by run. The runs
+    /// are scanned on several threads, in the order of the runs.
+    fn candidates(&self, words: &[String]) -> Vec<Vec<Candidate<'_>>> {
+        let probes: Vec<Probe> = words
+            .iter()
+            .map(|word| Probe::new(word, &self.stemmer))
+            .collect();
+        let runs: Vec<usize> = (0..self.runs.len()).collect();
+        let mut per_word: Vec<Vec<Candidate>> = (0..words.len()).map(|_| Vec::new()).collect();
+        for candidate in par::map(&runs, |&run| self.scan_run(run, &probes))
+            .into_iter()
+            .flatten()
+        {
+            per_word[candidate.word].push(candidate);
         }
-        let stem = self.stemmer.stem(word);
-        let stem_mates: Vec<&str> = self
-            .stems
-            .get(&*stem)
-            .map_or_else(Vec::new, |terms| terms.iter().map(String::as_str).collect());
-        [stem_mates, self.prefixed(word), self.one_edit(word)]
+        for candidates in &mut per_word {
+            candidates.sort_unstable_by_key(|c| (c.tier, c.term, c.run));
+        }
+        per_word
     }
 
-    /// The plain terms that start with a query word of `PREFIX_MIN` characters or more.
-    fn prefixed(&self, word: &str) -> Vec<&str> {
-        if shorter_than(word, PREFIX_MIN) {
-            return Vec::new();
+    /// The candidates of every query word in one run. A whole id or path is looked up by its exact term; a plain term is stemmed
+    /// once and checked against every plain word, and it is a candidate at each tier it reaches (PLAN §4).
+    fn scan_run(&self, run: usize, probes: &[Probe]) -> Vec<Candidate<'_>> {
+        let vocab = &self.runs[run];
+        let mut found = Vec::new();
+        for (word, probe) in probes.iter().enumerate() {
+            if probe.stem.is_none() {
+                if let Some((term, id)) = vocab.get(probe.word) {
+                    found.push(Candidate {
+                        word,
+                        tier: 0,
+                        term,
+                        run,
+                        id,
+                    });
+                }
+            }
         }
-        self.vocab
-            .range::<str, _>((Bound::Included(word), Bound::Unbounded))
-            .map(|(term, _)| term.as_str())
-            .take_while(|term| term.starts_with(word))
-            .filter(|term| !tokenize::is_whole(term))
-            .collect()
-    }
-
-    /// The plain terms one edit away from a query word of `FUZZY_MIN` characters or more. This scans the vocabulary once for the
-    /// word, not once per doc.
-    fn one_edit(&self, word: &str) -> Vec<&str> {
-        if shorter_than(word, FUZZY_MIN) {
-            return Vec::new();
+        if probes.iter().any(|probe| probe.stem.is_some()) {
+            for (term, id) in vocab.terms() {
+                if tokenize::is_whole(term) {
+                    continue;
+                }
+                let stem = self.stemmer.stem(term);
+                for (word, probe) in probes.iter().enumerate() {
+                    for tier in probe.tiers(term, &stem).into_iter().flatten() {
+                        found.push(Candidate {
+                            word,
+                            tier,
+                            term,
+                            run,
+                            id,
+                        });
+                    }
+                }
+            }
         }
-        self.vocab
-            .keys()
-            .map(String::as_str)
-            .filter(|term| !tokenize::is_whole(term) && fuzzy::one_edit(term, word))
-            .collect()
+        found
     }
 
     /// The hits in rank order: by score rounded to `QUANTUM`, highest first, then by label.
@@ -229,13 +254,37 @@ impl Index {
         hits.sort_by(|a, b| {
             quantize(b.score)
                 .cmp(&quantize(a.score))
-                .then_with(|| self.labels[a.doc].cmp(&self.labels[b.doc]))
+                .then_with(|| self.labels[a.doc].cmp(self.labels[b.doc]))
         });
         hits
     }
 }
 
-/// Adds one doc's terms to the vocabulary, and returns its token count in each field.
+impl<'w> Probe<'w> {
+    /// The probe of a query word: a whole id or path has no stem and matches only itself; a plain word may match by prefix from
+    /// `PREFIX_MIN` characters and by one edit from `FUZZY_MIN`.
+    fn new(word: &'w str, stemmer: &Stemmer) -> Probe<'w> {
+        let whole = tokenize::is_whole(word);
+        Probe {
+            word,
+            stem: (!whole).then(|| stemmer.stem(word).into_owned()),
+            prefix: !whole && !shorter_than(word, PREFIX_MIN),
+            fuzzy: !whole && !shorter_than(word, FUZZY_MIN),
+        }
+    }
+
+    /// The tiers at which a plain term matches this word, each `Some` in tier order: a stem-mate, a prefix, or a one-edit variant.
+    /// A prefix includes the word itself, since the word starts with itself; the best tier then keeps it at its stem tier.
+    fn tiers(&self, term: &str, stem: &str) -> [Option<usize>; 3] {
+        [
+            (self.stem.as_deref() == Some(stem)).then_some(0),
+            (self.prefix && term.starts_with(self.word)).then_some(1),
+            (self.fuzzy && fuzzy::one_edit(term, self.word)).then_some(2),
+        ]
+    }
+}
+
+/// Adds one doc's terms to a run's vocabulary, and returns its token count in each field.
 fn add_doc(terms: &mut Vocab, doc: usize, source: &Source) -> [f64; 3] {
     let mut length = [0.0; 3];
     for (field, text) in [source.id, source.title, source.body]
@@ -260,37 +309,15 @@ fn runs_of<'a, 'b>(sources: &'a [Source<'b>]) -> Vec<(usize, &'a [Source<'b>])> 
         .collect()
 }
 
-/// The terms of one run of docs, split into `shards` buckets, and the token count of each doc in it, with its docs numbered from
-/// `first`.
-fn count_run(first: usize, sources: &[Source], shards: usize) -> (Vec<Vec<Term>>, Vec<[f64; 3]>) {
+/// The distinct terms of one run of docs, and the token count of each doc in it, with its docs numbered from `first`.
+fn count_run(first: usize, sources: &[Source]) -> (Vocab, Vec<[f64; 3]>) {
     let mut terms = Vocab::default();
     let lengths = sources
         .iter()
         .enumerate()
         .map(|(offset, source)| add_doc(&mut terms, first + offset, source))
         .collect();
-    (terms.into_shards(shards), lengths)
-}
-
-/// The plain terms of the vocabulary by their stem, so that a query word finds its stem-mates in one lookup. The stems are found on
-/// the threads; the terms are then added in byte order, so that each stem's terms are in byte order too.
-fn stem_map(
-    vocab: &BTreeMap<String, Vec<Posting>>,
-    stemmer: &Stemmer,
-) -> HashMap<String, Vec<String>> {
-    let plain: Vec<&str> = vocab
-        .keys()
-        .map(String::as_str)
-        .filter(|term| !tokenize::is_whole(term))
-        .collect();
-    let stemmed = par::map(&plain, |term| {
-        (stemmer.stem(term).into_owned(), term.to_string())
-    });
-    let mut stems: HashMap<String, Vec<String>> = HashMap::new();
-    for (stem, term) in stemmed {
-        stems.entry(stem).or_default().push(term);
-    }
-    stems
+    (terms, lengths)
 }
 
 /// A score rounded to the quantum, so that scores that differ only in the last digits of their floats compare equal.
