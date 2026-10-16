@@ -130,9 +130,9 @@ When the copy changes, change STORY.md or design.md first, then this page.
             <span class="where">Any Markdown file with a <code>memex:</code> line in its frontmatter joins a collection. Cases are one: <code>CASES.md</code> with <code>memex: cases</code>, and the id sits in the test’s name.</span>
           </li>
           <li class="layer">
-            <span class="kind">Collections</span>
-            <span class="says">Any other docs worth reading, indexed where they are.</span>
-            <span class="where">A manifest in <code>.memex/collections/</code> says where they live.</span>
+            <span class="kind">Manifests</span>
+            <span class="says">Structures that are not Markdown, such as case folders and JSON case lists.</span>
+            <span class="where">A manifest in <code>.memex/collections/</code> indexes them as a collection, where they already are.</span>
           </li>
           <li class="layer scaffold">
             <span class="kind">Logs</span>
@@ -185,12 +185,12 @@ When the copy changes, change STORY.md or design.md first, then this page.
             <div class="term-bar">repo/crates/namer</div>
 <pre tabindex="0" role="group" aria-label="Terminal sample: memex info"><code><span class="p">$</span> <span class="c">memex info --agent cook-2</span>
 <span class="g">memex</span>  /repo · log store .memex/logs/
-<span class="k">intent</span>       48 readmes · 912 headers · 214 cases
-<span class="k">collections</span>  doom 41 · neo-cases 294 · perf 212
+<span class="k">graph</span>        48 readmes · 912 headers
+<span class="k">collections</span>  cases 214 · doom 41 · neo-cases 294 · perf 212
 <span class="k">streams</span>      impl 12 (3 new in 24h) · review 3 (1 new) · drift 5
 <span class="k">to cook-2</span>    2 messages <span class="d">→</span> memex search to:cook-2
-<span class="k">here</span>         <span class="l">crates/namer</span> — Namer: turns atoms into stable class names.
-<span class="k">use</span>          memex show &lt;path|ref&gt; · memex search &lt;words&gt; · memex log &lt;stream&gt; &lt; body</code></pre>
+<span class="k">here</span>         <span class="l">crates/namer</span> — Namer: turns atoms into stable class names
+<span class="k">use</span>          memex show &lt;path|ref&gt; · memex search &lt;words&gt; · memex log &lt;stream&gt; &lt;&lt;'EOF' … EOF</code></pre>
           </div>
         </div>
       </article>
@@ -289,7 +289,7 @@ updated <span class="l">CLAUDE.md</span>
 
 <span class="g">memex</span>  /home/you/project · log store .memex/logs/
 <span class="k">intent</span>  1 readme · 0 headers · 0 cases
-<span class="k">use</span>     memex show &lt;path|ref&gt; · memex search &lt;words&gt; · memex log &lt;stream&gt; &lt; body</code></pre>
+<span class="k">use</span>     memex show &lt;path|ref&gt; · memex search &lt;words&gt; · memex log &lt;stream&gt; &lt;&lt;'EOF' … EOF</code></pre>
           </div>
         </div>
       </article>
