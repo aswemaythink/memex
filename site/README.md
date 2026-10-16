@@ -1,6 +1,6 @@
 # Site
 
-`site/` is memex's documentation site: one static page, `index.html`, that says what memex is, how to install it and how to use it. It is plain HTML styled with Tailwind from its pinned Play CDN (`cdn.tailwindcss.com/3.4.17`), with no build step, so opening the page in a browser is the whole dev loop. It supersedes the story-first page of PLAN.md §6 Phase 9, at the user's direction.
+`site/` is memex's documentation site, one static page: `index.html`. It says what memex is, how to install it and how to use it. It is plain HTML styled with Tailwind from its pinned Play CDN (`cdn.tailwindcss.com/3.4.17`), with no build step, so opening the page in a browser is the whole dev loop. It supersedes the story-first page of PLAN.md §6 Phase 9, at the user's direction.
 
 `index.html` runs top to bottom, with a sticky nav of anchor links:
 
