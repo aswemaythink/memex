@@ -5,14 +5,15 @@
 `index.html` runs top to bottom, with a sticky nav of anchor links:
 
 1. Introduction: what memex is (README.md, design.md §1).
-2. Install and quick start: the working `cargo install --path . --locked` from a checkout, the planned v0.1.0 commands (design.md §6.1, marked as not yet published), then the six verbs (init, info, show, search, check, log), each a short description followed by its terminal sample, adapted from design.md §3 and README.md.
-3. The intent layer: the layer table, the citation chips and the citation forms (design.md §2).
+2. Install and quick start: `npx @rynwhite/memex init`, marked as coming with v0.1.0, with every other route (toolchains, Releases, a checkout, the plugin) in a native `<details>`; then `memex init` and its output (design.md §3.5b, §6.1).
+3. The intent layer: what a collection is, then the layer table, the citation chips and the citation forms (design.md §2).
 4. Context compression: three inline SVG diagrams, the compression ladder, two-way citations and hand-off by reference (design.md §1, §5).
 5. Patterns: cases, doom hunts, performance verdicts, hand-off and messages, checking intent against code (drift), promoting a stream (design.md §2.2, §4.2, §5).
-6. Principles (design.md §1).
-7. Story: STORY.md retold in full, on a dashed trail rail with orange markers (1945, the camera and the trail, now, memex, why this matters), the desk sketch and the pull quote.
+6. The verbs agents use: init, info, show, search, check and log, each a short description followed by its terminal sample (design.md §3, README.md).
+7. Principles (design.md §1).
+8. Story: STORY.md retold in full, on a dashed trail rail with orange markers, the desk sketch and the pull quote.
 
-Colours are CSS custom properties on `:root`, switched by `prefers-color-scheme`, and the Tailwind config maps its colour names to them. Prose sits in the original 40rem reading column; terminals, the layer table and the diagrams step out to 58rem (the `.flow` and `.wide` rules). On phones everything is full width, the layout holds at 375px, and terminal blocks scroll inside themselves.
+Colours are CSS custom properties on `:root`, switched by `prefers-color-scheme`, and the Tailwind config maps its colour names to them. Everything (header, prose, terminals, table, diagrams, footer) shares one 48rem column, so every edge lines up; on phones it is full width with a 16px gutter, and terminal blocks scroll inside themselves.
 
 ## Preview
 
