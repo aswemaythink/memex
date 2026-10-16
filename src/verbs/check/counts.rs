@@ -1,10 +1,12 @@
 //! Counts each in-scope file's lines for `length` and `thin` (design §3.5d Lines).
-//! The files are read on several threads (`par.rs`), and each is read once for its head, then once more past the head only when it is longer.
+//! The corpus kept each file's head facts as it loaded, so a file that its head holds whole is counted without a read; a longer one
+//! is read past its head only, on several threads (`par.rs`).
+//! Cases: CHK-LENGTH-01, CHK-LENGTH-03, CHK-LENGTH-04, CHK-LENGTH-05, CHK-LENGTH-06, CHK-THIN-01, CHK-REFINE-03
 
 use super::scope::Scope;
-use crate::intent::header::{has_family, lines, read_head};
+use crate::corpus::Corpus;
+use crate::intent::header::lines::{self, Head};
 use crate::par;
-use crate::walk::Entry;
 
 /// One in-scope file with a comment family, with its line counts (design §3.5d Lines).
 pub struct Counted {
@@ -14,25 +16,22 @@ pub struct Counted {
     pub counts: lines::Counts,
 }
 
-/// The line counts of each walked file in the scope that has a comment family, in walk order. A file that cannot be read is left
-/// out, since its read already warned (design §4.2).
-pub fn in_scope(tree: &[Entry], scope: &Scope) -> Vec<Counted> {
-    let files: Vec<&Entry> = tree
+/// The line counts of each file in the scope that has a comment family, in path order. A file whose head could not be read has no
+/// head facts and is left out, since its read already warned (design §4.2); so is one whose rest can no longer be read.
+pub fn in_scope(corpus: &Corpus, scope: &Scope) -> Vec<Counted> {
+    let files: Vec<(&String, &Head)> = corpus
+        .heads
         .iter()
-        .filter(|entry| !entry.is_dir && scope.holds_file(&entry.rel) && has_family(&entry.path))
+        .filter(|(rel, _)| scope.holds_file(rel))
         .collect();
-    par::map(&files, |entry| count_one(entry))
-        .into_iter()
-        .flatten()
-        .collect()
-}
-
-/// The counts of one walked file: its head, and its rest when the file is longer than the head (design §3.5d Lines).
-fn count_one(entry: &Entry) -> Option<Counted> {
-    let head = read_head(&entry.path).ok()?;
-    let counts = lines::counts(&entry.path, &head).ok().flatten()?;
-    Some(Counted {
-        rel: entry.rel.clone(),
-        counts,
+    par::map(&files, |(rel, head)| {
+        let counts = head.counts(&corpus.root.join(rel)).ok()?;
+        Some(Counted {
+            rel: (*rel).clone(),
+            counts,
+        })
     })
+    .into_iter()
+    .flatten()
+    .collect()
 }

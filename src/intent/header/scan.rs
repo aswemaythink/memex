@@ -14,12 +14,7 @@ pub struct Found {
     pub open: bool,
 }
 
-/// The header of a file whose lines are `lines`, read with `family`. None when no header block leads the file.
-pub fn header_text(family: &Family, lines: &[&str]) -> Option<Found> {
-    scan(family, lines).0
-}
-
-/// What the scan finds in a file's lines (design §2.1): the header as `header_text` gives it, then the ranges of indices into `lines`
+/// What the scan finds in a file's lines (design §2.1): the header, None when no header block leads the file, then the ranges of indices into `lines`
 /// of the license block and of the header block. The header range runs from the header's first line to its last comment line, so the
 /// blank lines after that comment are left out. A range is empty when its block is absent.
 pub(super) fn scan(family: &Family, lines: &[&str]) -> (Option<Found>, Range<usize>, Range<usize>) {

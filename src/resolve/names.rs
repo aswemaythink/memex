@@ -78,9 +78,9 @@ fn candidate(corpus: &Corpus, doc: &Doc) -> String {
 /// anything but the exact name.
 fn basename<'a>(corpus: &Corpus, arg: &str) -> Outcome<'a> {
     let mut found: Vec<String> = corpus
-        .files()
-        .filter(|rel| name_of(rel) == arg)
-        .map(str::to_string)
+        .entries()
+        .filter(|(rel, kind)| *kind == Kind::File && name_of(rel) == arg)
+        .map(|(rel, _)| rel.to_string())
         .collect();
     found.sort();
     match found.len() {

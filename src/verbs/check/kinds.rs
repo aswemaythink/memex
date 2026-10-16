@@ -1,12 +1,10 @@
 //! Finds each kind's findings over the scope, in the order of design §3.5d.
-//! The kinds are headers, readmes, length, one-liners, thin, cites and ids. Each is one function over `Ctx`; `length` and `thin` read the
-//! line counts that `counts.rs` makes. Each list is sorted by label (`thin` by its header share) and cut to `--limit` (design §3.3 Limits),
+//! The kinds are headers, readmes, length, one-liners, thin, cites and ids. Each is one function over `Ctx`; `headers` reads the
+//! corpus's head facts, and `length` and `thin` the line counts that `counts.rs` makes from them. Each list is sorted by label (`thin` by its header share) and cut to `--limit` (design §3.3 Limits),
 //! and a kind with no finding is left out. `thin` is listed but is not a finding (design §3.5d).
-//! Cases: CHK-HEADERS-01, CHK-HEADERS-02, CHK-HEADERS-03, CHK-READMES-01, CHK-READMES-02, CHK-READMES-03, CHK-READMES-04, CHK-READMES-05, CHK-LENGTH-01, CHK-LENGTH-02, CHK-LENGTH-03, CHK-LENGTH-04, CHK-LENGTH-05, CHK-LENGTH-06, CHK-LENGTH-07, CHK-ONELINERS-01, CHK-ONELINERS-02, CHK-ONELINERS-03, CHK-ONELINERS-04, CHK-THIN-01, CHK-THIN-02, CHK-THIN-03, CHK-THIN-04, CHK-THIN-05, CHK-THIN-06, CHK-THIN-07, CHK-CITES-01, CHK-CITES-02, CHK-CITES-03, CHK-CITES-04, CHK-CITES-05, CHK-CITES-06, CHK-IDS-01, CHK-IDS-02, CHK-LIMIT-01, CHK-LIMIT-02, CHK-LIMIT-03, CHK-JSON-01, CHK-JSON-03
+//! Cases: CHK-HEADERS-01, CHK-HEADERS-02, CHK-HEADERS-03, CHK-READMES-01, CHK-READMES-02, CHK-READMES-03, CHK-READMES-04, CHK-READMES-05, CHK-LENGTH-01, CHK-LENGTH-02, CHK-LENGTH-03, CHK-LENGTH-04, CHK-LENGTH-05, CHK-LENGTH-06, CHK-LENGTH-07, CHK-ONELINERS-01, CHK-ONELINERS-02, CHK-ONELINERS-03, CHK-ONELINERS-04, CHK-THIN-01, CHK-THIN-02, CHK-THIN-03, CHK-THIN-04, CHK-THIN-05, CHK-THIN-06, CHK-THIN-07, CHK-CITES-01, CHK-CITES-02, CHK-CITES-03, CHK-CITES-04, CHK-CITES-05, CHK-CITES-06, CHK-IDS-01, CHK-IDS-02, CHK-LIMIT-01, CHK-LIMIT-02, CHK-LIMIT-03, CHK-JSON-01, CHK-JSON-03, CHK-REFINE-01, CHK-REFINE-02, CHK-REFINE-03
 
 use std::collections::BTreeSet;
-use std::fs;
-use std::path::Path;
 
 use super::counts::{self, Counted};
 use super::scope::Scope;
@@ -69,7 +67,7 @@ pub struct Ctx<'a> {
 /// The findings of every kind over the scope, in §3.5d order, with each kind that has none left out. The line counts are read once,
 /// for `length` and `thin`. `thin` is listed among the kinds, but it is a pointer and not a finding (design §3.5d).
 pub fn all(ctx: &Ctx<'_>) -> Vec<Group> {
-    let counted = counts::in_scope(ctx.tree, ctx.scope);
+    let counted = counts::in_scope(ctx.corpus, ctx.scope);
     [
         headers(ctx),
         readmes(ctx),
@@ -102,17 +100,17 @@ fn group(
     }
 }
 
-/// The walked files in scope with a comment family, no header and some text (design §3.5d kind 1). A file that cannot be opened
-/// is not judged, since its read already warned (design §4.2).
+/// The walked files in scope with a comment family, no header and at least one byte (design §3.5d kind 1), as the corpus's head
+/// facts give them. A file that cannot be read has none and is not judged, since its read already warned (design §4.2).
 fn headers(ctx: &Ctx<'_>) -> Group {
     let items = ctx
-        .tree
+        .corpus
+        .heads
         .iter()
-        .filter(|entry| !entry.is_dir && ctx.scope.holds_file(&entry.rel))
-        .filter(|entry| has_family(&entry.path) && !has_header(ctx.corpus, &entry.rel))
-        .filter(|entry| is_non_empty(&entry.path))
-        .map(|entry| Item {
-            reference: entry.rel.clone(),
+        .filter(|(rel, head)| ctx.scope.holds_file(rel) && !head.is_empty())
+        .filter(|(rel, _)| !has_header(ctx.corpus, rel))
+        .map(|(rel, _)| Item {
+            reference: rel.clone(),
             detail: None,
         })
         .collect();
@@ -128,13 +126,6 @@ fn headers(ctx: &Ctx<'_>) -> Group {
 /// True when the graph holds a header doc for the file at this root-relative path.
 fn has_header(corpus: &Corpus, rel: &str) -> bool {
     corpus.labelled(rel).iter().any(Doc::is_header)
-}
-
-/// True when the file opens and holds at least one byte. Only its metadata is asked for, never its text (design §3.5d, a ruling).
-fn is_non_empty(path: &Path) -> bool {
-    fs::File::open(path)
-        .and_then(|file| file.metadata())
-        .is_ok_and(|meta| meta.len() > 0)
 }
 
 /// The walked folders in scope with no README.md whose subtree holds a file with a comment family, the root included (design §3.5d
@@ -262,27 +253,24 @@ fn thin(ctx: &Ctx<'_>, counted: &[Counted]) -> Group {
 }
 
 /// The explicit references that resolve to nothing, in the READMEs, headers and collection docs in scope (design §3.5d kind 6).
-/// Logs are not checked. The citation index resolves each label's doc, so one that is named twice is read once.
+/// Logs are not checked. Each doc is read for itself, so two docs that share a label each give theirs, and a reference that both
+/// make is listed once.
 fn cites(ctx: &Ctx<'_>) -> Group {
-    let labels: BTreeSet<&str> = ctx
+    let docs: Vec<&Doc> = ctx
         .corpus
         .all_docs()
         .filter(|doc| !ctx.corpus.is_log(doc) && in_scope(ctx.scope, doc))
-        .map(|doc| doc.label.as_str())
         .collect();
-    let names: Vec<&str> = labels.iter().copied().collect();
-    let index = cite::Index::for_show(ctx.corpus, &names, &[]);
-    let items = labels
+    let unresolved = cite::Index::unresolved(ctx.corpus, &docs);
+    let mut seen = BTreeSet::new();
+    let items = docs
         .iter()
-        .flat_map(|label| {
-            index
-                .cites(label)
-                .iter()
-                .filter(|cite| !cite.resolved)
-                .map(|cite| Item {
-                    reference: label.to_string(),
-                    detail: Some(format!("→ {}", cite.reference)),
-                })
+        .zip(unresolved)
+        .flat_map(|(doc, refs)| refs.into_iter().map(|raw| (doc.label.as_str(), raw)))
+        .filter(|pair| seen.insert(pair.clone()))
+        .map(|(label, raw)| Item {
+            reference: label.to_string(),
+            detail: Some(format!("→ {raw}")),
         })
         .collect();
     group(ctx, "cites", "unresolved", Some(CITES), items)

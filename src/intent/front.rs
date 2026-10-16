@@ -141,13 +141,11 @@ fn from_text(rel: &str, path: &Path, text: &str) -> Found {
     match value {
         Value::Str(name) if valid_name(&name) => Found {
             docs: docs_of(&name, rel, document),
-            warnings: Vec::new(),
-            title: None,
+            ..Found::default()
         },
         value => Found {
-            docs: Vec::new(),
             warnings: vec![name_warning(path, &value)],
-            title: None,
+            ..Found::default()
         },
     }
 }

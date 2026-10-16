@@ -1,4 +1,5 @@
-//! Counts a byte stream's lines for `check` (design §3.5d Lines), reading the stream in chunks.
+//! Counts a file's lines for `check` (design §3.5d Lines).
+//! The head is tallied as the corpus reads it; a longer file's rest carries the tally on, read in chunks.
 
 use std::io::{self, Read};
 
@@ -8,44 +9,54 @@ const BOM: &[u8] = b"\xEF\xBB\xBF";
 /// The size of the chunks in which a stream is read.
 const CHUNK: usize = 8 * 1024;
 
-/// The lines of a file whose first bytes are `head` and whose rest is read from `rest` (design §3.5d Lines). A line ends at LF, so a
-/// CRLF counts once and a lone CR ends no line; a last line without LF counts when it is not empty; a leading byte order mark is not
-/// a line by itself. `rest` is read in chunks.
-pub fn count_lines(head: &[u8], rest: impl Read) -> io::Result<u32> {
-    let mut stream = head.chain(rest);
-    let mut lead = Vec::with_capacity(BOM.len());
-    (&mut stream)
-        .take(BOM.len() as u64)
-        .read_to_end(&mut lead)?;
-    if lead == BOM {
-        lead.clear();
-    }
-    count_stream(lead.as_slice().chain(stream))
+/// The line count of a file so far: its LFs, and its last byte, which says whether a last line is still open (design §3.5d Lines).
+/// A line ends at LF, so a CRLF counts once and a lone CR ends no line; a last line without LF counts when it is not empty.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct Tally {
+    /// The LFs read so far.
+    newlines: u64,
+    /// The last byte read so far, None before any.
+    last: Option<u8>,
 }
 
-/// The lines of the bytes that `reader` gives: one for each LF, and one more when the last byte is not LF.
-fn count_stream(mut reader: impl Read) -> io::Result<u32> {
-    let mut buf = [0u8; CHUNK];
-    let mut newlines: u64 = 0;
-    let mut last = None;
-    loop {
-        let read = match reader.read(&mut buf) {
-            Ok(0) => break,
-            Ok(read) => read,
-            Err(failure) if failure.kind() == io::ErrorKind::Interrupted => continue,
-            Err(failure) => return Err(failure),
-        };
-        let chunk = &buf[..read];
-        newlines += chunk.iter().filter(|&&byte| byte == b'\n').count() as u64;
-        last = chunk.last().copied();
+impl Tally {
+    /// The tally of a file's head, its first bytes. A leading byte order mark is not a line by itself. A head shorter than the mark
+    /// is the whole file, since the head is cut at 8 KiB, so the mark is never split between the head and the rest.
+    pub fn of_head(head: &[u8]) -> Tally {
+        let text = head.strip_prefix(BOM).unwrap_or(head);
+        Tally {
+            newlines: newlines_in(text),
+            last: text.last().copied(),
+        }
     }
-    let unended = last.is_some_and(|byte| byte != b'\n');
-    Ok(saturate(newlines + u64::from(unended)))
+
+    /// This tally carried on through the bytes that `rest` gives, read in chunks.
+    pub fn read_on(mut self, mut rest: impl Read) -> io::Result<Tally> {
+        let mut buf = [0u8; CHUNK];
+        loop {
+            let read = match rest.read(&mut buf) {
+                Ok(0) => return Ok(self),
+                Ok(read) => read,
+                Err(failure) if failure.kind() == io::ErrorKind::Interrupted => continue,
+                Err(failure) => return Err(failure),
+            };
+            let chunk = &buf[..read];
+            self.newlines += newlines_in(chunk);
+            self.last = chunk.last().copied();
+        }
+    }
+
+    /// The lines counted: one for each LF, and one more when the last byte is not LF. No real file has more lines than a u32
+    /// holds, so a larger count stops at the largest one.
+    pub fn lines(self) -> u32 {
+        let unended = self.last.is_some_and(|byte| byte != b'\n');
+        u32::try_from(self.newlines + u64::from(unended)).unwrap_or(u32::MAX)
+    }
 }
 
-/// `count` as a line count. No real file has more lines than a u32 holds, so a larger count stops at the largest one.
-fn saturate(count: u64) -> u32 {
-    u32::try_from(count).unwrap_or(u32::MAX)
+/// The LFs in `bytes`.
+fn newlines_in(bytes: &[u8]) -> u64 {
+    bytes.iter().filter(|&&byte| byte == b'\n').count() as u64
 }
 
 #[cfg(test)]
@@ -84,9 +95,14 @@ mod tests {
         }
     }
 
-    /// The line count of `text` read whole.
+    /// The line count of `text` read whole, as a head.
     fn lines_of(text: &[u8]) -> u32 {
-        count_lines(text, io::empty()).expect("a count")
+        Tally::of_head(text).lines()
+    }
+
+    /// The line count of `head` carried on through `rest`.
+    fn count_lines(head: &[u8], rest: impl Read) -> io::Result<u32> {
+        Tally::of_head(head).read_on(rest).map(Tally::lines)
     }
 
     #[test]
@@ -116,14 +132,12 @@ mod tests {
         assert_eq!(lines_of(b"\xEF\xBB\xBF\n"), 1);
         assert_eq!(lines_of(b"\xEF\xBB\xBF\xEF\xBB\xBF"), 1);
         assert_eq!(lines_of(b"\xEF\xBB"), 1, "two bytes are not a mark");
-        let split = count_lines(b"\xEF\xBB", &b"\xBF"[..]).expect("a count");
-        assert_eq!(split, 0, "a mark split by the head");
     }
 
     #[test]
-    fn a_cut_anywhere_in_the_text_counts_the_same() {
+    fn a_cut_anywhere_after_the_mark_counts_the_same() {
         let text: &[u8] = b"\xEF\xBB\xBFa\r\n\r\nb\rc\n\nlast";
-        for cut in 0..=text.len() {
+        for cut in BOM.len()..=text.len() {
             let counted = count_lines(&text[..cut], &text[cut..]).expect("a count");
             assert_eq!(counted, 5, "cut at {cut}");
         }

@@ -1,0 +1,13 @@
+$ memex check
+exit 0
+stdout
+| check       . · 3 files · 3 folders · 4 findings
+| cites       (showing 3 of 3; unresolved)
+|   notes:notes  → plan/A.md
+|   notes:notes  → guide/GONE.md
+|   notes:notes  → plan/B.md
+| (cites): fix the reference or remove it
+| ids         (showing 1 of 1; duplicate)
+|   notes:notes  a/notes.md · b/notes.md
+| (ids): give each doc its own id
+stderr (empty)

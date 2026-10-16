@@ -6,6 +6,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::io;
 use std::ops::Bound;
+use std::panic::resume_unwind;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 use std::thread;
@@ -85,6 +86,8 @@ pub struct Corpus {
     titles: BTreeMap<String, String>,
     /// The folders that the walk could not list, by root-relative path, with the kind of the failure (design §3.3).
     unlistable: BTreeMap<String, io::ErrorKind>,
+    /// The line facts of each read file with a comment family, by root-relative path; filled only when `check` loads (§3.5d Lines).
+    pub heads: BTreeMap<String, crate::intent::header::lines::Head>,
     /// The streams of the log store, which `logs:` reads across (design §3.1).
     streams: BTreeSet<String>,
     /// The citations of every doc and the backlinks they give, built the first time they are asked for (design §2.3).
@@ -102,23 +105,25 @@ pub struct Corpus {
 impl Corpus {
     /// Reads the intent layer under `root` and, when there is a store, the logs in it. A missing store has no logs.
     pub fn load(root: &Path, store: Option<&Path>) -> Corpus {
-        let mut corpus = Corpus::intent(root);
+        let mut corpus = Corpus::intent(root, false);
         corpus.finish(store);
         corpus
     }
 
     /// Like `load`, with the store found by `find_store`, which runs on its own thread while the intent layer is read, since
-    /// finding the store may run git. Returns the store too, or the error in finding it.
-    pub fn load_finding<F>(root: &Path, find_store: F) -> Result<(Corpus, Option<PathBuf>), Error>
+    /// finding the store may run git; with `lines`, `heads` is filled too. Returns the store too, or the error in finding it.
+    pub fn load_finding<F>(
+        root: &Path,
+        lines: bool,
+        find: F,
+    ) -> Result<(Corpus, Option<PathBuf>), Error>
     where
         F: FnOnce() -> Result<Option<PathBuf>, Error> + Send,
     {
         let (mut corpus, store) = thread::scope(|scope| {
-            let finder = scope.spawn(find_store);
-            let intent = Corpus::intent(root);
-            let store = finder
-                .join()
-                .unwrap_or_else(|panic| std::panic::resume_unwind(panic));
+            let finder = scope.spawn(find);
+            let intent = Corpus::intent(root, lines);
+            let store = finder.join().unwrap_or_else(|panic| resume_unwind(panic));
             (intent, store)
         });
         let store = store?;
@@ -130,20 +135,20 @@ impl Corpus {
     /// their counts and warnings for `info` and `search`. The files are read on several threads. The walk's entries are sorted, so
     /// the kinds are bulk-built from them, and the docs are grouped by label in one pass that keeps the walk's order within each
     /// label. A file that cannot be read is skipped with its warning, and a folder that cannot be listed is kept as unlistable
-    /// (design §3.3). The rest of the layer loads (design §4.2).
-    fn intent(root: &Path) -> Corpus {
+    /// (design §3.3). The rest of the layer loads (design §4.2). With `lines`, each file's line facts are kept in `heads`.
+    fn intent(root: &Path, lines: bool) -> Corpus {
         let (mut read_warnings, mut unlistable) = (Vec::new(), BTreeMap::new());
         let entries = walk::walk_warned(root, &mut read_warnings, &mut unlistable);
-        let read = par::map(&entries, files::read_entry);
+        let read = par::map(&entries, |entry| files::read_entry(entry, lines));
         let mut kinds = Vec::with_capacity(entries.len() + 1);
         kinds.push((String::new(), Kind::Dir));
-        let mut docs = Vec::new();
-        let mut titles = BTreeMap::new();
+        let (mut docs, mut titles, mut heads) = (Vec::new(), BTreeMap::new(), BTreeMap::new());
         for (entry, found) in entries.into_iter().zip(read) {
             let kind = if entry.is_dir { Kind::Dir } else { Kind::File };
             match found {
                 Ok(found) => {
                     titles.extend(found.title.map(|title| (entry.rel.clone(), title)));
+                    heads.extend(found.head.map(|head| (entry.rel.clone(), head)));
                     docs.extend(found.docs);
                     read_warnings.extend(found.warnings.iter().map(|line| error::warning(line)));
                 }
@@ -157,6 +162,7 @@ impl Corpus {
             kinds: kinds.into_iter().collect(),
             titles,
             unlistable,
+            heads,
             streams: BTreeSet::new(),
             citations: OnceLock::new(),
             read_warnings,
@@ -252,12 +258,9 @@ impl Corpus {
         self.streams.contains(name)
     }
 
-    /// The root-relative paths of the walked files, in label order.
-    pub fn files(&self) -> impl Iterator<Item = &str> {
-        self.kinds
-            .iter()
-            .filter(|(_, kind)| **kind == Kind::File)
-            .map(|(rel, _)| rel.as_str())
+    /// Every walked entry's root-relative path and kind, in label order: the root `""` first, as a folder.
+    pub fn entries(&self) -> impl Iterator<Item = (&str, Kind)> {
+        self.kinds.iter().map(|(rel, kind)| (rel.as_str(), *kind))
     }
 
     /// What the walk found at this root-relative path: a folder, a file, or nothing.

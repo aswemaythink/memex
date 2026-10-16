@@ -95,13 +95,13 @@ fn count(n: usize, one: &str, many: &str) -> String {
 }
 
 /// A group's heading, its items and its fix line. The heading names the items shown and the total, and the flag that lists all of
-/// them is named only when the list was cut (design §3.3 Limits).
+/// them is named only when the list was cut: `(showing N of M; --limit M for all; <what>)` (design §3.5d, R33).
 fn group_text(out: &mut String, group: &Group) {
     let listing = &group.listing;
     let shown = listing.items.len();
     let total = listing.total;
     let cut = if shown < total {
-        format!(" (--limit {total} for all)")
+        format!("; --limit {total} for all")
     } else {
         String::new()
     };

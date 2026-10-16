@@ -2,7 +2,7 @@ $ memex check
 exit 0
 stdout
 | check       . · 22 files · 22 folders · 21 findings
-| readmes     (showing 20 of 21 (--limit 21 for all); folders with no README)
+| readmes     (showing 20 of 21; --limit 21 for all; folders with no README)
 |   d01
 |   d02
 |   d03

@@ -2,7 +2,7 @@ $ memex check --limit 1
 exit 0
 stdout
 | check       . · 4 files · 4 folders · 3 findings
-| readmes     (showing 1 of 3 (--limit 3 for all); folders with no README)
+| readmes     (showing 1 of 3; --limit 3 for all; folders with no README)
 |   a
 | (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
 stderr (empty)

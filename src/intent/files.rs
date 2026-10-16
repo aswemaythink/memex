@@ -1,7 +1,8 @@
 //! Reads one walked file into its docs: a README, a Markdown file's docs, or a header (design §2).
 //! Cases: HDR-CAP-01, HDR-CAP-04, HDR-BIN-01, HDR-EXT-01, INT-BOM-01, INT-LINE-01, HDR-READ-01, HDR-READ-02, COLL-README-01, COLL-UNREAD-01, SHOW-MDCHILD-01, SHOW-MDCHILD-02
 
-use super::{front, header, lead, readme, Origin};
+use super::header::{self, lines};
+use super::{front, lead, readme, Origin};
 use crate::corpus::{Doc, HEADERS};
 use crate::error::Error;
 use crate::root::slash;
@@ -17,28 +18,27 @@ pub struct Found {
     pub warnings: Vec<String>,
     /// The title of a Markdown file's text, which its folder's child line shows; None for any other file.
     pub title: Option<String>,
+    /// The line facts of a file with a comment family, when the read asked for them (`check`, design §3.5d Lines); else None.
+    pub head: Option<lines::Head>,
 }
 
-/// The docs of one walked entry: none for a folder, and those of its file otherwise (design §2 and §4.2).
-pub fn read_entry(entry: &Entry) -> Result<Found, Error> {
+/// The docs of one walked entry: none for a folder, and those of its file otherwise (design §2 and §4.2). With `lines`, a file with
+/// a comment family also gives the line facts of its head, for `check`.
+pub fn read_entry(entry: &Entry, lines: bool) -> Result<Found, Error> {
     if entry.is_dir {
         return Ok(Found::default());
     }
-    file_docs(entry)
+    file_docs(entry, lines)
 }
 
 /// The docs one walked file gives (design §2.2): a README's doc, the docs of a Markdown file whose frontmatter names a collection,
 /// or a file's header. A file that cannot be read is an error, except a file with no comment family, which is never opened
-/// (design §4.2).
-pub fn file_docs(entry: &Entry) -> Result<Found, Error> {
+/// (design §4.2). With `lines`, a file with a comment family also gives the line facts of its head.
+pub fn file_docs(entry: &Entry, lines: bool) -> Result<Found, Error> {
     match entry.path.file_name().and_then(|name| name.to_str()) {
         Some("README.md") => readme_found(entry),
         Some(name) if name.ends_with(".md") => front::markdown(&entry.rel, &entry.path),
-        _ => Ok(Found {
-            docs: header_doc(entry)?.into_iter().collect(),
-            warnings: Vec::new(),
-            title: None,
-        }),
+        _ => header_found(entry, lines),
     }
 }
 
@@ -56,22 +56,37 @@ fn readme_found(entry: &Entry) -> Result<Found, Error> {
     Ok(Found {
         docs: vec![readme::doc(&entry.rel, text)],
         warnings,
-        title: None,
+        ..Found::default()
     })
 }
 
-/// The doc of a file's header, when the file has one. A file with no comment family has no header and is never opened, so it
-/// gives no warning even when it cannot be read (design §4.2). A file named by its family, such as `Makefile`, is opened.
-fn header_doc(entry: &Entry) -> Result<Option<Doc>, Error> {
+/// The doc of a file's header, when the file has one, and with `lines` the line facts of its head. A file with no comment family
+/// has no header and is never opened, so it gives no warning even when it cannot be read (design §4.2). A file named by its
+/// family, such as `Makefile`, is opened.
+fn header_found(entry: &Entry, lines: bool) -> Result<Found, Error> {
     if !header::has_family(&entry.path) {
-        return Ok(None);
+        return Ok(Found::default());
     }
-    let head = header::read_head(&entry.path)
+    let bytes = header::read_head(&entry.path)
         .map_err(|failure| Error::io_at("cannot read", &entry.path, &failure))?;
-    let Some(text) = header::header(&entry.path, &head) else {
-        return Ok(None);
+    let (text, head) = if lines {
+        header::with_lines(&entry.path, &bytes)
+    } else {
+        (header::header(&entry.path, &bytes), None)
     };
-    Ok(Some(Doc {
+    Ok(Found {
+        docs: text
+            .map(|text| header_doc(entry, text))
+            .into_iter()
+            .collect(),
+        head,
+        ..Found::default()
+    })
+}
+
+/// The doc of a file's header, labelled by the file's path (design §3.1).
+fn header_doc(entry: &Entry, text: String) -> Doc {
+    Doc {
         label: entry.rel.clone(),
         collection: HEADERS.to_string(),
         id: entry.rel.clone(),
@@ -80,7 +95,7 @@ fn header_doc(entry: &Entry) -> Result<Option<Doc>, Error> {
         text,
         fields: Vec::new(),
         origin: Origin::Graph,
-    }))
+    }
 }
 
 #[cfg(all(test, unix))]
@@ -109,7 +124,8 @@ mod tests {
             // Running as root reads any file, so there is nothing to check.
             return;
         }
-        let error = file_docs(&entry_at(path, "locked.rs")).expect_err("an unreadable header file");
+        let error =
+            file_docs(&entry_at(path, "locked.rs"), false).expect_err("an unreadable header file");
         assert!(
             error.message.ends_with("locked.rs (PermissionDenied)"),
             "{}",
@@ -127,7 +143,8 @@ mod tests {
             // Running as root reads any file, so there is nothing to check.
             return;
         }
-        let error = file_docs(&entry_at(path, "README.md")).expect_err("an unreadable README");
+        let error =
+            file_docs(&entry_at(path, "README.md"), false).expect_err("an unreadable README");
         assert!(
             error.message.ends_with("README.md (PermissionDenied)"),
             "{}",
@@ -145,7 +162,7 @@ mod tests {
             // Running as root reads any file, so there is nothing to check.
             return;
         }
-        let error = file_docs(&entry_at(path, "notes.md")).expect_err("an unreadable .md");
+        let error = file_docs(&entry_at(path, "notes.md"), false).expect_err("an unreadable .md");
         assert!(
             error.message.ends_with("notes.md (PermissionDenied)"),
             "{}",
@@ -163,7 +180,7 @@ mod tests {
             // Running as root reads any file, so there is nothing to check.
             return;
         }
-        let found = file_docs(&entry_at(path, "locked.zzz"))
+        let found = file_docs(&entry_at(path, "locked.zzz"), false)
             .expect("a file with no comment family is never opened, so it is no error");
         assert!(found.docs.is_empty());
     }
@@ -179,8 +196,8 @@ mod tests {
                 // Running as root reads any file, so there is nothing to check.
                 return;
             }
-            let error =
-                file_docs(&entry_at(path, name)).expect_err("an unreadable file with a family");
+            let error = file_docs(&entry_at(path, name), false)
+                .expect_err("an unreadable file with a family");
             assert!(
                 error
                     .message

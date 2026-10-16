@@ -8,7 +8,10 @@ mod stream;
 
 use std::fs::{self, File};
 use std::io::{self, Read};
+use std::ops::Range;
 use std::path::Path;
+
+use families::Family;
 
 use crate::text;
 
@@ -30,17 +33,38 @@ pub fn read_head(path: &Path) -> io::Result<Vec<u8>> {
 /// no comment family, a binary file (one with a NUL byte), and a file whose first block is absent.
 pub fn header(path: &Path, bytes: &[u8]) -> Option<String> {
     let family = families::family_of(path)?;
+    let found = scanned(family, bytes).0?;
+    Some(finish(path, bytes, found))
+}
+
+/// The header as `header` reads it and, for `check`, the line facts of the head (design §3.5d Lines), from one scan of `bytes`,
+/// which are the file's head as `read_head` gives it. Both are None for a file with no comment family.
+pub fn with_lines(path: &Path, bytes: &[u8]) -> (Option<String>, Option<lines::Head>) {
+    let Some(family) = families::family_of(path) else {
+        return (None, None);
+    };
+    let (found, license, header) = scanned(family, bytes);
+    let head = lines::Head::new(bytes, header, license);
+    (found.map(|found| finish(path, bytes, found)), Some(head))
+}
+
+/// What the scan finds in `bytes` (see `scan::scan`). A binary file, one with a NUL byte, has no header and no license block.
+fn scanned(family: &Family, bytes: &[u8]) -> (Option<scan::Found>, Range<usize>, Range<usize>) {
     if bytes.contains(&0) {
-        return None;
+        return (None, 0..0, 0..0);
     }
     let text = text::decode(bytes);
     let lines: Vec<&str> = text.lines().collect();
-    let found = scan::header_text(family, &lines)?;
-    Some(if found.open && is_longer(path, bytes) {
+    scan::scan(family, &lines)
+}
+
+/// The header text of `found`, with the cut note when its block is still open and the file goes on past `bytes` (design §2.1).
+fn finish(path: &Path, bytes: &[u8], found: scan::Found) -> String {
+    if found.open && is_longer(path, bytes) {
         format!("{}\n\n{CUT_NOTE}", found.text)
     } else {
         found.text
-    })
+    }
 }
 
 /// True when a file of this name or extension has a comment family, so that its header is read. Any other file has no header.

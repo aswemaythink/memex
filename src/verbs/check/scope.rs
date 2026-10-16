@@ -122,29 +122,17 @@ fn label(resolved: &mut Resolved, label: String) {
     }
 }
 
-/// Every walked entry under the root, the root itself included, built from the corpus's children: no file is read. Paths are
-/// root-relative with `/` separators (design §4.4).
+/// Every walked entry under the root, the root itself included, in label order, as the corpus kept them: no file is read. Paths
+/// are root-relative with `/` separators (design §4.4).
 pub fn walked(corpus: &Corpus) -> Vec<Entry> {
-    let mut entries = vec![Entry {
-        rel: String::new(),
-        path: corpus.root.clone(),
-        is_dir: true,
-    }];
-    let mut folders = vec![String::new()];
-    while let Some(dir) = folders.pop() {
-        for child in corpus.children(&dir) {
-            let is_dir = child.kind == Kind::Dir;
-            if is_dir {
-                folders.push(child.rel.clone());
-            }
-            entries.push(Entry {
-                path: corpus.root.join(&child.rel),
-                rel: child.rel,
-                is_dir,
-            });
-        }
-    }
-    entries
+    corpus
+        .entries()
+        .map(|(rel, kind)| Entry {
+            rel: rel.to_string(),
+            path: corpus.root.join(rel),
+            is_dir: kind == Kind::Dir,
+        })
+        .collect()
 }
 
 /// The walked files and folders that the scope holds: the counts of the scope line (design §3.5d). The root is a folder, so it

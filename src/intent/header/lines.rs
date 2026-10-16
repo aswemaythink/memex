@@ -1,14 +1,15 @@
 //! Counts a file's lines for `check` (design §3.5d): its whole text, and its header and license blocks.
+//! The corpus records a `Head` for each file with a comment family as it reads the file's head, only when `check` asks for it; `check`
+//! then reads past the head only for a file that is longer than it.
+//! Cases: CHK-LENGTH-03, CHK-LENGTH-06, CHK-REFINE-03
 
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::{self, Seek, SeekFrom};
 use std::ops::Range;
 use std::path::Path;
 
-use super::families::{family_of, Family};
-use super::scan;
-use super::stream::count_lines;
-use crate::text;
+use super::stream::Tally;
+use super::HEAD_BYTES;
 
 /// The line counts of one file with a comment family (design §3.5d): its whole text's lines, and the lines of its header block and
 /// of its license block, which the head of the file holds (design §2.1).
@@ -32,43 +33,52 @@ impl Counts {
     }
 }
 
-/// The line counts of the file at `path`, whose first bytes are `head` (design §3.5d). None for a file with no comment family, which
-/// is not counted. A file no longer than `head` is counted from `head` alone; a longer one is read after `head`, which is not read again.
-pub fn counts(path: &Path, head: &[u8]) -> io::Result<Option<Counts>> {
-    let Some(family) = family_of(path) else {
-        return Ok(None);
-    };
-    let total = total_lines(path, head)?;
-    let (header, license) = block_lines(family, head);
-    Ok(Some(Counts {
-        total,
-        header,
-        license,
-    }))
+/// What `check` needs of a file with a comment family, taken from the head that the header reader already read (design §3.5d Lines):
+/// the head's size and line tally, and the lines of its header and license blocks.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Head {
+    /// The bytes in the head: 0 for an empty file.
+    len: u64,
+    /// The lines of the head so far, which the rest of a longer file carries on.
+    tally: Tally,
+    /// The lines of the header block: 0 when the head shows no header.
+    header: u32,
+    /// The lines of the license block: 0 when the head has none.
+    license: u32,
 }
 
-/// The lines of the whole file at `path`, whose first bytes are `head`: `head` alone when it is the whole file, else `head` and the
-/// rest of the file after it.
-fn total_lines(path: &Path, head: &[u8]) -> io::Result<u32> {
-    let head_len = head.len() as u64;
-    if fs::metadata(path)?.len() <= head_len {
-        return count_lines(head, io::empty());
+impl Head {
+    /// The facts of a head `bytes`, whose header and license blocks span these line ranges (design §2.1).
+    pub(super) fn new(bytes: &[u8], header: Range<usize>, license: Range<usize>) -> Head {
+        Head {
+            len: bytes.len() as u64,
+            tally: Tally::of_head(bytes),
+            header: span_len(header),
+            license: span_len(license),
+        }
     }
-    let mut file = File::open(path)?;
-    file.seek(SeekFrom::Start(head_len))?;
-    count_lines(head, file)
-}
 
-/// The header and license line counts that the header scan finds in `head` (design §2.1), as (header, license). A binary head has
-/// neither, since the header reader skips a binary file.
-fn block_lines(family: &Family, head: &[u8]) -> (u32, u32) {
-    if head.contains(&0) {
-        return (0, 0);
+    /// True for a file of zero bytes (design §3.5d kind 1).
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
     }
-    let text = text::decode(head);
-    let lines: Vec<&str> = text.lines().collect();
-    let (_, license, header) = scan::scan(family, &lines);
-    (span_len(header), span_len(license))
+
+    /// The line counts of the file at `path`, whose head this is. A head shorter than the read limit is the whole file, so it is
+    /// counted alone; a full head is followed by the rest of the file, which is read from where the head ends.
+    pub fn counts(&self, path: &Path) -> io::Result<Counts> {
+        let tally = if self.len < HEAD_BYTES {
+            self.tally
+        } else {
+            let mut file = File::open(path)?;
+            file.seek(SeekFrom::Start(self.len))?;
+            self.tally.read_on(file)?
+        };
+        Ok(Counts {
+            total: tally.lines(),
+            header: self.header,
+            license: self.license,
+        })
+    }
 }
 
 /// The number of lines in `span`, which no real file has more of than a u32 holds.
@@ -80,10 +90,19 @@ fn span_len(span: Range<usize>) -> u32 {
 mod tests {
     use std::fs;
 
+    use super::super::with_lines;
     use super::*;
 
     /// The size of the head that header detection reads from a file (design §2.1).
     const HEAD: usize = 8 * 1024;
+
+    /// The counts of the file at `path`, whose head is `head`, as `check` reads them; None with no comment family.
+    fn counts(path: &Path, head: &[u8]) -> io::Result<Option<Counts>> {
+        with_lines(path, head)
+            .1
+            .map(|head| head.counts(path))
+            .transpose()
+    }
 
     /// The counts of `text` as a file named `name`, with its first 8 KiB as the head, as `check` reads it.
     fn counts_of(name: &str, text: &[u8]) -> Counts {

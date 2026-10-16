@@ -1,7 +1,7 @@
 //! Carries out `memex check` (design §3.5d): where the intent layer is missing or broken.
 //! `check/scope.rs` turns the arguments into the scope they name, `check/kinds.rs` finds each kind's findings over it, and
 //! `render/check.rs` prints the report. A path that names nothing is reported, and the others are still checked.
-//! Cases: CHK-SCOPE-01, CHK-SCOPE-02, CHK-SCOPE-03, CHK-SCOPE-04, CHK-SCOPE-05, CHK-SCOPE-06, CHK-SCOPE-07, CHK-GLOB-01, CHK-GLOB-02, CHK-GLOB-03, CHK-HEADERS-01, CHK-HEADERS-02, CHK-HEADERS-03, CHK-READMES-01, CHK-READMES-02, CHK-READMES-03, CHK-READMES-04, CHK-READMES-05, CHK-LENGTH-01, CHK-LENGTH-02, CHK-LENGTH-03, CHK-LENGTH-04, CHK-LENGTH-05, CHK-LENGTH-06, CHK-LENGTH-07, CHK-ONELINERS-01, CHK-ONELINERS-02, CHK-ONELINERS-03, CHK-ONELINERS-04, CHK-THIN-01, CHK-THIN-02, CHK-THIN-03, CHK-THIN-04, CHK-THIN-05, CHK-THIN-06, CHK-THIN-07, CHK-CITES-01, CHK-CITES-02, CHK-CITES-03, CHK-CITES-04, CHK-CITES-05, CHK-CITES-06, CHK-IDS-01, CHK-IDS-02, CHK-LIMIT-01, CHK-LIMIT-02, CHK-LIMIT-03, CHK-JSON-01, CHK-JSON-02, CHK-JSON-03, CHK-EMPTY-01, CHK-EXIT-01, CHK-EXIT-02, CHK-EXIT-03
+//! Cases: CHK-SCOPE-01, CHK-SCOPE-02, CHK-SCOPE-03, CHK-SCOPE-04, CHK-SCOPE-05, CHK-SCOPE-06, CHK-SCOPE-07, CHK-GLOB-01, CHK-GLOB-02, CHK-GLOB-03, CHK-HEADERS-01, CHK-HEADERS-02, CHK-HEADERS-03, CHK-READMES-01, CHK-READMES-02, CHK-READMES-03, CHK-READMES-04, CHK-READMES-05, CHK-LENGTH-01, CHK-LENGTH-02, CHK-LENGTH-03, CHK-LENGTH-04, CHK-LENGTH-05, CHK-LENGTH-06, CHK-LENGTH-07, CHK-ONELINERS-01, CHK-ONELINERS-02, CHK-ONELINERS-03, CHK-ONELINERS-04, CHK-THIN-01, CHK-THIN-02, CHK-THIN-03, CHK-THIN-04, CHK-THIN-05, CHK-THIN-06, CHK-THIN-07, CHK-CITES-01, CHK-CITES-02, CHK-CITES-03, CHK-CITES-04, CHK-CITES-05, CHK-CITES-06, CHK-IDS-01, CHK-IDS-02, CHK-LIMIT-01, CHK-LIMIT-02, CHK-LIMIT-03, CHK-JSON-01, CHK-JSON-02, CHK-JSON-03, CHK-EMPTY-01, CHK-EXIT-01, CHK-EXIT-02, CHK-EXIT-03, CHK-REFINE-01, CHK-REFINE-02, CHK-REFINE-03
 
 mod counts;
 mod kinds;
@@ -46,7 +46,7 @@ pub fn run(request: &Request) -> Result<Report, Error> {
     if request.paths.iter().any(String::is_empty) {
         return Err(fail(Verb::Check, "empty path".to_string()));
     }
-    let here::Here { cwd, store, corpus } = here::load()?;
+    let here::Here { cwd, store, corpus } = here::load_with_lines()?;
     Ok(check_in(&corpus, &cwd, store.as_deref(), request))
 }
 

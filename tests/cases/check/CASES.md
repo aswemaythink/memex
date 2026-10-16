@@ -91,7 +91,7 @@ memex: cases
   design §3.5d kind 5 (80 lines or more). Run: memex check.
 - `CHK-THIN-04` A file of 80 lines or more with no header is not listed under `thin`, exit 0.
   design §3.5d kind 5 (that have a header). Run: memex check.
-- `CHK-THIN-05` `--limit 1` lists the first `thin` entry only, and its heading says `(--limit 3 for all)`, exit 0.
+- `CHK-THIN-05` `--limit 1` lists the first `thin` entry only, and its heading says `(showing 1 of 3; --limit 3 for all; …)`, exit 0.
   design §3.5d Output and §3.3 Limits. Run: memex check --limit 1.
 - `CHK-THIN-06` `thin` is a pointer, not a finding: a root whose only entry is thin prints `0 findings`, then `nothing to fix`, then the `thin` list, exit 0.
   design §3.5d kind 5 (not a finding) and Output (nothing to fix). Run: memex check.
@@ -122,9 +122,9 @@ memex: cases
 
 ## LIMIT
 
-- `CHK-LIMIT-01` By default a kind lists 20 findings: with 21 folders lacking a README, the heading reads `showing 20 of 21 (--limit 21 for all)` and 20 lines follow, exit 0.
+- `CHK-LIMIT-01` By default a kind lists 20 findings: with 21 folders lacking a README, the heading reads `(showing 20 of 21; --limit 21 for all; …)` and 20 lines follow, exit 0.
   design §3.5d Output and §3.3 Limits. Run: memex check.
-- `CHK-LIMIT-02` `--limit 1` cuts a kind to its first finding in label order and prints `(--limit M for all)`, exit 0.
+- `CHK-LIMIT-02` `--limit 1` cuts a kind to its first finding in label order and its heading reads `(showing 1 of M; --limit M for all; <what>)`, exit 0.
   design §3.5d Output. Run: memex check --limit 1.
 - `CHK-LIMIT-03` With `--json`, each kind's items are cut by `--limit` while its total counts every finding.
   design §3.6 check. Run: memex check --limit 1 --json.
@@ -153,3 +153,12 @@ memex: cases
   design §3 Flags. Run: memex check --limit x.
 - `CHK-EXIT-04` `memex check --help` prints check's help on stdout and exits 0.
   design §3 Flags (`--help` works after any verb). Run: memex check --help.
+
+## REFINE
+
+- `CHK-REFINE-01` An unresolved reference in a collection doc's frontmatter field is listed under `cites`, before the unresolved references of its body, exit 0.
+  design §3.5d kind 6 and §2.3 (field values are scanned before the body). Run: memex check.
+- `CHK-REFINE-02` Two docs that share an id each give their own unresolved references under the shared label, and a reference that both make is listed once, beside the `ids` finding, exit 0.
+  design §3.5d kinds 6 and 7 (a ruling: each doc is read for itself). Run: memex check.
+- `CHK-REFINE-03` A file of exactly 8 KiB, the size of the head, is counted from its head alone: 512 lines with a one-line header are listed as `511 code lines`, exit 0.
+  design §3.5d Lines and §2.1 (the 8 KiB head). Run: memex check.
