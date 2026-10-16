@@ -1,7 +1,7 @@
 //! Counts a file's lines for `check` (design §3.5d): its whole text, and its header and license blocks.
 //! The corpus records a `Head` for each file with a comment family as it reads the file's head, only when `check` asks for it; `check`
 //! then reads past the head only for a file that is longer than it.
-//! Cases: CHK-LENGTH-03, CHK-LENGTH-06, CHK-REFINE-03
+//! Cases: CHK-LENGTH-03, CHK-LENGTH-06, CHK-REFINE-03, CHK-REFINE-04
 
 use std::fs::File;
 use std::io::{self, Seek, SeekFrom};
@@ -217,10 +217,10 @@ mod tests {
     }
 
     #[test]
-    fn a_binary_file_has_no_header_or_license_lines_but_its_lines_count() {
-        assert_eq!(
-            tally(counts_of("blob.rs", b"//! Purpose.\n\0\n")),
-            (2, 0, 0)
-        );
+    fn a_binary_file_is_skipped_so_it_has_no_counts() {
+        let dir = tempfile::tempdir().expect("a temp folder");
+        let path = dir.path().join("blob.rs");
+        fs::write(&path, b"//! Purpose.\n\0\n").expect("a written file");
+        assert_eq!(counts(&path, b"//! Purpose.\n\0\n").expect("counts"), None);
     }
 }

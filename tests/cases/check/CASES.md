@@ -162,3 +162,5 @@ memex: cases
   design §3.5d kinds 6 and 7 (a ruling: each doc is read for itself). Run: memex check.
 - `CHK-REFINE-03` A file of exactly 8 KiB, the size of the head, is counted from its head alone: 512 lines with a one-line header are listed as `511 code lines`, exit 0.
   design §3.5d Lines and §2.1 (the 8 KiB head). Run: memex check.
+- `CHK-REFINE-04` A binary file, a `.rs` file with a NUL byte in its head and no header, is skipped: it is no `headers`, `length` or `thin` entry, exit 0.
+  design §2.1 (binary files are skipped). Run: memex check.
