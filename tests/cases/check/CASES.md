@@ -21,6 +21,10 @@ memex: cases
   design §3.5d Scope. Run: memex check ../outside.rs.
 - `CHK-SCOPE-08` A path that names two different entries, one from the cwd and one from the root, is `ambiguous` on stderr with both candidates and exit 1, and no scope is guessed.
   design §3.1 step 2 and §3.5d Scope. Run from src: memex check src.
+- `CHK-SCOPE-09` A label and a bare id are not scopes: `memex check cases:NAME-001` and `memex check NAME-001`, with a fixture whose CASES.md declares NAME-001, each print the `not found` error on stderr (§3.5c text) and exit 1, and in a run with a real path too, `memex check cases:NAME-001 src/b.rs`, that path is still checked.
+  design §3.5d Scope and §3.1 steps 3 and 4. Run: memex check cases:NAME-001; memex check NAME-001; memex check cases:NAME-001 src/b.rs.
+- `CHK-SCOPE-10` A unique basename resolves as a scope, as `show` resolves it: `memex check money.rs` checks the one walked `src/money.rs`, so its `headers` finding is listed and the header-less `src/b.rs` is left out, exit 0.
+  design §3.1 step 5 and §3.5d Scope. Run: memex check money.rs.
 
 ## GLOB
 
