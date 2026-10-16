@@ -13,7 +13,7 @@ joins that collection, such as CASES.md (`memex: cases`): test ids with their cl
 - Tests for X: `memex search <words> --in cases` (or the collection `memex info` names); `memex show <ID>` gives claim and evidence; `rg <ID>` finds the test.
 - Findings: `memex log <stream> [--to <agent>] <<'EOF' … EOF` prints a ref. Hand back the ref, not the report.
 - Messages to you: `memex search to:<your-id>`.
-- When you change code, update its header/README in the same change. Cite ids and paths; don't copy.
+- When you change code, update its header/README in the same change, then run `memex check <paths>` and fix what it lists. Cite ids and paths; don't copy.
 
 ## Your memex id
 
@@ -55,7 +55,7 @@ EOF
 3. Run `memex show <dir>` and read its `cites`: an `unresolved` entry is a broken citation. Run `memex search --in <collection>`: a roster line showing `<-0` is a doc nobody cites.
 4. Fix the README, header or collection doc in the same change, or log the mismatch to `drift` if it's out of scope.
 
-**Change code.** In the same commit, update the header or README you invalidated, add or adjust case lines, and put the id in each new test (its name, or a comment on it).
+**Change code.** In the same commit, update the header or README you invalidated, add or adjust case lines, and put the id in each new test (its name, or a comment on it). Then run `memex check <paths>` and fix what it lists.
 
 **Promote a stream.** When a stream has proven durable, copy its files into the repo and add `memex: <name>` to their frontmatter; give the owning skill the instructions.
 

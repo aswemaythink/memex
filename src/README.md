@@ -1,6 +1,6 @@
 # src
 
-`src/` is the crate's source: the `memex` library (`lib.rs`, whose module map is in PLAN.md §4) and the thin `main.rs` binary that turns `memex::run`'s result into the process exit code.
+`src/` is the crate's source: the `memex` library and a thin binary around it. The library is `lib.rs`, whose module map is in PLAN.md §4; `main.rs` turns `memex::run`'s result into the process exit code.
 
 - `cli.rs`: the argv grammar of design §3, parsed into a typed `Command`, or into the usage error the grammar calls for.
 - `grammar.rs`: the grammar's tables: the flags each verb takes, what each flag takes after it, and the words each verb takes.

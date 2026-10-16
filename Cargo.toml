@@ -1,3 +1,6 @@
+# The crate manifest of agent-memex: its metadata, dependencies, lints and test targets.
+# The `dist` profile at the end is the release build that cargo-dist uses.
+
 [package]
 name = "agent-memex"
 version = "0.1.0"

@@ -1,6 +1,6 @@
 # cases
 
-This folder is memex's conformance case hub: every behaviour the CLI must have is pinned by a case here (PLAN.md §0, §2). Each family is a folder, such as `cli/`, that holds its own README.md, a CASES.md claim index, and one folder per case, named by the case id.
+This folder is memex's conformance case hub. Every behaviour the CLI must have is pinned by a case here (PLAN.md §0, §2). Each family is a folder, such as `cli/`, that holds its own README.md, a CASES.md claim index, and one folder per case, named by the case id.
 
 ## Layout
 

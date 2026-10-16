@@ -55,6 +55,7 @@ memex info                  # where everything is: graph, collections, streams, 
 memex show <dir>            # its README, its children's one-liners, the chain up to the root
 memex show <file>           # its header, what it cites, who cites it, the chain
 memex search <words>        # ranked hits, grouped by collection
+memex check                 # gaps in the intent layer: missing intent, long files, unresolved refs
 ```
 
 `memex info` prints where things are, never their contents. Its shape, from design §3.5 (the counts are examples):
@@ -166,6 +167,42 @@ Logs are scaffolding: what a run did, useful for a couple of working days. Each 
 - Each `memex log` deletes entries older than `keep_logs` (default `3d`; also `Nm`, `Nh`, `Nd`, `Nw` or `forever`). Pruning happens only on write.
 - Anything worth keeping belongs in a collection. When a stream proves durable, copy its files into the repo and add a `memex:` line to their frontmatter.
 
+## Checking the intent layer
+
+`memex check` reports where the intent layer is missing or broken, for the whole repo or for the paths and globs you name. It prints one group per kind, in this order, and a kind with no finding is left out:
+
+- `headers`: a file with a comment syntax that is not empty and has no header.
+- `readmes`: a folder with no README.md whose subtree holds a file with a comment syntax. A folder of data alone needs none.
+- `length`: a file with more than 500 code lines, not counting its header and license blocks.
+- `one-liners`: a header or README whose one-liner is over 100 characters.
+- `thin`: a file of 80 lines or more with a header, lowest header ratio first.
+- `cites`: an explicit reference that resolves to nothing. Logs are not checked.
+- `ids`: a duplicate id within a collection.
+
+`thin` is a pointer, not a finding. It shows where intent is thin and has no threshold, so it is never "fixed", and it is left out of the finding count and of `nothing to fix`.
+
+`check` is a report, not a gate: it exits 0 whatever it finds. A path that names nothing exits 1, and a usage error exits 2. Its output looks like this (design §3.5d):
+
+```
+check       src · 148 files · 12 folders · 7 findings
+headers     (showing 2 of 2; files with no header)
+  src/a.rs
+  src/b.rs
+(no header): add a comment block atop the file; its first sentence states the file's purpose
+readmes     (showing 1 of 1; folders with no README)
+  src/util
+(no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+length      (showing 1 of 1; over 500 code lines)
+  src/big.rs  612 code lines
+(length): split the file; give the part with its own purpose its own file and header
+cites       (showing 1 of 1; unresolved)
+  src/z.rs  → NAME-404
+(cites): fix the reference or remove it
+ids         (showing 1 of 1; duplicate)
+  cases:NAME-003  tests/a/CASES.md · tests/b/CASES.md
+(ids): give each doc its own id
+```
+
 ## Using it with agents
 
 `memex init` writes this block into AGENTS.md (design §6):
@@ -181,7 +218,7 @@ joins that collection, such as CASES.md (`memex: cases`): test ids with their cl
 - Tests for X: `memex search <words> --in cases` (or the collection `memex info` names); `memex show <ID>` gives claim and evidence; `rg <ID>` finds the test.
 - Findings: `memex log <stream> [--to <agent>] <<'EOF' … EOF` prints a ref. Hand back the ref, not the report.
 - Messages to you: `memex search to:<your-id>`.
-- When you change code, update its header/README in the same change. Cite ids and paths; don't copy.
+- When you change code, update its header/README in the same change, then run `memex check <paths>` and fix what it lists. Cite ids and paths; don't copy.
 ```
 
 The optional Claude Code plugin lives in [plugins/memex](plugins/memex/README.md): one skill that carries the snippet, the usage recipes and the conventions, and one hook script. On SessionStart the hook prints `memex info`. On SubagentStart it adds `memex info --agent <agent_type>` and gives the sub-agent its memex id. It never sets `MEMEX_AGENT`, since a session-wide value would leak the parent's id into every sub-agent.
@@ -206,7 +243,7 @@ The optional Claude Code plugin lives in [plugins/memex](plugins/memex/README.md
 
 - **Code.** No searching or indexing of code bodies, and no symbol lookup. That is `rg`'s job.
 - **Infrastructure and generation.** No server, daemon, watcher, sync, auth, teams, MCP, embeddings or LLM summarisation.
-- **Mapping and linting.** No mapping files, no declared link tables, no linter or `check` verb, and no code-to-test linking by reading test bodies.
+- **Mapping and linting.** No mapping files and no declared link tables, because links are derived from mentions. No linter of code: `check` (design §3.5d) reports gaps in the intent layer and file length, never parsed code metrics such as complexity or function length. No code-to-test linking by reading test bodies.
 - **Bespoke adapters.** No per-repo collection code. Generic kinds only.
 - **Log management.** No editing, inboxes, read state or delivery for logs. Retention is one setting, applied on write.
 
