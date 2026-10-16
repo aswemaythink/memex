@@ -17,7 +17,7 @@
 - `par.rs`: maps a function over a list on several threads and keeps the results in the list's order; the walk, the file reads and the citation scan use it.
 - `fence.rs`: the one fenced-code scanner of design §2.3: which lines are outside every fence. Citations and init's markers are read only there.
 - `text.rs`: the one text-read helper, which drops a leading UTF-8 byte order mark, reads CRLF line ends as LF, and decodes lossily, for every reader (design §4.4 Text).
-- `corpus.rs`: the read model (design §3.1, §3.6): every walked file and folder, the docs, the label map, one folder's children on request, and the root that `show` reads from.
+- `corpus.rs`: the read model (design §3.1, §3.6): every walked file and folder, the docs, the label map, one folder's children on request, the root that `show` reads from, and, when check loads it, each comment-family file's head facts (`heads`).
 - `refs.rs`: the spellings that refs in docs use (design §2.2, §2.3): the case-id grammar, a path token's extension test, and the root-relative join that resolves a path.
 - `resolve/`: resolves a ref to a file, a folder or a doc (design §3.1), a path in another root included, or reports it not found or ambiguous; see its README.md.
 - `render.rs` and `render/`: the sections and misses that `show` prints, as text and as the `--json` document (design §3.3, §3.6).

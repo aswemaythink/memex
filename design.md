@@ -254,7 +254,7 @@ How healthy the intent layer is, for the whole root or part of it: where intent 
 
 - **Scope.** With no argument it checks the root. Each argument is a path (resolved as `show` resolves one, §3.1 step 1) or, if it holds `*`, `?` or `[`, a glob matched against walked root-relative paths with the gitignore rules that manifest `include` uses (§4.2). A file is in scope if it is named or lies under a named folder or matches a glob; a folder likewise. A path that names nothing is that argument's `not found` error (§3.5c), the rest are still checked, and the exit code is 1; a glob that matches nothing is not an error.
 - **Kinds.** Each finding has one kind. The kinds print in this order, and a kind with no finding in scope is left out:
-  1. `headers`: a file with a comment family (§2.1) that is not empty and has no header.
+  1. `headers`: a file with a comment family (§2.1) that is not empty, not binary (§2.1 skips binary files, so `length` and `thin` leave them out too) and has no header.
   2. `readmes`: a walked folder with no README.md whose subtree holds a file with a comment family (§2.1), the root included. A folder of data alone (case folders, JSON or text fixtures) is not a unit and needs none.
   3. `length`: a file with a comment family whose code lines exceed 500. Code lines are its lines minus its header block and its license block (§2.1); blank lines and other comments count. Detail: `<N> code lines`.
   4. `one-liners`: a header or README whose one-liner (§2) is over 100 characters (Unicode scalar values). Detail: `<N> characters`.
