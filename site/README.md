@@ -1,9 +1,18 @@
 # Site
 
-`site/` is memex's project site: one static page that tells the story first, then shows the tool. It is plain HTML and CSS with no build step, no framework, no script and no external font, so opening `index.html` in a browser is the whole dev loop. PLAN.md §6 Phase 9 specifies it.
+`site/` is memex's documentation site: one static page, `index.html`, that says what memex is, how to install it and how to use it. It is plain HTML styled with Tailwind from its pinned Play CDN (`cdn.tailwindcss.com/3.4.17`), with no build step, so opening the page in a browser is the whole dev loop. It supersedes the story-first page of PLAN.md §6 Phase 9, at the user's direction.
 
-- `index.html`: the page. The story is STORY.md retold (1945, the camera and the trail, now, memex); the terminal samples are adapted from design.md §3; the install lines are design.md §6.1.
-- `style.css`: the styles. Light and dark themes are custom properties on `:root`, switched by `prefers-color-scheme`. The layout holds at 375px, and terminal blocks scroll inside themselves.
+`index.html` runs top to bottom, with a sticky nav of anchor links:
+
+1. Introduction: what memex is (README.md, design.md §1).
+2. Install and quick start: the working `cargo install --path . --locked` from a checkout, the planned v0.1.0 commands (design.md §6.1, marked as not yet published), then the verbs with terminal samples adapted from design.md §3 and README.md.
+3. The intent layer: the layer table, the citation chips and the citation forms (design.md §2).
+4. Context compression: three inline SVG diagrams, the compression ladder, two-way citations and hand-off by reference (design.md §1, §5).
+5. Patterns: cases, doom hunts, performance verdicts, hand-off and messages, checking intent against code (drift), promoting a stream (design.md §2.2, §4.2, §5).
+6. Principles (design.md §1).
+7. Story: STORY.md retold, kept compact.
+
+Colours are CSS custom properties on `:root`, switched by `prefers-color-scheme`, and the Tailwind config maps its colour names to them. The reading column is 90ch wide, the layout holds at 375px, and terminal blocks scroll inside themselves.
 
 ## Preview
 
@@ -13,7 +22,7 @@ From the repo root, serve the folder and open http://localhost:8000:
 python3 -m http.server --directory site 8000
 ```
 
-Opening `site/index.html` from disk works too.
+Opening `site/index.html` from disk works too (it needs the network for the Tailwind CDN).
 
 ## Deploy
 
@@ -21,6 +30,6 @@ Opening `site/index.html` from disk works too.
 
 ## Before it goes live
 
-- The copy is a draft, to be judged against the bar in STORY.md: it should make people feel what we felt.
-- The install lines name the packages of design.md §6.1 (`@rynwhite/memex`, `rynwhite/tap/memex`, `agent-memex`). They work once the v0.1.0 release of PLAN.md Phase 8 exists, so hold the first deploy until then.
-- When the story or a verb's behaviour changes, change STORY.md or design.md first, then this page.
+- The planned install lines name the packages of design.md §6.1 (`@rynwhite/memex`, `rynwhite/tap/memex`, `agent-memex`). They work once the v0.1.0 release of PLAN.md Phase 8 exists; then drop the "Coming with v0.1.0" box and hold the first deploy until then.
+- The Play CDN prints a console warning that it is not meant for production. Swapping it for a prebuilt stylesheet would add a build step, so it is a ruling for the user.
+- When a verb's behaviour or the story changes, change design.md or STORY.md first, then this page.

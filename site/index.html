@@ -1,189 +1,206 @@
 <!DOCTYPE html>
 <!--
-The memex project site: one static page that tells the story first, then shows memex.
-The story is STORY.md retold. The terminal samples are adapted from design.md §3 and the
-install lines are design.md §6.1. Styles are in style.css. There is no build step and no script.
-When the copy changes, change STORY.md or design.md first, then this page.
+The memex documentation site: one static page that says what memex is, how to install it, and how to use it.
+Order: introduction, install and quick start, the intent layer, context compression, patterns, principles, story.
+Behaviour comes from design.md (§1, §2, §3, §5, §6.1) and README.md; the story is STORY.md retold.
+Tailwind comes from its pinned Play CDN; there is no build step. Colours are CSS custom properties, light and dark.
+When a verb's behaviour or the story changes, change design.md or STORY.md first, then this page.
 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>memex: authored context compression</title>
-<meta name="description" content="Authored context compression: trails of intent for humans and agents. Vannevar Bush’s 1945 idea, as Markdown files and a CLI. No server, no LLM, no database.">
+<title>memex: read intent before code</title>
+<meta name="description" content="memex is a CLI that indexes a repo's authored intent layer, so agents read intent before code. Markdown files and a CLI: no server, no LLM, no database.">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#faf7f0" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#141310" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="memex">
-<meta property="og:title" content="memex: authored context compression">
-<meta property="og:description" content="In 1945 Vannevar Bush imagined trails: associations made on purpose by someone who understood the material. memex brings them to repos and agents.">
+<meta property="og:title" content="memex: read intent before code">
+<meta property="og:description" content="A CLI that indexes a repo's authored intent layer: READMEs, headers, cases and logs, linked by citations in both directions.">
 <meta name="twitter:card" content="summary">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23faf7f0'/%3E%3Cpath d='M8 21c5-1 6-9 10-9s4 6 6 5' fill='none' stroke='%239a3d17' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='8' cy='21' r='3' fill='%239a3d17'/%3E%3Ccircle cx='24' cy='17' r='3' fill='%239a3d17'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23faf7f0'/%3E%3Crect x='5.5' y='5.5' width='5.5' height='21' rx='2.75' fill='%231c1a17'/%3E%3Crect x='13.25' y='14' width='5.5' height='12.5' rx='2.75' fill='%239a3d17'/%3E%3Crect x='21' y='5.5' width='5.5' height='21' rx='2.75' fill='%231c1a17'/%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+tailwind.config = {
+  darkMode: 'media',
+  theme: {
+    extend: {
+      colors: {
+        bg: 'var(--bg)', soft: 'var(--bg-soft)', fg: 'var(--fg)', muted: 'var(--muted)',
+        accent: 'var(--accent)', 'accent-soft': 'var(--accent-soft)', rule: 'var(--rule)', trail: 'var(--trail)',
+        term: 'var(--term-bg)', 'term-bar': 'var(--term-bar)', 'term-line': 'var(--term-line)', 'term-fg': 'var(--term-fg)', 'term-dim': 'var(--term-dim)'
+      },
+      fontFamily: {
+        serif: ['"Iowan Old Style"', '"Palatino Linotype"', 'Palatino', '"URW Palladio L"', 'P052', '"Book Antiqua"', 'Georgia', 'serif'],
+        sans: ['system-ui', '-apple-system', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', '"Noto Sans"', 'sans-serif'],
+        mono: ['ui-monospace', '"SF Mono"', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', '"Liberation Mono"', 'monospace']
+      },
+      maxWidth: { col: '90ch' }
+    }
+  }
+}
+</script>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #faf7f0; --bg-soft: #f1ece0; --fg: #1c1a17; --muted: #5c574d;
+  --accent: #9a3d17; --accent-soft: #f1ddd0; --rule: #d8d1c0; --trail: #948462;
+  --code-bg: rgba(70, 55, 30, 0.09);
+  --term-bg: #1b1a17; --term-bar: #25231f; --term-line: #3a362f; --term-fg: #ebe7dd;
+  --term-cmd: #ffffff; --term-dim: #a09a8c; --term-path: #e8c991; --term-key: #9fd3ca; --term-accent: #f2a077;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141310; --bg-soft: #1b1915; --fg: #ebe7dd; --muted: #a8a295;
+    --accent: #eca071; --accent-soft: #3a2519; --rule: #35322a; --trail: #7a7058;
+    --code-bg: rgba(255, 240, 210, 0.1);
+    --term-bg: #0c0b09; --term-bar: #1a1814; --term-line: #2e2b25; --term-cmd: #ebe7dd; --term-dim: #9d978a;
+  }
+}
+html { scroll-padding-top: 4.5rem; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+body { background: var(--bg); color: var(--fg); overflow-wrap: break-word; -webkit-font-smoothing: antialiased; }
+::selection { background: var(--accent-soft); color: var(--fg); }
+body a { color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+body a:hover { text-decoration-thickness: 2px; }
+a:focus-visible, pre:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+:not(pre) > code { font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.86em; background: var(--code-bg); padding: 0.08em 0.32em; border-radius: 4px; }
+p, li { text-wrap: pretty; }
+h1, h2, h3 { text-wrap: balance; }
+/* Terminals: always dark, with the old site's highlight colours. */
+pre { margin: 0; padding: 0.95rem 1.1rem 1.05rem; overflow-x: auto; font: 0.8125rem/1.65 ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace; tab-size: 2; color: var(--term-fg); }
+pre code { white-space: pre; }
+pre .p { color: var(--term-dim); user-select: none; }
+pre .c { color: var(--term-cmd); font-weight: 600; }
+pre .g { font-weight: 700; }
+pre .k { color: var(--term-key); }
+pre .l { color: var(--term-path); }
+pre .d { color: var(--term-dim); }
+pre .m { color: var(--term-accent); }
+pre:focus-visible { outline-color: var(--term-accent); outline-offset: -3px; }
+summary { list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; font: 600 1.1rem/1.2 ui-monospace, Menlo, monospace; color: var(--accent); }
+details[open] summary::after { content: "\2212"; }
+.nav::-webkit-scrollbar { display: none; }
+/* Diagrams: theme-aware through the same custom properties. */
+.dg { color: var(--fg); }
+.dg text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; fill: currentColor; }
+.dg .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+.dg .mut { fill: var(--muted); }
+.dg .acc { fill: var(--accent); }
+.dg .box { fill: var(--bg-soft); stroke: var(--rule); }
+.dg .plain { fill: var(--bg); stroke: var(--rule); }
+.dg .edge { fill: var(--accent); }
+.dg .dim { fill: var(--rule); }
+.dg .line { fill: none; stroke: var(--muted); stroke-width: 1.5; }
+.dg .aline { fill: none; stroke: var(--accent); stroke-width: 1.75; }
+.dg .dash { stroke-dasharray: 4 4; }
+.dg .ahead { fill: var(--muted); }
+.dg .aheada { fill: var(--accent); }
+.mark .bar { fill: currentColor; }
+.mark .dot { fill: var(--accent); }
+</style>
 </head>
-<body id="top">
-<a class="skip" href="#main">Skip to content</a>
+<body class="font-sans text-[1.0625rem] leading-[1.7]">
+<a href="#main" class="absolute left-4 -top-16 z-50 rounded-md bg-fg px-3 py-2 text-sm font-semibold !text-bg !no-underline focus:top-3">Skip to content</a>
 
-<header class="bar">
-  <div class="bar-in">
-    <a class="brand" href="#top"><svg class="mark" width="28" height="18" viewBox="2 8 28 18" aria-hidden="true" focusable="false"><path d="M6 21c5-1 6-9 10-9s4 6 6 5"/><circle cx="6" cy="21" r="3"/><circle cx="26" cy="17" r="3"/></svg>memex</a>
-    <nav class="nav" aria-label="Sections">
-      <a href="#s1945">Story</a>
-      <a class="opt" href="#verbs">Verbs</a>
-      <a href="#install">Install</a>
-      <a href="https://github.com/rynwhite/memex">GitHub</a>
+<header class="sticky top-0 z-40 border-b border-rule backdrop-blur" style="background-color: color-mix(in srgb, var(--bg) 88%, transparent)">
+  <div class="mx-auto flex max-w-col items-center gap-5 px-4 sm:px-6 h-14">
+    <a href="#top" class="flex shrink-0 items-center gap-2 !no-underline !text-fg font-serif text-xl font-semibold tracking-tight">
+      <svg class="mark h-7 w-7" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect class="bar" x="4" y="4" width="6" height="24" rx="3"/><rect class="dot" x="13" y="14" width="6" height="14" rx="3"/><rect class="bar" x="22" y="4" width="6" height="24" rx="3"/></svg>
+      memex
+    </a>
+    <nav class="nav -mr-4 flex min-w-0 flex-1 gap-4 overflow-x-auto pr-4 text-[0.875rem] [scrollbar-width:none] sm:mr-0 sm:pr-0" aria-label="Sections">
+      <a class="ml-auto shrink-0 !text-muted !no-underline hover:!text-fg" href="#install">Install</a>
+      <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#layer">Intent layer</a>
+      <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#compression">Compression</a>
+      <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#patterns">Patterns</a>
+      <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#principles">Principles</a>
+      <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#story">Story</a>
+      <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="https://github.com/rynwhite/memex">GitHub</a>
     </nav>
   </div>
 </header>
 
-<main id="main">
+<main id="main" class="mx-auto max-w-col px-4 sm:px-6">
 
-  <section class="hero col" aria-labelledby="hero-title">
-    <p class="kicker">memex: authored context compression</p>
-    <h1 id="hero-title">Good work was being lost, not because it was wrong, but because nobody could get back to it.</h1>
+  <!-- 1. Introduction -->
+  <section id="top" class="pt-12 pb-4 sm:pt-16" aria-labelledby="h-intro">
+    <p class="mb-3 font-mono text-[0.78rem] font-semibold uppercase tracking-[0.06em] text-accent">memex · authored context compression</p>
+    <h1 id="h-intro" class="font-serif text-[2rem] leading-[1.15] font-medium sm:text-[2.6rem]">Read intent before code.</h1>
+    <p class="mt-5 font-serif text-[1.2rem] leading-[1.55]">memex is a CLI that indexes a repo’s authored intent layer, so agents read what the code is for before they read the code.</p>
+    <p class="mt-4">Code records what a system does. The intent layer records what it is for: a README says why a folder exists, a header says what a file is for, and a case says what is claimed and how it is proven. Whoever knew the most compresses it at the moment they knew it best, and memex walks the citations between those pieces in both directions.</p>
+    <p class="mt-4">Markdown files and a CLI. No server, daemon, auth, MCP, LLM, vectors or database: memex starts, reads plain files live, prints and exits. Anything with a shell can use it.</p>
+    <p class="mt-4 text-[0.95rem] text-muted">The name is Vannevar Bush’s, from 1945. <a href="#story">The story</a> is at the bottom of the page.</p>
   </section>
 
-  <div class="col trail">
+  <!-- 2. Install and quick start -->
+  <section id="install" class="pt-14" aria-labelledby="h-install">
+    <h2 id="h-install" class="font-serif text-[1.75rem] leading-tight font-medium">Install</h2>
 
-    <section id="s1945" aria-labelledby="h-1945">
-      <h2 id="h-1945">1945</h2>
-      <p class="lead">Vannevar Bush ran American science through the Second World War. When it ended, what kept him up at night wasn’t weapons. It was the record. Science was producing findings faster than anyone could find them again.</p>
-      <p>In July 1945 he published <a href="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">“As We May Think”</a> in <i>The Atlantic</i>. In it he imagined a desk: two slanted translucent screens, a keyboard, levers, and inside, on microfilm, every book, letter and note you owned. He called it the <strong>memex</strong>.</p>
+    <p class="mt-4">From a checkout of the repo. This installs the <code>memex</code> binary; it is one codebase for Linux, macOS and Windows.</p>
+    <div class="mt-3 overflow-hidden rounded-[10px] border border-term-line bg-term">
+<pre tabindex="0" aria-label="Install from a checkout"><code><span class="p">$</span> <span class="c">git clone https://github.com/rynwhite/memex && cd memex</span>
+<span class="p">$</span> <span class="c">cargo install --path . --locked</span></code></pre>
+    </div>
 
-      <figure class="desk">
-        <svg width="640" height="340" viewBox="0 0 640 340" role="img" aria-labelledby="desk-title desk-desc" focusable="false">
-          <title id="desk-title">A memex desk, sketched</title>
-          <desc id="desk-desc">A desk with two slanted translucent screens side by side. A dotted trail joins a highlighted line on the left screen to a highlighted line on the right screen.</desc>
-          <g class="ink">
-            <path class="surface" d="M96 222h448l44 40H52z"/>
-            <rect class="surface" x="52" y="262" width="536" height="14" rx="2"/>
-            <rect class="surface" x="80" y="276" width="112" height="58"/>
-            <rect class="surface" x="448" y="276" width="112" height="58"/>
-            <path d="M80 305h112M448 305h112M122 290h28M122 320h28M490 290h28M490 320h28"/>
-            <path class="glass" d="M130 66h164l12 150H118z"/>
-            <path class="glass" d="M346 66h164l12 150H334z"/>
-            <path class="keys" d="M232 236h176M228 248h184"/>
-            <circle cx="468" cy="238" r="5"/>
-            <circle cx="488" cy="238" r="5"/>
-            <circle cx="508" cy="238" r="5"/>
-            <path d="M538 252l9-22"/>
-            <circle class="knob" cx="547" cy="229" r="4"/>
-          </g>
-          <g class="text">
-            <path d="M146 90h116M146 108h94M146 144h112M146 162h78M146 180h104M146 198h60"/>
-            <path d="M362 90h108M362 108h84M362 126h116M362 162h78M362 180h106M362 198h50"/>
-          </g>
-          <path class="hl" d="M146 126h86M362 144h90"/>
-          <path class="tie" d="M240 126C278 124 322 146 356 144"/>
-          <circle class="end" cx="240" cy="126" r="4.5"/>
-          <circle class="end" cx="356" cy="144" r="4.5"/>
-        </svg>
-        <figcaption>The memex, sketched: two documents side by side, tied together.</figcaption>
-      </figure>
-
-      <p>Storage wasn’t the point. The point was <strong>trails</strong>. Libraries index by alphabet and category; the human mind, Bush wrote, “operates by association.” On the memex you would put two documents side by side, press a button, and tie them together. Do it again and again, add your own notes, and you’ve laid a trail through the material: your reasoning, kept, so you or anyone you handed it to could walk it later.</p>
-
-      <figure class="quote">
-        <blockquote cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">
-          <p>The process of tying two items together is the important thing.</p>
-        </blockquote>
-        <figcaption>Vannevar Bush, <cite><a href="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">“As We May Think”</a></cite>, <i>The Atlantic</i>, July 1945</figcaption>
-      </figure>
-
-      <p>Bush predicted a new profession: <strong>trail blazers</strong>, people who take delight in making useful paths through the common record.</p>
-      <p>The memex was never built. But Douglas Engelbart read the essay in 1945 as a young radar technician and spent his life on it. That became the 1968 demo that gave us the mouse and hypertext. Ted Nelson named hypertext with Bush in mind. From there, the web. Every link you’ve ever clicked descends from that desk.</p>
-    </section>
-
-    <section id="camera" aria-labelledby="h-camera">
-      <h2 id="h-camera">The camera and the trail</h2>
-      <p>The same essay also imagines a walnut-sized camera strapped to a scientist’s forehead, photographing everything he sees. Capture everything and sort it out later.</p>
-      <p>Two ideas, one essay. The camera is the one we keep rebuilding. The trail is the one that changed the world: associations made <strong>on purpose</strong>, by someone who understood the material.</p>
-    </section>
-
-    <section id="now" aria-labelledby="h-now">
-      <h2 id="h-now">Now</h2>
-      <p>Eighty years later, the flood is back, and this time agents produce it. Every run writes logs, reports, notes and handoffs into folders nobody will open again. The answer the industry reached for is the camera: hooks that record everything, servers, vector stores, LLMs summarising the pile after the fact.</p>
-      <p class="pivot">memex takes Bush’s other idea.</p>
-    </section>
-
-    <section id="memex" aria-labelledby="h-memex">
-      <h2 id="h-memex">memex</h2>
-      <p class="lead">memex is <strong>authored context compression</strong>: trails of <strong>intent</strong>, for humans and agents.</p>
-      <p>Code records what a system does. The intent layer records what it’s <em>for</em>: a README says why a folder exists, a header says what a file is for, a case says what’s claimed and how it’s proven, and a log says what an agent was trying and what it found. Whoever understood it best compresses it, at the moment they understood it. Citations become trails, and memex walks them both ways.</p>
-
-      <figure class="layers">
-        <ul class="stack">
-          <li class="layer">
-            <span class="kind">READMEs</span>
-            <span class="says">Why a folder exists.</span>
-            <span class="where">One <code>README.md</code> per folder. Its first sentence is the one-liner.</span>
-          </li>
-          <li class="layer">
-            <span class="kind">Headers</span>
-            <span class="says">What a file is for.</span>
-            <span class="where">The comment block atop a file. Its first sentence is the purpose.</span>
-          </li>
-          <li class="layer">
-            <span class="kind">Dimensions</span>
-            <span class="says">Cases, decisions and perf notes, found by what they are.</span>
-            <span class="where">Any Markdown file with a <code>memex:</code> line in its frontmatter joins a collection. Cases are one: <code>CASES.md</code> with <code>memex: cases</code>, and the id sits in the test’s name.</span>
-          </li>
-          <li class="layer">
-            <span class="kind">Manifests</span>
-            <span class="says">Structures that are not Markdown, such as case folders and JSON case lists.</span>
-            <span class="where">A manifest in <code>.memex/collections/</code> indexes them as a collection, where they already are.</span>
-          </li>
-          <li class="layer scaffold">
-            <span class="kind">Logs</span>
-            <span class="says">What an agent was trying, and what it found.</span>
-            <span class="where"><code>.memex/logs/</code>. Kept a couple of days, then thrown away.</span>
-          </li>
-          <li class="layer base">
-            <span class="kind">Code</span>
-            <span class="says">What the system does.</span>
-            <span class="where">Read it with <code>rg</code>. memex reads only the comment atop a file.</span>
-          </li>
-        </ul>
-        <p class="strip">
-          <code>impl:20261013-214107-show-walks-hub-readmes</code>
-          <span aria-hidden="true">⇄</span>
-          <code>crates/namer/src/hash.rs</code>
-          <span aria-hidden="true">⇄</span>
-          <code>NAME-001</code>
-        </p>
-        <figcaption>The intent layer sits on top of the code. Cite an id, a path or a ref, and memex derives the links in both directions.</figcaption>
-      </figure>
-
-      <p>Developers and agents are the trail blazers. An agent that finishes a job compresses what it learned and cites what it touched; the next agent walks that trail instead of starting from zero. Logs are the camera’s film: kept a couple of days, then thrown away. What’s still true gets authored into the layer.</p>
-      <p>No server, no database, no model in the loop. Markdown files and a CLI. Because the compression was already done, by whoever understood it.</p>
-    </section>
-
-    <section id="why" aria-labelledby="h-why">
-      <h2 id="h-why">Why this matters to us</h2>
-      <p>When the story came together, the reaction was goosebumps. It wasn’t the history alone. It was recognising that the thing we’d been designing for practical reasons (READMEs everywhere, headers, case ids cited in prose, logs that expire, no automated capture) was Bush’s idea all along, and that it had been the right idea for eighty years.</p>
-      <p class="coda">The camera has always been tempting.<br><span>The trail has always been what mattered.</span></p>
-    </section>
-
-  </div>
-
-  <div class="docs">
-
-    <section id="verbs" aria-labelledby="h-verbs">
-      <div class="col">
-        <h2 id="h-verbs">Five verbs</h2>
-        <p class="lead">memex reads the layer back one level at a time: a one-liner with <code>search</code>, then the document with <code>show</code>, then the chain of READMEs above it. It starts, reads plain files live, prints, and exits.</p>
+    <div class="mt-6 rounded-[10px] border border-dashed border-trail p-4 sm:p-5">
+      <p class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span class="rounded-full bg-accent-soft px-2.5 py-0.5 font-mono text-[0.72rem] font-semibold uppercase tracking-[0.06em] text-accent">Coming with v0.1.0</span>
+        <span class="text-[0.95rem] text-muted">Not published yet. These are the intended commands.</span>
+      </p>
+      <p class="mt-3">One step, for a human or an agent. It installs the binary if needed, creates <code>.memex/</code>, wires <code>AGENTS.md</code> and <code>CLAUDE.md</code>, and prints the atlas.</p>
+      <div class="mt-3 overflow-hidden rounded-lg border border-term-line bg-term">
+<pre tabindex="0" aria-label="Planned one-step install"><code><span class="p">$</span> <span class="c">npx @rynwhite/memex init</span></code></pre>
       </div>
+      <p class="mt-4">Or one command per toolchain, then <code>memex init</code>, or a binary from GitHub Releases:</p>
+      <div class="mt-3 overflow-hidden rounded-lg border border-term-line bg-term">
+<pre tabindex="0" aria-label="Planned manual install commands"><code>brew install rynwhite/tap/memex
+cargo install agent-memex
+curl -LsSf https://github.com/rynwhite/memex/releases/latest/download/memex-installer.sh | sh
+powershell -c "irm https://github.com/rynwhite/memex/releases/latest/download/memex-installer.ps1 | iex"</code></pre>
+      </div>
+      <p class="mt-4">On Claude Code, an optional plugin carries the snippet and a start hook that prints <code>memex info</code>:</p>
+      <div class="mt-3 overflow-hidden rounded-lg border border-term-line bg-term">
+<pre tabindex="0" aria-label="Planned Claude Code plugin commands"><code>/plugin marketplace add rynwhite/memex
+/plugin install memex@memex</code></pre>
+      </div>
+    </div>
 
-      <article class="verb" aria-labelledby="v-info">
-        <div class="col">
-          <h3 id="v-info"><code>memex info</code> <span>Where things are</span></h3>
-          <p>The atlas: names, counts and the commands to get there, never their contents. It is the overview for humans and agents, and what the optional Claude Code start hook prints.</p>
-        </div>
-        <div class="wide">
-          <div class="term">
-            <div class="term-bar">repo/crates/namer</div>
-<pre tabindex="0" role="group" aria-label="Terminal sample: memex info"><code><span class="p">$</span> <span class="c">memex info --agent cook-2</span>
+    <h3 id="quickstart" class="mt-12 font-serif text-[1.35rem] leading-tight font-medium">Quick start</h3>
+    <p class="mt-3">In the repo you want to index, run <code>memex init</code> once. It is idempotent, never overwrites files in <code>.memex/</code>, and reports each action: a <code>.memex/</code> store, the memex block in <code>AGENTS.md</code> (and an <code>@AGENTS.md</code> line in an existing <code>CLAUDE.md</code>), then <code>memex info</code>. Reads need no setup; only <code>memex log</code> needs <code>.memex/</code>.</p>
+    <div class="mt-3 overflow-hidden rounded-[10px] border border-term-line bg-term">
+<pre tabindex="0" aria-label="Terminal sample: memex init"><code><span class="p">$</span> <span class="c">memex init</span>
+created <span class="l">.memex/.gitignore</span>
+created <span class="l">.memex/config.json</span>
+created <span class="l">.memex/collections/.gitkeep</span>
+created <span class="l">AGENTS.md</span>
+updated <span class="l">CLAUDE.md</span>
+
+<span class="g">memex</span>  /home/you/project · log store .memex/logs/
+<span class="k">graph</span>  1 readme · 0 headers
+<span class="k">use</span>    memex show &lt;path|ref&gt; · memex search &lt;words&gt; · memex log &lt;stream&gt; &lt;&lt;'EOF' … EOF</code></pre>
+    </div>
+
+    <p class="mt-6">Then look around. Six verbs, each one reading the layer back one level at a time.</p>
+    <div class="mt-3 overflow-hidden rounded-[10px] border border-term-line bg-term">
+<pre tabindex="0" aria-label="The verbs"><code><span class="c">memex info</span>              <span class="d"># where everything is, and messages for you</span>
+<span class="c">memex show</span> <span class="l">&lt;dir&gt;</span>        <span class="d"># README, children's one-liners, chain to the root</span>
+<span class="c">memex show</span> <span class="l">&lt;file&gt;</span>       <span class="d"># header, cites, cited by, chain</span>
+<span class="c">memex search</span> <span class="l">&lt;words&gt;</span>    <span class="d"># ranked hits, grouped by collection</span>
+<span class="c">memex check</span>             <span class="d"># gaps: missing intent, long files, unresolved refs</span>
+<span class="c">memex log</span> <span class="l">&lt;stream&gt;</span>      <span class="d"># record a finding from stdin; prints its ref</span></code></pre>
+    </div>
+
+    <div class="mt-8 space-y-8">
+      <div>
+        <h4 class="font-mono text-[0.9rem] font-semibold text-accent">memex info <span class="ml-2 font-serif text-[1.05rem] font-medium text-fg">Where things are</span></h4>
+        <p class="mt-2">The atlas: names, counts and the commands to get there, never their contents. With an agent id it also counts the messages waiting for that agent.</p>
+        <div class="mt-3 overflow-hidden rounded-[10px] border border-term-line bg-term">
+<pre tabindex="0" aria-label="Terminal sample: memex info"><code><span class="p">$</span> <span class="c">memex info --agent cook-2</span>
 <span class="g">memex</span>  /repo · log store .memex/logs/
 <span class="k">graph</span>        48 readmes · 912 headers
 <span class="k">collections</span>  cases 214 · doom 41 · neo-cases 294 · perf 212
@@ -191,43 +208,30 @@ When the copy changes, change STORY.md or design.md first, then this page.
 <span class="k">to cook-2</span>    2 messages <span class="d">→</span> memex search to:cook-2
 <span class="k">here</span>         <span class="l">crates/namer</span> — Namer: turns atoms into stable class names
 <span class="k">use</span>          memex show &lt;path|ref&gt; · memex search &lt;words&gt; · memex log &lt;stream&gt; &lt;&lt;'EOF' … EOF</code></pre>
-          </div>
         </div>
-      </article>
+      </div>
 
-      <article class="verb" aria-labelledby="v-search">
-        <div class="col">
-          <h3 id="v-search"><code>memex search</code> <span>Find by words</span></h3>
-          <p>Words, or filters like <code>to:cook-2</code> and <code>since:2d</code>, over READMEs, headers, cases, collections and logs. Results come grouped, so a README is never drowned by log noise, and each hit is a one-liner. A hit found by a near-miss spelling is marked <code>[~variant]</code>. <code>rg</code> still finds symbols; memex finds meaning.</p>
-        </div>
-        <div class="wide">
-          <div class="term">
-            <div class="term-bar">repo</div>
-<pre tabindex="0" role="group" aria-label="Terminal sample: memex search"><code><span class="p">$</span> <span class="c">memex search namer --limit 2</span>
+      <div>
+        <h4 class="font-mono text-[0.9rem] font-semibold text-accent">memex search <span class="ml-2 font-serif text-[1.05rem] font-medium text-fg">Find by words</span></h4>
+        <p class="mt-2">Words, or filters like <code>to:cook-2</code> and <code>since:2d</code>. One group per collection: the graph, the collections alphabetically, then the logs, so thousands of headers never drown a README. A near-miss spelling is marked <code>[~variant]</code>. <code>rg</code> still finds symbols.</p>
+        <div class="mt-3 overflow-hidden rounded-[10px] border border-term-line bg-term">
+<pre tabindex="0" aria-label="Terminal sample: memex search"><code><span class="p">$</span> <span class="c">memex search namer</span>
 <span class="g">readmes</span>  <span class="d">(showing 2 of 2)</span>
-  <span class="l">crates/namer/README.md</span>  Namer: turns atoms into stable class names.
-  <span class="l">crates/README.md</span>  The crates of the workspace.
-<span class="g">headers</span>  <span class="d">(showing 2 of 31)</span>
-  <span class="l">crates/namer/src/hash.rs</span>  FNV-1a over canonical atom strings.
-  <span class="l">crates/namer/src/class.rs</span>  Turns a hash into a short class name, and keeps collisions apart.
-<span class="g">cases</span>  <span class="d">(showing 2 of 6)</span>
+  <span class="l">crates/namer/README.md</span>  Namer: turns atoms into stable class names
+<span class="g">headers</span>  <span class="d">(showing 5 of 31)</span>
+  <span class="l">crates/namer/src/hash.rs</span>  FNV-1a over canonical atom strings  <span class="m">[~hashes]</span>
+<span class="g">cases</span>  <span class="d">(showing 1 of 1)</span>
   <span class="l">cases:NAME-001</span>  Class names are stable across runs and platforms.
-  <span class="l">cases:NAME-002</span>  Two atoms with equal declarations share one class.  <span class="m">[~name]</span>
 <span class="g">logs</span>  <span class="d">(showing 1 of 1)</span>
-  <span class="l">impl:20261013-214107-show-walks-hub-readmes</span>  <span class="d">2h · cook-2 · feat/show</span>  show walks hub READMEs</code></pre>
-          </div>
+  <span class="l">impl:20261013-214107-show-chain</span>  <span class="d">2h · cook-2 · feat/show</span>  show walks hub READMEs</code></pre>
         </div>
-      </article>
+      </div>
 
-      <article class="verb" aria-labelledby="v-show">
-        <div class="col">
-          <h3 id="v-show"><code>memex show</code> <span>Read it, then walk the trail</span></h3>
-          <p>Takes a path or a ref. A file prints its header, what it cites (each with its target’s one-liner), who cites it, and the READMEs above it, nearest first. A folder lists its children. Nobody maintains a link table: citations come from the ids, paths and refs people already write, and are read in both directions.</p>
-        </div>
-        <div class="wide">
-          <div class="term">
-            <div class="term-bar">repo</div>
-<pre tabindex="0" role="group" aria-label="Terminal sample: memex show"><code><span class="p">$</span> <span class="c">memex show crates/namer/src/hash.rs --up 1</span>
+      <div>
+        <h4 class="font-mono text-[0.9rem] font-semibold text-accent">memex show <span class="ml-2 font-serif text-[1.05rem] font-medium text-fg">Read it, then walk the trail</span></h4>
+        <p class="mt-2">Takes a path or a ref. A file prints its header, what it cites (each with its target’s one-liner), who cites it, and the READMEs above it, nearest first. A folder lists its children. Every printed label is valid input to <code>show</code>.</p>
+        <div class="mt-3 overflow-hidden rounded-[10px] border border-term-line bg-term">
+<pre tabindex="0" aria-label="Terminal sample: memex show"><code><span class="p">$</span> <span class="c">memex show crates/namer/src/hash.rs --up 1</span>
 <span class="g">=== crates/namer/src/hash.rs ===</span>
 FNV-1a over canonical atom strings.
 Hash input is the canonical atom string, never object identity.
@@ -239,136 +243,413 @@ Cases: NAME-001, NAME-002
 
 <span class="g">cited by</span>
   <span class="l">crates/namer/README.md</span>  Namer: turns atoms into stable class names.
-  <span class="l">impl:20261013-214107-show-walks-hub-readmes</span>  show walks hub READMEs
+  <span class="l">impl:20261013-214107-show-chain</span>  show walks hub READMEs
   <span class="d">showing 2 of 2</span>
 
 <span class="g">chain</span>
 <span class="d">---</span> <span class="l">crates/namer/README.md</span>
 # Namer
 
-Namer: turns atoms into stable class names. The same atom gets the same name on every run and every platform.
-
-- `src/hash.rs`: FNV-1a over canonical atom strings.
-- Cases: NAME-001 and NAME-002.</code></pre>
-          </div>
+Namer: turns atoms into stable class names. The same atom gets the same name on every run and every platform.</code></pre>
         </div>
-      </article>
+      </div>
 
-      <article class="verb" aria-labelledby="v-log">
-        <div class="col">
-          <h3 id="v-log"><code>memex log</code> <span>Hand back a ref, not a report</span></h3>
-          <p>Reads a finding from stdin and prints its ref. An agent ends its run by logging the full report and returning one line, <code>report: &lt;ref&gt;</code>; the next reader runs <code>memex show</code> on it only when it needs the detail. Logs are immutable and expire after three days by default. What is still true belongs in a README, a header, a case or a collection.</p>
+      <div>
+        <h4 class="font-mono text-[0.9rem] font-semibold text-accent">memex check <span class="ml-2 font-serif text-[1.05rem] font-medium text-fg">Where intent is missing</span></h4>
+        <p class="mt-2">For the whole repo or the paths you name: files with no header, folders with no README, files over 500 code lines, one-liners over 100 characters, unresolved references and duplicate ids. Each kind names its fix. It is a report, not a gate: it exits 0 whatever it finds.</p>
+        <div class="mt-3 overflow-hidden rounded-[10px] border border-term-line bg-term">
+<pre tabindex="0" aria-label="Terminal sample: memex check"><code><span class="p">$</span> <span class="c">memex check src</span>
+<span class="g">check</span>       src · 148 files · 12 folders · 3 findings
+<span class="g">headers</span>     <span class="d">(showing 2 of 2; files with no header)</span>
+  <span class="l">src/a.rs</span>
+  <span class="l">src/b.rs</span>
+<span class="d">(no header): add a comment block atop the file; its first sentence states the file's purpose</span>
+<span class="g">cites</span>       <span class="d">(showing 1 of 1; unresolved)</span>
+  <span class="l">src/z.rs</span>  → NAME-404
+<span class="d">(cites): fix the reference or remove it</span></code></pre>
         </div>
-        <div class="wide">
-          <div class="term">
-            <div class="term-bar">repo</div>
-<pre tabindex="0" role="group" aria-label="Terminal sample: memex log"><code><span class="p">$</span> <span class="c">memex log impl --agent cook-2 --tag namer,show &lt;&lt;'EOF'</span>
-<span class="c">show walks hub READMEs</span>
-<span class="c">`show &lt;file&gt;` now lists "cited by". crates/namer/src/hash.rs is reached</span>
-<span class="c">through crates/README.md, which cites NAME-*.</span>
+      </div>
+
+      <div>
+        <h4 class="font-mono text-[0.9rem] font-semibold text-accent">memex log <span class="ml-2 font-serif text-[1.05rem] font-medium text-fg">Hand back a ref, not a report</span></h4>
+        <p class="mt-2">Reads a finding from stdin; its first non-blank line is the title. Stdout is exactly the ref, on one line. Entries are immutable and expire after three days by default (<code>keep_logs</code>).</p>
+        <div class="mt-3 overflow-hidden rounded-[10px] border border-term-line bg-term">
+<pre tabindex="0" aria-label="Terminal sample: memex log"><code><span class="p">$</span> <span class="c">memex log review --tag namer &lt;&lt;'EOF'</span>
+<span class="c">NAME-004..006 have no citing README</span>
+<span class="c">crates/namer/README.md describes stations but cites no ids; claims match NAME-004..006 by text only.</span>
 <span class="c">EOF</span>
-<span class="l">impl:20261013-214107-show-walks-hub-readmes</span></code></pre>
-          </div>
+<span class="l">review:20261013-221530-name-004-006-have-no-citing-readme</span></code></pre>
+        </div>
+      </div>
+    </div>
+    <p class="mt-6 text-[0.95rem] text-muted">Every list prints <code>showing N of M</code> and takes <code>--limit</code>. <code>--json</code> makes stdout one JSON document, errors included. Exit codes: 0 ok (zero hits included), 1 not found or ambiguous, 2 usage error, 3 environment error.</p>
+  </section>
+
+  <!-- 3. The intent layer -->
+  <section id="layer" class="pt-16" aria-labelledby="h-layer">
+    <h2 id="h-layer" class="font-serif text-[1.75rem] leading-tight font-medium">The intent layer</h2>
+    <p class="mt-4">Two parts, tied together by citations. The <strong>graph</strong> sits on the tree and is found by <em>where</em> it is: a README per folder, a header per file. <strong>Dimensions</strong> cut across the tree and are found by <em>what</em> they are: any Markdown file joins a collection with one frontmatter line, <code>memex: &lt;name&gt;</code>. <strong>Logs</strong> are the time dimension.</p>
+
+    <figure class="mt-6">
+      <ul class="overflow-hidden rounded-[10px] border border-rule bg-soft">
+        <li class="grid gap-x-5 gap-y-0.5 border-l-4 border-accent px-4 py-3 sm:grid-cols-[7.5rem_1fr]">
+          <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">READMEs</span>
+          <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">Why a folder exists.</span>
+          <span class="text-[0.875rem] leading-normal text-muted">One <code>README.md</code> per folder. Line 1 is <code># Name</code>; the first sentence of its first paragraph is the one-liner.</span>
+        </li>
+        <li class="grid gap-x-5 gap-y-0.5 border-l-4 border-t border-accent border-t-rule px-4 py-3 sm:grid-cols-[7.5rem_1fr]">
+          <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Headers</span>
+          <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">What a file is for.</span>
+          <span class="text-[0.875rem] leading-normal text-muted">The first comment block atop a file. Its first sentence is the file’s purpose.</span>
+        </li>
+        <li class="grid gap-x-5 gap-y-0.5 border-l-4 border-t border-accent border-t-rule px-4 py-3 sm:grid-cols-[7.5rem_1fr]">
+          <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Dimensions</span>
+          <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">Cases, decisions and perf notes, found by what they are.</span>
+          <span class="text-[0.875rem] leading-normal text-muted">Any Markdown file with a <code>memex:</code> line in its frontmatter joins a collection. Cases are one: <code>CASES.md</code> with <code>memex: cases</code>, and the id sits in the test’s name.</span>
+        </li>
+        <li class="grid gap-x-5 gap-y-0.5 border-l-4 border-t border-accent border-t-rule px-4 py-3 sm:grid-cols-[7.5rem_1fr]">
+          <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Manifests</span>
+          <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">Structures that are not Markdown, such as case folders and JSON lists.</span>
+          <span class="text-[0.875rem] leading-normal text-muted">A manifest in <code>.memex/collections/</code> indexes them as a collection, where they already are.</span>
+        </li>
+        <li class="grid gap-x-5 gap-y-0.5 border-l-4 border-t border-l-trail border-t-rule px-4 py-3 [border-left-style:dashed] sm:grid-cols-[7.5rem_1fr]">
+          <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Logs</span>
+          <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">What an agent was trying, and what it found.</span>
+          <span class="text-[0.875rem] leading-normal text-muted"><code>.memex/logs/</code>, out of git. Kept a couple of days, then pruned.</span>
+        </li>
+        <li class="grid gap-x-5 gap-y-0.5 border-l-4 border-t border-l-rule border-t-rule bg-bg px-4 py-3 text-muted sm:grid-cols-[7.5rem_1fr]">
+          <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Code</span>
+          <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">What the system does.</span>
+          <span class="text-[0.875rem] leading-normal">Read it with <code>rg</code>. memex reads only the comment atop a file.</span>
+        </li>
+      </ul>
+      <p class="mt-5 mb-3 flex flex-col items-center gap-1 font-mono text-[0.82rem] leading-snug text-muted sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-2.5">
+        <code class="!rounded !border !border-rule !bg-bg !px-2 !py-1 text-fg [overflow-wrap:anywhere]">impl:20261013-214107-show-chain</code>
+        <span aria-hidden="true" class="rotate-90 sm:rotate-0">⇄</span>
+        <code class="!rounded !border !border-rule !bg-bg !px-2 !py-1 text-fg">crates/namer/src/hash.rs</code>
+        <span aria-hidden="true" class="rotate-90 sm:rotate-0">⇄</span>
+        <code class="!rounded !border !border-rule !bg-bg !px-2 !py-1 text-fg">NAME-001</code>
+      </p>
+      <figcaption class="text-center text-[0.86rem] leading-normal text-muted">The intent layer sits on top of the code. Cite an id, a path or a ref, and memex derives the links in both directions.</figcaption>
+    </figure>
+
+    <h3 class="mt-10 font-serif text-[1.35rem] leading-tight font-medium">Cite, don’t copy</h3>
+    <p class="mt-3">Write ids, paths and refs; memex derives the links both ways. There are no mapping files. Citations inside fenced code are ignored, and an explicit ref that resolves to nothing is listed as <code>unresolved</code>.</p>
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full border-collapse text-left text-[0.95rem]">
+        <thead><tr class="border-b border-rule text-[0.8rem] uppercase tracking-[0.05em] text-muted"><th class="py-2 pr-4 font-mono font-semibold">Write</th><th class="py-2 font-mono font-semibold">Links to</th></tr></thead>
+        <tbody>
+          <tr class="border-b border-rule"><td class="py-2 pr-4 align-top"><code>NAME-001</code></td><td class="py-2">the doc that declares that id; prose like <code>UTF-8</code> never links</td></tr>
+          <tr class="border-b border-rule"><td class="py-2 pr-4 align-top"><code>PREFIX-*</code></td><td class="py-2">every declared id with that prefix</td></tr>
+          <tr class="border-b border-rule"><td class="py-2 pr-4 align-top"><code>collection:id</code></td><td class="py-2">that doc, when <code>collection</code> is a known collection</td></tr>
+          <tr class="border-b border-rule"><td class="py-2 pr-4 align-top"><code>src/hash.rs</code></td><td class="py-2">the file or folder it names</td></tr>
+          <tr class="border-b border-rule"><td class="py-2 pr-4 align-top">a Markdown link</td><td class="py-2">a file or folder in the repo; URLs and <code>#anchors</code> are not refs</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 4. Context compression -->
+  <section id="compression" class="pt-16" aria-labelledby="h-compression">
+    <h2 id="h-compression" class="font-serif text-[1.75rem] leading-tight font-medium">Context compression</h2>
+    <p class="mt-4">memex is <strong>authored context compression</strong>. A README compresses a folder, a header compresses a file, a case line compresses a test, a log compresses an agent’s run, and a ref compresses a hand-off. Whoever knew the most compresses it at the moment they knew it best, so nothing has to summarise it after the fact.</p>
+
+    <figure class="mt-8 grid items-center gap-6 sm:grid-cols-[22rem_1fr] sm:gap-8">
+      <svg class="dg w-full max-w-[22rem] mx-auto" viewBox="0 0 352 262" role="img" aria-labelledby="ld-t ld-d">
+        <title id="ld-t">The compression ladder</title>
+        <desc id="ld-d">Four bars, shortest at the top: the root README, folder READMEs, file headers, and the code at the bottom. An arrow on the left points down: read top-down, open code last.</desc>
+        <defs>
+          <marker id="ah1" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="aheada" d="M0 0L10 5L0 10z"/></marker>
+        </defs>
+        <path class="aline" d="M14 10V244" marker-end="url(#ah1)"/>
+        <g>
+          <rect class="box" x="36" y="6" width="150" height="50" rx="6"/><rect class="edge" x="36" y="6" width="4" height="50" rx="1"/>
+          <text x="50" y="26" font-size="11" font-weight="600" class="mono" letter-spacing=".5">ROOT README</text>
+          <text x="50" y="45" font-size="12.5" class="mut">one paragraph</text>
+        </g>
+        <g>
+          <rect class="box" x="36" y="68" width="210" height="50" rx="6"/><rect class="edge" x="36" y="68" width="4" height="50" rx="1"/>
+          <text x="50" y="88" font-size="11" font-weight="600" class="mono" letter-spacing=".5">FOLDER READMES</text>
+          <text x="50" y="107" font-size="12.5" class="mut">a paragraph per folder</text>
+        </g>
+        <g>
+          <rect class="box" x="36" y="130" width="270" height="50" rx="6"/><rect class="edge" x="36" y="130" width="4" height="50" rx="1"/>
+          <text x="50" y="150" font-size="11" font-weight="600" class="mono" letter-spacing=".5">FILE HEADERS</text>
+          <text x="50" y="169" font-size="12.5" class="mut">one line per file</text>
+        </g>
+        <g>
+          <rect class="plain" x="36" y="192" width="314" height="56" rx="6"/><rect class="dim" x="36" y="192" width="4" height="56" rx="1"/>
+          <text x="50" y="213" font-size="11" font-weight="600" class="mono mut" letter-spacing=".5">CODE</text>
+          <text x="50" y="233" font-size="12.5" class="mut">thousands of lines · open last, with rg</text>
+        </g>
+      </svg>
+      <figcaption>
+        <h3 class="font-serif text-[1.2rem] font-medium leading-snug">Read the compression before the source</h3>
+        <p class="mt-2 text-[0.95rem]">Each level up is shorter. memex reads it back one level at a time: a one-liner with <code>search</code>, then the document with <code>show</code>, then the chain of READMEs above it, up to the root. Open code only when the intent layer can’t answer.</p>
+      </figcaption>
+    </figure>
+
+    <figure class="mt-12 grid items-center gap-6 sm:grid-cols-[22rem_1fr] sm:gap-8">
+      <svg class="dg w-full max-w-[22rem] mx-auto" viewBox="0 0 352 270" role="img" aria-labelledby="ct-t ct-d">
+        <title id="ct-t">Citations, resolved in both directions</title>
+        <desc id="ct-d">A README cites the case id NAME-001. The case entry in CASES.md lists the README under cited by. The test carries the id in a comment, so rg NAME-001 finds it.</desc>
+        <defs>
+          <marker id="ah2" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="aheada" d="M0 0L10 5L0 10z"/></marker>
+          <marker id="ah3" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahead" d="M0 0L10 5L0 10z"/></marker>
+        </defs>
+        <rect class="box" x="56" y="4" width="240" height="56" rx="6"/><rect class="edge" x="56" y="4" width="4" height="56" rx="1"/>
+        <text x="70" y="26" font-size="12" class="mono">crates/namer/README.md</text>
+        <text x="70" y="46" font-size="12.5" class="mut">… stable names, see <tspan class="mono acc" font-size="12">NAME-001</tspan></text>
+
+        <path class="aline" d="M150 64V100" marker-end="url(#ah2)"/>
+        <text x="142" y="86" font-size="12" text-anchor="end" class="acc">cites</text>
+        <path class="aline" d="M202 102V66" marker-end="url(#ah2)"/>
+        <text x="210" y="86" font-size="12" class="acc">cited by</text>
+
+        <rect class="box" x="56" y="106" width="240" height="56" rx="6"/><rect class="edge" x="56" y="106" width="4" height="56" rx="1"/>
+        <text x="70" y="128" font-size="12" class="mono">tests/CASES.md · <tspan class="acc">NAME-001</tspan></text>
+        <text x="70" y="148" font-size="12.5" class="mut">Class names are stable across runs.</text>
+
+        <path class="line dash" d="M176 166V202" marker-end="url(#ah3)"/>
+        <text x="186" y="188" font-size="12" class="mono mut">rg NAME-001</text>
+
+        <rect class="plain" x="56" y="208" width="240" height="56" rx="6"/><rect class="dim" x="56" y="208" width="4" height="56" rx="1"/>
+        <text x="70" y="230" font-size="12" class="mono">tests/namer_stable.rs</text>
+        <text x="70" y="250" font-size="12" class="mono mut">// NAME-001</text>
+      </svg>
+      <figcaption>
+        <h3 class="font-serif text-[1.2rem] font-medium leading-snug">Citations are trails, walked both ways</h3>
+        <p class="mt-2 text-[0.95rem]">A README cites a case id; the case lists the README under <em>cited by</em>. Nobody maintains a link table. The id also sits in the test’s name or a comment on it, so <code>memex show NAME-001</code> gives the claim and evidence, and <code>rg NAME-001</code> finds the test.</p>
+      </figcaption>
+    </figure>
+
+    <figure class="mt-12 grid items-center gap-6 sm:grid-cols-[22rem_1fr] sm:gap-8">
+      <svg class="dg w-full max-w-[22rem] mx-auto" viewBox="0 0 352 282" role="img" aria-labelledby="ho-t ho-d">
+        <title id="ho-t">Hand-off by reference</title>
+        <desc id="ho-d">A sub-agent logs its full report to the log store and returns one line, report: impl:20261013-214107-show-chain, to the orchestrator. The orchestrator runs memex show on the ref only when it needs the detail.</desc>
+        <defs>
+          <marker id="ah4" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="aheada" d="M0 0L10 5L0 10z"/></marker>
+          <marker id="ah5" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahead" d="M0 0L10 5L0 10z"/></marker>
+        </defs>
+        <rect class="box" x="4" y="4" width="344" height="46" rx="6"/><rect class="edge" x="4" y="4" width="4" height="46" rx="1"/>
+        <text x="18" y="32" font-size="13" font-weight="600">sub-agent <tspan class="mono mut" font-weight="400" font-size="12">cook-2</tspan></text>
+
+        <path class="aline" d="M70 54V96" marker-end="url(#ah4)"/>
+        <rect x="4" y="100" width="282" height="30" rx="15" class="plain" style="stroke: var(--accent)"/>
+        <text x="16" y="120" font-size="11" class="mono">report: <tspan class="acc">impl:20261013-214107-show-chain</tspan></text>
+        <path class="aline" d="M70 134V180" marker-end="url(#ah4)"/>
+        <text x="80" y="160" font-size="12" class="mut">returns one line</text>
+
+        <path class="line" d="M324 54V180" marker-end="url(#ah5)"/>
+        <text x="316" y="156" font-size="12" class="mut" text-anchor="end">full report</text>
+        <text x="316" y="172" font-size="11" class="mono mut" text-anchor="end">memex log impl</text>
+
+        <rect class="box" x="4" y="186" width="150" height="46" rx="6"/><rect class="edge" x="4" y="186" width="4" height="46" rx="1"/>
+        <text x="18" y="214" font-size="13" font-weight="600">orchestrator</text>
+        <rect class="plain" x="214" y="186" width="134" height="46" rx="6" style="stroke-dasharray: 4 3; stroke: var(--trail)"/>
+        <text x="226" y="214" font-size="12" class="mono">.memex/logs/</text>
+
+        <path class="line dash" d="M158 209H208" marker-end="url(#ah5)"/>
+        <text x="4" y="258" font-size="12" class="mono mut">memex show &lt;ref&gt;</text>
+        <text x="4" y="276" font-size="12" class="mut">only when it needs the detail</text>
+      </svg>
+      <figcaption>
+        <h3 class="font-serif text-[1.2rem] font-medium leading-snug">Hand off by reference</h3>
+        <p class="mt-2 text-[0.95rem]">A sub-agent ends its run by logging the full report and returning one line, <code>report: &lt;ref&gt;</code>. The orchestrator keeps its context for deciding and runs <code>memex show &lt;ref&gt;</code> only when it needs the detail.</p>
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- 5. Patterns -->
+  <section id="patterns" class="pt-16" aria-labelledby="h-patterns">
+    <h2 id="h-patterns" class="font-serif text-[1.75rem] leading-tight font-medium">Patterns</h2>
+    <p class="mt-4">Collections and log streams need no declaration, so the conventions are what matter. These are the ones that held up in practice. <strong>Write it where the next reader will look:</strong> true of the code, it goes in a header or README; true of this run, a log; a claim a test proves, a case.</p>
+
+    <div class="mt-8 space-y-10">
+      <article aria-labelledby="p-cases">
+        <h3 id="p-cases" class="font-serif text-[1.25rem] font-medium leading-snug">Test cases <span class="ml-1 font-mono text-[0.8rem] font-normal text-muted">memex: cases</span></h3>
+        <p class="mt-2">A <code>CASES.md</code> with <code>memex: cases</code> lists test ids with their claims. Each column-0 list item that opens with a backticked id is one entry; the id is kept forever. Put the id where <code>rg</code> finds the test: in its name where the language allows (<code>it("NAME-001 …")</code>), else in a comment on it.</p>
+        <div class="mt-3 overflow-hidden rounded-[10px] border border-term-line bg-term">
+<pre tabindex="0" aria-label="A CASES.md file"><code><span class="d">---</span>
+<span class="k">memex:</span> cases
+<span class="d">---</span>
+<span class="g"># Namer cases</span>
+
+<span class="g">## Stability</span>
+- <span class="l">`NAME-001`</span> Class names are stable across runs and platforms.
+  Hash input is the canonical atom string, never object identity.
+  Evidence: <span class="l">`tests/namer_stable.rs`</span>
+- <span class="l">`NAME-002`</span> Two atoms with equal declarations share one class.</code></pre>
+        </div>
+        <div class="mt-3 overflow-hidden rounded-[10px] border border-term-line bg-term">
+<pre tabindex="0" aria-label="Find the tests for X"><code><span class="c">memex search stable class names --in cases</span>    <span class="d"># the claims</span>
+<span class="c">memex show NAME-001</span>                           <span class="d"># claim, evidence, who cites it</span>
+<span class="c">rg NAME-001</span>                                   <span class="d"># the test itself</span></code></pre>
+        </div>
+        <p class="mt-3 text-[0.95rem] text-muted">Write an entry before its test exists and say so in the claim, “(planned)”. <code>memex search --in cases</code> with no words prints the roster, and <code>&lt;-0</code> marks entries nothing cites.</p>
+      </article>
+
+      <article aria-labelledby="p-doom">
+        <h3 id="p-doom" class="font-serif text-[1.25rem] font-medium leading-snug">Doom hunts <span class="ml-1 font-mono text-[0.8rem] font-normal text-muted">memex: doom</span></h3>
+        <p class="mt-2">A doom agent is sent to break one module. Every hunt, break found or clean, ends in one short Markdown report: the hypothesis and the red test, then the verdict. Before hunting, the next doom agent searches the collection, so nobody spends a theory re-proving a dead end. One gap per report, named by date and slug.</p>
+        <div class="mt-3 overflow-hidden rounded-[10px] border border-term-line bg-term">
+<pre tabindex="0" aria-label="A doom report's frontmatter"><code><span class="d"># doom/2026-09-20-jettison-namer-key-order.md</span>
+<span class="d">---</span>
+<span class="k">memex:</span> doom
+<span class="k">module:</span> atomic/namer
+<span class="k">theories_spent:</span> 2
+<span class="k">verdict:</span> clean-hunt
+<span class="d">---</span>
+<span class="g"># Namer key order survives reordered declarations</span></code></pre>
+        </div>
+        <div class="mt-3 overflow-hidden rounded-[10px] border border-term-line bg-term">
+<pre tabindex="0" aria-label="Searching doom reports"><code><span class="c">memex search namer key --in doom</span>             <span class="d"># past hunts on this module</span>
+<span class="c">memex search verdict:break-found --in doom</span>   <span class="d"># frontmatter keys are filters</span>
+<span class="c">memex show doom:2026-09-20-jettison-namer-key-order</span></code></pre>
         </div>
       </article>
 
-      <article class="verb" aria-labelledby="v-init">
-        <div class="col">
-          <h3 id="v-init"><code>memex init</code> <span>Set it up once</span></h3>
-          <p>Safe to repeat. It creates <code>.memex/</code>, writes a short block into <code>AGENTS.md</code> that tells any agent to read intent before code (and points <code>CLAUDE.md</code> at it, if one exists), and prints the atlas. Reading works without it; only <code>log</code> needs a <code>.memex/</code>.</p>
+      <article aria-labelledby="p-perf">
+        <h3 id="p-perf" class="font-serif text-[1.25rem] font-medium leading-snug">Performance verdicts <span class="ml-1 font-mono text-[0.8rem] font-normal text-muted">perf</span></h3>
+        <p class="mt-2">Every optimisation tried gets a verdict, kept or cut, with what it measured. Dead ends stay in, so a cut idea is not tried a second time. When the verdicts already live in a JSON index, a <code>json</code> manifest makes each entry a doc where it is, with no conversion.</p>
+        <div class="mt-3 overflow-hidden rounded-[10px] border border-term-line bg-term">
+<pre tabindex="0" aria-label="A json manifest for perf verdicts"><code><span class="d"># .memex/collections/perf.json</span>
+{ <span class="k">"name"</span>: "perf", <span class="k">"kind"</span>: "json", <span class="k">"owner"</span>: "agent-perf skill",
+  <span class="k">"roots"</span>: ["perf"], <span class="k">"include"</span>: ["*.json"], <span class="k">"at"</span>: "/entries",
+  <span class="k">"id"</span>: "id", <span class="k">"title"</span>: "topic" }</code></pre>
         </div>
-        <div class="wide">
-          <div class="term">
-            <div class="term-bar">project</div>
-<pre tabindex="0" role="group" aria-label="Terminal sample: memex init"><code><span class="p">$</span> <span class="c">memex init</span>
-created <span class="l">.memex/.gitignore</span>
-created <span class="l">.memex/config.json</span>
-created <span class="l">.memex/collections/.gitkeep</span>
-created <span class="l">AGENTS.md</span>
-updated <span class="l">CLAUDE.md</span>
+        <div class="mt-3 overflow-hidden rounded-[10px] border border-term-line bg-term">
+<pre tabindex="0" aria-label="Searching perf verdicts"><code><span class="c">memex search parallel scan --in perf</span>   <span class="d"># was this tried?</span>
+<span class="c">memex search verdict:CUT --in perf</span>     <span class="d"># every dead end</span>
+<span class="c">memex show PERF-W2-HASHERS</span>             <span class="d"># one verdict, its fields and who cites it</span></code></pre>
+        </div>
+        <p class="mt-3 text-[0.95rem] text-muted">Verdicts that are Markdown files need no manifest: <code>memex: perf</code> in their frontmatter is enough.</p>
+      </article>
 
-<span class="g">memex</span>  /home/you/project · log store .memex/logs/
-<span class="k">graph</span>  1 readme · 0 headers
-<span class="k">use</span>    memex show &lt;path|ref&gt; · memex search &lt;words&gt; · memex log &lt;stream&gt; &lt;&lt;'EOF' … EOF</code></pre>
-          </div>
+      <article aria-labelledby="p-handoff">
+        <h3 id="p-handoff" class="font-serif text-[1.25rem] font-medium leading-snug">Hand-off and messages <span class="ml-1 font-mono text-[0.8rem] font-normal text-muted">--to · to:</span></h3>
+        <p class="mt-2">A sub-agent logs its full report and returns one line, <code>report: &lt;ref&gt;</code>. Messages are logs with <code>--to</code>; recipients find them with <code>memex search to:&lt;id&gt;</code>, and <code>memex info --agent &lt;id&gt;</code> counts what is waiting. Live back-and-forth stays in the harness’s own messaging.</p>
+        <div class="mt-3 overflow-hidden rounded-[10px] border border-term-line bg-term">
+<pre tabindex="0" aria-label="Hand-off by reference"><code><span class="p">$</span> <span class="c">memex log impl --agent cook-2 --to orchestrator &lt;&lt;'EOF'</span>
+<span class="c">show walks hub READMEs</span>
+<span class="c">`show &lt;file&gt;` now lists "cited by", through crates/README.md.</span>
+<span class="c">EOF</span>
+<span class="l">impl:20261013-214107-show-walks-hub-readmes</span>
+
+<span class="p">$</span> <span class="c">memex search to:orchestrator</span>
+<span class="g">logs</span>  <span class="d">(showing 1 of 1)</span>
+  <span class="l">impl:20261013-214107-show-walks-hub-readmes</span>  <span class="d">2m · cook-2 · feat/show</span>  show walks hub READMEs</code></pre>
         </div>
       </article>
-    </section>
 
-    <section id="install" aria-labelledby="h-install">
-      <div class="col">
-        <h2 id="h-install">Install</h2>
-        <p>One step, for a human or an agent:</p>
-      </div>
-      <div class="col">
-        <p class="cmd"><span class="p" aria-hidden="true">$</span> <code>npx @rynwhite/memex init</code></p>
-        <p>That installs the binary (if needed), creates <code>.memex/</code>, wires <code>AGENTS.md</code> and <code>CLAUDE.md</code>, and prints the atlas. To uninstall, delete <code>.memex/</code> and the marked block in <code>AGENTS.md</code>.</p>
-        <details>
-          <summary>Other ways to install</summary>
-          <p>One command per toolchain, then <code>memex init</code>:</p>
-<pre tabindex="0" role="group" aria-label="Manual install commands"><code>brew install rynwhite/tap/memex
-cargo install agent-memex
-curl -LsSf https://github.com/rynwhite/memex/releases/latest/download/memex-installer.sh | sh
-powershell -c "irm https://github.com/rynwhite/memex/releases/latest/download/memex-installer.ps1 | iex"</code></pre>
-          <p>Or download a binary from <a href="https://github.com/rynwhite/memex/releases">GitHub Releases</a>. Every route comes from one cargo-dist release per tag.</p>
-          <p>On Claude Code, the plugin is optional:</p>
-<pre tabindex="0" role="group" aria-label="Claude Code plugin commands"><code>/plugin marketplace add rynwhite/memex
-/plugin install memex@memex</code></pre>
-        </details>
-      </div>
-    </section>
+      <article aria-labelledby="p-drift">
+        <h3 id="p-drift" class="font-serif text-[1.25rem] font-medium leading-snug">Check intent against code <span class="ml-1 font-mono text-[0.8rem] font-normal text-muted">drift</span></h3>
+        <ol class="mt-2 list-decimal space-y-1 pl-6 marker:text-muted">
+          <li>Run <code>memex show &lt;dir&gt;</code>, then read the code it describes.</li>
+          <li>For each claim: does the code do it? Is there a cited case that proves it?</li>
+          <li>Run <code>memex check &lt;dir&gt;</code> for unresolved citations, missing headers and missing READMEs.</li>
+          <li>Fix the README, header or collection doc in the same change, or, if it’s out of scope, log the mismatch to <code>drift</code>.</li>
+        </ol>
+        <div class="mt-3 overflow-hidden rounded-[10px] border border-term-line bg-term">
+<pre tabindex="0" aria-label="Logging drift"><code><span class="p">$</span> <span class="c">memex log drift --tag namer &lt;&lt;'EOF'</span>
+<span class="c">crates/namer/README.md claims collisions are kept apart; no case proves it</span>
+<span class="c">EOF</span></code></pre>
+        </div>
+        <p class="mt-3 text-[0.95rem] text-muted">When you change code, update the header or README you invalidated in the same commit, put the id in each new test, then run <code>memex check &lt;paths&gt;</code> and fix what it lists.</p>
+      </article>
 
-    <section id="principles" aria-labelledby="h-principles">
-      <div class="col">
-        <h2 id="h-principles">Principles</h2>
-        <ul class="principles">
-          <li>
-            <h3>Markdown files and a CLI</h3>
-            <p>No server, daemon, MCP, LLM, vectors or database. memex starts, reads plain files live, prints and exits.</p>
-          </li>
-          <li>
-            <h3>Agent-agnostic</h3>
-            <p>Anything with a shell can use it. The Claude Code plugin only wraps the CLI.</p>
-          </li>
-          <li>
-            <h3>Conventions over configuration</h3>
-            <p>The intent layer needs zero config. The only config is collection manifests.</p>
-          </li>
-          <li>
-            <h3>memex reads intent, rg reads code</h3>
-            <p>memex never indexes code bodies, only the comment block at the top of a file.</p>
-          </li>
-          <li>
-            <h3>Bounded output</h3>
-            <p>Every list says <code>showing N of M</code>, and <code>--limit</code> works everywhere. Nothing is capped silently.</p>
-          </li>
-          <li>
-            <h3>Logs are scaffolding; knowledge is authored</h3>
-            <p>A log is useful for a couple of working days, then memex prunes it. Whatever is still true gets compressed into the layer by someone who understands it.</p>
-          </li>
-        </ul>
-        <p class="fine">A feature earns its place by removing friction an agent actually hit in a playtest.</p>
-      </div>
-    </section>
+      <article aria-labelledby="p-promote">
+        <h3 id="p-promote" class="font-serif text-[1.25rem] font-medium leading-snug">Promote a stream</h3>
+        <p class="mt-2">Logs are scaffolding: useful for a couple of working days, then pruned. When a stream has proven durable, copy its files into the repo, add <code>memex: &lt;name&gt;</code> to their frontmatter, and give the owning skill the instructions. Name the collection apart from the stream, so <code>--in</code> reaches both.</p>
+        <div class="mt-3 overflow-hidden rounded-[10px] border border-term-line bg-term">
+<pre tabindex="0" aria-label="Promoting a stream"><code><span class="p">$</span> <span class="c">mkdir -p docs/playtests</span>
+<span class="p">$</span> <span class="c">cp .memex/logs/playtest/*.md docs/playtests/</span>
+<span class="d"># then add one line to each copied file's frontmatter</span>
+<span class="d">---</span>
+<span class="k">memex:</span> playtests
+<span class="k">stream:</span> playtest
+<span class="k">time:</span> 2026-10-15T09:12:40Z
+<span class="d">---</span></code></pre>
+        </div>
+      </article>
+    </div>
+  </section>
 
-    <section id="links" aria-labelledby="h-links">
-      <div class="col">
-        <h2 id="h-links">Read on</h2>
-        <ul class="links">
-          <li><a href="https://github.com/rynwhite/memex">github.com/rynwhite/memex</a> <span>The source and the releases.</span></li>
-          <li><a href="https://github.com/rynwhite/memex/blob/main/design.md">design.md</a> <span>The spec: how every verb behaves. It is authoritative.</span></li>
-          <li><a href="https://github.com/rynwhite/memex/blob/main/STORY.md">STORY.md</a> <span>The story, as first written.</span></li>
-        </ul>
-      </div>
-    </section>
+  <!-- 6. Principles -->
+  <section id="principles" class="pt-16" aria-labelledby="h-principles">
+    <h2 id="h-principles" class="font-serif text-[1.75rem] leading-tight font-medium">Principles</h2>
+    <ul class="mt-5 grid gap-x-10 gap-y-6 sm:grid-cols-2">
+      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Markdown files and a CLI</h3><p class="mt-1 text-[0.95rem] text-muted">No server, daemon, auth, MCP, LLM, vectors or database. memex starts, reads plain files live, prints and exits.</p></li>
+      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Agent-agnostic</h3><p class="mt-1 text-[0.95rem] text-muted">Anything with a shell can use it. Plugins only wrap it.</p></li>
+      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Conventions over configuration</h3><p class="mt-1 text-[0.95rem] text-muted">READMEs and headers are found by where they are; a frontmatter line joins a collection. Manifests exist only for structures that are not Markdown.</p></li>
+      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">memex reads intent, rg reads code</h3><p class="mt-1 text-[0.95rem] text-muted">It never indexes code bodies, only the comment block atop a file.</p></li>
+      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Bounded output</h3><p class="mt-1 text-[0.95rem] text-muted">Every list prints <code>showing N of M</code>, and <code>--limit</code> works everywhere. Nothing is capped silently.</p></li>
+      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Logs are scaffolding; knowledge is authored</h3><p class="mt-1 text-[0.95rem] text-muted">A log expires. What is still true gets written into a README, a header or a collection doc by someone who understands it.</p></li>
+    </ul>
+    <p class="mt-8 font-serif italic text-muted">A feature earns its place by removing friction an agent actually hit in a playtest.</p>
+  </section>
 
-  </div>
+  <!-- 7. Story -->
+  <section id="story" class="mt-16 border-t border-rule pt-14 font-serif text-[1.1rem] leading-[1.65]" aria-labelledby="h-story">
+    <p class="font-mono text-[0.78rem] font-semibold uppercase tracking-[0.06em] text-accent not-italic">The story</p>
+    <h2 id="h-story" class="mt-2 text-[1.75rem] leading-tight font-medium">The camera and the trail</h2>
+
+    <p class="mt-5">In 1945 Vannevar Bush, who had run American science through the war, worried about the record: findings were piling up faster than anyone could find them again. In “<a href="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">As We May Think</a>” (<i>The Atlantic</i>, July 1945) he imagined a desk of microfilm, two slanted screens and a keyboard, and called it the <strong>memex</strong>.</p>
+
+    <figure class="my-8">
+      <svg class="desk mx-auto block h-auto w-full max-w-[30rem]" viewBox="0 0 640 340" role="img" aria-labelledby="desk-title desk-desc" style="color: var(--fg)">
+        <title id="desk-title">A memex desk, sketched</title>
+        <desc id="desk-desc">A desk with two slanted translucent screens side by side. A dotted trail joins a highlighted line on the left screen to a highlighted line on the right screen.</desc>
+        <g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M96 222h448l44 40H52z" style="fill: var(--bg)"/>
+          <rect x="52" y="262" width="536" height="14" rx="2" style="fill: var(--bg)"/>
+          <rect x="80" y="276" width="112" height="58" style="fill: var(--bg)"/>
+          <rect x="448" y="276" width="112" height="58" style="fill: var(--bg)"/>
+          <path d="M80 305h112M448 305h112M122 290h28M122 320h28M490 290h28M490 320h28"/>
+          <path d="M130 66h164l12 150H118z" style="fill: var(--bg-soft)"/>
+          <path d="M346 66h164l12 150H334z" style="fill: var(--bg-soft)"/>
+          <path d="M232 236h176M228 248h184" stroke-width="8" stroke-dasharray="10 3.5" stroke-linecap="butt" style="stroke: var(--muted)"/>
+          <circle cx="468" cy="238" r="5"/><circle cx="488" cy="238" r="5"/><circle cx="508" cy="238" r="5"/>
+          <path d="M538 252l9-22"/>
+          <circle cx="547" cy="229" r="4" fill="currentColor"/>
+        </g>
+        <g fill="none" stroke-width="3" stroke-linecap="round" opacity=".75" style="stroke: var(--muted)">
+          <path d="M146 90h116M146 108h94M146 144h112M146 162h78M146 180h104M146 198h60"/>
+          <path d="M362 90h108M362 108h84M362 126h116M362 162h78M362 180h106M362 198h50"/>
+        </g>
+        <path d="M146 126h86M362 144h90" fill="none" stroke-width="4.5" stroke-linecap="round" style="stroke: var(--accent)"/>
+        <path d="M240 126C278 124 322 146 356 144" fill="none" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="0.1 8" style="stroke: var(--accent)"/>
+        <circle cx="240" cy="126" r="4.5" style="fill: var(--accent)"/>
+        <circle cx="356" cy="144" r="4.5" style="fill: var(--accent)"/>
+      </svg>
+      <figcaption class="mt-2 text-center font-sans text-[0.86rem] text-muted">The memex, sketched: two documents side by side, tied together.</figcaption>
+    </figure>
+
+    <p>Storage wasn’t the point. The point was <strong>trails</strong>: put two documents side by side, press a button, tie them together, add your notes, and you have laid a path through the material that you or anyone you hand it to can walk later. Bush predicted a profession of <strong>trail blazers</strong> who make useful paths through the common record.</p>
+
+    <blockquote class="my-7 border-l-[3px] border-accent pl-4">
+      <p class="text-[1.25rem] italic leading-snug">The process of tying two items together is the important thing.</p>
+      <footer class="mt-2 font-sans text-[0.86rem] text-muted">Vannevar Bush, “As We May Think”, 1945</footer>
+    </blockquote>
+
+    <p>The same essay imagines a walnut-sized camera on a scientist’s forehead, photographing everything he sees. Two ideas, one essay. The camera is the one we keep rebuilding. The trail is the one that changed the world, through Engelbart, Nelson’s hypertext and the web: associations made <strong>on purpose</strong>, by someone who understood the material.</p>
+
+    <p class="mt-4">Eighty years later the flood is back, and agents produce it: logs, reports and hand-offs that nobody opens again. The industry reached for the camera: hooks that record everything, vector stores, LLMs summarising the pile after the fact. memex takes Bush’s other idea. Developers and agents are the trail blazers; citations are the trails; logs are the camera’s film, kept a couple of days and then thrown away.</p>
+
+    <p class="mt-8 text-[1.3rem] italic leading-snug">The camera has always been tempting.<br><span class="text-accent">The trail has always been what mattered.</span></p>
+    <p class="mt-6 font-sans text-[0.95rem] text-muted"><a href="https://github.com/rynwhite/memex/blob/main/STORY.md">STORY.md</a> has the story as first written.</p>
+  </section>
 
 </main>
 
-<footer class="foot">
-  <div class="col">
-    <p>memex is dual-licensed under MIT or Apache-2.0.</p>
+<footer class="mx-auto mt-16 max-w-col px-4 sm:px-6">
+  <div class="border-t border-rule pt-6 pb-12 text-[0.88rem] text-muted">
+  <p class="flex flex-wrap gap-x-5 gap-y-1">
+    <a href="https://github.com/rynwhite/memex">GitHub</a>
+    <a href="https://github.com/rynwhite/memex/blob/main/design.md">design.md, the spec</a>
+    <a href="https://github.com/rynwhite/memex/blob/main/STORY.md">STORY.md</a>
+  </p>
+  <p class="mt-3">memex is dual-licensed under MIT or Apache-2.0.</p>
   </div>
 </footer>
 
