@@ -585,3 +585,13 @@ Expected: reference-ui `info` about 55 → 25–30 ms; 100k about 1 s → 0.4–
 
 Design applied in commit "design: the graph and its dimensions (PLAN §15, user-approved)"; U1-U3 and R1 approved by the user 2026-10-15.
 - (§15, S15.G, user-approved) the `Cases:` header gate and the direct-citation selfhost gate are gone; citing case ids in headers is optional; existing `//! Cases:` lines stay as ordinary citations.
+
+## 16. After the 0.1 verdict (Fable 5.1, 2026-10-16)
+
+Verdict: approve 0.1, modulo the user-blocked items. The hard pre-tag gates are all the user's: Windows conformance green in CI before `v0.1.0` (design §4.4 promises it; it has never run, and the Windows-only goldens were hand-edited), the names applied (design §1 and §6.1 say `rynwhite`/`aswemaythink (pending)`, Cargo.toml and §0's table say `aswemaythink`; installer files are `agent-memex-installer.*`), S8.2 RC dry run, and site copy sign-off.
+
+Done tonight on the verdict: R24 (a Markdown child lists its title in `show <folder>`) and R25 (the snippet says where a test id goes and points at the collection `info` names), §13.
+
+**Proposal for the user (not built): Q3, id-prefix search.** Playtest 2A's `memex search ATM-NAME` found nothing, because an id-shaped query token matches whole id tokens only (design §3.2, SRCH-TOKEN-01). Proposed rule: an id-shaped query token also matches ids that continue it after a hyphen (`ATM-NAME` → `ATM-NAME-01`…), as a prefix tier ranked below an exact id; SRCH-TOKEN-01 is unchanged (`NAME-001` still does not find `NAME-002`). It changes a stated rule, so it needs your yes and a design §3.2 edit. (The one hit `ATM-NAME` gave, NEO-CSS-11, is correct: that README cites `ATM-NAME-*` literally.)
+
+**Left as is (reviewer's ruling).** Q5: `show` prints ancestor READMEs in full (design §3.3); `--up 0` is the escape; revisit after Playtest 2B. Q6: 0.1 ships without `check` (design §7 and the README name it a non-goal today); §14 stays a proposal.
