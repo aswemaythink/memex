@@ -1,15 +1,17 @@
 //! Finds each kind's findings over the scope, in the order of design §3.5d.
-//! The kinds are headers, readmes, one-liners, cites and ids. Each is one function over `Ctx`, so `length` (third) and `thin` (fifth) join the list as one function each. Each list is
-//! sorted by label and cut to `--limit` (design §3.3 Limits), and a kind with no finding is left out.
-//! Cases: CHK-HEADERS-01, CHK-HEADERS-02, CHK-HEADERS-03, CHK-READMES-01, CHK-READMES-02, CHK-READMES-03, CHK-ONELINERS-01, CHK-ONELINERS-02, CHK-ONELINERS-03, CHK-ONELINERS-04, CHK-CITES-01, CHK-CITES-02, CHK-CITES-03, CHK-CITES-04, CHK-CITES-05, CHK-CITES-06, CHK-IDS-01, CHK-IDS-02, CHK-LIMIT-01, CHK-LIMIT-02, CHK-LIMIT-03, CHK-JSON-01, CHK-JSON-03
+//! The kinds are headers, readmes, length, one-liners, thin, cites and ids. Each is one function over `Ctx`; `length` and `thin` read the
+//! line counts that `counts.rs` makes. Each list is sorted by label (`thin` by its header share) and cut to `--limit` (design §3.3 Limits),
+//! and a kind with no finding is left out. `thin` is listed but is not a finding (design §3.5d).
+//! Cases: CHK-HEADERS-01, CHK-HEADERS-02, CHK-HEADERS-03, CHK-READMES-01, CHK-READMES-02, CHK-READMES-03, CHK-READMES-04, CHK-READMES-05, CHK-LENGTH-01, CHK-LENGTH-02, CHK-LENGTH-03, CHK-LENGTH-04, CHK-LENGTH-05, CHK-LENGTH-06, CHK-LENGTH-07, CHK-ONELINERS-01, CHK-ONELINERS-02, CHK-ONELINERS-03, CHK-ONELINERS-04, CHK-THIN-01, CHK-THIN-02, CHK-THIN-03, CHK-THIN-04, CHK-THIN-05, CHK-THIN-06, CHK-THIN-07, CHK-CITES-01, CHK-CITES-02, CHK-CITES-03, CHK-CITES-04, CHK-CITES-05, CHK-CITES-06, CHK-IDS-01, CHK-IDS-02, CHK-LIMIT-01, CHK-LIMIT-02, CHK-LIMIT-03, CHK-JSON-01, CHK-JSON-03
 
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
 
+use super::counts::{self, Counted};
 use super::scope::Scope;
 use crate::cite;
-use crate::corpus::{label_of, readme_label, Corpus, Doc, Kind};
+use crate::corpus::{label_of, parent_of, readme_label, Corpus, Doc, Kind};
 use crate::intent::header::has_family;
 use crate::intent::{shared, Origin};
 use crate::render::check::{Group, Item};
@@ -36,6 +38,22 @@ const CITES: &str = "(cites): fix the reference or remove it";
 /// The fix line of `ids` (design §3.5d).
 const IDS: &str = "(ids): give each doc its own id";
 
+/// The most code lines a file may have before `length` lists it (design §3.5d kind 3).
+const LENGTH_MAX: u32 = 500;
+
+/// The fix line of `length` (design §3.5d kind 3).
+const LENGTH: &str =
+    "(length): split the file; give the part with its own purpose its own file and header";
+
+/// What `length` lists, in its heading (design §3.5d kind 3).
+const LENGTH_WHAT: &str = "over 500 code lines";
+
+/// The fewest lines a file may have to be listed under `thin` (design §3.5d kind 5).
+const THIN_MIN: u32 = 80;
+
+/// What `thin` lists, in its heading (design §3.5d kind 5).
+const THIN_WHAT: &str = "files of 80 lines or more, lowest header share first";
+
 /// What the kinds read: the corpus, the scope, the walked entries and the `--limit` of each list.
 pub struct Ctx<'a> {
     /// The corpus of the root that is checked.
@@ -48,15 +66,22 @@ pub struct Ctx<'a> {
     pub limit: usize,
 }
 
-/// The findings of every kind over the scope, in §3.5d order, with each kind that has none left out. `length` and `thin` are
-/// added to this list in their own slices.
+/// The findings of every kind over the scope, in §3.5d order, with each kind that has none left out. The line counts are read once,
+/// for `length` and `thin`. `thin` is listed among the kinds, but it is a pointer and not a finding (design §3.5d).
 pub fn all(ctx: &Ctx<'_>) -> Vec<Group> {
-    let kinds: [fn(&Ctx<'_>) -> Group; 5] = [headers, readmes, one_liners, cites, ids];
-    kinds
-        .iter()
-        .map(|kind| kind(ctx))
-        .filter(|group| group.listing.total > 0)
-        .collect()
+    let counted = counts::in_scope(ctx.tree, ctx.scope);
+    [
+        headers(ctx),
+        readmes(ctx),
+        length(ctx, &counted),
+        one_liners(ctx),
+        thin(ctx, &counted),
+        cites(ctx),
+        ids(ctx),
+    ]
+    .into_iter()
+    .filter(|group| group.listing.total > 0)
+    .collect()
 }
 
 /// A kind's group: its items sorted by label (the sort keeps equal labels in the order they came), cut to the limit.
@@ -72,6 +97,7 @@ fn group(
         kind,
         what,
         fix,
+        finding: true,
         listing: Listing::of(&items, ctx.limit),
     }
 }
@@ -111,13 +137,16 @@ fn is_non_empty(path: &Path) -> bool {
         .is_ok_and(|meta| meta.len() > 0)
 }
 
-/// The walked folders in scope with no README.md, the root included (design §3.5d kind 2). A folder the walk could not list is
-/// not judged, since its children, and so any README in it, are unknown.
+/// The walked folders in scope with no README.md whose subtree holds a file with a comment family, the root included (design §3.5d
+/// kind 2). A folder of data alone is not a unit and needs none. A folder the walk could not list is not judged, since its children,
+/// and so any README in it, are unknown.
 fn readmes(ctx: &Ctx<'_>) -> Group {
+    let code = code_folders(ctx.tree);
     let items = ctx
         .tree
         .iter()
         .filter(|entry| entry.is_dir && ctx.scope.holds_folder(&entry.rel))
+        .filter(|entry| code.contains(entry.rel.as_str()))
         .filter(|entry| ctx.corpus.kind(&readme_label(&entry.rel)) != Some(Kind::File))
         .filter(|entry| ctx.corpus.unlistable(&entry.rel).is_none())
         .map(|entry| Item {
@@ -132,6 +161,39 @@ fn readmes(ctx: &Ctx<'_>) -> Group {
         Some(NO_README),
         items,
     )
+}
+
+/// The folders whose subtree holds a walked file with a comment family, the folder itself included, and the root `""` when any does
+/// (design §3.5d kind 2). Each such file marks its folders up to the root; a folder already marked ends the climb, since the folders
+/// above it were marked with it.
+fn code_folders(tree: &[Entry]) -> BTreeSet<&str> {
+    let mut folders = BTreeSet::new();
+    for entry in tree
+        .iter()
+        .filter(|entry| !entry.is_dir && has_family(&entry.path))
+    {
+        let mut folder = parent_of(&entry.rel);
+        while let Some(rel) = folder {
+            if !folders.insert(rel) {
+                break;
+            }
+            folder = parent_of(rel);
+        }
+    }
+    folders
+}
+
+/// The files in scope whose code lines are more than 500, each with its code lines (design §3.5d kind 3).
+fn length(ctx: &Ctx<'_>, counted: &[Counted]) -> Group {
+    let items = counted
+        .iter()
+        .filter(|file| file.counts.code() > LENGTH_MAX)
+        .map(|file| Item {
+            reference: file.rel.clone(),
+            detail: Some(format!("{} code lines", file.counts.code())),
+        })
+        .collect();
+    group(ctx, "length", LENGTH_WHAT, Some(LENGTH), items)
 }
 
 /// The READMEs and headers in scope whose one-liner is over 100 characters, counted as Unicode scalar values (design §3.5d kind 4).
@@ -160,6 +222,43 @@ fn one_liners(ctx: &Ctx<'_>) -> Group {
         Some(ONE_LINERS),
         items,
     )
+}
+
+/// The files in scope of 80 lines or more that have a header, by header lines over total lines, lowest first and ties by path (design
+/// §3.5d kind 5). It is a pointer and not a finding: it is listed but not counted, and it has no fix line.
+fn thin(ctx: &Ctx<'_>, counted: &[Counted]) -> Group {
+    let mut picks: Vec<&Counted> = counted
+        .iter()
+        .filter(|file| file.counts.total >= THIN_MIN && has_header(ctx.corpus, &file.rel))
+        .collect();
+    picks.sort_by(|left, right| {
+        let (left_header, left_total) =
+            (u64::from(left.counts.header), u64::from(left.counts.total));
+        let (right_header, right_total) = (
+            u64::from(right.counts.header),
+            u64::from(right.counts.total),
+        );
+        (left_header * right_total)
+            .cmp(&(right_header * left_total))
+            .then_with(|| left.rel.cmp(&right.rel))
+    });
+    let items: Vec<Item> = picks
+        .iter()
+        .map(|file| Item {
+            reference: file.rel.clone(),
+            detail: Some(format!(
+                "{}/{} header lines",
+                file.counts.header, file.counts.total
+            )),
+        })
+        .collect();
+    Group {
+        kind: "thin",
+        what: THIN_WHAT,
+        fix: None,
+        finding: false,
+        listing: Listing::of(&items, ctx.limit),
+    }
 }
 
 /// The explicit references that resolve to nothing, in the READMEs, headers and collection docs in scope (design §3.5d kind 6).

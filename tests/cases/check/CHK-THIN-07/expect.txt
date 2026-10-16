@@ -1,0 +1,5 @@
+$ memex check --json
+exit 0
+stdout
+| {"scope":["."],"files":3,"folders":2,"findings":0,"kinds":[{"kind":"thin","total":1,"items":[{"ref":"src/notes.rs","detail":"1/90 header lines"}]}],"errors":[]}
+stderr (empty)

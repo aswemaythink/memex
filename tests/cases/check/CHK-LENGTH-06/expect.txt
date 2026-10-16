@@ -1,0 +1,10 @@
+$ memex check
+exit 0
+stdout
+| check       . · 3 files · 2 folders · 1 finding
+| length      (showing 1 of 1; over 500 code lines)
+|   src/long.rs  600 code lines
+| (length): split the file; give the part with its own purpose its own file and header
+| thin        (showing 1 of 1; files of 80 lines or more, lowest header share first)
+|   src/long.rs  1/601 header lines
+stderr (empty)

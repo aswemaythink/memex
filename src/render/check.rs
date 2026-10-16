@@ -1,7 +1,7 @@
 //! Prints `check`'s report as text and as its `--json` document (design §3.5d and §3.6).
 //! The report is the scope line, then each kind with findings under its heading, its items and its fix line, and the misses of
 //! the paths that named nothing. Paths in labels and JSON are root-relative, with `/` separators.
-//! Cases: CHK-SCOPE-01, CHK-SCOPE-02, CHK-SCOPE-04, CHK-HEADERS-01, CHK-READMES-01, CHK-ONELINERS-01, CHK-CITES-01, CHK-IDS-01, CHK-LIMIT-01, CHK-LIMIT-02, CHK-LIMIT-03, CHK-EMPTY-01, CHK-JSON-01, CHK-JSON-02, CHK-JSON-03, CHK-EXIT-01
+//! Cases: CHK-SCOPE-01, CHK-SCOPE-02, CHK-SCOPE-04, CHK-HEADERS-01, CHK-READMES-01, CHK-ONELINERS-01, CHK-CITES-01, CHK-IDS-01, CHK-LIMIT-01, CHK-LIMIT-02, CHK-LIMIT-03, CHK-EMPTY-01, CHK-LENGTH-01, CHK-THIN-01, CHK-THIN-06, CHK-THIN-07, CHK-JSON-01, CHK-JSON-02, CHK-JSON-03, CHK-EXIT-01
 
 use serde_json::{json, Value as Json};
 
@@ -27,6 +27,9 @@ pub struct Group {
     pub what: &'static str,
     /// The line that follows the list with the fix, or None for a kind with no fix line.
     pub fix: Option<&'static str>,
+    /// True for a finding, which the count of findings includes. False for a pointer such as `thin`: it is listed, but not counted
+    /// (design §3.5d).
+    pub finding: bool,
     /// Every finding of the kind, in label order, with the first `--limit` of them kept.
     pub listing: Listing<Item>,
 }
@@ -39,23 +42,29 @@ pub struct Summary {
     pub files: usize,
     /// The walked folders in the scope, the root included when it is in scope.
     pub folders: usize,
-    /// The kinds that have findings, in §3.5d order.
+    /// The kinds that have findings, and the pointers such as `thin` that have entries, in §3.5d order.
     pub groups: Vec<Group>,
     /// The arguments that named nothing, or several things.
     pub errors: Vec<Miss>,
 }
 
 impl Summary {
-    /// The findings of every kind, which the scope line counts, whether or not the lists show them all.
+    /// The findings of every kind, which the scope line counts, whether or not the lists show them all. A pointer such as `thin` is
+    /// not a finding, so it is left out (design §3.5d).
     pub fn findings(&self) -> usize {
-        self.groups.iter().map(|group| group.listing.total).sum()
+        self.groups
+            .iter()
+            .filter(|group| group.finding)
+            .map(|group| group.listing.total)
+            .sum()
     }
 }
 
-/// The report as text (design §3.5d): the scope line, then each group, or `nothing to fix` when no kind has a finding.
+/// The report as text (design §3.5d): the scope line, then `nothing to fix` when no kind has a finding, then each group, which
+/// lists a pointer such as `thin` as well.
 pub fn text(summary: &Summary) -> String {
     let mut out = format!("{:<12}{}\n", "check", scope_line(summary));
-    if summary.groups.is_empty() {
+    if summary.findings() == 0 {
         out.push_str("nothing to fix\n");
     }
     for group in &summary.groups {

@@ -42,12 +42,33 @@ memex: cases
 
 ## READMES
 
-- `CHK-READMES-01` A walked folder with no README.md is listed under `readmes` by its root-relative path, with the README fix line, exit 0.
+- `CHK-READMES-01` A walked folder with no README.md whose subtree holds a file with a comment family is listed under `readmes` by its root-relative path, with the README fix line, exit 0.
   design §3.5d kind 2. Run: memex check.
-- `CHK-READMES-02` A root with no README.md is listed as `.`, exit 0.
+- `CHK-READMES-02` A root with no README.md, whose tree holds a file with a comment family, is listed as `.`, exit 0.
   design §3.5d kind 2 (the root included). Run: memex check.
 - `CHK-READMES-03` A folder that the walk does not enter, here one named by an `.ignore` rule, is not listed, since the report covers walked folders only, exit 0.
   design §3.5d Scope and §4.1 item 2. Run: memex check.
+- `CHK-READMES-04` A folder that holds only case data, such as a case folder with case.json and expect.txt and no README, is not a unit, so it is not listed under `readmes`, exit 0.
+  design §3.5d kind 2 (a folder of data alone needs none). Run: memex check.
+- `CHK-READMES-05` A folder with no file of its own, only subfolders whose subtree holds a file with a comment family, is listed under `readmes`, and so is the subfolder that holds the code, exit 0.
+  design §3.5d kind 2 (the subtree holds a file with a comment family). Run: memex check.
+
+## LENGTH
+
+- `CHK-LENGTH-01` A file with a comment family whose code lines are 501 is listed under `length` as `501 code lines`, with the length fix line, exit 0.
+  design §3.5d kind 3. Run: memex check.
+- `CHK-LENGTH-02` A file of exactly 500 code lines is not a finding, exit 0.
+  design §3.5d kind 3 (exceed 500). Run: memex check.
+- `CHK-LENGTH-03` Header and license lines are not code: a file of 520 lines whose header and license blocks hold 29 of them has 491 code lines and is not a finding, exit 0.
+  design §3.5d kind 3 and Lines; §2.1 header and license blocks. Run: memex check.
+- `CHK-LENGTH-04` A file with CRLF line ends counts each line once, so 501 code lines in CRLF are listed as `501 code lines`, exit 0.
+  design §3.5d Lines (CRLF counts once). Run: memex check.
+- `CHK-LENGTH-05` A last line without a newline counts when it is not empty, so 501 code lines whose last line has no newline are listed as `501 code lines`, exit 0.
+  design §3.5d Lines. Run: memex check.
+- `CHK-LENGTH-06` A file longer than the 8 KiB head is counted whole, so 600 code lines in about 16 KiB are listed as `600 code lines`, exit 0.
+  design §3.5d Lines (check reads past the head). Run: memex check.
+- `CHK-LENGTH-07` A file with no comment family, such as a 700-line JSON file, is never counted, and a folder that holds only such data needs no README, exit 0.
+  design §3.5d kinds 2 and 3. Run: memex check.
 
 ## ONELINERS
 
@@ -59,6 +80,23 @@ memex: cases
   design §3.5d kind 4 (Unicode scalar values). Run: memex check.
 - `CHK-ONELINERS-04` A header whose one-liner is over 100 characters is listed by its file path, exit 0.
   design §3.5d kind 4 (a header or README). Run: memex check.
+
+## THIN
+
+- `CHK-THIN-01` Files of 80 lines or more with a header are listed under `thin`, lowest header share first, each with its `<H>/<T> header lines` detail and no fix line, exit 0.
+  design §3.5d kind 5. Run: memex check.
+- `CHK-THIN-02` Equal shares are ordered by path: 4 of 200 lines at `src/a.rs` is listed before 2 of 100 at `src/b.rs`, exit 0.
+  design §3.5d kind 5 (ties by path). Run: memex check.
+- `CHK-THIN-03` A file of 79 lines is not listed, and one of 80 lines with a header is, exit 0.
+  design §3.5d kind 5 (80 lines or more). Run: memex check.
+- `CHK-THIN-04` A file of 80 lines or more with no header is not listed under `thin`, exit 0.
+  design §3.5d kind 5 (that have a header). Run: memex check.
+- `CHK-THIN-05` `--limit 1` lists the first `thin` entry only, and its heading says `(--limit 3 for all)`, exit 0.
+  design §3.5d Output and §3.3 Limits. Run: memex check --limit 1.
+- `CHK-THIN-06` `thin` is a pointer, not a finding: a root whose only entry is thin prints `0 findings`, then `nothing to fix`, then the `thin` list, exit 0.
+  design §3.5d kind 5 (not a finding) and Output (nothing to fix). Run: memex check.
+- `CHK-THIN-07` JSON `findings` leaves thin out, so a root whose only entry is thin has `findings` 0, while `kinds` still lists `thin` with its total and items (a ruling: §3.6 says `kinds` holds the kinds with findings), exit 0.
+  design §3.5d kind 5 and §3.6 check. Run: memex check --json.
 
 ## CITES
 
@@ -102,8 +140,8 @@ memex: cases
 
 ## EMPTY
 
-- `CHK-EMPTY-01` A root where every folder has a README, every file has its header and every one-liner fits prints its scope line and then `nothing to fix`, exit 0.
-  design §3.5d Output (nothing to fix). Run: memex check.
+- `CHK-EMPTY-01` A root where every folder has a README, every file has its header, every one-liner fits and no file has 80 lines or more prints its scope line and then `nothing to fix`, exit 0.
+  design §3.5d Output (nothing to fix) and kind 5 (thin is not a finding). Run: memex check.
 
 ## EXIT
 
