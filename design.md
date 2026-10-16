@@ -54,7 +54,7 @@ The comment syntax is chosen by extension from a built-in table. Files with unkn
 | `"""` / `'''` module docstring | py (used if there is no leading `#` block) |
 
 - **Header rule.** After blank lines, a shebang, encoding/pragma lines (`# -*-`, `//go:build`, `"use client"`, and markup prologues `<?xml …?>`, `<!DOCTYPE …>`, `<?php`) and one leading license block (a block containing `SPDX-License-Identifier` or starting with `Copyright`); a license block ends at its first blank line, so a header must be separated from it by one, the next comment block is the header. It ends at the first line that is neither comment nor blank.
-- **Limits.** The index keeps the first 60 lines; `show` prints the whole block. A file with no header shows as `(no header)` in listings. That gap is itself a signal.
+- **Limits.** The index keeps the first 60 lines; `show` prints the whole block. A file with no header shows as `(no header)` in listings. That gap is itself a signal. Markdown files have no header; listings show their title (§3.3).
 - **Files read.** Only the first 8 KiB of each file is read. Binary files are skipped. A header still open at the 8 KiB cut is shown with a final line `… (header cut at 8 KiB)`, never silently.
 
 ### 2.2 Collections: `memex: <name>`
@@ -174,7 +174,7 @@ logs  (showing 1 of 1)
 It takes one or more refs and prints a section for each, separated by `=== <label> ===` lines. A ref repeated in one call prints once, at its first position. A requested file that can't be read, or a requested folder that can't be listed, is that ref's error (`io`), so `show` exits 1 as for any failed ref; unreadable files met while loading the corpus stay warnings (§4.2). A path inside a folder that can't be listed was never walked, so it is `not found`; the folder's own warning says why.
 
 - **File.** The header (full content for `.md`), then `cites`, then `cited by`, then the chain. `--up N` limits the depth; `--up 0` prints the file alone.
-- **Folder.** The folder's README if there is one; otherwise `(no README)`. Then the children (the folder's own README.md excluded, since it is already printed): subfolders with their README one-liners, and files with their header one-liners or `(no header)`. Then `cites`/`cited by` for the folder path, then the chain. A folder without a README lists its children and is not an error. `show .` is the map of the root.
+- **Folder.** The folder's README if there is one; otherwise `(no README)`. Then the children (the folder's own README.md excluded, since it is already printed): subfolders with their README one-liners, and files with their header one-liners or `(no header)`. A Markdown file has no header (§2.1), so its child line shows its title instead: the §4.2 title rule applied to its text after any frontmatter (first ATX heading outside fenced code, else first non-blank line). An empty Markdown file shows its name alone. No placeholder, so no legend line. JSON `title` carries the same text. Then `cites`/`cited by` for the folder path, then the chain. A folder without a README lists its children and is not an error. `show .` is the map of the root.
 - **Chain.** Ancestor READMEs in full, nearest first, root last. For a README.md itself, the chain starts at the folder above its own, since the file is already printed in full.
 - **Entry** (§2.2). Claim, detail, group, the defining file, evidence paths, and cited by.
 - **Log or other collection doc.** The full text, its fields as a `key: value` block, cites, and cited by.
