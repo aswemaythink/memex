@@ -78,7 +78,7 @@ memex: cases
 - `INFO-WARN-01` An invalid manifest is a warning on stderr, printed once, and is left out of the collections line, which still lists the valid manifests, exit 0.
   Scenario: `good.json` (valid, one doc), `bad.json` (an unknown key) and `wrong.json` (its name is not its file name); stdout reads `collections  good 1` and stderr holds each warning once. design §4.2 Invalid manifests and §3.5 Collections.
 - `INFO-WARN-02` With `--json`, `warnings` lists the invalid manifest and the duplicate id, and the same two lines are on stderr, each once.
-  Scenario: `bad.json` plus two CASES.md files that both declare DUP-001; the JSON `warnings` array holds the manifest warning and `memex: warning: duplicate id cases:DUP-001 in CASES.md, sub/CASES.md`. design §2.2 (duplicate ids), §4.2 and §3.6 info.
+  Scenario: `bad.json` plus two CASES.md files that both declare DUP-001; the JSON `warnings` array holds the manifest warning and `memex: warning: duplicate id cases:<id> in CASES.md, sub/CASES.md`, with the id DUP-001. design §2.2 (duplicate ids), §4.2 and §3.6 info.
 
 ## NOROOT
 

@@ -72,8 +72,8 @@ fn no_doc_under_src_has_an_unresolved_citation() {
     );
 }
 
-/// `memex check` finds nothing to fix in this repo (design §3.5d). `thin` is a pointer, not a finding. The one exception is a
-/// case claim that quotes a ref living in its fixture, such as `memex show cases:NAME-001`: the fixture is data the walk skips.
+/// `memex check` finds nothing to fix in this repo (design §3.5d). `thin` is a pointer, not a finding, so it is the one kind
+/// skipped. No case claim is exempt: a claim names a fixture doc by its bare id, or writes a label as a placeholder.
 #[test]
 fn memex_check_finds_nothing_to_fix() {
     let checked = memex_json(&["check", "--limit", "100000"]);
@@ -82,7 +82,7 @@ fn memex_check_finds_nothing_to_fix() {
         let name = kind["kind"].as_str().unwrap_or("?");
         for item in kind["items"].as_array().into_iter().flatten() {
             let label = item["ref"].as_str().unwrap_or("?");
-            if name == "thin" || (name == "cites" && label.starts_with("cases:")) {
+            if name == "thin" {
                 continue;
             }
             found.push(format!(

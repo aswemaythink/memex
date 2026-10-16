@@ -73,7 +73,7 @@ memex: cases
 - `COLL-CITE-02` A `collection:id` ref in a README resolves to a whole-file doc, so the README cites `decisions:0001-cache`, exit 0.
   design §2.3 (`collection:id`). Run: memex show README.md.
 - `COLL-CITE-03` A link to a whole file's path cites its doc: the README cites `decisions:0001-cache`, and the file's own show lists the README under cited by, exit 0.
-  design §2.3 (`[text](path)`) and §3.3 (a file's citations are its doc's). Run: memex show README.md decisions/0001-cache.md.
+  design §2.3 (a Markdown link) and §3.3 (a file's citations are its doc's). Run: memex show README.md decisions/0001-cache.md.
 - `COLL-CITE-04` A path token in a whole file resolves from that file's folder, so `notes:a` cites `notes:sibling` through `sibling.md` beside it, exit 0.
   design §2.3 (a path token resolves from the citing doc's folder first). Run: memex show notes:a.
 
@@ -86,12 +86,12 @@ memex: cases
 
 ## SHARED
 
-- `COLL-SHARED-01` A frontmatter collection named `readmes` loads with the graph's warning, which names its first file in byte order, so `--in readmes` keeps the graph's READMEs, global search gives the collection its own `readmes` group after the graph's, and `show readmes:alpha` prints its doc, exit 0.
-  design §4.2 Names and §3.2 (`--in` names, groups). Run: memex search widget --in readmes; memex search widget; memex show readmes:alpha. The root README and notes/a.md both hold the word widget.
-- `COLL-SHARED-02` A frontmatter collection named `logs` loads with the stream form of the warning, so `--in logs` keeps the log entries, global search gives the collection its own `logs` group ahead of the log group, and `show logs:alpha` prints its doc, exit 0.
-  design §4.2 Names; PLAN §13 R10 takes the stream form, since `--in logs` means every stream. Run: memex search widget --in logs; memex search widget; memex show logs:alpha. The fixture has one log entry in stream impl.
-- `COLL-SHARED-03` A frontmatter collection named like an existing log stream, `impl`, loads with the stream form of the warning, so `--in impl` keeps the stream's entries and not the collection's doc, global search gives the collection its own `impl` group, and `show impl:alpha` prints its doc, exit 0.
-  design §4.2 Names and §3.2 (`--in` names: a stream's name means the stream). Run: memex search widget --in impl; memex search widget; memex show impl:alpha.
+- `COLL-SHARED-01` A frontmatter collection named `readmes` loads with the graph's warning, which names its first file in byte order, so `--in readmes` keeps the graph's READMEs, global search gives the collection its own `readmes` group after the graph's, and `show readmes:<id>` prints its doc `alpha`, exit 0.
+  design §4.2 Names and §3.2 (`--in` names, groups). Run: memex search widget --in readmes; memex search widget; memex show readmes:<id> for the id alpha. The root README and notes/a.md both hold the word widget.
+- `COLL-SHARED-02` A frontmatter collection named `logs` loads with the stream form of the warning, so `--in logs` keeps the log entries, global search gives the collection its own `logs` group ahead of the log group, and `show logs:<id>` prints its doc `alpha`, exit 0.
+  design §4.2 Names; PLAN §13 R10 takes the stream form, since `--in logs` means every stream. Run: memex search widget --in logs; memex search widget; memex show logs:<id> for the id alpha. The fixture has one log entry in stream impl.
+- `COLL-SHARED-03` A frontmatter collection named like an existing log stream, `impl`, loads with the stream form of the warning, so `--in impl` keeps the stream's entries and not the collection's doc, global search gives the collection its own `impl` group, and `show impl:<id>` prints its doc `alpha`, exit 0.
+  design §4.2 Names and §3.2 (`--in` names: a stream's name means the stream). Run: memex search widget --in impl; memex search widget; memex show impl:<id> for the id alpha.
 - `COLL-SHARED-04` `info --json` lists the shared-name warning in `warnings`, and lists the collection in `collections` with kind `markdown` and `builtin` false, exit 0.
   design §4.2 Names (info lists it) and §3.6 (info). Run: memex info --json. The fixture is the COLL-SHARED-01 fixture.
 

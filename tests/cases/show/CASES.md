@@ -38,7 +38,7 @@ memex: cases
 ## LOG
 
 - `SHOW-LOG-01` A log ref shows its body under its `===` line, then a `fields` block with the frontmatter in the order the file gives it (lists as `[a, b]`), then cites and cited by, and no chain, exit 0.
-  design §3.3 Log or collection doc, and §4.3 frontmatter. Run: memex show impl:20261013-120000-show-walks-hub-readmes.
+  design §3.3 Log or collection doc, and §4.3 frontmatter. Run: memex show 20261013-120000-show-walks-hub-readmes.
 - `SHOW-LOG-02` A log ref is not found when the repo has no `.memex/` store, so it exits 1 with `memex: not found:` on stderr and nothing on stdout.
   design §4.1 item 3: the store is read from `.memex/logs/`; design §3.1 step 3. Run: memex show with the log ref in a repo with no .memex/.
 
@@ -98,7 +98,7 @@ memex: cases
 - `SHOW-JSON-02` `--json` on a folder adds a `children` object with `total` and `items`, not counting the folder's own README.md, where each item has its `path`, its `kind` (`dir` or `file`) and its `title`, or null when it has none, exit 0.
   design §3.6 show: children. Run: memex show src --json.
 - `SHOW-JSON-03` `--json` on a log ref gives a null `path`, the frontmatter as `fields` with lists as JSON arrays, and an empty `chain`, exit 0.
-  design §3.6 Doc and show: logs add their frontmatter fields. Run: memex show impl:20261013-120000-show-walks-hub-readmes --json.
+  design §3.6 Doc and show: logs add their frontmatter fields. Run: memex show 20261013-120000-show-walks-hub-readmes --json.
 - `SHOW-JSON-04` `--json` with a ref that is not found prints the error in `errors` with code `not_found`, prints nothing on stderr, and exits 1.
   design §3.6 show shape and exit codes. Run: memex show nope.rs --json.
 - `SHOW-JSON-05` `--json` on an ambiguous ref lists its `candidates` in the error, and exits 1.

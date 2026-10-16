@@ -81,14 +81,14 @@ The ref family pins design §3.1: how a ref becomes the file, folder or doc it n
   Scenario: show readmes:src/README.md, then show src/README.md. design §3.1 reserved names; design is silent on the spelling, so the literal path is used.
 - `REF-RESERVED-02` headers:src/cli.rs names the header doc by its literal path, so it prints the section that show src/cli.rs prints, exit 0.
   Scenario: show headers:src/cli.rs, then show src/cli.rs. design §3.1 reserved names; the literal path, as in REF-RESERVED-01.
-- `REF-RESERVED-03` logs:ID names the log entry with that id in whichever stream holds it, labelled stream:ID, exit 0.
-  Scenario: show logs:20261013-120000-show-walks-hub-readmes, with the entry in the impl stream. design §3.1 reserved names: logs means every stream.
-- `REF-RESERVED-04` logs:ID that two streams both hold is ambiguous, and its candidates are both labels, sorted, exit 1.
+- `REF-RESERVED-03` `logs:<id>` names the log entry with that id in whichever stream holds it, labelled stream:ID, exit 0.
+  Scenario: show `logs:<id>` for the id 20261013-120000-show-walks-hub-readmes, with the entry in the impl stream. design §3.1 reserved names: logs means every stream.
+- `REF-RESERVED-04` `logs:<id>` that two streams both hold is ambiguous, and its candidates are both labels, sorted, exit 1.
   Scenario: the same stem in the impl and review streams. design §3.1 reserved names and step 6.
 
 ## TRIP
 
-- `REF-TRIP-01` The label that show prints for a log entry, impl:ID, fed back to show, names the same entry as the bare id did, exit 0.
-  Scenario: show 20261013-120000-show-walks-hub-readmes, then show impl:20261013-120000-show-walks-hub-readmes. design §3.1 labels round-trip.
+- `REF-TRIP-01` The label that show prints for a log entry, `impl:<ts>-<slug>`, fed back to show, names the same entry as the bare id did, exit 0.
+  Scenario: show 20261013-120000-show-walks-hub-readmes, then show the label that the first show printed for that entry, `impl:<ts>-<slug>`. design §3.1 labels round-trip.
 - `REF-TRIP-02` Each label that show prints for a folder, a file, a case, a collection doc and a log is accepted back by show, and names the same entry.
-  Scenario: show ./src/, then show src; show ./src/cli.rs, then show src/cli.rs; show TRIP-ONE-01, then cases:TRIP-ONE-01; show alpha, then notes:alpha; show a bare log id, then its impl label. design §3.1 labels round-trip.
+  Scenario: show ./src/, then show src; show ./src/cli.rs, then show src/cli.rs; show TRIP-ONE-01, then its label `cases:<id>`; show alpha, then notes:alpha; show a bare log id, then its impl label. design §3.1 labels round-trip.

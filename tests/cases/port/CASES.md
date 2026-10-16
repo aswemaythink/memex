@@ -12,7 +12,7 @@ memex: cases
 - `PORT-CRLF-03` A shell script whose `#` header has CRLF line ends, after a shebang, gives the same header as its LF twin, with no carriage return.
   design §4.4 Text and §2.1 pragma skip. Run: memex show tools/run.sh --up 0, from a CRLF root and from its LF twin.
 - `PORT-CRLF-04` A CASES.md with CRLF line ends gives the same case as its LF twin, with no carriage return.
-  design §4.4 Text and §2.2 case index. Run: memex show cases:CRL-TOPIC-01, from a CRLF root and from its LF twin.
+  design §4.4 Text and §2.2 case index. Run: memex show CRL-TOPIC-01, from a CRLF root and from its LF twin.
 - `PORT-CRLF-05` A Markdown collection doc with CRLF frontmatter gives the same fields and body as its LF twin, with no carriage return.
   design §4.4 Text and §2.2 frontmatter. Run: memex show notes:alpha, from a CRLF root and from its LF twin.
 - `PORT-CRLF-06` A log body piped in with CRLF line ends is stored with LF line ends, and its ref, its `show` text and its stored file match its LF twin.
@@ -51,7 +51,7 @@ memex: cases
 ## BOM
 
 - `PORT-BOM-01` A CASES.md saved with a BOM and CRLF line ends is read: `info` counts its case, and `show` prints the case with no BOM and no carriage return, exit 0.
-  design §4.4 Text: a leading BOM is dropped on read. Run: memex info, then memex show cases:BOM-TOPIC-01.
+  design §4.4 Text: a leading BOM is dropped on read. Run: memex info, then memex show BOM-TOPIC-01.
 - `PORT-BOM-02` A JSON manifest and its data file saved with a BOM are read: `info` lists the collection with its count and no warning, and `show` finds the row, exit 0.
   design §4.4 Text and §4.2 kind json. Run: memex info, then memex show rows:R-1.
 

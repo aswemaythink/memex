@@ -6,7 +6,7 @@ memex: cases
 ## BARE
 
 - `CITE-BARE-01` A declared bare id in a README is cited, and the case it names lists that README under cited by.
-  design §2.3 bare id. Run: memex show README.md, then memex show cases:NAME-001.
+  design §2.3 bare id. Run: memex show README.md, then memex show NAME-001.
 - `CITE-BARE-02` `UTF-8` and an id that no CASES.md declares are not cited, so the README's cites block says `(none)`.
   design §2.3: prose like UTF-8 never links. Run: memex show README.md.
 - `CITE-BARE-03` `show NAME-001` resolves the bare id to its case, and that case lists the README that cites the id under cited by.
@@ -15,19 +15,19 @@ memex: cases
 ## PREFIX
 
 - `CITE-PREFIX-01` `NAME-*` in a README is a backlink on each declared NAME id, marked `(via NAME-*)`, and it is never a cites line.
-  design §2.3 prefix citation, and the cites block has no limit, so a family is not expanded there. Run: memex show README.md, then memex show cases:NAME-002.
+  design §2.3 prefix citation, and the cites block has no limit, so a family is not expanded there. Run: memex show README.md, then memex show NAME-002.
 - `CITE-PREFIX-02` A doc that cites an id both directly and by prefix is listed once under cited by, with no via marker.
-  design §2.3: the direct citation is the one that counts. Run: memex show cases:NAME-001, then memex show cases:NAME-002.
+  design §2.3: the direct citation is the one that counts. Run: memex show NAME-001, then memex show NAME-002.
 
 ## COLL
 
-- `CITE-COLL-01` `cases:NAME-001` in a README is cited under its label, with the case's claim as its one-liner.
+- `CITE-COLL-01` A `cases:<id>` label in a README, here naming the fixture's `cases` entry `NAME-001`, is cited under its label, with the case's claim as its one-liner.
   design §2.3 `collection:id` with a known collection, and §3.1 labels. Run: memex show README.md.
-- `CITE-COLL-02` `cases:NOPE-01` with a known collection and no such doc is an unresolved cite, printed as `unresolved`.
+- `CITE-COLL-02` A `cases:<id>` label with a known collection and no such doc, here `NOPE-01`, is an unresolved cite, printed as `unresolved`.
   design §2.3: explicit refs that resolve to nothing are listed as unresolved. Run: memex show README.md.
 - `CITE-COLL-03` `foo:NAME-001` with an unknown collection is not an explicit ref: its bare id is cited, and nothing is unresolved.
   design §2.3: `collection:id` counts only when the collection is known. Run: memex show README.md.
-- `CITE-COLL-04` `impl:ID` with the log stream as a known collection cites that log entry under its label, with its title.
+- `CITE-COLL-04` `impl:<id>` with the log stream as a known collection cites that log entry under its label, with its title.
   design §2.3 and §3.1: a stream is a collection. Run: memex show README.md.
 
 ## PATH
@@ -48,20 +48,20 @@ memex: cases
 ## LINK
 
 - `CITE-LINK-01` A markdown link to a walked file cites it, resolved from the folder of its README, and an anchor after the path is dropped.
-  design §2.3 `[text](path)`: resolved from the folder, then the root; #anchors are not refs. Run: memex show src/README.md.
+  design §2.3 (a Markdown link: resolved from the folder, then the root; #anchors are not refs). Run: memex show src/README.md.
 - `CITE-LINK-02` A link to a URL, an in-page anchor and a bare URL in prose are not refs, even where their path names a walked file.
   design §2.3: URLs and #anchors are not refs. Run: memex show README.md.
 - `CITE-LINK-03` A markdown link to a missing file is an unresolved cite, printed with its target as written.
   design §2.3: a link that resolves to nothing is listed as unresolved. Run: memex show README.md.
-- `CITE-LINK-04` A markdown link whose destination is in angle brackets, `[t](<path with spaces.rs>)`, cites the walked file at that path, spaces and all.
-  design §2.3 `[text](path)`: a file in the walked set, resolved from the citing doc's folder, then the root. Run: memex show README.md.
+- `CITE-LINK-04` A markdown link whose destination is in angle brackets, with spaces in its path, cites the walked file at that path, spaces and all.
+  design §2.3 (a Markdown link: a file in the walked set, resolved from the citing doc's folder, then the root). Run: memex show README.md.
 - `CITE-LINK-05` A markdown link in a README outside src/ that names src/cli.rs cites that file, since the README's own folder holds no such path and the link resolves from the root.
-  design §2.3 `[text](path)`: resolved from the citing doc's folder, then the root. Run: memex show docs/README.md, then memex show src/cli.rs.
+  design §2.3 (a Markdown link: resolved from the citing doc's folder, then the root). Run: memex show docs/README.md, then memex show src/cli.rs.
 
 ## MAN
 
 - `CITE-MAN-01` A collection doc is cited like a file: a link to it lists the linking README under its cited by, and `notes:beta` in a README cites that doc, which lists the README under its cited by.
-  design §2.3 `[text](path)` and `collection:id` with a known collection, and §2.2 frontmatter collections. Run: memex show notes:alpha, then memex show README.md, then memex show notes:beta. The fixture's notes are `memex: notes` frontmatter docs.
+  design §2.3 (a Markdown link) and `collection:id` with a known collection, and §2.2 frontmatter collections. Run: memex show notes:alpha, then memex show README.md, then memex show notes:beta. The fixture's notes are `memex: notes` frontmatter docs.
 
 ## UNRES
 
@@ -89,27 +89,27 @@ memex: cases
 ## SELF
 
 - `CITE-SELF-01` A case does not cite its own id in its claim, and a README does not cite its own folder, so the cited by lists stay `(none)`.
-  design §2.3: self-citations are dropped. Run: memex show cases:NAME-001, then memex show src/README.md, then memex show src.
+  design §2.3: self-citations are dropped. Run: memex show NAME-001, then memex show src/README.md, then memex show src.
 
 ## BACK
 
 - `CITE-BACK-01` Cited by lists each citing README, header and case, sorted by label, with its one-liner.
   design §2.3 derived backlinks, and §3.3 File. Run: memex show src/cli.rs.
 - `CITE-BACK-02` A log entry that cites a file is listed under cited by as stream:id with its title, and the log's own section lists what it cites.
-  design §2.3: log docs are scanned; §3.3 Log or collection doc. Run: memex show src/cli.rs, then memex show impl:20261013-120000-x.
+  design §2.3: log docs are scanned; §3.3 Log or collection doc. Run: memex show src/cli.rs, then memex show 20261013-120000-x.
 - `CITE-BACK-03` A case that cites another case is a backlink on it, and the citing case's own section shows cited by with no cites block.
-  design §2.3 and §3.3 Case. Run: memex show cases:NAME-001, then memex show cases:NAME-002.
+  design §2.3 and §3.3 Case. Run: memex show NAME-001, then memex show NAME-002.
 - `CITE-BACK-04` `--limit` cuts the cited by list, and its limits line always reads `showing N of M`, adding the `(--limit M for all)` hint only when the list was cut.
   design §3.3 Limits: the cited-by list uses --limit and always prints showing N of M, with the hint only when N < M. Run: memex show src/cli.rs --limit 2, then --limit 3.
 - `CITE-BACK-05` A log that cites another log is listed under that log's cited by as `stream:id` with its title, and the citing log's cites lists the log it cites.
-  design §2.3 (log docs are scanned for citations) and §3.3 Log or collection doc. Run: memex show impl:20261013-115000-first-finding, then memex show review:20261013-115500-second-finding.
+  design §2.3 (log docs are scanned for citations) and §3.3 Log or collection doc. Run: memex show the `impl` entry 20261013-115000-first-finding, then memex show the `review` entry 20261013-115500-second-finding.
 
 ## JSON
 
 - `CITE-JSON-01` `--json` gives each cite as `{ref, title, resolved}`, and an unresolved cite has `resolved` false and an empty title.
   design §3.6 show: cites. Run: memex show README.md --json.
 - `CITE-JSON-02` `--json` gives cited_by its total and its refs, and a ref has a `via` key only when it cites by prefix.
-  design §3.6 show: cited_by. Run: memex show cases:NAME-001 --json.
+  design §3.6 show: cited_by. Run: memex show NAME-001 --json.
 
 ## FIELD
 
@@ -124,7 +124,7 @@ memex: cases
 - `CITE-FIELD-05` A collection doc's `memex` key is not one of its fields, and its field cites come before its body's cites, each id listed once at its first appearance.
   design §2.3: the memex key is never scanned, and field cites come before body cites in cites. Run: memex show decisions:rounding.
 - `CITE-FIELD-06` A log's frontmatter is not scanned, so a log whose tags hold a declared id does not cite it, while an id in its body is cited.
-  design §2.3: a log's frontmatter is memex's own record of the run and is not scanned. Run: memex show MONEY-001, then memex show MONEY-002, then memex show impl:20261013-120000-pricing.
+  design §2.3: a log's frontmatter is memex's own record of the run and is not scanned. Run: memex show MONEY-001, then memex show MONEY-002, then memex show 20261013-120000-pricing.
 - `CITE-FIELD-07` A folder doc whose marker is a Markdown file cites through the fields of that file's frontmatter, as a collection doc does.
   design §2.3 and §4.2: a folder doc whose marker is `.md` takes its fields from that frontmatter. Run: memex show MONEY-001, then memex show specs:ledger.
 - `CITE-FIELD-08` A json manifest's doc cites from its text alone, as before: its strings are the text, so a fence that opens in one string and closes in a later one hides the ids between them, and its fields are not read again.

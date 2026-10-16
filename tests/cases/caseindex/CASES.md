@@ -7,57 +7,57 @@ The caseindex family pins design §2.2, how a CASES.md becomes case docs, and th
 
 ## ITEM
 
-- `CASE-ITEM-01` A column-0 dash item whose first element is a case id is a case, shown as `cases:ID`.
-  Scenario: a fixture CASES.md with a dash item for NAME-001; show cases:NAME-001 prints it, exit 0. design §2.2 column 0.
+- `CASE-ITEM-01` A column-0 dash item whose first element is a case id is a case, shown as `cases:<id>`.
+  Scenario: a fixture CASES.md with a dash item for NAME-001; show NAME-001 prints it, exit 0. design §2.2 column 0.
 - `CASE-ITEM-02` A column-0 star item whose first element is a case id is a case too.
-  Scenario: a star item for STAR-001; show cases:STAR-001 prints it, exit 0. design §2.2 column 0.
+  Scenario: a star item for STAR-001; show STAR-001 prints it, exit 0. design §2.2 column 0.
 - `CASE-ITEM-03` An indented item is not a case, so its id is not found, and its line stays detail of the item above it.
-  Scenario: an indented item for INDENT-001 under PARENT-001; show cases:INDENT-001 exits 1, and show cases:PARENT-001 prints the line as detail. design §2.2 column 0.
+  Scenario: an indented item for INDENT-001 under PARENT-001; show INDENT-001 exits 1, and show PARENT-001 prints the line as detail. design §2.2 column 0.
 - `CASE-ITEM-04` A paragraph that opens with a backticked case id, but is not a list item, is not a case.
-  Scenario: a column-0 paragraph that opens with PROSE-001; show cases:PROSE-001 exits 1. design §2.2 list item.
+  Scenario: a column-0 paragraph that opens with PROSE-001; show PROSE-001 exits 1. design §2.2 list item.
 
 ## CLAIM
 
 - `CASE-CLAIM-01` The claim is the rest of the item's first line after the id, and it is the first line of the body.
-  Scenario: a dash item for CLAIM-001 with one sentence; show cases:CLAIM-001 prints that sentence first. design §2.2 Claim.
+  Scenario: a dash item for CLAIM-001 with one sentence; show CLAIM-001 prints that sentence first. design §2.2 Claim.
 - `CASE-CLAIM-02` An item with no text after its id is still a case, and its claim is empty.
-  Scenario: a bare item for EMPTY-001 under a heading; show cases:EMPTY-001 prints the section with no claim line. design §2.2 Case id and claim.
+  Scenario: a bare item for EMPTY-001 under a heading; show EMPTY-001 prints the section with no claim line. design §2.2 Case id and claim.
 
 ## DETAIL
 
 - `CASE-DETAIL-01` Indented lines under an item are its detail, printed after its claim without their indent.
-  Scenario: an item with two indented lines; show cases:DETAIL-001 prints the claim, then both lines unindented. design §2.2 Detail.
+  Scenario: an item with two indented lines; show DETAIL-001 prints the claim, then both lines unindented. design §2.2 Detail.
 - `CASE-DETAIL-02` A column-0 line ends an item, so a later column-0 line that is not an item is not its detail.
-  Scenario: an item, a column-0 sentence, then the next item; show cases:ENDS-001 omits the sentence. design §2.2 Detail.
+  Scenario: an item, a column-0 sentence, then the next item; show ENDS-001 omits the sentence. design §2.2 Detail.
 - `CASE-DETAIL-03` A blank line does not end an item: an indented line after it is detail, a blank line between detail lines is kept, and trailing blank lines are dropped.
-  Scenario: an item with a blank line between two indented paragraphs, then a blank line and the next item; show cases:BLANK-001 keeps one blank line in the middle and none at its end. design §2.2 Detail.
+  Scenario: an item with a blank line between two indented paragraphs, then a blank line and the next item; show BLANK-001 keeps one blank line in the middle and none at its end. design §2.2 Detail.
 
 ## GROUP
 
 - `CASE-GROUP-01` The group is the nearest heading above an item, at any heading level, and it is recorded as the group field.
   Scenario: items under a level-two, a level-three and a later level-one heading; each shows its nearest heading as its group. design §2.2 Group.
 - `CASE-GROUP-02` An item above every heading has no group, so its group block shows (none).
-  Scenario: an item before any heading and one after a heading; show cases:TOP-001 shows (none) and show cases:TOP-002 shows its heading. design §2.2 Group.
+  Scenario: an item before any heading and one after a heading; show TOP-001 shows (none) and show TOP-002 shows its heading. design §2.2 Group.
 
 ## FENCE
 
 - `CASE-FENCE-01` An item inside a column-0 code fence is code, not a list item, so it is not a case.
-  Scenario: a fenced dash item for FENCED-001 and a real item after the fence for FENCE-002; show cases:FENCED-001 exits 1 and show cases:FENCE-002 prints it. design §2.3, fenced code is never read as intent, applied to CASES.md.
+  Scenario: a fenced dash item for FENCED-001 and a real item after the fence for FENCE-002; show FENCED-001 exits 1 and show FENCE-002 prints it. design §2.3, fenced code is never read as intent, applied to CASES.md.
 - `CASE-FENCE-02` A heading inside a code fence does not set the group of the items after the fence.
-  Scenario: a tilde fence holding a level-two heading, then an item; show cases:FENCE-003 shows the heading above the fence as its group. design §2.3.
+  Scenario: a tilde fence holding a level-two heading, then an item; show FENCE-003 shows the heading above the fence as its group. design §2.3.
 - `CASE-FENCE-03` A fence indented up to three spaces is a fence, so an item inside it is code; a line indented four spaces is not a fence, so the item after it is read.
-  Scenario: an item before a three-space fence that holds HIDDEN-001, then FOUR-001 with a four-space line in its detail and FOUR-002 after it; show cases:INDENT-001 prints its claim alone, show cases:HIDDEN-001 exits 1 and show cases:FOUR-002 prints it. design §2.3, the fence definition applied to CASES.md items.
+  Scenario: an item before a three-space fence that holds HIDDEN-001, then FOUR-001 with a four-space line in its detail and FOUR-002 after it; show INDENT-001 prints its claim alone, show HIDDEN-001 exits 1 and show FOUR-002 prints it. design §2.3, the fence definition applied to CASES.md items.
 - `CASE-FENCE-04` The lines of a fence inside an item's detail are left out of the detail, and the detail after the fence is kept.
-  Scenario: DETAIL-001 with two detail lines around a two-space `sh` fence; show cases:DETAIL-001 prints its claim and the two detail lines, and not the fence or its code. design §2.2 Detail and §2.3.
+  Scenario: DETAIL-001 with two detail lines around a two-space `sh` fence; show DETAIL-001 prints its claim and the two detail lines, and not the fence or its code. design §2.2 Detail and §2.3.
 - `CASE-FENCE-05` A fence closes only at a bare line of its own mark, at least as long: a tilde line, a line with other text after its marks, or a shorter run does not close it.
-  Scenario: a backtick fence holding a tilde line, then one holding a line with `md` after its marks, then a four-backtick fence holding a three-backtick line; show cases:CLOSE-002, cases:CLOSE-004 and cases:CLOSE-007 exit 1, and show cases:CLOSE-005 and cases:CLOSE-008 print their items. design §2.3.
+  Scenario: a backtick fence holding a tilde line, then one holding a line with `md` after its marks, then a four-backtick fence holding a three-backtick line; show CLOSE-002, CLOSE-004 and CLOSE-007 exit 1, and show CLOSE-005 and CLOSE-008 print their items. design §2.3.
 - `CASE-FENCE-06` A backtick fence line whose info string holds a backtick is text, not a fence, so the items after it are read.
-  Scenario: a line that opens with three backticks and then holds a backtick, between TICK-001 and TICK-002, with TICK-003 after it; show cases:TICK-002 and show cases:TICK-003 print them. design §2.3.
+  Scenario: a line that opens with three backticks and then holds a backtick, between TICK-001 and TICK-002, with TICK-003 after it; show TICK-002 and show TICK-003 print them. design §2.3.
 
 ## GRAMMAR
 
 - `CASE-GRAMMAR-01` A lowercase id is not a case id, so its item is not a case.
-  Scenario: a dash item for name-001; show cases:name-001 exits 1. design §2.2 Case id.
+  Scenario: a dash item for name-001; show name-001 exits 1. design §2.2 Case id.
 - `CASE-GRAMMAR-02` An id with several dash-separated parts and a short digit suffix is a case id.
   Scenario: items for STT-WRAP-06, LIB-MEASURE-001 and A-1; show prints all three. design §2.2 Case id.
 - `CASE-GRAMMAR-03` An id with no dash, with a trailing dash or with a double dash is not a case id.
@@ -66,14 +66,14 @@ The caseindex family pins design §2.2, how a CASES.md becomes case docs, and th
 ## CRLF
 
 - `CASE-CRLF-01` A CASES.md with CRLF line ends gives the same case, with no carriage return in its text.
-  Scenario: a CRLF fixture with an item and one indented line; show cases:CRLF-001 prints both lines with no carriage return. design §4.4 Text.
+  Scenario: a CRLF fixture with an item and one indented line; show CRLF-001 prints both lines with no carriage return. design §4.4 Text.
 - `CASE-CRLF-02` A leading UTF-8 byte order mark is dropped, so the frontmatter after it still makes the file a collection, and its item is still a case.
-  Scenario: a fixture whose first bytes are a byte order mark, then an item for BOM-001; show cases:BOM-001 prints it. design §4.4 Text.
+  Scenario: a fixture whose first bytes are a byte order mark, then an item for BOM-001; show BOM-001 prints it. design §4.4 Text.
 
 ## PLAN
 
 - `CASE-PLAN-01` A claim that marks its case as planned is a case like any other, and its claim prints as written.
-  Scenario: an item for PLAN-001 whose claim begins with the planned marker; show cases:PLAN-001 prints the claim unchanged. design §2.2 Planned cases.
+  Scenario: an item for PLAN-001 whose claim begins with the planned marker; show PLAN-001 prints the claim unchanged. design §2.2 Planned cases.
 
 ## EVID
 
@@ -96,24 +96,24 @@ The caseindex family pins design §2.2, how a CASES.md becomes case docs, and th
 
 ## JSON
 
-- `CASE-JSON-01` `--json` on a case gives one doc with ref cases:ID, collection cases, its CASES.md as path, its claim as title, and its group and evidence as fields, exit 0.
-  Scenario: a grouped item citing src/hash.rs; show cases:JSON-001 --json prints that doc with empty cites and an empty chain. design §3.6 Doc.
+- `CASE-JSON-01` `--json` on a case gives one doc with ref `cases:<id>`, collection cases, its CASES.md as path, its claim as title, and its group and evidence as fields, exit 0.
+  Scenario: a grouped item citing src/hash.rs; show JSON-001 --json prints that doc with empty cites and an empty chain. design §3.6 Doc.
 
 ## SECT
 
 - `CASE-SECT-01` A case section prints its claim and detail, then its group, its defining CASES.md, its evidence and its cited by list, with no cites block and no chain.
-  Scenario: a grouped item with detail and evidence; show cases:SECT-001 prints the blocks in that order. design §3.3 Case.
+  Scenario: a grouped item with detail and evidence; show SECT-001 prints the blocks in that order. design §3.3 Case.
 
 ## DUP
 
-- `CASE-DUP-01` Two entries with the same id make show cases:ID ambiguous, listing both CASES.md paths, with exit 1.
-  Scenario: two CASES.md files that each declare DUP-001; show cases:DUP-001 prints nothing on stdout and names both files on stderr. design §4.2 and §3.1 step 6.
+- `CASE-DUP-01` Two entries with the same id make `show cases:<id>` ambiguous, listing both CASES.md paths, with exit 1.
+  Scenario: two CASES.md files that each declare DUP-001; show DUP-001 prints nothing on stdout and names both files on stderr. design §4.2 and §3.1 step 6.
 - `CASE-DUP-02` A duplicate id is an info warning on stderr, naming the label and each CASES.md that declares it, exit 0.
-  Scenario: two CASES.md files that each declare DUP-001; memex info prints `memex: warning: duplicate id cases:DUP-001 in CASES.md, sub/CASES.md` on stderr. design §2.2 (duplicate ids) and §3.5 Collections (warnings).
+  Scenario: two CASES.md files that each declare DUP-001; memex info prints `memex: warning: duplicate id cases:<id> in CASES.md, sub/CASES.md` on stderr, with the id DUP-001. design §2.2 (duplicate ids) and §3.5 Collections (warnings).
 
 ## BARE
 
-- `CASE-BARE-01` A bare case id, as in memex show NAME-001, shows the same section as cases:NAME-001.
+- `CASE-BARE-01` A bare case id, as in memex show NAME-001, shows the same section as the label `cases:<id>` for that id.
   Scenario: memex show NAME-001 with the item for NAME-001 in the fixture. design §3.1 step 4, built with REF in S3.2.
 
 ## READ

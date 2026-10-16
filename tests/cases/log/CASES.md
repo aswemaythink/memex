@@ -126,14 +126,14 @@ memex: cases
 ## READ
 
 - `LOG-READ-01` A dot-named `.md` file in a stream folder is read by no read verb: search, a stream's roster and info all leave it out, and show finds nothing under its name, though the entry beside it is listed.
-  design §4.3 (readers ignore dotfiles, so a partial entry is never visible) and §3.5 Streams. Run: memex search widget, then memex search --in impl, then memex info, then memex show impl:.20261013-115500-widget-draft.
+  design §4.3 (readers ignore dotfiles, so a partial entry is never visible) and §3.5 Streams. Run: memex search widget, then memex search --in impl, then memex info, then memex show the `impl` entry .20261013-115500-widget-draft.
 - `LOG-READ-02` A stream folder that cannot be read is one stderr warning, `memex: warning: cannot read <path> (PermissionDenied)`, and its entries are not loaded, while `show .`, `search` and `info` still exit 0.
   design §4.2 (an unreadable stream folder is a warning that is skipped) and §4.4 Errors. Run: memex show ., memex search earlier and memex info, with .memex/logs/impl at mode 000.
 
 ## PRUNE
 
 - `LOG-PRUNE-19` With keep_logs 3d, `search`, `show` and `info` leave an entry 4 days old in place: it is still listed, shown and counted, and its file is still in the store, since pruning happens only on write.
-  design §4.3 Cleanup (pruning happens only on write, and reads never delete). Run: memex search widget, then memex show impl:20261009-110000-widget-old, then memex info, with the store snapshot after.
+  design §4.3 Cleanup (pruning happens only on write, and reads never delete). Run: memex search widget, then memex show 20261009-110000-widget-old, then memex info, with the store snapshot after.
 - `LOG-PRUNE-01` With no config.json, a write deletes an entry older than 3 days by its filename stamp, keeps one 2 days old, and keeps the new entry.
   design §4.3 Cleanup and §4.1 item 4 (the default 3d); PLAN §1 fix 6. Run: memex log impl over a 4-day-old and a 2-day-old entry, with no config.json.
 - `LOG-PRUNE-02` With a config.json that has no keep_logs key, the default 3d applies: an entry exactly 3 days old stays, one second older is deleted, and a future-stamped entry stays.

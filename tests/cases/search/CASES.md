@@ -40,7 +40,7 @@ memex: cases
 
 ## TOKEN
 
-- `SRCH-TOKEN-01` An id is a whole token: `NAME-001` finds `cases:NAME-001` and not `cases:NAME-002`, while the word `name` finds both.
+- `SRCH-TOKEN-01` An id is a whole token: `NAME-001` finds the `cases` entry `NAME-001` and not the entry `NAME-002`, while the word `name` finds both.
   design §3.2 Words (ids are kept as whole tokens, so NAME-001 matches exactly). Run: memex search NAME-001, then memex search name.
 - `SRCH-TOKEN-02` A path is a whole token: `src/hash.rs` finds that header and not `other/hash.rs`, while the word `hash` finds both.
   design §3.2 Words (paths are kept as whole tokens). Run: memex search src/hash.rs, then memex search hash.
@@ -120,8 +120,8 @@ memex: cases
 
 - `SRCH-LITERAL-01` A `field:value` term whose field no doc in scope holds is searched as its words, so `zzq:widget` finds the READMEs that say `widget`, the word `zzq` being in none of them.
   design §3.2 Filters (any other `x:` is a filter only if some doc in scope has field `x`; otherwise it is a literal word). Run: memex search --in readmes zzq:widget.
-- `SRCH-LITERAL-02` `cases:WID-ONE-01` is not a filter, since no doc holds a field `cases`, so it is searched as words and its id ranks WID-ONE-01 first.
-  design §3.2 Filters (a literal `cases:X` stays searchable). Run: memex search cases:WID-ONE-01 --in cases --limit 2.
+- `SRCH-LITERAL-02` A literal `cases:<id>` term is not a filter, since no doc holds a field `cases`, so it is searched as words and the doc WID-ONE-01 ranks first.
+  design §3.2 Filters (a literal `cases:<id>` stays searchable). Run: memex search cases:<id> --in cases --limit 2, with the id WID-ONE-01.
 - `SRCH-LITERAL-03` Which fields count depends on the groups searched: `stream:impl` filters the logs when no `--in` is given, but with `--in readmes` no doc in scope holds `stream`, so the term is words.
   design §3.2 Filters (some doc in scope has field x). Run: memex search stream:impl, then memex search --in readmes stream:impl.
 
@@ -148,7 +148,7 @@ memex: cases
 - `SRCH-ORPHAN-01` In a roster, `<-N` counts the docs that cite a doc directly, so a case that nothing cites reads `<-0`, one cited by one doc reads `<-1`, and one cited by two docs reads `<-2`.
   design §3.2 Roster (each line carries its cited-by count) and design §2.3 (cited by). Run: memex search --in cases --limit 5.
 - `SRCH-ORPHAN-02` A prefix citation is not counted in `<-N`, so a case that only the root README reaches through `WID-*` reads `<-0`, while `memex show` lists it as cited by `WID-*`.
-  design §2.3 (a prefix citation is excluded from roster `<-N`). Run: memex search --in cases --limit 5, then memex show cases:WID-ONE-04.
+  design §2.3 (a prefix citation is excluded from roster `<-N`). Run: memex search --in cases --limit 5, then memex show WID-ONE-04.
 
 ## SINCE
 
