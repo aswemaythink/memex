@@ -52,7 +52,7 @@ EOF
 **Check intent against code.**
 1. Run `memex show <dir>`, then read the code it describes.
 2. For each claim, does the code do it? Is there a cited case that proves it?
-3. Run `memex show <dir>` and read its `cites`: an `unresolved` entry is a broken citation. Run `memex search --in <collection>`: a roster line showing `<-0` is a doc nobody cites.
+3. Run `memex show <dir>` and read its `cites`: an `unresolved` entry is a broken citation, or run `memex check <dir>`, which lists them with missing headers and READMEs. Run `memex search --in <collection>`: a roster line showing `<-0` is a doc nobody cites.
 4. Fix the README, header or collection doc in the same change, or log the mismatch to `drift` if it's out of scope.
 
 **Change code.** In the same commit, update the header or README you invalidated, add or adjust case lines, and put the id in each new test (its name, or a comment on it). Then run `memex check <paths>` and fix what it lists.

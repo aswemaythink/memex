@@ -252,7 +252,7 @@ Exit codes and JSON codes are unchanged.
 
 How healthy the intent layer is, for the whole root or part of it: where intent is missing or thin, which files have grown too long, and which references are broken. It is a report of facts memex already knows, plus one plain-text measure, line count. It never parses code (§1, §7).
 
-- **Scope.** With no argument it checks the root. Each argument is a path (resolved as `show` resolves one, §3.1 step 1) or, if it holds `*`, `?` or `[`, a glob matched against walked root-relative paths with the gitignore rules that manifest `include` uses (§4.2). A file is in scope if it is named or lies under a named folder or matches a glob; a folder likewise. A path that names nothing is that argument's `not found` error (§3.5c), the rest are still checked, and the exit code is 1; a glob that matches nothing is not an error.
+- **Scope.** With no argument it checks the root. Each argument is a path, resolved as `show` resolves one (§3.1 steps 1, 2 and 5; a label or a bare id is not a scope and is `not found`), or, if it holds `*`, `?` or `[`, a glob matched against walked root-relative paths with the gitignore rules that manifest `include` uses (§4.2). A file is in scope if it is named or lies under a named folder or matches a glob; a folder likewise. A path that names nothing is that argument's `not found` error (§3.5c), the rest are still checked, and the exit code is 1; a glob that matches nothing is not an error.
 - **Kinds.** Each finding has one kind. The kinds print in this order, and a kind with no finding in scope is left out:
   1. `headers`: a file with a comment family (§2.1) that is not empty, not binary (§2.1 skips binary files, so `length` and `thin` leave them out too) and has no header.
   2. `readmes`: a walked folder with no README.md whose subtree holds a file with a comment family (§2.1), the root included. A folder of data alone (case folders, JSON or text fixtures) is not a unit and needs none.
@@ -439,10 +439,10 @@ EOF
 **Check intent against code.**
 1. Run `memex show <dir>`, then read the code it describes.
 2. For each claim, does the code do it? Is there a cited case that proves it?
-3. Run `memex show <dir>` and read its `cites`: an `unresolved` entry is a broken citation.
+3. Run `memex show <dir>` and read its `cites`: an `unresolved` entry is a broken citation, or run `memex check <dir>`, which lists them with missing headers and READMEs.
 4. Fix the README, header or collection doc in the same change, or log the mismatch to `drift` if it's out of scope.
 
-**Change code.** In the same commit, update the header or README you invalidated, add or adjust case lines, and put the id in each new test (its name, or a comment on it).
+**Change code.** In the same commit, update the header or README you invalidated, add or adjust case lines, and put the id in each new test (its name, or a comment on it). Then run `memex check <paths>` and fix what it lists.
 
 **Promote a stream.** When a stream has proven durable, copy its files into the repo and add `memex: <name>` to their frontmatter; give the owning skill the instructions.
 
