@@ -6,11 +6,11 @@ description: Read a repo's intent layer with memex before its code. It shows whe
 ## memex: read intent before code
 This repo keeps an intent layer. The graph: README.md per folder and a header comment atop each file
 (first line = purpose). Dimensions: any Markdown file with `memex: <collection>` in its frontmatter
-joins that collection, such as CASES.md (`memex: cases`): test ids with their claims (ids appear in test names).
+joins that collection, such as CASES.md (`memex: cases`): test ids with their claims; each id is in its test's name or in a comment on it.
 - Overview: `memex info`: where everything is (graph, collections, streams, messages for you).
 - Orient: `memex show <path>`: header, cites, who cites it, README chain; folders list children.
 - Find: `memex search <words>` over READMEs, headers, collections and logs. Use `rg` for symbols.
-- Tests for X: `memex search <words> --in cases`; `memex show <ID>` gives claim and evidence; `rg <ID>` finds the test.
+- Tests for X: `memex search <words> --in cases` (or the collection `memex info` names); `memex show <ID>` gives claim and evidence; `rg <ID>` finds the test.
 - Findings: `memex log <stream> [--to <agent>] <<'EOF' … EOF` prints a ref. Hand back the ref, not the report.
 - Messages to you: `memex search to:<your-id>`.
 - When you change code, update its header/README in the same change. Cite ids and paths; don't copy.
@@ -36,7 +36,7 @@ memex show crates/namer/src/hash.rs   # header, cites (with claims), cited by, c
 ```sh
 memex search stable class names --in cases   # the claims
 memex show NAME-001                   # claim, evidence, who cites it
-rg NAME-001                           # the test itself (id is in its name)
+rg NAME-001                           # the test itself (the id is in its name or a comment)
 ```
 
 **Log a finding.** Record what you learned that the code doesn't say: a verdict, a dead end, a gotcha. Do not log a diary.
@@ -52,7 +52,7 @@ EOF
 **Check intent against code.**
 1. Run `memex show <dir>`, then read the code it describes.
 2. For each claim, does the code do it? Is there a cited case that proves it?
-3. Run `memex show <dir>` and read its `cites`: an `unresolved` entry is a broken citation. Run `memex search --in cases`: an entry showing `<-0` is a case nobody cites.
+3. Run `memex show <dir>` and read its `cites`: an `unresolved` entry is a broken citation. Run `memex search --in <collection>`: a roster line showing `<-0` is a doc nobody cites.
 4. Fix the README, header or collection doc in the same change, or log the mismatch to `drift` if it's out of scope.
 
 **Change code.** In the same commit, update the header or README you invalidated, add or adjust case lines, and put the id in new test names.
@@ -69,7 +69,7 @@ The intent layer has two parts, tied together by citations.
 
 1. **README.md per unit folder.** Line 1 is `# Name`. The first paragraph says what the folder is and why it exists; its first sentence is the one-liner shown everywhere.
 2. **Header at the top of each non-trivial file.** It is the first comment block, and its first sentence states the file's purpose. That sentence is the file's one-liner. Citing case ids in it is optional.
-3. **A frontmatter line joins a dimension.** `memex: <collection>` in a Markdown file's frontmatter makes it a doc in that collection. Cases are the usual first one: a `CASES.md` with `memex: cases` lists test ids with their claims, and each test's own name contains its id.
+3. **A frontmatter line joins a dimension.** `memex: <collection>` in a Markdown file's frontmatter makes it a doc in that collection. Cases are the usual first one: a `CASES.md` with `memex: cases` lists test ids with their claims, and each test carries its id, in its name where the language allows, else in a comment on it.
 4. **Cite, don't copy.** Write ids, paths and refs into READMEs, headers, docs and logs. memex derives links both ways from them. There are no mapping files.
 5. **Intent ships with code.** A change to behaviour updates its header or README in the same commit.
 
