@@ -1,7 +1,8 @@
 //! Reads a README (design §2 and §4.2): its doc, and the one-liner that its folder lists.
 //! Cases: INT-LINE-01, INT-LINE-02, INT-LINE-03, INT-LINE-04, INT-LINE-05, INT-NOHEAD-01, INT-NOHEAD-02, SHOW-DIR-01, SHOW-ROOT-01, SHOW-LINE-01, COLL-REFINE-03
 
-use super::{front, sentence, Origin};
+use super::{sentence, Origin};
+use crate::collections::frontmatter::after_frontmatter;
 use crate::corpus::{Doc, READMES};
 
 /// The doc of the README `rel` whose whole text is `contents`, labelled by its path (design §3.1). Its one-liner is read after a
@@ -13,7 +14,7 @@ pub fn doc(rel: &str, contents: String) -> Doc {
         collection: READMES.to_string(),
         id: rel.to_string(),
         path: Some(rel.to_string()),
-        title: one_liner(front::after_frontmatter(&contents)),
+        title: one_liner(after_frontmatter(&contents)),
         text: contents,
         fields: Vec::new(),
         origin: Origin::Graph,

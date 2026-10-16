@@ -5,10 +5,9 @@ stdout
 | (no README)
 | 
 | children
-|   notes.md  (no header)
+|   notes.md  Plain notes
 |   showing 1 of 1
 | (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
-| (no header): add a comment block atop the file; its first sentence states the file's purpose
 | 
 | cites
 |   (none)

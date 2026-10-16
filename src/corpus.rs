@@ -1,7 +1,7 @@
 //! Loads the read model (design §3.1 and §3.6): the walked entries and the docs built from them.
 //! The docs are READMEs, headers, collection docs read from frontmatter and manifests, and logs, with the label map.
 //! The walked entries and the intent docs are bulk-built from sorted input; manifest and log docs are inserted one by one.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ORDER-01, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, SHOW-IO-02, INT-NAME-01, INT-NAME-02, INT-CHAIN-01, INT-BOM-01, MAN-LOAD-02, REF-AMBIG-02, REF-AMBIG-03, REF-RESERVED-03, REF-RESERVED-04, COLL-INFO-01, COLL-INFO-02, COLL-SHARED-01, COLL-SHARED-02, COLL-SHARED-03, COLL-SHARED-04, COLL-DUP-01, COLL-DUP-02, COLL-DUP-03
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ORDER-01, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, SHOW-IO-02, INT-NAME-01, INT-NAME-02, INT-CHAIN-01, INT-BOM-01, MAN-LOAD-02, REF-AMBIG-02, REF-AMBIG-03, REF-RESERVED-03, REF-RESERVED-04, COLL-INFO-01, COLL-INFO-02, COLL-SHARED-01, COLL-SHARED-02, COLL-SHARED-03, COLL-SHARED-04, COLL-DUP-01, COLL-DUP-02, COLL-DUP-03, SHOW-MDCHILD-01, SHOW-MDCHILD-02, SHOW-MDCHILD-03, SHOW-MDCHILD-04
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::io;
@@ -14,7 +14,7 @@ use crate::cite;
 use crate::collections::frontmatter::Value;
 use crate::collections::manifest;
 use crate::error::{self, Error};
-use crate::intent::{files, front, shared, Origin};
+use crate::intent::{by_label, files, front, shared, Origin};
 use crate::logs::read::load as load_logs;
 use crate::par;
 use crate::walk;
@@ -70,7 +70,7 @@ pub struct Child {
     pub rel: String,
     /// Whether the child is a folder or a file.
     pub kind: Kind,
-    /// The one-liner of a folder's README, or of a file's header or README; None when there is none.
+    /// The one-liner of a folder's README, or of a file's header, README or Markdown text; None when there is none.
     pub title: Option<String>,
 }
 
@@ -81,6 +81,8 @@ pub struct Corpus {
     /// Every doc by label, in load order. A label holds more than one doc when two files declare the same id.
     docs: BTreeMap<String, Vec<Doc>>,
     kinds: BTreeMap<String, Kind>,
+    /// The title of each Markdown file that was read, by root-relative path: what its folder's child line shows (design §3.3).
+    titles: BTreeMap<String, String>,
     /// The folders that the walk could not list, by root-relative path, with the kind of the failure (design §3.3).
     unlistable: BTreeMap<String, io::ErrorKind>,
     /// The streams of the log store, which `logs:` reads across (design §3.1).
@@ -136,21 +138,24 @@ impl Corpus {
         let mut kinds = Vec::with_capacity(entries.len() + 1);
         kinds.push((String::new(), Kind::Dir));
         let mut docs = Vec::new();
+        let mut titles = BTreeMap::new();
         for (entry, found) in entries.into_iter().zip(read) {
             let kind = if entry.is_dir { Kind::Dir } else { Kind::File };
-            kinds.push((entry.rel, kind));
             match found {
                 Ok(found) => {
+                    titles.extend(found.title.map(|title| (entry.rel.clone(), title)));
                     docs.extend(found.docs);
                     read_warnings.extend(found.warnings.iter().map(|line| error::warning(line)));
                 }
                 Err(error) => read_warnings.push(error::warning(&error.message)),
             }
+            kinds.push((entry.rel, kind));
         }
         let mut corpus = Corpus {
             root: root.to_path_buf(),
             docs: by_label(docs),
             kinds: kinds.into_iter().collect(),
+            titles,
             unlistable,
             streams: BTreeSet::new(),
             citations: OnceLock::new(),
@@ -298,13 +303,14 @@ impl Corpus {
         self.docs.entry(doc.label.clone()).or_default().push(doc);
     }
 
-    /// The one-liner of a walked entry: its README's for a folder, its own doc's for a file.
+    /// The one-liner of a walked entry: its README's for a folder, its own doc's for a file, else a Markdown file's title.
     fn title_of(&self, rel: &str, kind: Kind) -> Option<String> {
-        let label = match kind {
-            Kind::Dir => readme_label(rel),
-            Kind::File => rel.to_string(),
+        let doc = match kind {
+            Kind::Dir => self.doc(&readme_label(rel)),
+            Kind::File => self.doc(rel),
         };
-        self.doc(&label).map(|doc| doc.title.clone())
+        doc.map(|doc| doc.title.clone())
+            .or_else(|| self.titles.get(rel).cloned())
     }
 }
 
@@ -340,23 +346,14 @@ pub fn name_of(rel: &str) -> &str {
     rel.rsplit('/').next().unwrap_or(rel)
 }
 
+/// True for a Markdown file by its name: the walk reads a name that ends in `.md` as Markdown (design §2.2).
+pub fn is_markdown(name: &str) -> bool {
+    name.ends_with(".md")
+}
+
 /// True for a root-relative path that is directly under the folder `prefix`: `""` for the root, else `<folder>/`. The root's own
 /// empty path is no child, and a path with a `/` after the prefix lies deeper.
 fn direct_child_of(path: &str, prefix: &str) -> bool {
     path.strip_prefix(prefix)
         .is_some_and(|name| !name.is_empty() && !name.contains('/'))
-}
-
-/// The intent docs grouped by label (design §3.1). The sort is stable, so each label's docs keep the order they were read in, and
-/// the groups go to the map in one pass.
-fn by_label(mut docs: Vec<Doc>) -> BTreeMap<String, Vec<Doc>> {
-    docs.sort_by(|left, right| left.label.cmp(&right.label));
-    let mut groups: Vec<(String, Vec<Doc>)> = Vec::new();
-    for doc in docs {
-        match groups.last_mut() {
-            Some((label, group)) if *label == doc.label => group.push(doc),
-            _ => groups.push((doc.label.clone(), vec![doc])),
-        }
-    }
-    groups.into_iter().collect()
 }

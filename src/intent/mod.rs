@@ -1,6 +1,6 @@
 //! The readers of the intent layer and the one-liner rule they share (design §2).
 //! Paragraphs, the first sentence, and the one-liner of a block; `Origin` tells the graph, entries, whole files, manifest docs and
-//! log entries apart.
+//! log entries apart, and `by_label` groups the docs by label (design §3.1).
 //! Cases: SHOW-DIR-01, SHOW-FILE-01, SHOW-LINE-01
 
 pub mod entries;
@@ -9,6 +9,8 @@ pub mod front;
 pub mod header;
 pub mod readme;
 pub mod shared;
+
+use std::collections::BTreeMap;
 
 use crate::corpus::{Doc, HEADERS, READMES};
 
@@ -51,6 +53,20 @@ impl Doc {
     pub fn is_header(&self) -> bool {
         self.is_graph() && self.collection == HEADERS
     }
+}
+
+/// The intent docs grouped by label (design §3.1). The sort is stable, so each label's docs keep the order they were read in, and
+/// the groups go to the map in one pass.
+pub fn by_label(mut docs: Vec<Doc>) -> BTreeMap<String, Vec<Doc>> {
+    docs.sort_by(|left, right| left.label.cmp(&right.label));
+    let mut groups: Vec<(String, Vec<Doc>)> = Vec::new();
+    for doc in docs {
+        match groups.last_mut() {
+            Some((label, group)) if *label == doc.label => group.push(doc),
+            _ => groups.push((doc.label.clone(), vec![doc])),
+        }
+    }
+    groups.into_iter().collect()
 }
 
 /// The paragraphs of a block: runs of non-blank lines, each joined with newlines. Blank lines separate them.

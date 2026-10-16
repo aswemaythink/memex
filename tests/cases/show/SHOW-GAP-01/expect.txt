@@ -6,10 +6,9 @@ stdout
 | 
 | children
 |   inner/  (no README)
-|   notes.md  (no header)
+|   notes.md  Plain notes
 |   showing 2 of 2
 | (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
-| (no header): add a comment block atop the file; its first sentence states the file's purpose
 | 
 | cites
 |   (none)
@@ -28,5 +27,5 @@ stderr (empty)
 $ memex show plain --json
 exit 0
 stdout
-| {"docs":[{"ref":"plain","collection":null,"id":null,"path":"plain","title":null,"fields":{},"text":null,"cites":[],"cited_by":{"total":0,"refs":[]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}],"children":{"total":2,"items":[{"path":"plain/inner","kind":"dir","title":null},{"path":"plain/notes.md","kind":"file","title":null}]}}],"errors":[]}
+| {"docs":[{"ref":"plain","collection":null,"id":null,"path":"plain","title":null,"fields":{},"text":null,"cites":[],"cited_by":{"total":0,"refs":[]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}],"children":{"total":2,"items":[{"path":"plain/inner","kind":"dir","title":null},{"path":"plain/notes.md","kind":"file","title":"Plain notes"}]}}],"errors":[]}
 stderr (empty)

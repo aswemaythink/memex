@@ -121,9 +121,20 @@ memex: cases
 
 ## GAP
 
-- `SHOW-GAP-01` A folder with no README, holding a headerless file and a subfolder with no README, prints `(no README)` as its body and on the subfolder's line, `(no header)` on the file's line, and after its children the legend lines `(no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is` and `(no header): add a comment block atop the file; its first sentence states the file's purpose`, each once, exit 0; with `--json` the same folder has no legend text, exit 0.
-  design §3.3 Gaps: a section that prints a placeholder follows its children with one legend line per placeholder, once; JSON is unchanged. Run: memex show plain, then memex show plain --json.
+- `SHOW-GAP-01` A folder with no README, holding a Markdown file with a heading and a subfolder with no README, prints `(no README)` as its body and on the subfolder's line, the Markdown file's heading on its line with no placeholder, and after its children only the legend line `(no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is`, once, with no `(no header)` line, exit 0; with `--json` the same folder has no legend text, and the Markdown file's heading is its child's `title`, exit 0.
+  design §3.3 Gaps: a section that prints a placeholder follows its children with one legend line per placeholder, once; JSON is unchanged. A Markdown child prints its title, never a placeholder (SHOW-MDCHILD-04). Run: memex show plain, then memex show plain --json.
 - `SHOW-GAP-02` A headerless file prints `(no header)` as its body, and the `(no header)` legend line directly after that body, before `cites`, exit 0; with `--json` it has no legend text, exit 0.
   design §3.3 Gaps: a file section's legend follows its body. Run: memex show notes.txt, then memex show notes.txt --json.
 - `SHOW-GAP-03` A folder with a README whose children all have a one-liner, and a file with a header, print no legend line, and `--json` has none either, exit 0.
   design §3.3 Gaps: a section that prints no placeholder gets no legend line. Run: memex show headed, memex show src/cli.rs --up 0, then memex show headed --json.
+
+## MDCHILD
+
+- `SHOW-MDCHILD-01` A Markdown child of a folder lists its first heading as its one-liner, in text and as the child's `title` in `--json`, exit 0.
+  design §3.3 Folder: a Markdown file's child line shows its title, the §4.2 title rule. Run: memex show notes, then memex show notes --json.
+- `SHOW-MDCHILD-02` A Markdown child with no heading lists its first non-blank line, trimmed, and its JSON title is that same text, exit 0.
+  design §3.3 Folder and §4.2 title rule: a text with no heading gives its first non-blank line. Run: memex show notes, then memex show notes --json.
+- `SHOW-MDCHILD-03` A `memex:`-keyed Markdown doc and a CASES.md entry index each list their own first heading, read after their frontmatter, exit 0.
+  design §3.3 Folder: the title is read after any frontmatter (§2.2). Run: memex show notes.
+- `SHOW-MDCHILD-04` An empty Markdown child lists its name alone with an empty JSON title, and a folder whose only child lacking a one-liner is that file prints no `(no header)` legend line, exit 0.
+  design §3.3 Folder: an empty Markdown file shows its name alone; no placeholder, so no legend line. Run: memex show scraps, then memex show scraps --json.

@@ -1,0 +1,3 @@
+# Scraps
+
+The scrap folder.

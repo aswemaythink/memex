@@ -1,6 +1,6 @@
-//! Reads a Markdown file's `memex:` frontmatter into collection docs (design §2.2).
+//! Reads a Markdown file's `memex:` frontmatter into docs (design §2.2) and its title (design §3.3).
 //! A head is read once: when it holds the whole file, the text comes from it, so no Markdown file is opened twice for its head.
-//! Cases: COLL-FRONT-01, COLL-FRONT-02, COLL-FRONT-03, COLL-FRONT-04, COLL-FRONT-05, COLL-FRONT-06, COLL-FRONT-07, COLL-FRONT-08, COLL-NAME-01, COLL-NAME-02, COLL-ONE-01, COLL-ONE-02, COLL-ONE-03, COLL-ONE-04, COLL-README-01, COLL-UNREAD-01, COLL-PLAIN-01, COLL-INFO-02
+//! Cases: COLL-FRONT-01, COLL-FRONT-02, COLL-FRONT-03, COLL-FRONT-04, COLL-FRONT-05, COLL-FRONT-06, COLL-FRONT-07, COLL-FRONT-08, COLL-NAME-01, COLL-NAME-02, COLL-ONE-01, COLL-ONE-02, COLL-ONE-03, COLL-ONE-04, COLL-README-01, COLL-UNREAD-01, COLL-PLAIN-01, COLL-INFO-02, SHOW-MDCHILD-01, SHOW-MDCHILD-02, SHOW-MDCHILD-03, SHOW-MDCHILD-04
 
 use std::collections::BTreeMap;
 use std::fs::{self, File};
@@ -10,7 +10,7 @@ use std::path::Path;
 use super::entries;
 use super::files::Found;
 use super::Origin;
-use crate::collections::frontmatter::{split, Document, Value};
+use crate::collections::frontmatter::{after_frontmatter, split, Document, Value};
 use crate::collections::manifest::{Kind, Loaded, Manifest};
 use crate::collections::title;
 use crate::corpus::Doc;
@@ -77,6 +77,17 @@ impl Head {
         text::read(path).map_err(|failure| Error::io_at("cannot read", path, &failure))
     }
 
+    /// The title of the file's text, which its folder's child line shows (design §3.3): the default line of the text after any
+    /// frontmatter. It is read from the head alone, so a title that starts past the limit is not seen (design §2.1), and a head
+    /// cut by the limit keeps only its complete lines.
+    pub fn markdown_title(&self) -> String {
+        let mut head_text = text::decode(&self.bytes);
+        if !self.whole {
+            head_text.truncate(head_text.rfind('\n').map_or(0, |end| end + 1));
+        }
+        title::default_title(after_frontmatter(&head_text))
+    }
+
     /// True when the frontmatter of the head has a `memex:` line before its closing fence, and that line is complete within the
     /// head, so a line cut by the limit is not seen (design §2.2). The key must lie in the first 8 KiB of the file.
     pub fn has_key(&self) -> bool {
@@ -105,33 +116,18 @@ pub fn readme_has_key(head: &Head, text: &str) -> bool {
     head.has_key() && closed(text).is_some()
 }
 
-/// The text after a closed frontmatter block at the top of `text`, which `text::decode` has read, by the rule `split` uses: a first
-/// line `---` and the next `---` line. A text with no such block, or whose block never closes, is whole. A README's one-liner and its
-/// search body are read from it, while `show` prints the whole file (design §2 One-liners).
-pub fn after_frontmatter(text: &str) -> &str {
-    let mut pieces = text.split_inclusive('\n');
-    let Some(first) = pieces.next().filter(|first| text::line_of(first) == FENCE) else {
-        return text;
-    };
-    let mut consumed = first.len();
-    for piece in pieces {
-        consumed += piece.len();
-        if text::line_of(piece) == FENCE {
-            return &text[consumed..];
-        }
-    }
-    text
-}
-
-/// The docs of the Markdown file at `path`, which the walk labels `rel` (design §2.2). A file whose head has no `memex:` key is
-/// no doc and is not read again. A file with the key gives its entries, or else its one doc; a bad name is a warning.
+/// The docs of the Markdown file at `path`, which the walk labels `rel` (design §2.2), and its title (design §3.3). A file whose head
+/// has no `memex:` key is no doc and is not read again. A file with the key gives its entries, or else its one doc; a bad name is
+/// a warning.
 pub fn markdown(rel: &str, path: &Path) -> Result<Found, Error> {
     let head = Head::read(path)?;
-    if !head.has_key() {
-        return Ok(Found::default());
-    }
-    let text = head.text(path)?;
-    Ok(from_text(rel, path, &text))
+    let title = Some(head.markdown_title());
+    let found = if head.has_key() {
+        from_text(rel, path, &head.text(path)?)
+    } else {
+        Found::default()
+    };
+    Ok(Found { title, ..found })
 }
 
 /// The docs of a Markdown text whose frontmatter names a collection (design §2.2). A file whose fence never closes is no doc.
@@ -146,10 +142,12 @@ fn from_text(rel: &str, path: &Path, text: &str) -> Found {
         Value::Str(name) if valid_name(&name) => Found {
             docs: docs_of(&name, rel, document),
             warnings: Vec::new(),
+            title: None,
         },
         value => Found {
             docs: Vec::new(),
             warnings: vec![name_warning(path, &value)],
+            title: None,
         },
     }
 }
@@ -331,16 +329,6 @@ mod tests {
     fn an_unclosed_fence_is_no_frontmatter() {
         assert!(closed("---\nmemex: x\n").is_none());
         assert!(closed("---\nmemex: x\n---\nbody\n").is_some());
-    }
-
-    #[test]
-    fn only_a_closed_block_at_the_top_is_cut_from_the_text() {
-        assert_eq!(after_frontmatter("---\ntitle: D\n---\n# D\n"), "# D\n");
-        assert_eq!(after_frontmatter("---\ntitle: D\n"), "---\ntitle: D\n");
-        assert_eq!(
-            after_frontmatter("# D\n---\nx\n---\n"),
-            "# D\n---\nx\n---\n"
-        );
     }
 
     #[cfg(unix)]

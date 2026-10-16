@@ -1,6 +1,7 @@
 //! Splits a document's flat-YAML frontmatter from its body (design §4.2 and §4.3).
 //! It reads the fields: `key: scalar`, `key: [a, b]`, `- item` lists, and nested text kept as written.
-//! Cases: SHOW-LOG-01, SHOW-JSON-03
+//! `after_frontmatter` cuts a closed block from a text, the same way, for the one-liners and titles that read the body.
+//! Cases: SHOW-LOG-01, SHOW-JSON-03, SHOW-MDCHILD-03
 
 use crate::text::line_of;
 
@@ -46,6 +47,24 @@ pub fn split(text: &str) -> Document {
         }
     }
     whole(text)
+}
+
+/// The text after a closed frontmatter block at the top of `text`, which `text::decode` has read, by the rule `split` uses: a first
+/// line `---` and the next `---` line. A text with no such block, or whose block never closes, is whole. A README's one-liner and
+/// search body, and a Markdown file's title (design §3.3), are read from it, while `show` prints the whole file (design §2).
+pub fn after_frontmatter(text: &str) -> &str {
+    let mut pieces = text.split_inclusive('\n');
+    let Some(first) = pieces.next().filter(|first| line_of(first) == FENCE) else {
+        return text;
+    };
+    let mut consumed = first.len();
+    for piece in pieces {
+        consumed += piece.len();
+        if line_of(piece) == FENCE {
+            return &text[consumed..];
+        }
+    }
+    text
 }
 
 /// A document with no fields, whose body is the whole text.
@@ -178,6 +197,16 @@ mod tests {
         assert_eq!(
             split("---\nopen: never closed\n").body,
             "---\nopen: never closed\n"
+        );
+    }
+
+    #[test]
+    fn only_a_closed_block_at_the_top_is_cut_from_the_text() {
+        assert_eq!(after_frontmatter("---\ntitle: D\n---\n# D\n"), "# D\n");
+        assert_eq!(after_frontmatter("---\ntitle: D\n"), "---\ntitle: D\n");
+        assert_eq!(
+            after_frontmatter("# D\n---\nx\n---\n"),
+            "# D\n---\nx\n---\n"
         );
     }
 }

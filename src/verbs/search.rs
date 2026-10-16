@@ -9,13 +9,14 @@ use std::collections::BTreeMap;
 use self::listing::{age_of, list_group};
 use crate::cli::Verb;
 use crate::clock::Timestamp;
+use crate::collections::frontmatter::after_frontmatter;
 use crate::corpus::{Corpus, Doc, HEADERS, LOGS, READMES};
 use crate::error::{warn, Error};
 use crate::index::bm25;
 use crate::index::filter::{self, Filter};
 use crate::index::tokenize::query_tokens;
 use crate::index::{Index, Source};
-use crate::intent::{front, header};
+use crate::intent::header;
 use crate::render::search::{self as render, Group, Hit};
 use crate::scan::fail;
 use crate::verbs::here;
@@ -295,7 +296,7 @@ fn source_of(doc: &Doc) -> Source<'_> {
     let body = if doc.is_header() {
         first_lines(header::without_note(&doc.text), HEADER_LINES)
     } else if doc.is_readme() {
-        front::after_frontmatter(&doc.text)
+        after_frontmatter(&doc.text)
     } else {
         &doc.text
     };

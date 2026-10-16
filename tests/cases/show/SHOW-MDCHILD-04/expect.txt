@@ -1,0 +1,28 @@
+$ memex show scraps
+exit 0
+stdout
+| === scraps ===
+| # Scraps
+| 
+| The scrap folder.
+| 
+| children
+|   blank.md
+|   showing 1 of 1
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show scraps --json
+exit 0
+stdout
+| {"docs":[{"ref":"scraps","collection":null,"id":null,"path":"scraps","title":"The scrap folder.","fields":{},"text":"# Scraps\n\nThe scrap folder.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[],"children":{"total":1,"items":[{"path":"scraps/blank.md","kind":"file","title":""}]}}],"errors":[]}
+stderr (empty)

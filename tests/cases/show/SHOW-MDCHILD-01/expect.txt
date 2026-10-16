@@ -1,0 +1,29 @@
+$ memex show notes
+exit 0
+stdout
+| === notes ===
+| # Notes
+| 
+| The notes folder.
+| 
+| children
+|   draft.md  Second level
+|   plan.md  Plan for the thing
+|   showing 2 of 2
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show notes --json
+exit 0
+stdout
+| {"docs":[{"ref":"notes","collection":null,"id":null,"path":"notes","title":"The notes folder.","fields":{},"text":"# Notes\n\nThe notes folder.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[],"children":{"total":2,"items":[{"path":"notes/draft.md","kind":"file","title":"Second level"},{"path":"notes/plan.md","kind":"file","title":"Plan for the thing"}]}}],"errors":[]}
+stderr (empty)

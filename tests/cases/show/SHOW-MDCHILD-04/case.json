@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "scraps"]}, {"args": ["show", "scraps", "--json"]}]}

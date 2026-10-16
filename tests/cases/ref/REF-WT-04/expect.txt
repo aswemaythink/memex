@@ -26,10 +26,9 @@ stdout
 | A folder with no .memex and no git above it.
 | 
 | children
-|   notes.md  (no header)
+|   notes.md  A note with no header of its own.
 |   sub/  A folder below the loose one.
 |   showing 2 of 2
-| (no header): add a comment block atop the file; its first sentence states the file's purpose
 | 
 | cites
 |   (in another root: run show from $SANDBOX/loose)

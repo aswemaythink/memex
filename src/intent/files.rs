@@ -1,5 +1,5 @@
 //! Reads one walked file into its docs: a README, a Markdown file's docs, or a header (design §2).
-//! Cases: HDR-CAP-01, HDR-CAP-04, HDR-BIN-01, HDR-EXT-01, INT-BOM-01, INT-LINE-01, HDR-READ-01, HDR-READ-02, COLL-README-01, COLL-UNREAD-01
+//! Cases: HDR-CAP-01, HDR-CAP-04, HDR-BIN-01, HDR-EXT-01, INT-BOM-01, INT-LINE-01, HDR-READ-01, HDR-READ-02, COLL-README-01, COLL-UNREAD-01, SHOW-MDCHILD-01, SHOW-MDCHILD-02
 
 use super::{front, header, lead, readme, Origin};
 use crate::corpus::{Doc, HEADERS};
@@ -7,13 +7,16 @@ use crate::error::Error;
 use crate::root::slash;
 use crate::walk::Entry;
 
-/// What one walked file gives: its docs, and the warnings that it gives without losing them (design §4.2).
+/// What one walked file gives: its docs, the warnings that it gives without losing them (design §4.2), and the title of a Markdown
+/// file's text (design §3.3).
 #[derive(Debug, Default)]
 pub struct Found {
     /// The docs of the file, in the order they are read.
     pub docs: Vec<Doc>,
     /// The warnings of the file, each without its `memex: warning: ` prefix, which the corpus adds.
     pub warnings: Vec<String>,
+    /// The title of a Markdown file's text, which its folder's child line shows; None for any other file.
+    pub title: Option<String>,
 }
 
 /// The docs of one walked entry: none for a folder, and those of its file otherwise (design §2 and §4.2).
@@ -34,6 +37,7 @@ pub fn file_docs(entry: &Entry) -> Result<Found, Error> {
         _ => Ok(Found {
             docs: header_doc(entry)?.into_iter().collect(),
             warnings: Vec::new(),
+            title: None,
         }),
     }
 }
@@ -52,6 +56,7 @@ fn readme_found(entry: &Entry) -> Result<Found, Error> {
     Ok(Found {
         docs: vec![readme::doc(&entry.rel, text)],
         warnings,
+        title: None,
     })
 }
 

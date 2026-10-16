@@ -1,12 +1,12 @@
 //! Prints `show`'s sections and misses as text (design §3.3).
 //! Each section sits under its `===` line, then its blocks in order, with a limits line after the children and cited-by lists,
 //! and a gap legend after its children (a file: after its body) when it prints a placeholder (design §3.3 Gaps).
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-MD-01, SHOW-MD-02, SHOW-LOG-01, SHOW-UP-01, SHOW-ROOT-01, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, INT-NOHEAD-03, CASE-SECT-01, CITE-PREFIX-01, CITE-UNRES-01, CITE-BACK-01, CITE-BACK-04, CITE-LINK-03, SHOW-OTHER-01, SHOW-GAP-01, SHOW-GAP-02, SHOW-GAP-03
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-MD-01, SHOW-MD-02, SHOW-LOG-01, SHOW-UP-01, SHOW-ROOT-01, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, INT-NOHEAD-03, CASE-SECT-01, CITE-PREFIX-01, CITE-UNRES-01, CITE-BACK-01, CITE-BACK-04, CITE-LINK-03, SHOW-OTHER-01, SHOW-GAP-01, SHOW-GAP-02, SHOW-GAP-03, SHOW-MDCHILD-01, SHOW-MDCHILD-02, SHOW-MDCHILD-03, SHOW-MDCHILD-04
 
 use super::{CaseParts, Citations, Fields, Link, Listing, Miss, Ref, Section};
 use crate::cite::Cite;
 use crate::collections::frontmatter::Value;
-use crate::corpus::{Child, Kind};
+use crate::corpus::{is_markdown, Child, Kind};
 
 /// A one-liner is cut to this many characters, the ellipsis included (design §2).
 const CLIP: usize = 120;
@@ -215,7 +215,7 @@ fn chain_block(out: &mut String, chain: &[Link]) {
 }
 
 /// The line of one child: its name, with `/` for a folder, then its one-liner. A folder whose README exists but has no
-/// one-liner shows its name alone; only a folder with no README, or a file with no header, shows a placeholder.
+/// one-liner shows its name alone; only a folder with no README, or a file with no header that is not Markdown, shows a placeholder.
 fn child_line(child: &Child) -> String {
     let name = match child.kind {
         Kind::Dir => format!("{}/", child.name),
@@ -229,12 +229,14 @@ fn child_line(child: &Child) -> String {
 }
 
 /// The placeholder that a child's line prints in place of its one-liner: `(no README)` for a folder, `(no header)` for a file.
-/// None when the line has a one-liner, or when it is a folder whose README has none, which shows its name alone.
+/// None when the line has a one-liner, or when it is a folder whose README has none, which shows its name alone. A Markdown file
+/// has no header, so its line shows its title, or its name alone when the title is empty, and never a placeholder (design §3.3).
 fn child_placeholder(child: &Child) -> Option<&'static str> {
     match (&child.title, child.kind) {
         (Some(title), Kind::Dir) if title.is_empty() => None,
         (Some(title), _) if !title.is_empty() => None,
         (_, Kind::Dir) => Some(NO_README),
+        (_, Kind::File) if is_markdown(&child.name) => None,
         (_, Kind::File) => Some(NO_HEADER),
     }
 }
