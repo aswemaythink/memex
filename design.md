@@ -36,7 +36,7 @@ Five conventions:
 4. **Cite, don't copy.** Write ids, paths and refs into READMEs, headers, docs and logs. memex derives links both ways from them. There are no mapping files.
 5. **Intent ships with code.** A change to behaviour updates its header or README in the same commit.
 
-**One-liners.** A README's one-liner is the first sentence of the first paragraph after the H1, or the H1 text if there is no paragraph. A header's is the first sentence of the block. A sentence ends at `.`, `!` or `?` followed by whitespace or the end of the paragraph. Text output truncates a one-liner at 120 chars with `…`; JSON keeps the full text.
+**One-liners.** A README's one-liner is the first sentence of the first paragraph after the H1, or the H1 text if there is no paragraph; a closed frontmatter block atop a README is not part of that text (search skips it too; `show` prints the whole file). A header's is the first sentence of the block. A sentence ends at `.`, `!` or `?` followed by whitespace or the end of the paragraph. Text output truncates a one-liner at 120 chars with `…`; JSON keeps the full text.
 
 ### 2.1 Header detection
 
@@ -70,7 +70,7 @@ status: accepted
 Worktrees are removed when a slice lands, so their logs would go with them.
 ```
 
-- **Frontmatter.** The file's first line is `---` (after a BOM), the flat YAML of §4.2 follows, and the next `---` line closes it. The `memex` key counts only within the file's first 8 KiB, the limit headers use (§2.1).
+- **Frontmatter.** The file's first line is `---` (after a BOM), the flat YAML of §4.2 follows, and the next `---` line closes it. The `memex` key counts only within the file's first 8 KiB, the limit headers use (§2.1), and only when its whole line lies inside them.
 - **Name.** `[a-z0-9][a-z0-9-]{0,39}`, as for streams (§3.4). A file with any other value is a warning, `memex: warning: <path>: 'memex: <value>' is not a collection name; use a-z, 0-9 and -`, and is skipped. A name shared with the graph or a stream warns, never breaks (§4.2 Names).
 - **One file, one doc.** Its id is the `id` field, else the file stem; its title is the first heading (the §4.2 title rule); its fields are the frontmatter keys other than `memex`; its text is the body after the frontmatter. Its label is `<name>:<id>`.
 - **Entries: many docs in one file.** If a column-0 list item outside fenced code opens with a backticked id (the case-id grammar below), the file is an entry index: each such item is a doc, and the file itself is not one. This is how `CASES.md` works:
@@ -94,7 +94,7 @@ memex: cases
   - **Evidence.** Backticked paths inside the item that resolve to existing files (relative to the file's folder first, then the root). Optional, because an id in a test name already makes `rg NAME-001` exact.
   - **Group.** The nearest heading above the item, recorded as the `group` field. The file's frontmatter keys are not copied to its entries.
   - **Planned entries.** An entry written before its test exists is fine, and is README-driven development applied to tests. Say so in the claim, for example "(planned)".
-- **Duplicate ids.** Ids are unique within a collection; a duplicate is an `info` warning, `duplicate id <name>:<id> in <paths>` (each path once), and `ambiguous` in `show`. Keep them unique across the repo too, so a bare id names one doc (§3.1).
+- **Duplicate ids.** Ids are unique within a collection; a duplicate is an `info` warning, `duplicate id <name>:<id> in <paths>` (each path once), and `ambiguous` in `show`; `search` lists one hit for the shared label. Keep them unique across the repo too, so a bare id names one doc (§3.1).
 - **Existing structures.** Case-per-folder layouts and JSON case arrays need no conversion: a `folder` or `json` manifest (§4.2) indexes them, and their ids follow the same citation rules.
 
 ### 2.3 Citations and derived backlinks
@@ -304,12 +304,12 @@ A manifest indexes a structure that is not Markdown: one doc per folder that hol
 | `marker`, `merge` | folder | marker file defines a doc; `merge` globs in that folder are appended to the body |
 | `at` | json | JSON Pointer to the entries array (default: document root) |
 
-- **`folder`.** Each folder containing `marker` is one doc. The marker's fields come from top-level JSON scalars, or from frontmatter for a `.md` marker. Each `merge` file adds its full text if it is Markdown, or **only its header** if it is code, so memex still never reads code bodies.
-- **`json`.** Each entry of the array at `at`, in every matched file, is one doc. Scalars become fields and strings are indexed as text.
+- **`folder`.** Each folder containing `marker` is one doc, and that folder is the doc's folder for its relative citations (§2.3). The marker's fields come from top-level JSON scalars, or from frontmatter for a `.md` marker. Each `merge` file adds its full text if it is Markdown, or **only its header** if it is code, so memex still never reads code bodies.
+- **`json`.** Each entry of the array at `at`, in every matched file, is one doc. Scalars become fields and strings are indexed as text. The JSON file's folder is the doc's folder for its relative citations (§2.3).
 - **Frontmatter.** Flat YAML: `key: scalar`, `key: [a, b]`, or `- item` lists. Anything nested is kept as text and cannot be filtered. Frontmatter is optional, and missing fields simply don't score.
 - **`kind: markdown`.** No longer a kind: the manifest is skipped with `memex: warning: <path>: kind 'markdown' is gone; add 'memex: <name>' to its files' frontmatter instead`.
 - **One collection, two sources.** A manifest and frontmatter files that name the same collection form one collection; `info` shows the manifest's kind, description and owner.
-- **Names.** A collection named like the graph (`readmes`, `headers`), like `logs`, or like a log stream still loads: its docs are indexed, appear in global search under their own group, and resolve in `show` as `<name>:<id>`. `--in <name>` keeps meaning the graph or the stream. A warning prints once per run in the form above, `memex: warning: collection '<name>' (in <path>) shares a name with the graph; --in <name> means the graph — rename it to reach it with --in` (for a stream: `shares a name with a log stream; --in <name> means the stream`), where `<path>` is its first file in byte order, and `info` lists it.
+- **Names.** A frontmatter collection named like the graph (`readmes`, `headers`), like `logs`, or like a log stream still loads (a manifest named `readmes`, `headers` or `logs` is rejected, as the table says; one named like a stream loads): its docs are indexed, appear in global search under their own group, and resolve in `show` as `<name>:<id>`. `--in <name>` keeps meaning the graph or the stream. A warning prints once per run in the form above, `memex: warning: collection '<name>' (in <path>) shares a name with the graph; --in <name> means the graph — rename it to reach it with --in` (for `logs` or a stream: `shares a name with a log stream; --in <name> means the stream`), where `<path>` is its first file in byte order (for a manifest's docs, the manifest file), and `info` lists it. It prints on every verb that loads the corpus.
 - **Unreadable files.** A README, header, Markdown file or stream folder that can't be read is a warning (`memex: warning: cannot read <path> (<ErrorKind>)`) and is skipped. A path whose name memex skips (§4.4 Encoding) gets no warning either, nor does a walked file with no comment family (§2.1) that is not Markdown: the walk never opens it. A folder manifest's `merge` file is read by its manifest whatever its family, and warns as above; warnings print in the order they arise. A folder manifest's `merge` file that can't be read gets the same warning. A manifest root that is a symlink resolving outside the repo root is skipped with `memex: warning: <collection>: root <root> leads outside the repo; skipped`. It never fails a read verb.
 - **Invalid manifests.** An invalid manifest or an unknown key is a warning, and that collection is skipped. It never makes the run fail. Warnings are printed once per run on stderr by every verb that loads them, in text and JSON modes. `info` also lists them, with duplicate ids, in its output.
 - **Duplicate ids.** Within one collection, reported as `info` warnings, and as `ambiguous` in `show` (§2.2).
