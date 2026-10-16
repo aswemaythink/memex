@@ -15,7 +15,7 @@ use crate::index::bm25;
 use crate::index::filter::{self, Filter};
 use crate::index::tokenize::query_tokens;
 use crate::index::{Index, Source};
-use crate::intent::header;
+use crate::intent::{front, header};
 use crate::render::search::{self as render, Group, Hit};
 use crate::scan::fail;
 use crate::verbs::here;
@@ -289,11 +289,13 @@ fn search_group<'a>(
     })
 }
 
-/// A doc as the index reads it. A header is read without its cut note and cut to its first `HEADER_LINES` lines; the text of every
-/// other doc is read whole.
+/// A doc as the index reads it. A header is read without its cut note and cut to its first `HEADER_LINES` lines, a README without a
+/// closed frontmatter block at its top (design §2 One-liners); the text of every other doc is read whole.
 fn source_of(doc: &Doc) -> Source<'_> {
     let body = if doc.is_header() {
         first_lines(header::without_note(&doc.text), HEADER_LINES)
+    } else if doc.is_readme() {
+        front::after_frontmatter(&doc.text)
     } else {
         &doc.text
     };

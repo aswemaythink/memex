@@ -2,6 +2,6 @@ $ memex search zebratail
 exit 0
 stdout
 | readmes  (showing 1 of 1)
-|   docs/README.md  --- memex: notes ---
+|   docs/README.md  The docs folder.
 stderr
 | memex: warning: $SANDBOX/repo/docs/README.md is a README, which belongs to the graph; its memex: key is ignored — move that content into its own file

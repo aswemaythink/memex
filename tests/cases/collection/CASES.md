@@ -110,3 +110,5 @@ memex: cases
   design §2.2 (a README's key is ignored with the warning) and §2 (a README is read in full). Run: memex search zebratail.
 - `COLL-REFINE-02` An empty `memex:` value is not a collection name: one warning, `'memex: ' is not a collection name`, skips its file, and the other file of `notes` still counts, exit 0.
   design §2.2 (Name: any other value is a warning and the file is skipped). Run: memex info.
+- `COLL-REFINE-03` A README whose closed frontmatter holds no `memex:` key (`title: Docs`) gets no warning and takes its one-liner from the first paragraph after its H1, so `show .` lists `docs` with it and `search guides` shows it; the frontmatter is not searched, so `search title` has no hits, exit 0.
+  design §2 One-liners (the first sentence of the first paragraph after the H1) and PLAN §13 (orchestrator ruling, 2026-10-16: a closed frontmatter block at a README's top is not part of its one-liner or search text; `show` still prints the whole file). Run: memex show .; memex search guides; memex search title.

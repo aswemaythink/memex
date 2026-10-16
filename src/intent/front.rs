@@ -105,6 +105,24 @@ pub fn readme_has_key(head: &Head, text: &str) -> bool {
     head.has_key() && closed(text).is_some()
 }
 
+/// The text after a closed frontmatter block at the top of `text`, which `text::decode` has read, by the rule `split` uses: a first
+/// line `---` and the next `---` line. A text with no such block, or whose block never closes, is whole. A README's one-liner and its
+/// search body are read from it, while `show` prints the whole file (design §2 One-liners).
+pub fn after_frontmatter(text: &str) -> &str {
+    let mut pieces = text.split_inclusive('\n');
+    let Some(first) = pieces.next().filter(|first| text::line_of(first) == FENCE) else {
+        return text;
+    };
+    let mut consumed = first.len();
+    for piece in pieces {
+        consumed += piece.len();
+        if text::line_of(piece) == FENCE {
+            return &text[consumed..];
+        }
+    }
+    text
+}
+
 /// The docs of the Markdown file at `path`, which the walk labels `rel` (design §2.2). A file whose head has no `memex:` key is
 /// no doc and is not read again. A file with the key gives its entries, or else its one doc; a bad name is a warning.
 pub fn markdown(rel: &str, path: &Path) -> Result<Found, Error> {
@@ -313,6 +331,16 @@ mod tests {
     fn an_unclosed_fence_is_no_frontmatter() {
         assert!(closed("---\nmemex: x\n").is_none());
         assert!(closed("---\nmemex: x\n---\nbody\n").is_some());
+    }
+
+    #[test]
+    fn only_a_closed_block_at_the_top_is_cut_from_the_text() {
+        assert_eq!(after_frontmatter("---\ntitle: D\n---\n# D\n"), "# D\n");
+        assert_eq!(after_frontmatter("---\ntitle: D\n"), "---\ntitle: D\n");
+        assert_eq!(
+            after_frontmatter("# D\n---\nx\n---\n"),
+            "# D\n---\nx\n---\n"
+        );
     }
 
     #[cfg(unix)]

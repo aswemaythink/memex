@@ -1,0 +1,34 @@
+$ memex show .
+exit 0
+stdout
+| === . ===
+| (no README)
+| 
+| children
+|   docs/  The docs folder holds the guides.
+|   showing 1 of 1
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex search guides
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   docs/README.md  The docs folder holds the guides.
+stderr (empty)
+
+$ memex search title
+exit 0
+stdout (empty)
+stderr
+| memex: no hits for title; try fewer or other words, or memex info
