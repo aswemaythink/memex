@@ -2,7 +2,11 @@
 //! Cases: HDR-BOM-01, HDR-BOM-02, HDR-BIN-01, HDR-EXT-01, HDR-CAP-01, HDR-CAP-02, HDR-CAP-03, HDR-CAP-04, HDR-CAP-05, HDR-NONE-01, HDR-CRLF-01, HDR-LIMIT-01
 
 mod families;
+#[cfg(test)]
+mod lines;
 mod scan;
+#[cfg(test)]
+mod stream;
 
 use std::fs::{self, File};
 use std::io::{self, Read};
