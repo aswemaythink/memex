@@ -220,7 +220,7 @@ fn sources(docs: &[&Doc]) -> String {
 fn in_scope(scope: &Scope, doc: &Doc) -> bool {
     match (&doc.path, &doc.origin) {
         (Some(path), _) => scope.holds_file(path),
-        (None, Origin::Other { folder }) => scope.holds_folder(folder),
+        (None, Origin::Other { folder, .. }) => scope.holds_folder(folder),
         _ => false,
     }
 }

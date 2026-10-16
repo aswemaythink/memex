@@ -1,6 +1,6 @@
 # cite
 
-`src/cite/` holds the parts of `cite.rs` that find citations and backlinks (design §2.3): the tokenizer, the resolver that turns a doc's tokens into the docs and entries they name, and the index that a verb asks for. `search`'s roster takes the full index; `show` takes one index for all the targets it prints, so a `show` of many refs scans every doc's tokens once and reads only those that can name one of them.
+`src/cite/` holds the parts of `cite.rs` that find citations and backlinks (design §2.3). They are the tokenizer, the resolver that turns a doc's tokens into the docs and entries they name, and the index that a verb asks for. `search`'s roster takes the full index; `show` takes one index for all the targets it prints, so a `show` of many refs scans every doc's tokens once and reads only those that can name one of them.
 
 - `tokens.rs`: reads a line of a doc's text as tokens, each borrowed from the line: links, `collection:id` labels, `X-*` prefixes and words, and tells a case id from other text. `lines.rs` gives it only the lines outside fenced code, which `../fence.rs` finds. A link destination in angle brackets is read to its `>`, so it may hold spaces.
 - `lines.rs`: the lines that a doc's citations come from (design §2.3): for a frontmatter collection doc, or a folder doc whose marker is Markdown, its frontmatter field values first, each scalar and each list item on its own, and never its `memex` key; then its text. Every other doc gives its text alone.
