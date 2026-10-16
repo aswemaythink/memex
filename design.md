@@ -122,6 +122,7 @@ memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--js
 memex show   <path|ref>... [--up N] [--limit N] [--json]
 memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
 memex info   [--agent <id>] [--json]
+memex check  [<path|glob>...] [--limit N] [--json]
 memex init
 memex --help | --version
 ```
@@ -245,6 +246,46 @@ Agents are memex's main readers, so every error that leaves the user stuck names
 
 Exit codes and JSON codes are unchanged.
 
+### 3.5d `check`
+
+How healthy the intent layer is, for the whole root or part of it: where intent is missing or thin, which files have grown too long, and which references are broken. It is a report of facts memex already knows, plus one plain-text measure, line count. It never parses code (§1, §7).
+
+- **Scope.** With no argument it checks the root. Each argument is a path (resolved as `show` resolves one, §3.1 step 1) or, if it holds `*`, `?` or `[`, a glob matched against walked root-relative paths with the gitignore rules that manifest `include` uses (§4.2). A file is in scope if it is named or lies under a named folder or matches a glob; a folder likewise. A path that names nothing is that argument's `not found` error (§3.5c), the rest are still checked, and the exit code is 1; a glob that matches nothing is not an error.
+- **Kinds.** Each finding has one kind. The kinds print in this order, and a kind with no finding in scope is left out:
+  1. `headers`: a file with a comment family (§2.1) that is not empty and has no header.
+  2. `readmes`: a walked folder with no README.md, the root included.
+  3. `length`: a file with a comment family whose code lines exceed 500. Code lines are its lines minus its header block and its license block (§2.1); blank lines and other comments count. Detail: `<N> code lines`.
+  4. `one-liners`: a header or README whose one-liner (§2) is over 100 characters (Unicode scalar values). Detail: `<N> characters`.
+  5. `thin`: files of 80 lines or more that have a header, ordered by header lines over total lines, lowest first (ties by path). Detail: `<H>/<T> header lines`. It points at where intent is thin; it has no threshold, so it is never "fixed".
+  6. `cites`: an explicit reference in a README, header or collection doc that resolves to nothing (`unresolved` in `show`, §2.3). Detail: `→ <reference as written>`. Logs are scaffolding and are not checked.
+  7. `ids`: a duplicate id within a collection (§2.2). The finding is `<name>:<id>`; detail: its paths, each once.
+  A manifest doc is in scope by its folder (§4.2). Prefix citations, uncited docs and anything about code bodies are never findings.
+- **Lines.** A line ends at LF; CRLF counts once; a last line without a newline counts if it is not empty. `length` and `thin` count a file's whole text, so `check` is the one verb that reads past the 8 KiB head (§2.1), and only for files with a comment family; the header and license blocks are found in the head as §2.1 finds them. `info`, `search` and `show` never read further.
+- **Output.**
+
+```
+check       src · 148 files · 12 folders · 7 findings
+headers     (showing 2 of 2; files with no header)
+  src/a.rs
+  src/b.rs
+(no header): add a comment block atop the file; its first sentence states the file's purpose
+readmes     (showing 1 of 1; folders with no README)
+  src/util
+(no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+length      (showing 1 of 1; over 500 code lines)
+  src/big.rs  612 code lines
+(length): split the file; give the part with its own purpose its own file and header
+cites       (showing 1 of 1; unresolved)
+  src/z.rs  → NAME-404
+(cites): fix the reference or remove it
+ids         (showing 1 of 1; duplicate)
+  cases:NAME-003  tests/a/CASES.md · tests/b/CASES.md
+(ids): give each doc its own id
+```
+
+  The first line names the scope (`.` for the root; several arguments are joined with ` · `), the walked files and folders in it, and the total findings. Each kind is a group headed like a search group, `<kind>  (showing N of M; <what it lists>)`, its lines are `<label>  <detail>`, and its fix line follows; `one-liners` says `(one-liners): shorten the first sentence to 100 characters or fewer`, and `thin` has no fix line. With no finding, the first line is followed by `nothing to fix`. Each kind's list uses `--limit` (default 20) and adds `(--limit M for all)` when cut (§3.3 Limits).
+- **Exit code.** 0 whatever it finds, since a finding is not an error; 1 if a path argument names nothing; 2 for a usage error.
+
 ### 3.6 JSON
 
 With `--json`, stdout is always one JSON document, including errors. Without it, errors go to stderr as text.
@@ -253,6 +294,7 @@ With `--json`, stdout is always one JSON document, including errors. Without it,
 - **`search` (with words or filters, or a roster):** `{query, filters:{…}, groups:[{collection, total, hits:[doc + {score|null, snippet, fuzzy:[]}]}]}`. Roster hits have `score: null` and `cited_by: N`, which, like `<-N`, excludes prefix citations. JSON scores are rounded to 3 decimals. The shape is the same with or without `--in`.
 - **`info`:** `{root, log_store, collections:[{name, kind, builtin, count, description, owner, new_24h?, newest?, error?}], to?:{agent, count}, here?:{path, title}, warnings:[]}`, where `kind` is `null` for `readmes` and `headers` (`builtin: true`), `markdown` for a collection declared by frontmatter, the manifest's kind (`folder`, `json`) for one declared by a manifest, and `log` for streams.
 - **`show`:** `{docs:[doc + {text, cites:[{ref, title, resolved}], cited_by:{total, refs:[{ref, title, via?}]}, children?:{total, items:[{path, kind:"dir"|"file", title}]}, chain:[{path, text}]}], errors:[{arg, code, message, candidates?}]}`. `cites` and `cited_by` are `null` for an entry in another root (§3.1).
+- **`check`:** `{scope:[…], files, folders, findings, kinds:[{kind, total, items:[{ref, detail}]}], errors:[{arg, code, message}]}`, where `kinds` holds only kinds with findings, in §3.5d order, each list bounded by `--limit`; `detail` is `null` where the text has none.
 - **`log`:** `{ref, path}`, where `path` is absolute and `/`-separated.
 - **Fatal errors:** `{error:{code, message}}`, where `code` is one of `usage | not_found | ambiguous | no_root | io`. `no_root` is `log` with no `.memex/` (§4.1).
 - **Exit codes:**
@@ -453,7 +495,7 @@ Or download a binary from GitHub Releases. All of these come from one cargo-dist
 
 - **Code.** No searching or indexing code bodies, no symbol lookup. That is `rg`'s job.
 - **Infrastructure and generation.** No server, daemon, watcher, sync, auth, teams, MCP, embeddings, or LLM summarisation.
-- **Mapping and linting.** No mapping files and no declared link tables, because links are derived from mentions. No linter or `check` verb. No code↔test linking by reading test bodies.
+- **Mapping and linting.** No mapping files and no declared link tables, because links are derived from mentions. No linter of code: `check` (§3.5d) reports gaps in the intent layer and file length, never parsed code metrics such as complexity or function length. No code↔test linking by reading test bodies.
 - **Bespoke adapters.** No per-repo collection code: generic kinds only, and building a collection is the owning skill's job.
 - **Log management.** No editing, inboxes, read state or delivery for logs. Retention is one setting (`keep_logs`), applied on write.
 
@@ -469,7 +511,7 @@ Or download a binary from GitHub Releases. All of these come from one cargo-dist
 
 1. **Spike 1: can an agent in a sandboxed worktree write to the main checkout's `.memex/logs/`?** Recommended fallback if not: write to the worktree's local `.memex/logs/`, and have reads merge across `git worktree list`.
 2. **Spike 2: agent ids.** If the harness exposes no id, keep `--agent`/`$MEMEX_AGENT` and have the skill tell agents to pass their role name. Never invent ids.
-3. **A `check` verb for drift?** Not yet. Roster `<-N` counts plus `unresolved` cover it. Add it only if playtest 2 shows agents computing orphans by hand.
+3. **A `check` verb for drift?** Settled (user, 2026-10-16): `check` ships in 0.1 (§3.5d). Uncited docs are not a finding; roster `<-N` covers orphans.
 4. **Cache.** Settled for now (oracle, 2026-10-15): none. Opening every walked `.md` for frontmatter costs reference-ui +1-2% (info 54 → 55 ms, search 67 → 68, show 60 → 61; budgets 90/115/95) and the 100k tree +2-4% with 3% Markdown, +7-8% with 10%. Revisit when cold start exceeds 200 ms on the largest proving ground; then the stat-keyed cache of PLAN §15, with no CLI change.
 5. **Other Markdown (`docs/`, `SPEC.md`) as intent?** Settled: a `memex:` frontmatter line puts any of it in a collection (§2.2). READMEs stay the graph.
 6. **Log retention.** Settled: prune on write, `keep_logs` default 3 days (a couple of working days). Revisit the default after playtests.
