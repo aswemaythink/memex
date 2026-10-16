@@ -5,14 +5,14 @@
 `index.html` runs top to bottom, with a sticky nav of anchor links:
 
 1. Introduction: what memex is (README.md, design.md §1).
-2. Install and quick start: the working `cargo install --path . --locked` from a checkout, the planned v0.1.0 commands (design.md §6.1, marked as not yet published), then the verbs with terminal samples adapted from design.md §3 and README.md.
+2. Install and quick start: the working `cargo install --path . --locked` from a checkout, the planned v0.1.0 commands (design.md §6.1, marked as not yet published), then the six verbs (init, info, show, search, check, log), each a short description followed by its terminal sample, adapted from design.md §3 and README.md.
 3. The intent layer: the layer table, the citation chips and the citation forms (design.md §2).
 4. Context compression: three inline SVG diagrams, the compression ladder, two-way citations and hand-off by reference (design.md §1, §5).
 5. Patterns: cases, doom hunts, performance verdicts, hand-off and messages, checking intent against code (drift), promoting a stream (design.md §2.2, §4.2, §5).
 6. Principles (design.md §1).
 7. Story: STORY.md retold in full, on a dashed trail rail with orange markers (1945, the camera and the trail, now, memex, why this matters), the desk sketch and the pull quote.
 
-Colours are CSS custom properties on `:root`, switched by `prefers-color-scheme`, and the Tailwind config maps its colour names to them. The reading column is 90ch wide, the layout holds at 375px, and terminal blocks scroll inside themselves.
+Colours are CSS custom properties on `:root`, switched by `prefers-color-scheme`, and the Tailwind config maps its colour names to them. Prose sits in the original 40rem reading column; terminals, the layer table and the diagrams step out to 58rem (the `.flow` and `.wide` rules). On phones everything is full width, the layout holds at 375px, and terminal blocks scroll inside themselves.
 
 ## Preview
 
