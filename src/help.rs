@@ -1,20 +1,21 @@
 //! The help texts and the grammar block of design §3, plus the usage lines that usage errors print.
-//! Cases: CLI-*, CLI-HELP-01, CLI-HELP-02, CLI-HELP-03, CLI-HELP-04, CLI-HELP-05, CLI-HELP-06, CLI-HINTB-01
+//! Cases: CLI-*, CLI-HELP-01, CLI-HELP-02, CLI-HELP-03, CLI-HELP-04, CLI-HELP-05, CLI-HELP-06, CLI-HINTB-01, CHK-EXIT-04
 
 use crate::cli::Verb;
 
 /// The grammar block of design §3: one line per verb, then the top-level flags.
-/// The first five lines are in `Verb::ALL` order, so `Verb as usize` indexes them.
-const GRAMMAR: [&str; 6] = [
+/// The first six lines are in `Verb::ALL` order, so `Verb as usize` indexes them.
+const GRAMMAR: [&str; 7] = [
     "memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]",
     "memex show   <path|ref>... [--up N] [--limit N] [--json]",
     "memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF",
     "memex info   [--agent <id>] [--json]",
+    "memex check  [<path|glob>...] [--limit N] [--json]",
     "memex init",
     "memex --help | --version",
 ];
 
-const TOP: [&str; 14] = [
+const TOP: [&str; 16] = [
     "memex is authored context compression: it indexes a repo's intent layer so agents read intent before code.",
     "",
     GRAMMAR[0],
@@ -23,11 +24,13 @@ const TOP: [&str; 14] = [
     GRAMMAR[3],
     GRAMMAR[4],
     GRAMMAR[5],
+    GRAMMAR[6],
     "",
     "search  find docs by words and field:value filters",
     "show    print the header, citations and chain of each ref",
     "log     append an entry from stdin and print its ref",
     "info    print where things are, never their contents",
+    "check   report where intent is missing or broken, for the root or some of it",
     "init    set up .memex/ and the AGENTS.md snippet",
 ];
 
@@ -63,8 +66,16 @@ const INFO: [&str; 4] = [
     "  --json        print one JSON document instead of text",
 ];
 
-const INIT: [&str; 2] = [
+const CHECK: [&str; 5] = [
     GRAMMAR[4],
+    "Report where the intent layer is missing or broken: headers, readmes, one-liners, cites and ids.",
+    "A path names a file or folder, and a glob (with *, ? or [) matches walked paths; with none, the root is checked.",
+    "  --limit N   findings listed per kind (default 20)",
+    "  --json      print one JSON document instead of text",
+];
+
+const INIT: [&str; 2] = [
+    GRAMMAR[5],
     "Set up .memex/ and the AGENTS.md snippet; safe to run again, and it never overwrites a file.",
 ];
 
@@ -88,6 +99,7 @@ pub fn text(verb: Option<Verb>) -> String {
         Some(Verb::Show) => &SHOW,
         Some(Verb::Log) => &LOG,
         Some(Verb::Info) => &INFO,
+        Some(Verb::Check) => &CHECK,
         Some(Verb::Init) => &INIT,
     };
     let mut text = lines.join("\n");

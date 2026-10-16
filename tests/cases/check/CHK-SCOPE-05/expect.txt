@@ -1,0 +1,9 @@
+$ memex check nope.rs src/b.rs
+exit 1
+stdout
+| check       src/b.rs · 1 file · 0 folders · 1 finding
+| headers     (showing 1 of 1; files with no header)
+|   src/b.rs
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+stderr
+| memex: not found: nope.rs (find refs with memex search <words>)

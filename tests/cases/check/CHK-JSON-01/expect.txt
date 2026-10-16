@@ -1,0 +1,5 @@
+$ memex check --json
+exit 0
+stdout
+| {"scope":["."],"files":4,"folders":3,"findings":2,"kinds":[{"kind":"headers","total":1,"items":[{"ref":"src/a.rs","detail":null}]},{"kind":"readmes","total":1,"items":[{"ref":"docs","detail":null}]}],"errors":[]}
+stderr (empty)

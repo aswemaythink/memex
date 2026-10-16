@@ -1,0 +1,12 @@
+$ memex check 'src/*'
+exit 0
+stdout
+| check       src/* · 4 files · 1 folder · 3 findings
+| headers     (showing 2 of 2; files with no header)
+|   src/b.rs
+|   src/deep/c.rs
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+| readmes     (showing 1 of 1; folders with no README)
+|   src/deep
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+stderr (empty)

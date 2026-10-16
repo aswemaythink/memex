@@ -2,6 +2,7 @@
 //! Each takes its request and returns its stdout.
 //! Cases: none (module map only; each verb cites its own cases)
 
+pub mod check;
 pub mod here;
 pub mod info;
 pub mod init;

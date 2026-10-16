@@ -1,0 +1,8 @@
+$ memex check
+exit 0
+stdout
+| check       . · 2 files · 2 folders · 1 finding
+| readmes     (showing 1 of 1; folders with no README)
+|   .
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+stderr (empty)

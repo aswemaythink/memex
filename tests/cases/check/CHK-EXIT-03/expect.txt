@@ -1,0 +1,6 @@
+$ memex check --limit x
+exit 2
+stdout (empty)
+stderr
+| memex: bad value 'x' for '--limit': expected a non-negative integer
+| usage: memex check  [<path|glob>...] [--limit N] [--json]

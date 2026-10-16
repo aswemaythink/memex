@@ -1,6 +1,6 @@
 //! The tables of design §3's grammar.
 //! Which flags each verb takes, what each flag takes after it, and how many words each verb takes.
-//! Cases: CLI-*, CLI-HINTB-01
+//! Cases: CLI-*, CLI-HINTB-01, CHK-EXIT-02, CHK-EXIT-03
 
 use crate::cli::Verb;
 
@@ -36,7 +36,7 @@ pub(crate) struct Spec {
 }
 
 /// One row per verb, in `Verb::ALL` order, so `Verb as usize` indexes it.
-pub(crate) const SPECS: [Spec; 5] = [
+pub(crate) const SPECS: [Spec; 6] = [
     Spec {
         flags: &["--in", "--limit", "--json"],
         min: 0,
@@ -59,6 +59,12 @@ pub(crate) const SPECS: [Spec; 5] = [
         flags: &["--agent", "--json"],
         min: 0,
         max: Some(0),
+        missing: "",
+    },
+    Spec {
+        flags: &["--limit", "--json"],
+        min: 0,
+        max: None,
         missing: "",
     },
     Spec {

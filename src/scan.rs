@@ -1,6 +1,6 @@
 //! Reads one verb's arguments against its row of the grammar.
 //! Words, flags and their values, each checked as design §3 says.
-//! Cases: CLI-*, CLI-ARGS-01, CLI-ARGS-02, CLI-ARGS-03, CLI-ARGS-04, CLI-ARGS-05, CLI-BARE-02, CLI-FLAG-01, CLI-FLAG-02, CLI-FLAG-03, CLI-FLAG-04, CLI-FLAG-05, CLI-FLAG-07, CLI-FLAG-08, CLI-FLAG-09, CLI-FLAG-10, CLI-FLAG-11, CLI-FLAG-12, CLI-FLAG-13, CLI-HELP-02, CLI-HELP-03, CLI-HELP-04, CLI-HELP-05, CLI-HELP-06, CLI-HELP-07, CLI-HELP-08, CLI-HINT-07, CLI-HINT-08, CLI-HINT-09
+//! Cases: CLI-*, CLI-ARGS-01, CLI-ARGS-02, CLI-ARGS-03, CLI-ARGS-04, CLI-ARGS-05, CLI-BARE-02, CLI-FLAG-01, CLI-FLAG-02, CLI-FLAG-03, CLI-FLAG-04, CLI-FLAG-05, CLI-FLAG-07, CLI-FLAG-08, CLI-FLAG-09, CLI-FLAG-10, CLI-FLAG-11, CLI-FLAG-12, CLI-FLAG-13, CLI-HELP-02, CLI-HELP-03, CLI-HELP-04, CLI-HELP-05, CLI-HELP-06, CLI-HELP-07, CLI-HELP-08, CLI-HINT-07, CLI-HINT-08, CLI-HINT-09, CHK-EXIT-02, CHK-EXIT-03
 
 use std::iter::Peekable;
 use std::slice::Iter;
@@ -204,6 +204,11 @@ fn command(verb: Verb, args: Args) -> Command {
         },
         Verb::Info => Command::Info {
             agent: flags.text("--agent"),
+            json,
+        },
+        Verb::Check => Command::Check {
+            paths: words,
+            limit: flags.count("--limit"),
             json,
         },
         Verb::Init => Command::Init,
