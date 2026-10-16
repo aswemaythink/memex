@@ -1,0 +1,63 @@
+$ memex show cases:ATM-1
+exit 0
+stdout
+| === cases:ATM-1 ===
+| # Atom contract
+| 
+| Contract: [spec](../SPEC.md). Code: `../src/lib.rs`.
+| 
+| fields
+|   status: draft
+| 
+| cites
+|   units/SPEC.md
+|   units/src/lib.rs  The atom library: the code that the contract names.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show units/SPEC.md
+exit 0
+stdout
+| === units/SPEC.md ===
+| # Atom spec
+| 
+| Every atom has one stable class name.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   cases:ATM-1  Atom contract
+|   units/ATM-1/README.md  Contract: [spec](../SPEC.md).
+|   showing 2 of 2
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show units/src/lib.rs
+exit 0
+stdout
+| === units/src/lib.rs ===
+| The atom library: the code that the contract names.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   cases:ATM-1  Atom contract
+|   units/ATM-1/README.md  Contract: [spec](../SPEC.md).
+|   showing 2 of 2
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show cases:ATM-1 --json
+exit 0
+stdout
+| {"docs":[{"ref":"cases:ATM-1","collection":"cases","id":"ATM-1","path":null,"title":"Atom contract","fields":{"status":"draft"},"text":"# Atom contract\n\nContract: [spec](../SPEC.md). Code: `../src/lib.rs`.","cites":[{"ref":"units/SPEC.md","title":"","resolved":true},{"ref":"units/src/lib.rs","title":"The atom library: the code that the contract names.","resolved":true}],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
+stderr (empty)

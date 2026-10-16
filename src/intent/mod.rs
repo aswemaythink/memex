@@ -15,7 +15,7 @@ use crate::corpus::{Doc, HEADERS, READMES};
 /// Where a doc was read from (design §2.2, §4.2 and §4.3): the graph's own docs, an entry of an entry index, a whole Markdown file,
 /// a manifest's doc, or a log entry. Each reader sets it, and the citation scan, the search groups and `show` read it. A log entry
 /// is its own origin, not a name, so a collection that shares a stream's name is never a log (design §4.2 Names).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Origin {
     /// A README or a header: the graph's doc, labelled by its path.
     Graph,
@@ -23,8 +23,10 @@ pub enum Origin {
     Entry,
     /// A Markdown file that is one doc of its collection (design §2.2), labelled `collection:id`, with its path.
     Whole,
-    /// A manifest's doc (design §4.2), labelled `collection:id`; a json or folder doc has no path.
-    Other,
+    /// A manifest's doc (design §4.2), labelled `collection:id`, with no path. `folder` is the root-relative folder its relative
+    /// citations resolve from first (design §2.3): the folder that holds a folder doc's marker, or the folder of a json doc's file.
+    /// It is empty when that folder is the root.
+    Other { folder: String },
     /// A log entry (design §4.3), labelled `stream:id`, with no path.
     Log,
 }

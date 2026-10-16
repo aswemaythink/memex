@@ -1,13 +1,13 @@
 //! Reads a `folder` manifest's docs: each folder with its marker file is one doc (design §4.2).
 //! The marker gives the fields and, when it is Markdown, the start of the text; `merge` files add the rest, and one that cannot be read warns.
-//! Cases: MANK-FOLDER-01, MANK-FOLDER-02, MANK-FOLDER-03, MANK-FOLDER-04, MANK-FOLDER-05, MANK-FOLDER-06, MANK-FOLDER-07, MANK-FOLDER-08, MANK-FOLDER-09, MANK-MERGE-01
+//! Cases: MANK-FOLDER-01, MANK-FOLDER-02, MANK-FOLDER-03, MANK-FOLDER-04, MANK-FOLDER-05, MANK-FOLDER-06, MANK-FOLDER-07, MANK-FOLDER-08, MANK-FOLDER-09, MANK-MERGE-01, MANK-CITE-01
 
 use std::collections::BTreeMap;
 use std::path::Path;
 
 use super::frontmatter::{self, Value};
 use super::globs;
-use super::json::{doc, field_text, read_json, scalar_fields, warn};
+use super::json::{doc, field_text, folder_under, read_json, scalar_fields, warn};
 use super::manifest::{self, Manifest};
 use crate::corpus::{name_of, parent_of, Doc};
 use crate::intent::header;
@@ -26,22 +26,28 @@ pub fn docs(manifest: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Vec
         let entries = walk::walk(&base);
         let files = files_by_folder(&entries);
         for file in entries.iter().filter(|entry| is_marker(entry, marker)) {
-            let folder = parent_of(&file.rel).unwrap_or_default();
-            let siblings = files.get(folder).map_or(&[][..], |list| list.as_slice());
-            docs.extend(folder_doc(manifest, &base, file, siblings, warnings));
+            let rel_folder = parent_of(&file.rel).unwrap_or_default();
+            let siblings = files
+                .get(rel_folder)
+                .map_or(&[][..], |list| list.as_slice());
+            let folder = folder_under(dir, rel_folder);
+            docs.extend(folder_doc(
+                manifest, &base, file, siblings, warnings, folder,
+            ));
         }
     }
     docs
 }
 
-/// The doc of the folder that holds `marker`. A marker that cannot be read or parsed, or whose id is missing or empty, adds its
-/// warning to `warnings` and gives no doc.
+/// The doc of the folder that holds `marker`, whose relative citations resolve from `folder`, the folder's root-relative path (design
+/// §2.3). A marker that cannot be read or parsed, or whose id is missing or empty, adds its warning to `warnings` and gives no doc.
 fn folder_doc(
     manifest: &Manifest,
     base: &Path,
     marker: &Entry,
     siblings: &[&Entry],
     warnings: &mut Vec<String>,
+    folder: String,
 ) -> Option<Doc> {
     let parsed = marker_fields(&marker.path).and_then(|(fields, body)| {
         let id = id_of(manifest, base, marker, &fields)
@@ -59,7 +65,7 @@ fn folder_doc(
         return None;
     }
     let text = joined(body, merge_pieces(manifest, marker, siblings, warnings));
-    Some(doc(manifest, id, text.clone(), fields, &text))
+    Some(doc(manifest, id, text.clone(), fields, &text, folder))
 }
 
 /// The id of a folder doc: the marker field that the manifest's `id` names, which must be present and not empty, or else the

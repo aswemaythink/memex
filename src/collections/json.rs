@@ -1,6 +1,6 @@
 //! Reads a `json` manifest's docs: each object of the array at `at` is one doc (design §4.2).
 //! It also holds the scalar, field and doc helpers that the folder kind shares with it.
-//! Cases: MANK-JSON-01, MANK-JSON-02, MANK-JSON-03, MANK-JSON-04, MANK-JSON-05, MANK-JSON-06, MANK-JSON-07, MANK-JSON-08, MANK-TITLE-01, MANK-TITLE-02, MANK-TITLE-03
+//! Cases: MANK-JSON-01, MANK-JSON-02, MANK-JSON-03, MANK-JSON-04, MANK-JSON-05, MANK-JSON-06, MANK-JSON-07, MANK-JSON-08, MANK-TITLE-01, MANK-TITLE-02, MANK-TITLE-03, MANK-CITE-02
 
 use std::path::Path;
 
@@ -10,7 +10,7 @@ use super::frontmatter::Value;
 use super::globs;
 use super::manifest::{self, Manifest};
 use super::title;
-use crate::corpus::Doc;
+use crate::corpus::{parent_of, Doc};
 use crate::intent::Origin;
 use crate::text;
 use crate::walk::{self, Entry};
@@ -28,12 +28,23 @@ pub fn docs(manifest: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Vec
         let entries = walk::walk(&base);
         let files: Vec<&Entry> = entries.iter().filter(|entry| !entry.is_dir).collect();
         for file in globs::hits(&base, &manifest.include, &files) {
+            let folder = folder_under(dir, parent_of(&file.rel).unwrap_or_default());
             for item in items_at(&file.path, at, warnings) {
-                docs.extend(entry_doc(manifest, key, &item));
+                docs.extend(entry_doc(manifest, key, &item, &folder));
             }
         }
     }
     docs
+}
+
+/// The root-relative folder that holds a file at `rel`, which is a folder relative to the manifest root `dir` (design §2.3, §4.2). Both
+/// are `/`-separated and either may be empty; the result is `""` for the root itself.
+pub(super) fn folder_under(dir: &str, rel: &str) -> String {
+    [dir, rel]
+        .into_iter()
+        .filter(|part| !part.is_empty())
+        .collect::<Vec<&str>>()
+        .join("/")
 }
 
 /// The items of the array that `at` points to in the JSON file at `path`. A file that cannot be read or parsed adds its
@@ -68,13 +79,15 @@ pub(super) fn warn(warnings: &mut Vec<String>, line: String) {
 }
 
 /// The doc of one entry: its scalars as fields, its string scalars as the text, and its `id` field as the id. None when the
-/// entry is not an object, or its `id` is missing or empty. Its default one-liner is read without the id field.
-fn entry_doc(manifest: &Manifest, key: &str, item: &Json) -> Option<Doc> {
+/// entry is not an object, or its `id` is missing or empty. Its default one-liner is read without the id field. The doc's
+/// folder is the one of the JSON file the entry came from.
+fn entry_doc(manifest: &Manifest, key: &str, item: &Json, folder: &str) -> Option<Doc> {
     let members = item.as_object()?;
     let fields = scalar_fields(members);
     let id = field_text(&fields, key).filter(|id| !id.is_empty())?;
     let lead = text_of(members, Some(key));
-    Some(doc(manifest, id, text_of(members, None), fields, &lead))
+    let text = text_of(members, None);
+    Some(doc(manifest, id, text, fields, &lead, folder.to_string()))
 }
 
 /// The text of an entry: its string scalars, one per line, in source order. The member named `skip`, when there is one, is
@@ -119,13 +132,14 @@ pub(super) fn field_text(fields: &[(String, Value)], key: &str) -> Option<String
 }
 
 /// The doc of a manifest: labelled `<name>:<id>`, with its one-liner by the rule of `title` (design §4.2), read from `lead`, the
-/// text that the default line is read from.
+/// text that the default line is read from. `folder` is the root-relative folder its relative citations resolve from (design §2.3).
 pub(super) fn doc(
     manifest: &Manifest,
     id: String,
     text: String,
     fields: Vec<(String, Value)>,
     lead: &str,
+    folder: String,
 ) -> Doc {
     let title = title::one_liner(manifest.title.as_deref(), &fields, lead);
     Doc {
@@ -136,7 +150,7 @@ pub(super) fn doc(
         title,
         text,
         fields,
-        origin: Origin::Other,
+        origin: Origin::Other { folder },
     }
 }
 

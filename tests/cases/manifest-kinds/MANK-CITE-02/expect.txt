@@ -1,0 +1,76 @@
+$ memex show rows:JS-1 rows:JS-2
+exit 0
+stdout
+| === rows:JS-1 ===
+| JS-1
+| Reads `docs/x.md` for detail.
+| 
+| fields
+|   name: JS-1
+|   claim: Reads `docs/x.md` for detail.
+| 
+| cites
+|   data/docs/x.md
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| === rows:JS-2 ===
+| JS-2
+| Reads `notes/y.md` too.
+| 
+| fields
+|   name: JS-2
+|   claim: Reads `notes/y.md` too.
+| 
+| cites
+|   notes/y.md
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show data/docs/x.md docs/x.md notes/y.md
+exit 0
+stdout
+| === data/docs/x.md ===
+| # Beside the data
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   rows:JS-1  Reads `docs/x.md` for detail.
+|   showing 1 of 1
+| 
+| chain
+|   (none)
+| 
+| === docs/x.md ===
+| # At the root
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+| 
+| === notes/y.md ===
+| # Root note
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   rows:JS-2  Reads `notes/y.md` too.
+|   showing 1 of 1
+| 
+| chain
+|   (none)
+stderr (empty)
