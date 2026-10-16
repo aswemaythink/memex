@@ -115,11 +115,11 @@ details[open] summary::after { content: "\2212"; }
       memex
     </a>
     <nav class="nav -mr-4 flex min-w-0 flex-1 gap-4 overflow-x-auto pr-4 text-[0.875rem] [scrollbar-width:none] sm:mr-0 sm:pr-0" aria-label="Sections">
-      <a class="ml-auto shrink-0 !text-muted !no-underline hover:!text-fg" href="#install">Get started</a>
+      <a class="ml-auto shrink-0 !text-muted !no-underline hover:!text-fg" href="#principles">Principles</a>
+      <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#install">Get started</a>
       <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#compression">Compression</a>
       <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#patterns">Patterns</a>
       <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#verbs">Verbs</a>
-      <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#principles">Principles</a>
       <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#story">Story</a>
       <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="https://github.com/rynwhite/memex">GitHub</a>
     </nav>
@@ -133,12 +133,25 @@ details[open] summary::after { content: "\2212"; }
     <p class="mb-3 font-mono text-[0.78rem] font-semibold uppercase tracking-[0.06em] text-accent">memex · authored context compression</p>
     <h1 id="h-intro" class="font-serif text-[2rem] leading-[1.15] font-medium sm:text-[2.6rem]">Read intent before code.</h1>
     <p class="mt-5 font-serif text-[1.2rem] leading-[1.55]">memex is a CLI that indexes a repo’s authored intent layer, so agents read what the code is for before they read the code.</p>
-    <p class="mt-4">Code records what a system does. The intent layer records what it is for: a README says why a folder exists, a header says what a file is for, and a case says what is claimed and how it is proven. Whoever knew the most compresses it at the moment they knew it best, and memex walks the citations between those pieces in both directions.</p>
-    <p class="mt-4">Markdown files and a CLI. No server, daemon, auth, MCP, LLM, vectors or database: memex starts, reads plain files live, prints and exits. Anything with a shell can use it.</p>
-    <p class="mt-4 text-[0.95rem] text-muted">The name is Vannevar Bush’s, from 1945. <a href="#story">The story</a> is at the bottom of the page.</p>
+    <p class="mt-4">Code records what a system does. READMEs, headers and cases record what it is for, written by whoever knew it best. memex walks the links between them, both ways.</p>
+    <p class="mt-4 text-[0.95rem] text-muted">The name is Vannevar Bush’s, from 1945. <a href="#story">Read the story</a>.</p>
   </section>
 
-  <!-- 2. Install and quick start -->
+  <!-- 2. Principles -->
+  <section id="principles" class="pt-16" aria-labelledby="h-principles">
+    <h2 id="h-principles" class="font-serif text-[1.75rem] leading-tight font-medium">Principles</h2>
+    <ul class="mt-5 grid gap-x-10 gap-y-6 sm:grid-cols-2">
+      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Markdown first</h3><p class="mt-1 text-[0.95rem] text-muted">Knowledge lives in plain Markdown in the repo, versioned with the code. No server, database, vectors or LLM: memex reads the files live, prints and exits.</p></li>
+      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Agent-agnostic</h3><p class="mt-1 text-[0.95rem] text-muted">Anything with a shell can use it, whichever agent or human is at the keyboard. Plugins only wrap the CLI.</p></li>
+      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">memex reads intent, tools read code</h3><p class="mt-1 text-[0.95rem] text-muted">memex indexes READMEs, headers and collections, never code bodies. For symbols, <code>rg</code> is already the right tool.</p></li>
+      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Conventions over configuration</h3><p class="mt-1 text-[0.95rem] text-muted">READMEs and headers are found by where they are; one frontmatter line joins a collection. Nothing to set up.</p></li>
+      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Never floods the context</h3><p class="mt-1 text-[0.95rem] text-muted">Every list says <code>showing N of M</code> and takes <code>--limit</code>, so an agent knows what it has not seen. Nothing is cut silently.</p></li>
+      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Logs expire; knowledge is written down</h3><p class="mt-1 text-[0.95rem] text-muted">A run’s log is kept a few days, then pruned. Whatever is still true gets written into a README, a header or a case by someone who understands it.</p></li>
+    </ul>
+    <p class="mt-8 font-serif italic text-muted">A feature earns its place by removing friction an agent actually hit in a playtest.</p>
+  </section>
+
+  <!-- 3. Get started -->
   <section id="install" class="pt-16" aria-labelledby="h-install">
     <h2 id="h-install" class="font-serif text-[1.75rem] leading-tight font-medium">Get started</h2>
     <p class="mt-4">One command in the repo you want to index, for a human or an agent. It installs the binary if needed, creates <code>.memex/</code>, and adds a block to <code>AGENTS.md</code> that tells any agent to read intent before code. It is safe to repeat.</p>
@@ -175,7 +188,7 @@ powershell -c "irm https://github.com/rynwhite/memex/releases/latest/download/me
     </details>
   </section>
 
-  <!-- 3. Context compression: the layer table (the compression order), citations, hand-off. -->
+  <!-- 4. Context compression: the layer table (the compression order), citations, hand-off. -->
   <section id="compression" class="pt-16" aria-labelledby="h-compression">
     <h2 id="h-compression" class="font-serif text-[1.75rem] leading-tight font-medium">Context compression</h2>
     <p class="mt-4">memex is <strong>authored context compression</strong>. A README compresses a folder, a header compresses a file, a case line compresses a test, a log compresses an agent’s run, and a ref compresses a hand-off. Whoever knew the most compresses it at the moment they knew it best, so nothing has to summarise it after the fact.</p>
@@ -366,7 +379,7 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
     </div>
   </section>
 
-  <!-- 4. Patterns -->
+  <!-- 5. Patterns -->
   <section id="patterns" class="pt-16" aria-labelledby="h-patterns">
     <h2 id="h-patterns" class="font-serif text-[1.75rem] leading-tight font-medium">Patterns</h2>
     <p class="mt-4">Collections and log streams need no declaration, so the conventions are what matter. These are the ones that held up in practice. <strong>Write it where the next reader will look:</strong> true of the code, it goes in a header or README; true of this run, a log; a claim a test proves, a case.</p>
@@ -481,7 +494,7 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
     </div>
   </section>
 
-  <!-- 5. The verbs -->
+  <!-- 6. The verbs -->
   <section id="verbs" class="pt-16" aria-labelledby="h-verbs">
     <h2 id="h-verbs" class="font-serif text-[1.75rem] leading-tight font-medium">The verbs agents use</h2>
     <p class="mt-4">For reference: six verbs, the ones the memex block in <code>AGENTS.md</code> points agents at. memex reads the layer back one level at a time: a one-liner with <code>search</code>, then the document with <code>show</code>, then the chain of READMEs above it.</p>
@@ -581,20 +594,6 @@ Namer: turns atoms into stable class names. The same atom gets the same name on 
 <span class="l">impl:20261013-214107-show-walks-hub-readmes</span></code></pre>
     </div>
     <p class="mt-6 text-[0.95rem] text-muted">Every list prints <code>showing N of M</code> and takes <code>--limit</code>. <code>--json</code> makes stdout one JSON document, errors included. Exit codes: 0 ok (zero hits included), 1 not found or ambiguous, 2 usage error, 3 environment error.</p>
-  </section>
-
-  <!-- 6. Principles -->
-  <section id="principles" class="pt-16" aria-labelledby="h-principles">
-    <h2 id="h-principles" class="font-serif text-[1.75rem] leading-tight font-medium">Principles</h2>
-    <ul class="mt-5 grid gap-x-10 gap-y-6 sm:grid-cols-2">
-      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Markdown files and a CLI</h3><p class="mt-1 text-[0.95rem] text-muted">No server, daemon, auth, MCP, LLM, vectors or database. memex starts, reads plain files live, prints and exits.</p></li>
-      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Agent-agnostic</h3><p class="mt-1 text-[0.95rem] text-muted">Anything with a shell can use it. Plugins only wrap it.</p></li>
-      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Conventions over configuration</h3><p class="mt-1 text-[0.95rem] text-muted">READMEs and headers are found by where they are; a frontmatter line joins a collection. A file in <code>.memex/collections/</code> is needed only for structures that are not Markdown.</p></li>
-      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">memex reads intent, rg reads code</h3><p class="mt-1 text-[0.95rem] text-muted">It never indexes code bodies, only the comment block atop a file.</p></li>
-      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Bounded output</h3><p class="mt-1 text-[0.95rem] text-muted">Every list prints <code>showing N of M</code>, and <code>--limit</code> works everywhere. Nothing is capped silently.</p></li>
-      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Logs are scaffolding; knowledge is authored</h3><p class="mt-1 text-[0.95rem] text-muted">A log expires. What is still true gets written into a README, a header or a collection doc by someone who understands it.</p></li>
-    </ul>
-    <p class="mt-8 font-serif italic text-muted">A feature earns its place by removing friction an agent actually hit in a playtest.</p>
   </section>
 
   <!-- 7. Story: STORY.md retold in full, laid along a trail. -->
