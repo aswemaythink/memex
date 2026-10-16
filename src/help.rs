@@ -68,7 +68,7 @@ const INFO: [&str; 4] = [
 
 const CHECK: [&str; 5] = [
     GRAMMAR[4],
-    "Report where the intent layer is missing or broken: headers, readmes, one-liners, cites and ids.",
+    "Report where the intent layer is missing, thin or broken: headers, readmes, length, one-liners, thin, cites and ids.",
     "A path names a file or folder, and a glob (with *, ? or [) matches walked paths; with none, the root is checked.",
     "  --limit N   findings listed per kind (default 20)",
     "  --json      print one JSON document instead of text",
