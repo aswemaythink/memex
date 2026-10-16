@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 The memex docs site: one static page on what memex is, how to install it and how to use it.
-Order: introduction, install and quick start, the intent layer, context compression, patterns, the verbs, principles, story.
+Order: introduction, get started, context compression (the intent layer), patterns, the verbs, principles, story.
 Behaviour comes from design.md (§1, §2, §3, §5, §6.1) and README.md; the story is STORY.md retold.
 Tailwind comes from its pinned Play CDN; there is no build step. Colours are CSS custom properties, light and dark.
 When a verb's behaviour or the story changes, change design.md or STORY.md first, then this page.
@@ -79,6 +79,7 @@ pre .k { color: var(--term-key); }
 pre .l { color: var(--term-path); }
 pre .d { color: var(--term-dim); }
 pre .m { color: var(--term-accent); }
+pre.ex { padding: 0.6rem 0.8rem 0.7rem; font-size: 0.72rem; line-height: 1.55; }
 pre:focus-visible { outline-color: var(--term-accent); outline-offset: -3px; }
 summary { list-style: none; }
 summary::-webkit-details-marker { display: none; }
@@ -115,7 +116,6 @@ details[open] summary::after { content: "\2212"; }
     </a>
     <nav class="nav -mr-4 flex min-w-0 flex-1 gap-4 overflow-x-auto pr-4 text-[0.875rem] [scrollbar-width:none] sm:mr-0 sm:pr-0" aria-label="Sections">
       <a class="ml-auto shrink-0 !text-muted !no-underline hover:!text-fg" href="#install">Get started</a>
-      <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#layer">Intent layer</a>
       <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#compression">Compression</a>
       <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#patterns">Patterns</a>
       <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#verbs">Verbs</a>
@@ -175,58 +175,99 @@ powershell -c "irm https://github.com/rynwhite/memex/releases/latest/download/me
     </details>
   </section>
 
-  <!-- 3. The intent layer -->
-  <section id="layer" class="pt-16" aria-labelledby="h-layer">
-    <h2 id="h-layer" class="font-serif text-[1.75rem] leading-tight font-medium">The intent layer</h2>
-    <p class="mt-4">Two parts, tied together by citations. The <strong>graph</strong> sits on the tree and is found by <em>where</em> it is: a README per folder, a header per file. <strong>Collections</strong> cut across the tree and are found by <em>what</em> they are. <strong>Logs</strong> are what happened, over time.</p>
-
-    <h3 class="mt-8 font-serif text-[1.35rem] leading-tight font-medium">What a collection is</h3>
-    <p class="mt-3">A collection is a set of plain Markdown files that share one frontmatter line, <code>memex: &lt;name&gt;</code>. Nothing to configure: put the line atop a file and it is a doc in that collection. Anyone can start one.</p>
-    <ul class="mt-3 list-disc space-y-1 pl-6 marker:text-muted">
-      <li>Its label is <code>&lt;name&gt;:&lt;id&gt;</code>. The id is the file’s <code>id</code> field, else its file stem; the title is its first heading.</li>
-      <li>The other frontmatter keys are fields, and fields are filters: <code>memex search status:accepted --in decisions</code>.</li>
-      <li>One file can hold many docs. In a <code>CASES.md</code> with <code>memex: cases</code>, each list item that opens with an id is one entry.</li>
-      <li>Structures that are not Markdown, such as case folders or a JSON list, join as a collection through a file in <code>.memex/collections/</code>.</li>
-    </ul>
-    <div class="mt-5 overflow-hidden rounded-[10px] border border-term-line bg-term">
-      <div class="border-b border-term-line bg-term-bar px-4 py-1.5 font-mono text-[0.74rem] text-term-dim">docs/decisions/logs-in-main-checkout.md</div>
-<pre tabindex="0" aria-label="A decisions doc"><code><span class="d">---</span>
-<span class="k">memex:</span> decisions
-<span class="k">status:</span> accepted
-<span class="d">---</span>
-<span class="g"># Logs live in the main checkout</span>
-Worktrees are removed when a slice lands, so their logs would go with them.
-
-<span class="p">$</span> <span class="c">memex show decisions:logs-in-main-checkout</span></code></pre>
-    </div>
-    <p class="mt-4">Cases, decisions, doom hunts and perf verdicts are all collections; <code>memex info</code> lists them with their counts. Together with the graph they make up the layer:</p>
+  <!-- 3. Context compression: the layer table (the compression order), citations, hand-off. -->
+  <section id="compression" class="pt-16" aria-labelledby="h-compression">
+    <h2 id="h-compression" class="font-serif text-[1.75rem] leading-tight font-medium">Context compression</h2>
+    <p class="mt-4">memex is <strong>authored context compression</strong>. A README compresses a folder, a header compresses a file, a case line compresses a test, a log compresses an agent’s run, and a ref compresses a hand-off. Whoever knew the most compresses it at the moment they knew it best, so nothing has to summarise it after the fact.</p>
+    <p class="mt-4">Together these are the <strong>intent layer</strong>, and this table is its compression order, from the most compressed at the top to the code at the bottom. READMEs and headers are found by <em>where</em> they are, collections by <em>what</em> they are, logs by <em>when</em>. memex reads it top-down, one level at a time (a one-liner with <code>search</code>, the document with <code>show</code>, then the chain of READMEs above it), so code comes last.</p>
 
     <figure class="mt-6">
-      <ul class="overflow-hidden rounded-[10px] border border-rule bg-soft">
-        <li class="grid gap-x-5 gap-y-0.5 border-l-4 border-accent px-4 py-3 sm:grid-cols-[7.5rem_1fr]">
+      <p class="mb-2 text-right text-[0.8rem] text-muted"><span class="hidden sm:inline">Hover or tab to a row</span><span class="sm:hidden">Tap a row</span> for an example.</p>
+      <ul class="rounded-[10px] border border-rule bg-soft">
+        <li class="group relative grid cursor-help gap-x-5 gap-y-0.5 px-4 py-3 outline-none focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:grid-cols-[7.5rem_1fr] border-l-4 border-accent rounded-t-[9px]" tabindex="0" aria-describedby="ex-readme">
           <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">READMEs</span>
           <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">Why a folder exists.</span>
           <span class="text-[0.875rem] leading-normal text-muted">One <code>README.md</code> per folder. Line 1 is <code># Name</code>; the first sentence of its first paragraph is the one-liner.</span>
+          <div id="ex-readme" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 hidden overflow-hidden rounded-lg border border-term-line bg-term shadow-xl shadow-black/30 [@media(hover:hover)]:group-hover:block group-focus:block sm:left-[8.5rem] sm:right-3">
+            <div class="border-b border-term-line bg-term-bar px-3 py-1 font-mono text-[0.7rem] text-term-dim [overflow-wrap:anywhere]">crates/namer/README.md</div>
+<pre class="ex"><code><span class="g"># namer</span>
+
+<span class="m">Namer: turns atoms into stable class</span>
+<span class="m">names.</span> The same atom gets the same
+name on every run and every platform.
+
+- `src/hash.rs`: hashes atom strings.
+- Cases: NAME-001 and NAME-002.</code></pre>
+          </div>
         </li>
-        <li class="grid gap-x-5 gap-y-0.5 border-l-4 border-t border-accent border-t-rule px-4 py-3 sm:grid-cols-[7.5rem_1fr]">
+        <li class="group relative grid cursor-help gap-x-5 gap-y-0.5 px-4 py-3 outline-none focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:grid-cols-[7.5rem_1fr] border-l-4 border-t border-accent border-t-rule" tabindex="0" aria-describedby="ex-header">
           <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Headers</span>
           <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">What a file is for.</span>
           <span class="text-[0.875rem] leading-normal text-muted">The first comment block atop a file. Its first sentence is the file’s purpose.</span>
+          <div id="ex-header" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 hidden overflow-hidden rounded-lg border border-term-line bg-term shadow-xl shadow-black/30 [@media(hover:hover)]:group-hover:block group-focus:block sm:left-[8.5rem] sm:right-3">
+            <div class="border-b border-term-line bg-term-bar px-3 py-1 font-mono text-[0.7rem] text-term-dim [overflow-wrap:anywhere]">crates/namer/src/hash.rs</div>
+<pre class="ex"><code><span class="m">//! FNV-1a over canonical atom strings.</span>
+//! Hash input is the canonical atom
+//! string, never object identity.
+//! Cases: NAME-001, NAME-002
+
+<span class="d">use std::hash::Hasher;</span></code></pre>
+          </div>
         </li>
-        <li class="grid gap-x-5 gap-y-0.5 border-l-4 border-t border-accent border-t-rule px-4 py-3 sm:grid-cols-[7.5rem_1fr]">
+        <li class="group relative grid cursor-help gap-x-5 gap-y-0.5 px-4 py-3 outline-none focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:grid-cols-[7.5rem_1fr] border-l-4 border-t border-accent border-t-rule" tabindex="0" aria-describedby="ex-coll">
           <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Collections</span>
           <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">Cases, decisions and perf notes, found by what they are.</span>
           <span class="text-[0.875rem] leading-normal text-muted">A Markdown file joins with a <code>memex:</code> line in its frontmatter, such as <code>CASES.md</code> with <code>memex: cases</code>. Case folders and JSON lists join, where they already are, through a file in <code>.memex/collections/</code>.</span>
+          <div id="ex-coll" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 hidden overflow-hidden rounded-lg border border-term-line bg-term shadow-xl shadow-black/30 [@media(hover:hover)]:group-hover:block group-focus:block sm:left-[8.5rem] sm:right-3">
+            <div class="border-b border-term-line bg-term-bar px-3 py-1 font-mono text-[0.7rem] text-term-dim [overflow-wrap:anywhere]">tests/CASES.md</div>
+<pre class="ex"><code><span class="d">---</span>
+<span class="k">memex:</span> cases
+<span class="d">---</span>
+<span class="g"># Namer cases</span>
+
+<span class="g">## Stability</span>
+- <span class="l">`NAME-001`</span> <span class="m">Class names are stable.</span>
+  Hash input is the canonical atom string.
+  Evidence: <span class="l">`tests/namer_stable.rs`</span></code></pre>
+          </div>
         </li>
-        <li class="grid gap-x-5 gap-y-0.5 border-l-4 border-t border-l-trail border-t-rule px-4 py-3 [border-left-style:dashed] sm:grid-cols-[7.5rem_1fr]">
+        <li class="group relative grid cursor-help gap-x-5 gap-y-0.5 px-4 py-3 outline-none focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:grid-cols-[7.5rem_1fr] border-l-4 border-t border-l-trail border-t-rule [border-left-style:dashed]" tabindex="0" aria-describedby="ex-log">
           <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Logs</span>
           <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">What an agent was trying, and what it found.</span>
           <span class="text-[0.875rem] leading-normal text-muted"><code>.memex/logs/</code>, out of git. Kept a couple of days, then pruned.</span>
+          <div id="ex-log" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 hidden overflow-hidden rounded-lg border border-term-line bg-term shadow-xl shadow-black/30 [@media(hover:hover)]:group-hover:block group-focus:block sm:left-[8.5rem] sm:right-3">
+            <div class="border-b border-term-line bg-term-bar px-3 py-1 font-mono text-[0.7rem] text-term-dim [overflow-wrap:anywhere]">.memex/logs/impl/20261013-214107-show-chain.md</div>
+<pre class="ex"><code><span class="d">---</span>
+<span class="k">stream:</span> impl
+<span class="k">time:</span> 2026-10-13T21:41:07Z
+<span class="k">agent:</span> cook-2
+<span class="k">to:</span> [orchestrator]
+<span class="k">tags:</span> [namer, show]
+<span class="k">branch:</span> feat/show
+<span class="k">worktree:</span> /home/you/wt/cook-2
+<span class="k">commit:</span> 3f2a9c1
+<span class="d">---</span>
+<span class="m">show walks hub READMEs</span>
+`show &lt;file&gt;` now lists "cited by".</code></pre>
+          </div>
         </li>
-        <li class="grid gap-x-5 gap-y-0.5 border-l-4 border-t border-l-rule border-t-rule bg-bg px-4 py-3 text-muted sm:grid-cols-[7.5rem_1fr]">
+        <li class="group relative grid cursor-help gap-x-5 gap-y-0.5 px-4 py-3 outline-none focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:grid-cols-[7.5rem_1fr] border-l-4 border-t border-l-rule border-t-rule bg-bg text-muted rounded-b-[9px]" tabindex="0" aria-describedby="ex-code">
           <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Code</span>
           <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">What the system does.</span>
-          <span class="text-[0.875rem] leading-normal">Read it with <code>rg</code>. memex reads only the comment atop a file.</span>
+          <span class="text-[0.875rem] leading-normal ">Read it with <code>rg</code>. memex reads only the comment atop a file.</span>
+          <div id="ex-code" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 hidden overflow-hidden rounded-lg border border-term-line bg-term shadow-xl shadow-black/30 [@media(hover:hover)]:group-hover:block group-focus:block sm:left-[8.5rem] sm:right-3">
+            <div class="border-b border-term-line bg-term-bar px-3 py-1 font-mono text-[0.7rem] text-term-dim [overflow-wrap:anywhere]">crates/namer/src/hash.rs</div>
+<pre class="ex"><code><span class="m">//! FNV-1a over canonical atom strings.</span>
+
+pub fn hash(atom: &amp;str) -&gt; u64 {
+  let mut h: u64 = 0xcbf29ce484222325;
+  for b in atom.bytes() {
+    h ^= b as u64;
+    h = h.wrapping_mul(0x100000001b3);
+  }
+  h
+}</code></pre>
+          </div>
         </li>
       </ul>
       <p class="mt-5 mb-3 flex flex-col items-center gap-1 font-mono text-[0.82rem] leading-snug text-muted sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-2.5">
@@ -237,62 +278,6 @@ Worktrees are removed when a slice lands, so their logs would go with them.
         <code class="!rounded !border !border-rule !bg-bg !px-2 !py-1 text-fg">NAME-001</code>
       </p>
       <figcaption class="text-center text-[0.86rem] leading-normal text-muted">The intent layer sits on top of the code. Cite an id, a path or a ref, and memex derives the links in both directions.</figcaption>
-    </figure>
-
-    <h3 class="mt-10 font-serif text-[1.35rem] leading-tight font-medium">Cite, don’t copy</h3>
-    <p class="mt-3">Write ids, paths and refs; memex derives the links both ways. There are no mapping files. Citations inside fenced code are ignored, and an explicit ref that resolves to nothing is listed as <code>unresolved</code>.</p>
-    <div class="mt-4 overflow-x-auto">
-      <table class="w-full border-collapse text-left text-[0.95rem]">
-        <thead><tr class="border-b border-rule text-[0.8rem] uppercase tracking-[0.05em] text-muted"><th class="py-2 pr-4 font-mono font-semibold">Write</th><th class="py-2 font-mono font-semibold">Links to</th></tr></thead>
-        <tbody>
-          <tr class="border-b border-rule"><td class="py-2 pr-4 align-top"><code>NAME-001</code></td><td class="py-2">the doc that declares that id; prose like <code>UTF-8</code> never links</td></tr>
-          <tr class="border-b border-rule"><td class="py-2 pr-4 align-top"><code>PREFIX-*</code></td><td class="py-2">every declared id with that prefix</td></tr>
-          <tr class="border-b border-rule"><td class="py-2 pr-4 align-top"><code>collection:id</code></td><td class="py-2">that doc, when <code>collection</code> is a known collection</td></tr>
-          <tr class="border-b border-rule"><td class="py-2 pr-4 align-top"><code>src/hash.rs</code></td><td class="py-2">the file or folder it names</td></tr>
-          <tr class="border-b border-rule"><td class="py-2 pr-4 align-top">a Markdown link</td><td class="py-2">a file or folder in the repo; URLs and <code>#anchors</code> are not refs</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- 4. Context compression -->
-  <section id="compression" class="pt-16" aria-labelledby="h-compression">
-    <h2 id="h-compression" class="font-serif text-[1.75rem] leading-tight font-medium">Context compression</h2>
-    <p class="mt-4">memex is <strong>authored context compression</strong>. A README compresses a folder, a header compresses a file, a case line compresses a test, a log compresses an agent’s run, and a ref compresses a hand-off. Whoever knew the most compresses it at the moment they knew it best, so nothing has to summarise it after the fact.</p>
-
-    <figure class="mt-8 grid items-center gap-6 sm:grid-cols-[22rem_1fr] sm:gap-8">
-      <svg class="dg w-full max-w-[22rem] mx-auto" viewBox="0 0 352 262" role="img" aria-labelledby="ld-t ld-d">
-        <title id="ld-t">The compression ladder</title>
-        <desc id="ld-d">Four bars, shortest at the top: the root README, folder READMEs, file headers, and the code at the bottom. An arrow on the left points down: read top-down, open code last.</desc>
-        <defs>
-          <marker id="ah1" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="aheada" d="M0 0L10 5L0 10z"/></marker>
-        </defs>
-        <path class="aline" d="M14 10V244" marker-end="url(#ah1)"/>
-        <g>
-          <rect class="box" x="36" y="6" width="150" height="50" rx="6"/><rect class="edge" x="36" y="6" width="4" height="50" rx="1"/>
-          <text x="50" y="26" font-size="11" font-weight="600" class="mono" letter-spacing=".5">ROOT README</text>
-          <text x="50" y="45" font-size="12.5" class="mut">one paragraph</text>
-        </g>
-        <g>
-          <rect class="box" x="36" y="68" width="210" height="50" rx="6"/><rect class="edge" x="36" y="68" width="4" height="50" rx="1"/>
-          <text x="50" y="88" font-size="11" font-weight="600" class="mono" letter-spacing=".5">FOLDER READMES</text>
-          <text x="50" y="107" font-size="12.5" class="mut">a paragraph per folder</text>
-        </g>
-        <g>
-          <rect class="box" x="36" y="130" width="270" height="50" rx="6"/><rect class="edge" x="36" y="130" width="4" height="50" rx="1"/>
-          <text x="50" y="150" font-size="11" font-weight="600" class="mono" letter-spacing=".5">FILE HEADERS</text>
-          <text x="50" y="169" font-size="12.5" class="mut">one line per file</text>
-        </g>
-        <g>
-          <rect class="plain" x="36" y="192" width="314" height="56" rx="6"/><rect class="dim" x="36" y="192" width="4" height="56" rx="1"/>
-          <text x="50" y="213" font-size="11" font-weight="600" class="mono mut" letter-spacing=".5">CODE</text>
-          <text x="50" y="233" font-size="12.5" class="mut">thousands of lines · open last, with rg</text>
-        </g>
-      </svg>
-      <figcaption>
-        <h3 class="font-serif text-[1.2rem] font-medium leading-snug">Read the compression before the source</h3>
-        <p class="mt-2 text-[0.95rem]">Each level up is shorter. memex reads it back one level at a time: a one-liner with <code>search</code>, then the document with <code>show</code>, then the chain of READMEs above it, up to the root. Open code only when the intent layer can’t answer.</p>
-      </figcaption>
     </figure>
 
     <figure class="mt-12 grid items-center gap-6 sm:grid-cols-[22rem_1fr] sm:gap-8">
@@ -364,9 +349,24 @@ Worktrees are removed when a slice lands, so their logs would go with them.
         <p class="mt-2 text-[0.95rem]">A sub-agent ends its run by logging the full report and returning one line, <code>report: &lt;ref&gt;</code>. The orchestrator keeps its context for deciding and runs <code>memex show &lt;ref&gt;</code> only when it needs the detail.</p>
       </figcaption>
     </figure>
+
+    <h3 class="mt-10 font-serif text-[1.35rem] leading-tight font-medium">Cite, don’t copy</h3>
+    <p class="mt-3">Write ids, paths and refs; memex derives the links both ways. There are no mapping files. Citations inside fenced code are ignored, and an explicit ref that resolves to nothing is listed as <code>unresolved</code>.</p>
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full border-collapse text-left text-[0.95rem]">
+        <thead><tr class="border-b border-rule text-[0.8rem] uppercase tracking-[0.05em] text-muted"><th class="py-2 pr-4 font-mono font-semibold">Write</th><th class="py-2 font-mono font-semibold">Links to</th></tr></thead>
+        <tbody>
+          <tr class="border-b border-rule"><td class="py-2 pr-4 align-top"><code>NAME-001</code></td><td class="py-2">the doc that declares that id; prose like <code>UTF-8</code> never links</td></tr>
+          <tr class="border-b border-rule"><td class="py-2 pr-4 align-top"><code>PREFIX-*</code></td><td class="py-2">every declared id with that prefix</td></tr>
+          <tr class="border-b border-rule"><td class="py-2 pr-4 align-top"><code>collection:id</code></td><td class="py-2">that doc, when <code>collection</code> is a known collection</td></tr>
+          <tr class="border-b border-rule"><td class="py-2 pr-4 align-top"><code>src/hash.rs</code></td><td class="py-2">the file or folder it names</td></tr>
+          <tr class="border-b border-rule"><td class="py-2 pr-4 align-top">a Markdown link</td><td class="py-2">a file or folder in the repo; URLs and <code>#anchors</code> are not refs</td></tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 
-  <!-- 5. Patterns -->
+  <!-- 4. Patterns -->
   <section id="patterns" class="pt-16" aria-labelledby="h-patterns">
     <h2 id="h-patterns" class="font-serif text-[1.75rem] leading-tight font-medium">Patterns</h2>
     <p class="mt-4">Collections and log streams need no declaration, so the conventions are what matter. These are the ones that held up in practice. <strong>Write it where the next reader will look:</strong> true of the code, it goes in a header or README; true of this run, a log; a claim a test proves, a case.</p>
@@ -481,7 +481,7 @@ Worktrees are removed when a slice lands, so their logs would go with them.
     </div>
   </section>
 
-  <!-- 6. The verbs -->
+  <!-- 5. The verbs -->
   <section id="verbs" class="pt-16" aria-labelledby="h-verbs">
     <h2 id="h-verbs" class="font-serif text-[1.75rem] leading-tight font-medium">The verbs agents use</h2>
     <p class="mt-4">For reference: six verbs, the ones the memex block in <code>AGENTS.md</code> points agents at. memex reads the layer back one level at a time: a one-liner with <code>search</code>, then the document with <code>show</code>, then the chain of READMEs above it.</p>
@@ -583,7 +583,7 @@ Namer: turns atoms into stable class names. The same atom gets the same name on 
     <p class="mt-6 text-[0.95rem] text-muted">Every list prints <code>showing N of M</code> and takes <code>--limit</code>. <code>--json</code> makes stdout one JSON document, errors included. Exit codes: 0 ok (zero hits included), 1 not found or ambiguous, 2 usage error, 3 environment error.</p>
   </section>
 
-  <!-- 7. Principles -->
+  <!-- 6. Principles -->
   <section id="principles" class="pt-16" aria-labelledby="h-principles">
     <h2 id="h-principles" class="font-serif text-[1.75rem] leading-tight font-medium">Principles</h2>
     <ul class="mt-5 grid gap-x-10 gap-y-6 sm:grid-cols-2">
@@ -597,7 +597,7 @@ Namer: turns atoms into stable class names. The same atom gets the same name on 
     <p class="mt-8 font-serif italic text-muted">A feature earns its place by removing friction an agent actually hit in a playtest.</p>
   </section>
 
-  <!-- 8. Story: STORY.md retold in full, laid along a trail. -->
+  <!-- 7. Story: STORY.md retold in full, laid along a trail. -->
   <section id="story" class="mt-16 border-t border-rule pt-16 font-serif text-[1.125rem] leading-[1.65]" aria-labelledby="h-story">
     <p class="font-mono text-[0.78rem] font-semibold uppercase tracking-[0.06em] text-accent">The story</p>
     <h2 id="h-story" class="mt-3 text-[1.9rem] leading-[1.15] font-medium tracking-[-0.02em] sm:text-[2.5rem]">Good work was being lost, not because it was wrong, but because nobody could get back to it.</h2>
@@ -660,7 +660,7 @@ Namer: turns atoms into stable class names. The same atom gets the same name on 
       <section class="pb-14" aria-labelledby="h-memex">
         <h3 id="h-memex" class="relative mb-4 text-[1.75rem] leading-[1.12] font-medium tracking-[-0.015em] sm:text-[2.2rem]"><span aria-hidden="true" class="absolute -left-5 top-[0.6em] h-[11px] w-[11px] -translate-x-[6.75px] -translate-y-1/2 rounded-full border-2 border-accent bg-bg sm:-left-7"></span>memex</h3>
         <p class="text-[1.2rem]">memex is <strong>authored context compression</strong>: trails of <strong>intent</strong>, for humans and agents.</p>
-        <p class="mt-4">Code records what a system does. The intent layer records what it’s <em>for</em>: a README says why a folder exists, a header says what a file is for, a case says what’s claimed and how it’s proven, and a log says what an agent was trying and what it found. Whoever understood it best compresses it, at the moment they understood it. Citations become trails, and memex walks them both ways (<a href="#layer">the intent layer</a>, above).</p>
+        <p class="mt-4">Code records what a system does. The intent layer records what it’s <em>for</em>: a README says why a folder exists, a header says what a file is for, a case says what’s claimed and how it’s proven, and a log says what an agent was trying and what it found. Whoever understood it best compresses it, at the moment they understood it. Citations become trails, and memex walks them both ways (<a href="#compression">the intent layer</a>, above).</p>
         <p class="mt-4">Developers and agents are the trail blazers. An agent that finishes a job compresses what it learned and cites what it touched; the next agent walks that trail instead of starting from zero. Logs are the camera’s film: kept a couple of days, then thrown away. What’s still true gets authored into the layer.</p>
         <p class="mt-4">No server, no database, no model in the loop. Markdown files and a CLI. Because the compression was already done, by whoever understood it.</p>
       </section>

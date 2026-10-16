@@ -6,12 +6,11 @@
 
 1. Introduction: what memex is (README.md, design.md §1).
 2. Get started: one command, `npx @rynwhite/memex init`, marked as coming with v0.1.0, with every other route (toolchains, Releases, a checkout, the plugin) in a native `<details>` (design.md §3.5b, §6.1).
-3. The intent layer: what a collection is, then the layer table, the citation chips and the citation forms (design.md §2).
-4. Context compression: three inline SVG diagrams, the compression ladder, two-way citations and hand-off by reference (design.md §1, §5).
-5. Patterns: cases, doom hunts, performance verdicts, hand-off and messages, checking intent against code (drift), promoting a stream (design.md §2.2, §4.2, §5).
-6. The verbs agents use: init, info, show, search, check and log, each a short description followed by its terminal sample (design.md §3, README.md).
-7. Principles (design.md §1).
-8. Story: STORY.md retold in full, on a dashed trail rail with orange markers, the desk sketch and the pull quote.
+3. Context compression: the intent layer as a table in compression order (READMEs, headers, collections, logs, code), each row with a CSS-only example popover (hover, keyboard focus or tap); then the citation chips, the two-way citation and hand-off-by-ref diagrams, and the citation forms (design.md §1, §2, §4.3, §5).
+4. Patterns: cases, doom hunts, performance verdicts, hand-off and messages, checking intent against code (drift), promoting a stream (design.md §2.2, §4.2, §5).
+5. The verbs agents use: init, info, show, search, check and log, each a short description followed by its terminal sample (design.md §3, README.md).
+6. Principles (design.md §1).
+7. Story: STORY.md retold in full, on a dashed trail rail with orange markers, the desk sketch and the pull quote.
 
 Colours are CSS custom properties on `:root`, switched by `prefers-color-scheme`, and the Tailwind config maps its colour names to them. Everything (header, prose, terminals, table, diagrams, footer) shares one 48rem column, so every edge lines up; on phones it is full width with a 16px gutter, and terminal blocks scroll inside themselves.
 
