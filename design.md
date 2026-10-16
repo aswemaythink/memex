@@ -398,7 +398,7 @@ EOF
 3. Run `memex show <dir>` and read its `cites`: an `unresolved` entry is a broken citation.
 4. Fix the README, header or collection doc in the same change, or log the mismatch to `drift` if it's out of scope.
 
-**Change code.** In the same commit, update the header or README you invalidated, add or adjust case lines, and put the id in new test names.
+**Change code.** In the same commit, update the header or README you invalidated, add or adjust case lines, and put the id in each new test (its name, or a comment on it).
 
 **Promote a stream.** When a stream has proven durable, copy its files into the repo and add `memex: <name>` to their frontmatter; give the owning skill the instructions.
 
