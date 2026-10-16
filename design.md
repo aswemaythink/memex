@@ -285,7 +285,7 @@ ids         (showing 1 of 1; duplicate)
 (ids): give each doc its own id
 ```
 
-  The first line names the scope (`.` for the root; several arguments are joined with ` · `), the walked files and folders in it, and the total findings. Each kind is a group headed like a search group, `<kind>  (showing N of M; <what it lists>)`, its lines are `<label>  <detail>`, and its fix line follows; `one-liners` says `(one-liners): shorten the first sentence to 100 characters or fewer`, and `thin` has no fix line. With no finding, the first line is followed by `nothing to fix`. Each kind's list uses `--limit` (default 20) and adds `(--limit M for all)` when cut (§3.3 Limits).
+  The first line names the scope (`.` for the root; several arguments are joined with ` · `), the walked files and folders in it, and the total findings. Each kind is a group headed like a search group, `<kind>  (showing N of M; <what it lists>)`, its lines are `<label>  <detail>`, and its fix line follows; `one-liners` says `(one-liners): shorten the first sentence to 100 characters or fewer`, and `thin` has no fix line. With no finding, the first line is followed by `nothing to fix`. Each kind's list uses `--limit` (default 20); when it is cut, the heading reads `(showing N of M; --limit M for all; <what it lists>)`.
 - **Exit code.** 0 whatever it finds, since a finding is not an error; 1 if a path argument names nothing; 2 for a usage error.
 
 ### 3.6 JSON
@@ -296,7 +296,7 @@ With `--json`, stdout is always one JSON document, including errors. Without it,
 - **`search` (with words or filters, or a roster):** `{query, filters:{…}, groups:[{collection, total, hits:[doc + {score|null, snippet, fuzzy:[]}]}]}`. Roster hits have `score: null` and `cited_by: N`, which, like `<-N`, excludes prefix citations. JSON scores are rounded to 3 decimals. The shape is the same with or without `--in`.
 - **`info`:** `{root, log_store, collections:[{name, kind, builtin, count, description, owner, new_24h?, newest?, error?}], to?:{agent, count}, here?:{path, title}, warnings:[]}`, where `kind` is `null` for `readmes` and `headers` (`builtin: true`), `markdown` for a collection declared by frontmatter, the manifest's kind (`folder`, `json`) for one declared by a manifest, and `log` for streams.
 - **`show`:** `{docs:[doc + {text, cites:[{ref, title, resolved}], cited_by:{total, refs:[{ref, title, via?}]}, children?:{total, items:[{path, kind:"dir"|"file", title}]}, chain:[{path, text}]}], errors:[{arg, code, message, candidates?}]}`. `cites` and `cited_by` are `null` for an entry in another root (§3.1).
-- **`check`:** `{scope:[…], files, folders, findings, kinds:[{kind, total, items:[{ref, detail}]}], errors:[{arg, code, message}]}`, where `kinds` holds only kinds with findings, in §3.5d order, each list bounded by `--limit`; `detail` is `null` where the text has none.
+- **`check`:** `{scope:[…], files, folders, findings, kinds:[{kind, total, items:[{ref, detail}]}], errors:[{arg, code, message}]}`, where `kinds` holds only kinds with items, in §3.5d order, each list bounded by `--limit` (`thin` is listed there but, as a pointer, is not counted in `findings`); `detail` is `null` where the text has none.
 - **`log`:** `{ref, path}`, where `path` is absolute and `/`-separated.
 - **Fatal errors:** `{error:{code, message}}`, where `code` is one of `usage | not_found | ambiguous | no_root | io`. `no_root` is `log` with no `.memex/` (§4.1).
 - **Exit codes:**

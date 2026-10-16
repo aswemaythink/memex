@@ -72,6 +72,28 @@ fn no_doc_under_src_has_an_unresolved_citation() {
     );
 }
 
+/// `memex check` finds nothing to fix in this repo (design §3.5d). `thin` is a pointer, not a finding. The one exception is a
+/// case claim that quotes a ref living in its fixture, such as `memex show cases:NAME-001`: the fixture is data the walk skips.
+#[test]
+fn memex_check_finds_nothing_to_fix() {
+    let checked = memex_json(&["check", "--limit", "100000"]);
+    let mut found = Vec::new();
+    for kind in checked["kinds"].as_array().into_iter().flatten() {
+        let name = kind["kind"].as_str().unwrap_or("?");
+        for item in kind["items"].as_array().into_iter().flatten() {
+            let label = item["ref"].as_str().unwrap_or("?");
+            if name == "thin" || (name == "cites" && label.starts_with("cases:")) {
+                continue;
+            }
+            found.push(format!(
+                "{name}: {label} {}",
+                item["detail"].as_str().unwrap_or("")
+            ));
+        }
+    }
+    report(&found, "run memex check and fix what it lists");
+}
+
 /// AGENTS.md's marked block is assets/agents-snippet.md byte for byte: the one source that `init` writes (design §6, PLAN §4).
 #[test]
 fn agents_block_is_the_snippet_byte_for_byte() {
