@@ -105,6 +105,10 @@ fn fuzz_cases_round_trip() {
         let roster = words(&["search", "--in", "cases", "--limit", "100000"]);
         let printed = roster_ids(&output_text(&run_ok(&sandbox, &roster, "")?.stdout));
         let (mut seen, mut declared) = (printed.clone(), doc.declared);
+        if declared.is_empty() {
+            // design §2.2: a collection file with no id-led items is one doc, its id the file stem.
+            declared.push("CASES".to_string());
+        }
         seen.sort();
         declared.sort();
         if seen != declared {
