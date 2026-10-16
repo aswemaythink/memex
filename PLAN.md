@@ -362,8 +362,8 @@ Every slice writes its CASES.md entries (from the design § and the §2 must-cov
 - **S8.3 Release verdict.** The oracle gives a verdict on behaviour vs design, installer paths and Windows self-install. Then the **user approves**: repo public, tag `v0.1.0`, `cargo publish`, plugin marketplace announced.
 
 **Phase 9: site** (may start during the playtest window).
-- `site/index.html` and `site/style.css`; static, no build step, light and dark themes, works at phone width.
-- **Story first, from STORY.md:** 1945, the camera and the trail, now, then memex. The memex section covers the intent layer, the five verbs and `npx <pkg> init`.
+- `site/index.html`: one static page, no build step, Tailwind from a pinned CDN, light and dark themes, works at phone width.
+- **Reworked by the user 2026-10-16: docs first, story last.** Intro, install (`npx <pkg> init` first, the other routes in a fold), quick start, the intent layer and collections, context compression, patterns, the verbs, principles, then the story from STORY.md in full at the foot.
 - Our own retelling. Quotes are short and attributed.
 - `.github/workflows/pages.yml` deploys on pushes to main that touch `site/`.
 - The orchestrator reviews it in the browser. The user judges the copy against STORY.md's bar ("make people feel what we felt").
