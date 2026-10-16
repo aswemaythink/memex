@@ -255,10 +255,10 @@ How healthy the intent layer is, for the whole root or part of it: where intent 
 - **Scope.** With no argument it checks the root. Each argument is a path (resolved as `show` resolves one, §3.1 step 1) or, if it holds `*`, `?` or `[`, a glob matched against walked root-relative paths with the gitignore rules that manifest `include` uses (§4.2). A file is in scope if it is named or lies under a named folder or matches a glob; a folder likewise. A path that names nothing is that argument's `not found` error (§3.5c), the rest are still checked, and the exit code is 1; a glob that matches nothing is not an error.
 - **Kinds.** Each finding has one kind. The kinds print in this order, and a kind with no finding in scope is left out:
   1. `headers`: a file with a comment family (§2.1) that is not empty and has no header.
-  2. `readmes`: a walked folder with no README.md, the root included.
+  2. `readmes`: a walked folder with no README.md whose subtree holds a file with a comment family (§2.1), the root included. A folder of data alone (case folders, JSON or text fixtures) is not a unit and needs none.
   3. `length`: a file with a comment family whose code lines exceed 500. Code lines are its lines minus its header block and its license block (§2.1); blank lines and other comments count. Detail: `<N> code lines`.
   4. `one-liners`: a header or README whose one-liner (§2) is over 100 characters (Unicode scalar values). Detail: `<N> characters`.
-  5. `thin`: files of 80 lines or more that have a header, ordered by header lines over total lines, lowest first (ties by path). Detail: `<H>/<T> header lines`. It points at where intent is thin; it has no threshold, so it is never "fixed".
+  5. `thin`: files of 80 lines or more that have a header, ordered by header lines over total lines, lowest first (ties by path). Detail: `<H>/<T> header lines`. It points at where intent is thin; it has no threshold, so it is never "fixed", and it is not a finding: the first line's count, `nothing to fix` and JSON `findings` leave it out.
   6. `cites`: an explicit reference in a README, header or collection doc that resolves to nothing (`unresolved` in `show`, §2.3). Detail: `→ <reference as written>`. Logs are scaffolding and are not checked.
   7. `ids`: a duplicate id within a collection (§2.2). The finding is `<name>:<id>`; detail: its paths, each once.
   A manifest doc is in scope by its folder (§4.2). Prefix citations, uncited docs and anything about code bodies are never findings.
@@ -461,7 +461,7 @@ joins that collection, such as CASES.md (`memex: cases`): test ids with their cl
 - Tests for X: `memex search <words> --in cases` (or the collection `memex info` names); `memex show <ID>` gives claim and evidence; `rg <ID>` finds the test.
 - Findings: `memex log <stream> [--to <agent>] <<'EOF' … EOF` prints a ref. Hand back the ref, not the report.
 - Messages to you: `memex search to:<your-id>`.
-- When you change code, update its header/README in the same change. Cite ids and paths; don't copy.
+- When you change code, update its header/README in the same change, then run `memex check <paths>` and fix what it lists. Cite ids and paths; don't copy.
 ```
 
 **Claude Code plugin (optional).** The memex repo is its own marketplace. The plugin contains exactly:
