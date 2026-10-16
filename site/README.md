@@ -5,7 +5,7 @@
 `index.html` runs top to bottom, with a sticky nav of anchor links:
 
 1. Introduction: what memex is (README.md, design.md §1).
-2. Install and quick start: `npx @rynwhite/memex init`, marked as coming with v0.1.0, with every other route (toolchains, Releases, a checkout, the plugin) in a native `<details>`; then `memex init` and its output (design.md §3.5b, §6.1).
+2. Get started: one command, `npx @rynwhite/memex init`, marked as coming with v0.1.0, with every other route (toolchains, Releases, a checkout, the plugin) in a native `<details>` (design.md §3.5b, §6.1).
 3. The intent layer: what a collection is, then the layer table, the citation chips and the citation forms (design.md §2).
 4. Context compression: three inline SVG diagrams, the compression ladder, two-way citations and hand-off by reference (design.md §1, §5).
 5. Patterns: cases, doom hunts, performance verdicts, hand-off and messages, checking intent against code (drift), promoting a stream (design.md §2.2, §4.2, §5).

@@ -114,7 +114,7 @@ details[open] summary::after { content: "\2212"; }
       memex
     </a>
     <nav class="nav -mr-4 flex min-w-0 flex-1 gap-4 overflow-x-auto pr-4 text-[0.875rem] [scrollbar-width:none] sm:mr-0 sm:pr-0" aria-label="Sections">
-      <a class="ml-auto shrink-0 !text-muted !no-underline hover:!text-fg" href="#install">Install</a>
+      <a class="ml-auto shrink-0 !text-muted !no-underline hover:!text-fg" href="#install">Get started</a>
       <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#layer">Intent layer</a>
       <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#compression">Compression</a>
       <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#patterns">Patterns</a>
@@ -140,8 +140,8 @@ details[open] summary::after { content: "\2212"; }
 
   <!-- 2. Install and quick start -->
   <section id="install" class="pt-16" aria-labelledby="h-install">
-    <h2 id="h-install" class="font-serif text-[1.75rem] leading-tight font-medium">Install</h2>
-    <p class="mt-4">One step, for a human or an agent. It installs the binary if needed, creates <code>.memex/</code>, wires <code>AGENTS.md</code> and <code>CLAUDE.md</code>, and prints the atlas.</p>
+    <h2 id="h-install" class="font-serif text-[1.75rem] leading-tight font-medium">Get started</h2>
+    <p class="mt-4">One command in the repo you want to index, for a human or an agent. It installs the binary if needed, creates <code>.memex/</code>, and adds a block to <code>AGENTS.md</code> that tells any agent to read intent before code. It is safe to repeat.</p>
     <div class="mt-4 flex items-baseline gap-3 overflow-x-auto rounded-[10px] border border-term-line bg-term px-5 py-4 font-mono text-[1.05rem] font-semibold sm:text-[1.2rem]">
       <span class="select-none text-term-dim" aria-hidden="true">$</span><code class="whitespace-nowrap !bg-transparent !p-0 !text-[1em]" style="color: var(--term-cmd)">npx @rynwhite/memex init</code>
     </div>
@@ -170,25 +170,9 @@ powershell -c "irm https://github.com/rynwhite/memex/releases/latest/download/me
 <pre tabindex="0" aria-label="Claude Code plugin commands"><code>/plugin marketplace add rynwhite/memex
 /plugin install memex@memex</code></pre>
         </div>
-        <p class="mt-5 text-[0.95rem] text-muted">To uninstall, delete <code>.memex/</code> and the marked block in <code>AGENTS.md</code>.</p>
+        <p class="mt-5 text-[0.95rem] text-muted">After a manual install, run <code>memex init</code> in the repo. To uninstall, delete <code>.memex/</code> and the marked block in <code>AGENTS.md</code>.</p>
       </div>
     </details>
-
-    <h3 id="quickstart" class="mt-12 font-serif text-[1.35rem] leading-tight font-medium">Quick start</h3>
-    <p class="mt-3">Run <code>memex init</code> once in the repo you want to index; it is safe to repeat. You get a <code>.memex/</code> store, a block in <code>AGENTS.md</code> that tells any agent to read intent before code, and the atlas. From then on, <code>memex info</code> shows where everything is.</p>
-    <div class="mt-4 overflow-hidden rounded-[10px] border border-term-line bg-term">
-      <div class="border-b border-term-line bg-term-bar px-4 py-1.5 font-mono text-[0.74rem] text-term-dim">project</div>
-<pre tabindex="0" aria-label="Terminal sample: memex init"><code><span class="p">$</span> <span class="c">memex init</span>
-created <span class="l">.memex/.gitignore</span>
-created <span class="l">.memex/config.json</span>
-created <span class="l">.memex/collections/.gitkeep</span>
-created <span class="l">AGENTS.md</span>
-
-<span class="g">memex</span>  /home/you/project · log store .memex/logs/
-<span class="k">graph</span>  1 readme · 0 headers
-<span class="k">use</span>    memex show &lt;path|ref&gt; · memex search &lt;words&gt; · memex log &lt;stream&gt; &lt;&lt;'EOF' … EOF</code></pre>
-    </div>
-    <p class="mt-4 text-[0.95rem] text-muted">Reads need no setup; only <code>memex log</code> needs <code>.memex/</code>. <a href="#verbs">The verbs</a> are further down.</p>
   </section>
 
   <!-- 3. The intent layer -->
