@@ -72,8 +72,8 @@ memex: cases
 
 ## INFO
 
-- `INIT-INFO-01` After the report, init prints a blank line and then the atlas of the target, with its intent counts, exit 0.
-  Scenario: a git repo with a README and a `src/lib.rs` header; the atlas counts one readme and one header. design §3.5b item 4.
+- `INIT-INFO-01` After the report, init prints a blank line and then the atlas of the target, with its graph counts, exit 0.
+  Scenario: a git repo with a README and a `src/lib.rs` header; the atlas counts one readme and one header on its graph line. design §3.5b item 4.
 - `INIT-INFO-02` Run from a subfolder, init prints the atlas of the toplevel, so the `here` line is absent, exit 0.
   Scenario: the cwd `repo/src/deep` sits below a `src/README.md` that would give a here line if the atlas read the cwd. design §3.5b item 4 and §3.5 `here` line.
 - `INIT-INFO-03` The atlas of init ignores `$MEMEX_AGENT`: an invalid id neither fails init nor warns, and a valid id with messages gives no `to` line, exit 0 both times.

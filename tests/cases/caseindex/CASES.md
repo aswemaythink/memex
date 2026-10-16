@@ -108,8 +108,8 @@ The caseindex family pins design §2.2, how a CASES.md becomes case docs, and th
 
 - `CASE-DUP-01` Two entries with the same id make show cases:ID ambiguous, listing both CASES.md paths, with exit 1.
   Scenario: two CASES.md files that each declare DUP-001; show cases:DUP-001 prints nothing on stdout and names both files on stderr. design §4.2 and §3.1 step 6.
-- `CASE-DUP-02` A duplicate case id is an info warning on stderr, naming the id and each CASES.md that declares it, exit 0.
-  Scenario: two CASES.md files that each declare DUP-001; memex info prints `memex: warning: duplicate case id DUP-001 in CASES.md, sub/CASES.md` on stderr. design §4.2 and §3.5 Collections (warnings).
+- `CASE-DUP-02` A duplicate id is an info warning on stderr, naming the label and each CASES.md that declares it, exit 0.
+  Scenario: two CASES.md files that each declare DUP-001; memex info prints `memex: warning: duplicate id cases:DUP-001 in CASES.md, sub/CASES.md` on stderr. design §2.2 (duplicate ids) and §3.5 Collections (warnings).
 
 ## BARE
 

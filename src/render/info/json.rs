@@ -23,14 +23,14 @@ pub fn document(atlas: &Atlas) -> String {
     format!("{out}\n")
 }
 
-/// The collections of the JSON document (design §3.6): the three built-ins, then the manifests, then the streams. A built-in has
-/// no kind, description or owner; a stream has kind `log` and its new count, and its newest time when it has one.
+/// The collections of the JSON document (design §3.6): the two built-ins, then the collections (manifests and frontmatter alike), then
+/// the streams. A built-in has no kind, description or owner; a stream has kind `log` and its new count, and its newest time when it
+/// has one.
 fn collections_json(atlas: &Atlas) -> Vec<Json> {
     let intent = &atlas.intent;
     let mut list = vec![
         builtin(crate::corpus::READMES, intent.readmes),
         builtin(crate::corpus::HEADERS, intent.headers),
-        builtin(crate::corpus::CASES, intent.cases),
     ];
     list.extend(atlas.collections.iter().map(|collection| {
         json!({

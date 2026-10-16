@@ -15,7 +15,7 @@ pub struct Atlas {
     pub store: Option<String>,
     /// The store as the header prints it: root-relative with a trailing `/` inside the root, else absolute, or `none`.
     pub store_label: String,
-    /// The built-in docs of the intent layer, counted.
+    /// The graph's docs, counted.
     pub intent: Intent,
     /// The manifest collections, in name order.
     pub collections: Vec<Collection>,
@@ -25,20 +25,18 @@ pub struct Atlas {
     pub to: Option<ToCount>,
     /// The nearest README at or above the cwd, when the cwd is below the root and such a README exists.
     pub here: Option<HereLine>,
-    /// The warnings of the run: the manifests that did not load, the duplicate case ids, then the files that could not be read.
-    /// Only JSON lists them.
+    /// The warnings of the run: the manifests that did not load, the duplicate ids, then the corpus's read warnings, which hold the
+    /// files that could not be read and the shared names. Only JSON lists them.
     pub warnings: Vec<String>,
 }
 
-/// The counts of the built-in collections: READMEs, headers and case ids.
+/// The counts of the graph (design §3.5): its READMEs and its headers.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Intent {
     /// The READMEs of the root.
     pub readmes: usize,
     /// The files with a header block.
     pub headers: usize,
-    /// The case ids of every CASES.md.
-    pub cases: usize,
 }
 
 /// A manifest collection: its name, its kind, its doc count and what its manifest says about itself.

@@ -1,5 +1,5 @@
 //! The spellings that refs in docs use (design §2.2, §2.3): case ids, path tokens and path resolution.
-//! The CASES.md reader and the citation scanner both read them, so each rule has one copy.
+//! The entry reader and the citation scanner both read them, so each rule has one copy.
 //! Cases: CASE-GRAMMAR-01, CASE-GRAMMAR-02, CASE-GRAMMAR-03, CASE-EVID-02, CASE-EVID-03, CASE-EVID-05, CASE-EVID-06, CITE-BARE-01, CITE-BARE-02, CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-05, CITE-PATH-06
 
 /// True for an id body (design §2.2): a capital first, then dash-separated parts of capitals and digits, none of them empty.

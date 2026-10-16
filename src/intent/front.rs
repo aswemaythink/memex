@@ -13,7 +13,7 @@ use super::Origin;
 use crate::collections::frontmatter::{split, Document, Value};
 use crate::collections::manifest::{Kind, Loaded, Manifest};
 use crate::collections::title;
-use crate::corpus::{Doc, CASES};
+use crate::corpus::Doc;
 use crate::error::Error;
 use crate::root::slash;
 use crate::text;
@@ -214,13 +214,11 @@ fn stem_of(rel: &str) -> String {
         .map_or_else(String::new, |stem| stem.to_string_lossy().into_owned())
 }
 
-/// The number of docs that each collection named by frontmatter holds, other than the built-in `cases`, which is counted by its
-/// name as before (design §4.2, one collection from two sources).
+/// The number of docs that each collection named by frontmatter holds (design §4.2, one collection from two sources). A file's
+/// entries and whole-file docs count; the graph's docs and the manifests' docs are counted elsewhere.
 pub fn counts<'a>(docs: impl Iterator<Item = &'a Doc>) -> BTreeMap<String, usize> {
     let mut counts = BTreeMap::new();
-    for doc in docs.filter(|doc| {
-        matches!(doc.origin, Origin::Entry | Origin::Whole) && doc.collection != CASES
-    }) {
+    for doc in docs.filter(|doc| matches!(doc.origin, Origin::Entry | Origin::Whole)) {
         *counts.entry(doc.collection.clone()).or_insert(0) += 1;
     }
     counts

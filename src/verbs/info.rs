@@ -1,5 +1,5 @@
 //! Carries out `memex info` (design §3.5 and §3.6): the atlas of where things are, as text or JSON.
-//! Cases: INFO-HEAD-01, INFO-HEAD-02, INFO-INTENT-01, INFO-INTENT-02, INFO-INTENT-03, INFO-COLL-01, INFO-COLL-02, INFO-STREAM-01, INFO-STREAM-02, INFO-STREAM-03, INFO-STREAM-04, INFO-TO-01, INFO-TO-02, INFO-TO-03, INFO-TO-04, INFO-TO-05, INFO-HERE-01, INFO-HERE-02, INFO-HERE-03, INFO-HERE-04, INFO-USE-01, INFO-CAP-01, INFO-WARN-01, INFO-WARN-02, INFO-NOROOT-01, INFO-NOROOT-02, INFO-JSON-01, INFO-JSON-02, INFO-JSON-03, CASE-DUP-02, INIT-INFO-03, INFO-ZERO-01, INFO-ZERO-02
+//! Cases: INFO-HEAD-01, INFO-HEAD-02, INFO-INTENT-01, INFO-INTENT-02, INFO-INTENT-03, INFO-COLL-01, INFO-COLL-02, INFO-STREAM-01, INFO-STREAM-02, INFO-STREAM-03, INFO-STREAM-04, INFO-TO-01, INFO-TO-02, INFO-TO-03, INFO-TO-04, INFO-TO-05, INFO-HERE-01, INFO-HERE-02, INFO-HERE-03, INFO-HERE-04, INFO-USE-01, INFO-CAP-01, INFO-WARN-01, INFO-WARN-02, INFO-NOROOT-01, INFO-NOROOT-02, INFO-JSON-01, INFO-JSON-02, INFO-JSON-03, CASE-DUP-02, INIT-INFO-03, INFO-ZERO-01, INFO-ZERO-02, COLL-SHARED-04, COLL-DUP-01, COLL-DUP-02, COLL-DUP-03
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -8,8 +8,9 @@ use crate::cli::Verb;
 use crate::clock::{self, Timestamp};
 use crate::collections::frontmatter::Value;
 use crate::collections::manifest::{Kind, Loaded};
-use crate::corpus::{label_of, parent_of, readme_label, Corpus, Doc, CASES, HEADERS, READMES};
+use crate::corpus::{label_of, parent_of, readme_label, Corpus, Doc};
 use crate::error::{self, Error};
+use crate::intent::shared;
 use crate::logs::values;
 use crate::render::info::{self as render, Atlas, Collection, HereLine, Intent, Stream, ToCount};
 use crate::root::slash;
@@ -27,7 +28,7 @@ pub struct Request {
     pub json: bool,
 }
 
-/// Carries out `info` and returns its stdout: the text of the atlas, or its JSON document with `--json`. Each duplicate case id
+/// Carries out `info` and returns its stdout: the text of the atlas, or its JSON document with `--json`. Each duplicate id
 /// is warned on stderr here; the manifests that do not load were warned when the corpus loaded.
 pub fn run(request: &Request, now: Timestamp) -> Result<String, Error> {
     let agent = agent_of(request.agent.as_deref())?;
@@ -41,7 +42,7 @@ pub fn text_in(dir: PathBuf, now: Timestamp) -> Result<String, Error> {
     Ok(render_here(&here::load_in(dir)?, None, now, false))
 }
 
-/// The atlas of `here` for `agent`, as text or as its JSON document. Each duplicate case id is warned on stderr.
+/// The atlas of `here` for `agent`, as text or as its JSON document. Each duplicate id is warned on stderr.
 fn render_here(here: &Here, agent: Option<String>, now: Timestamp, json: bool) -> String {
     let duplicates = duplicate_warnings(&here.corpus);
     error::warn(&duplicates);
@@ -60,7 +61,7 @@ fn agent_of(flag: Option<&str>) -> Result<Option<String>, Error> {
 }
 
 /// The atlas of a run: the root and the store, the counts, the collections and streams, the `to` count, the `here` line, and the
-/// warnings of the manifests, the duplicate case ids and the files that could not be read.
+/// warnings of the manifests, the duplicate ids and the corpus's read warnings (files that could not be read, shared names).
 fn atlas(here: &Here, agent: Option<String>, now: Timestamp, duplicates: &[String]) -> Atlas {
     let corpus = &here.corpus;
     let (collections, mut warnings) = manifest_collections(corpus);
@@ -129,16 +130,14 @@ fn kind_word(kind: Kind) -> &'static str {
     }
 }
 
-/// The built-in docs of the intent layer, counted by collection (design §3.5 Header). A log entry never counts, even when its
-/// stream carries a built-in name.
+/// The graph's docs, counted (design §3.5 Header): its READMEs and its headers. A collection that shares their names is not counted.
 fn intent_of(corpus: &Corpus) -> Intent {
     let mut intent = Intent::default();
-    for doc in corpus.all_docs().filter(|doc| !corpus.is_log(doc)) {
-        match doc.collection.as_str() {
-            READMES => intent.readmes += 1,
-            HEADERS => intent.headers += 1,
-            CASES => intent.cases += 1,
-            _ => {}
+    for doc in corpus.all_docs() {
+        if doc.is_readme() {
+            intent.readmes += 1;
+        } else if doc.is_header() {
+            intent.headers += 1;
         }
     }
     intent
@@ -243,10 +242,7 @@ fn here_of(corpus: &Corpus, cwd: &Path) -> Option<HereLine> {
     }
     let mut dir = rel.as_str();
     loop {
-        if let Some(doc) = corpus
-            .doc(&readme_label(dir))
-            .filter(|doc| doc.collection == READMES)
-        {
+        if let Some(doc) = corpus.doc(&readme_label(dir)).filter(|doc| doc.is_readme()) {
             return Some(HereLine {
                 path: label_of(dir),
                 title: doc.title.clone(),
@@ -256,24 +252,20 @@ fn here_of(corpus: &Corpus, cwd: &Path) -> Option<HereLine> {
     }
 }
 
-/// One warning for each case id that more than one CASES.md declares, naming every file that declares it (design §4.2). The lines
-/// come in id order.
+/// One warning for each id that more than one doc of a collection holds, naming each file that holds it once (design §2.2 and §4.2):
+/// `duplicate id <name>:<id> in <paths>`. The lines come in label order.
 fn duplicate_warnings(corpus: &Corpus) -> Vec<String> {
-    let mut declared: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
-    for doc in corpus
-        .all_docs()
-        .filter(|doc| doc.collection == CASES && !corpus.is_log(doc))
-    {
-        declared
-            .entry(doc.id.as_str())
-            .or_default()
-            .push(doc.path.as_deref().unwrap_or_default());
-    }
-    declared
+    shared::duplicates(corpus)
         .into_iter()
-        .filter(|(_, files)| files.len() > 1)
-        .map(|(id, files)| {
-            error::warning(&format!("duplicate case id {id} in {}", files.join(", ")))
+        .map(|(label, docs)| {
+            let mut files: Vec<String> = Vec::new();
+            for doc in docs {
+                let file = shared::source(doc);
+                if !files.contains(&file) {
+                    files.push(file);
+                }
+            }
+            error::warning(&format!("duplicate id {label} in {}", files.join(", ")))
         })
         .collect()
 }

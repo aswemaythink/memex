@@ -10,7 +10,7 @@ Each case folder carries a small intent layer as its fixture: a root README, a `
 - A case section shows cited by only, and its JSON has an empty cites list, as design §3.3 Case and the caseindex family pin.
 - A doc never cites itself, and a README never cites its own folder: both are self-citations and are dropped.
 - A bare id resolves to every declared doc with that id, in label order. Declared means a CASES.md or a manifest holds the id, and the id has the case-id grammar.
-- `collection:id` is explicit only when the collection is known. `readmes`, `headers`, `cases` and `logs` always are (the reserved names of design §3.1); any other name is known when some doc holds it, as a stream or a manifest does.
+- `collection:id` is explicit only when the collection is known. `readmes`, `headers` and `logs` always are (the names of design §3.1); any other name is known when some doc holds it, as a stream, a manifest or a frontmatter collection does. So a case that cites `cases:ID` declares a CASES.md, as CITE-COLL-02 does.
 - A `collection:id` label resolves as `show` resolves a label (design §3.1). `readmes:` and `headers:` name a doc by its path, and `logs:` names the entry of every stream that holds the id. A label that names several docs cites each of them.
 - A path token that names nothing is silent. Only explicit refs (markdown links and known `collection:id`) can be unresolved (design §2.3).
 - A markdown link that climbs above the root is not a citation at all.

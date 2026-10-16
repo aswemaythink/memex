@@ -110,8 +110,8 @@ memex: cases
 
 ## STREAM
 
-- `LOG-STREAM-01` A reserved stream name, `readmes`, `headers`, `cases` or `logs`, exits 2 with `stream name '<name>' is reserved` and writes nothing.
-  design §3.4 Stream name and §3.1 built-in collections. Run: memex log logs, then readmes, headers and cases.
+- `LOG-STREAM-01` A reserved stream name, `readmes`, `headers` or `logs`, exits 2 with `stream name '<name>' is reserved` and writes nothing, while `cases` is an ordinary stream name, so `memex log cases` writes its entry, exit 0.
+  design §3.4 Stream name and §3.1 built-in collections; PLAN §13 R14. Run: memex log logs, then readmes, headers and cases.
 - `LOG-STREAM-02` A stream name whose `.memex/collections/<name>.json` manifest exists exits 2 with `stream name '<name>' is a collection` and writes nothing.
   design §3.4 Stream name; §4.2 manifests. Run: memex log rs-notes with that manifest present, then memex log rs, which is accepted because only the exact file name counts.
 - `LOG-STREAM-03` From a linked worktree, a manifest that exists only in the main checkout's `.memex/collections` also makes its name a collection.

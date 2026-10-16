@@ -73,11 +73,10 @@ impl List {
     }
 }
 
-/// The whole text with each list at its current length: the header, the intent line, each list that has items, the to and
+/// The whole text with each list at its current length: the header, the graph line, each list that has items, the to and
 /// here lines, then the use line. Every label is padded to the longest label that prints, and the value follows two spaces on.
 fn assemble(atlas: &Atlas, lists: &[List]) -> String {
-    let mut lines: Vec<(String, String)> =
-        vec![("intent".to_string(), intent_value(&atlas.intent))];
+    let mut lines: Vec<(String, String)> = vec![("graph".to_string(), intent_value(&atlas.intent))];
     for list in lists.iter().filter(|list| !list.items.is_empty()) {
         lines.push((list.label.to_string(), list.value()));
     }
@@ -100,12 +99,11 @@ fn assemble(atlas: &Atlas, lists: &[List]) -> String {
     out
 }
 
-/// The intent line's value: the built-in counts in the order readmes, headers and cases.
+/// The graph line's value: the counts of READMEs and headers, in that order (design §3.5).
 fn intent_value(intent: &Intent) -> String {
     [
         counted(intent.readmes, "readme", "readmes"),
         counted(intent.headers, "header", "headers"),
-        counted(intent.cases, "case", "cases"),
     ]
     .join(DOT)
 }

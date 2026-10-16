@@ -2,7 +2,7 @@ $ memex info --agent cook-2
 exit 0
 stdout
 | memex  $SANDBOX/repo · log store .memex/logs/
-| intent     1 readme · 0 headers · 0 cases
+| graph      1 readme · 0 headers
 | streams    impl 2 (2 new in 24h) · review 2 (2 new)
 | to cook-2  2 messages → memex search to:cook-2
 | use        memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF

@@ -20,10 +20,14 @@ stderr
 | usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
 
 $ memex log cases
-exit 2
-stdout (empty)
-stderr
-| memex: stream name 'cases' is reserved; pick another name, such as impl
-| usage: memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
+exit 0
+stdout
+| cases:20261013-120000-reserved
+stderr (empty)
 == snapshot repo/.memex/logs
-(missing)
+-- cases/20261013-120000-reserved.md
+| ---
+| stream: cases
+| time: 2026-10-13T12:00:00Z
+| ---
+| Reserved

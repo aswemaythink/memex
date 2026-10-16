@@ -2,5 +2,5 @@ $ memex search widget --in nope
 exit 2
 stdout (empty)
 stderr
-| memex: unknown collection 'nope'; collections: readmes, headers, cases, notes, logs, impl
+| memex: unknown collection 'nope'; collections: readmes, headers, notes, logs, impl
 | usage: memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]

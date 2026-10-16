@@ -7,7 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::paths::{self, is_intent, Hit, Names, Wanted};
 use super::{Cite, Citer};
-use crate::corpus::{label_of, parent_of, Corpus, Doc, READMES};
+use crate::corpus::{label_of, parent_of, Corpus, Doc};
 use crate::par;
 
 /// The citations that docs make, and the backlinks that targets get (design §2.3).
@@ -143,7 +143,8 @@ fn cites_of(corpus: &Corpus, names: &Names, label: &str) -> Option<Vec<Cite>> {
 /// The label of the folder that a README is the doc of. A README never cites its own folder (design §2.3, self-citation).
 fn own_folder(doc: &Doc) -> Option<String> {
     let path = doc.path.as_deref()?;
-    (doc.collection == READMES).then(|| label_of(parent_of(path).unwrap_or("")))
+    doc.is_readme()
+        .then(|| label_of(parent_of(path).unwrap_or("")))
 }
 
 /// Reduces one doc's hits: each target once, in first-appearance order, with the doc's own label and folder left out. It reads

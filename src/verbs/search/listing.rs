@@ -5,7 +5,7 @@
 use std::cmp::Ordering;
 
 use crate::clock::{self, Timestamp};
-use crate::corpus::{Corpus, Doc, LOGS};
+use crate::corpus::{Corpus, Doc};
 use crate::index::filter::time_of;
 use crate::render::search::{self as render, Group, Hit};
 
@@ -37,7 +37,7 @@ pub fn list_group<'a>(
             doc,
             score: None,
             fuzzy: Vec::new(),
-            age: age_of(&name, doc, now),
+            age: age_of(corpus, doc, now),
             cited_by: roster.then(|| corpus.citations().direct_count(&doc.label)),
         })
         .collect();
@@ -65,8 +65,8 @@ fn compare_newest(left: Option<Timestamp>, right: Option<Timestamp>) -> Ordering
 
 /// The age of a log entry, from the stamp that starts its file name, which is the instant of its `time` field. Other docs have no
 /// age, and nor does a log whose name has no stamp.
-pub fn age_of(group: &str, doc: &Doc, now: Timestamp) -> Option<String> {
-    if group != LOGS {
+pub fn age_of(corpus: &Corpus, doc: &Doc, now: Timestamp) -> Option<String> {
+    if !corpus.is_log(doc) {
         return None;
     }
     clock::leading_stamp(&doc.id).map(|stamp| render::age(now.seconds_since(stamp)))

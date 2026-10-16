@@ -1,0 +1,9 @@
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| graph        0 readmes · 0 headers
+| collections  perf 2
+| use          memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+stderr
+| memex: warning: duplicate id perf:PERF-001 in perf/budgets.md

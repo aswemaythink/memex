@@ -1,12 +1,12 @@
 //! Reads and matches a search's filters, and checks its `--in` names (design §3.2).
-//! Cases: SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-07, SRCH-FILTER-08, SRCH-IN-03, SRCH-IN-04, SRCH-IN-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-JSON-03, CLI-HINT-03, CLI-HINT-04, SRCH-FOLD-01
+//! Cases: SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-07, SRCH-FILTER-08, SRCH-IN-03, SRCH-IN-04, SRCH-IN-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-JSON-03, CLI-HINT-03, CLI-HINT-04, SRCH-FOLD-01, COLL-SHARED-01, COLL-SHARED-02, COLL-SHARED-03
 
 use std::collections::BTreeSet;
 
 use crate::cli::Verb;
 use crate::clock::{self, Timestamp};
 use crate::collections::frontmatter::Value;
-use crate::corpus::{Corpus, Doc, CASES, HEADERS, LOGS, READMES};
+use crate::corpus::{Corpus, Doc, HEADERS, LOGS, READMES};
 use crate::error::Error;
 use crate::scan::fail;
 
@@ -109,9 +109,9 @@ pub fn fields_of<'a>(docs: impl Iterator<Item = &'a Doc>) -> BTreeSet<String> {
         .collect()
 }
 
-/// Checks the names given to `--in` (design §3.2): each is a built-in collection (`readmes`, `headers`, `cases` or `logs`), a
-/// collection or stream that a doc of the corpus holds, or a manifest that loads. The first name that is none of these is a usage
-/// error, so an unknown name never gives an empty result.
+/// Checks the names given to `--in` (design §3.2): each is a built-in name (`readmes`, `headers` or `logs`), a collection or stream
+/// that a doc of the corpus holds, or a manifest that loads. The first name that is none of these is a usage error, so an unknown
+/// name never gives an empty result.
 pub fn check_in(corpus: &Corpus, names: &[String]) -> Result<(), Error> {
     let held: BTreeSet<&str> = corpus
         .all_docs()
@@ -132,22 +132,24 @@ pub fn check_in(corpus: &Corpus, names: &[String]) -> Result<(), Error> {
     Ok(())
 }
 
-/// The names that `--in` takes, in the order design §3.5c gives: readmes, headers and cases, the manifests in name order, logs,
-/// then the streams in name order. A stream is a log doc's collection that no manifest takes, so each name is listed once.
+/// The names that `--in` takes, in the order design §3.5c gives: readmes and headers, the collections in name order (manifests and
+/// frontmatter alike), logs, then the streams in name order. A name that means the graph or a stream to `--in` is listed once, as
+/// that graph name or stream, so a collection that shares one is not listed as a collection (design §4.2 Names).
 fn valid_names(corpus: &Corpus) -> String {
-    let manifests: BTreeSet<&str> = corpus
-        .manifests
-        .iter()
-        .map(|found| found.manifest.name.as_str())
-        .collect();
     let streams: BTreeSet<&str> = corpus
         .all_docs()
         .filter(|doc| corpus.is_log(doc))
         .map(|doc| doc.collection.as_str())
-        .filter(|name| !manifests.contains(name))
+        .filter(|name| !crate::corpus::RESERVED.contains(name))
         .collect();
-    let mut names = vec![READMES, HEADERS, CASES];
-    names.extend(manifests.iter().copied());
+    let collections: BTreeSet<&str> = corpus
+        .manifests
+        .iter()
+        .map(|found| found.manifest.name.as_str())
+        .filter(|name| !crate::corpus::RESERVED.contains(name) && !streams.contains(name))
+        .collect();
+    let mut names = vec![READMES, HEADERS];
+    names.extend(collections);
     names.push(LOGS);
     names.extend(streams);
     names.join(", ")

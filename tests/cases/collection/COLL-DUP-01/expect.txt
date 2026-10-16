@@ -1,0 +1,17 @@
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| graph        0 readmes · 0 headers
+| collections  decisions 2
+| use          memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+stderr
+| memex: warning: duplicate id decisions:ADR-001 in decisions/a.md, decisions/b.md
+
+$ memex show decisions:ADR-001
+exit 1
+stdout (empty)
+stderr
+| memex: ambiguous: decisions:ADR-001
+|   decisions/a.md
+|   decisions/b.md

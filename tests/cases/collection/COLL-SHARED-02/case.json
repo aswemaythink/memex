@@ -1,0 +1,1 @@
+{"steps": [{"args": ["search", "widget", "--in", "logs"]}, {"args": ["search", "widget"]}, {"args": ["show", "logs:alpha"]}]}

@@ -12,12 +12,12 @@ memex: cases
 
 ## INTENT
 
-- `INFO-INTENT-01` The intent line counts the built-in docs in the order readmes, headers and cases: the README of each folder, each file with a header, and each case id in a CASES.md, exit 0.
-  Scenario: three READMEs, one file with a header and one without, and two case ids; the line reads `intent  3 readmes · 1 header · 2 cases`. design §3.5 Header and §3.1 built-in collections.
+- `INFO-INTENT-01` The graph line counts the built-in docs in the order readmes, headers: the README of each folder and each file with a header, exit 0, while case ids are no graph doc and count on the collections line.
+  Scenario: three READMEs, one file with a header and one without, and a CASES.md with two case ids; the graph line reads `graph … 3 readmes · 1 header` and the collections line reads `cases 2`. design §3.5 Header and §3.1 built-in collections.
 - `INFO-INTENT-02` Files the walk skips (hidden entries, paths named in `.ignore`, `node_modules` and `target`) are not counted.
-  Scenario: a hidden folder's README, an ignored folder's README, a `node_modules` README and a `target` header are present; the line reads `intent  1 readme · 1 header · 0 cases`. design §4.1 item 2.
-- `INFO-INTENT-03` A count of one is singular, so the line reads `1 readme · 1 header · 1 case`.
-  Scenario: one README, one file with a header and one case id. design §3.5 gives no count of one; singular is a choice pinned here.
+  Scenario: a hidden folder's README, an ignored folder's README, a `node_modules` README and a `target` header are present; the graph line reads `graph … 1 readme · 1 header`. design §4.1 item 2.
+- `INFO-INTENT-03` A count of one is singular, so the graph line reads `1 readme · 1 header`.
+  Scenario: one README and one file with a header. design §3.5 gives no count of one; singular is a choice pinned here.
 
 ## COLL
 
@@ -77,8 +77,8 @@ memex: cases
 
 - `INFO-WARN-01` An invalid manifest is a warning on stderr, printed once, and is left out of the collections line, which still lists the valid manifests, exit 0.
   Scenario: `good.json` (valid, one doc), `bad.json` (an unknown key) and `wrong.json` (its name is not its file name); stdout reads `collections  good 1` and stderr holds each warning once. design §4.2 Invalid manifests and §3.5 Collections.
-- `INFO-WARN-02` With `--json`, `warnings` lists the invalid manifest and the duplicate case id, and the same two lines are on stderr, each once.
-  Scenario: `bad.json` plus two CASES.md files that both declare DUP-001; the JSON `warnings` array holds the manifest warning and `memex: warning: duplicate case id DUP-001 in CASES.md, sub/CASES.md`. design §4.2 and §3.6 info.
+- `INFO-WARN-02` With `--json`, `warnings` lists the invalid manifest and the duplicate id, and the same two lines are on stderr, each once.
+  Scenario: `bad.json` plus two CASES.md files that both declare DUP-001; the JSON `warnings` array holds the manifest warning and `memex: warning: duplicate id cases:DUP-001 in CASES.md, sub/CASES.md`. design §2.2 (duplicate ids), §4.2 and §3.6 info.
 
 ## NOROOT
 
@@ -89,9 +89,9 @@ memex: cases
 
 ## JSON
 
-- `INFO-JSON-01` `--json` prints one document with root, log_store, collections (the built-ins, then the manifests with kind, description and owner, then the streams with kind `log`, new_24h and newest), to and warnings, exit 0.
+- `INFO-JSON-01` `--json` prints one document with root, log_store, collections (the built-ins `readmes` and `headers`, then the collections with kind, description and owner, then the streams with kind `log`, new_24h and newest), to and warnings, exit 0.
   Scenario: a root with one manifest that has a description and an owner, one stream entry addressed to cook-2, and `info --json --agent cook-2`. design §3.6 info; `null` kind for a built-in and RFC 3339 newest are choices pinned here.
-- `INFO-JSON-02` With no store, `log_store` is null and the collections are the three built-ins only.
+- `INFO-JSON-02` With no store, `log_store` is null and the collections are the two built-ins only.
   Scenario: the NOROOT-01 folder with `info --json`. design §3.6 info; `null` is a choice pinned here.
 - `INFO-JSON-03` The here one-liner in JSON is the whole text, not cut at 120 characters.
   Scenario: the HERE-03 folder with `info --json` from `src/`. design §2 One-liners (JSON keeps the full text).

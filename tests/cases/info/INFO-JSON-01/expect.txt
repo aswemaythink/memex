@@ -1,5 +1,5 @@
 $ memex info --json --agent cook-2
 exit 0
 stdout
-| {"root":"$SANDBOX/repo","log_store":"$SANDBOX/repo/.memex/logs","collections":[{"name":"readmes","kind":null,"builtin":true,"count":1,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"cases","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"doom","kind":"markdown","builtin":false,"count":1,"description":"Doom notes.","owner":"doom skill"},{"name":"impl","kind":"log","builtin":false,"count":1,"description":null,"owner":null,"new_24h":1,"newest":"2026-10-13T11:00:00Z"}],"warnings":[],"to":{"agent":"cook-2","count":1}}
+| {"root":"$SANDBOX/repo","log_store":"$SANDBOX/repo/.memex/logs","collections":[{"name":"readmes","kind":null,"builtin":true,"count":1,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"doom","kind":"markdown","builtin":false,"count":1,"description":"Doom notes.","owner":"doom skill"},{"name":"impl","kind":"log","builtin":false,"count":1,"description":null,"owner":null,"new_24h":1,"newest":"2026-10-13T11:00:00Z"}],"warnings":[],"to":{"agent":"cook-2","count":1}}
 stderr (empty)

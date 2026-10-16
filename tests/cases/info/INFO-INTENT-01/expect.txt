@@ -2,6 +2,7 @@ $ memex info
 exit 0
 stdout
 | memex  $SANDBOX/repo · log store .memex/logs/
-| intent  3 readmes · 1 header · 2 cases
-| use     memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+| graph        3 readmes · 1 header
+| collections  cases 2
+| use          memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr (empty)

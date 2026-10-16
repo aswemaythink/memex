@@ -1,0 +1,1 @@
+{"steps": [{"args": ["search", "widget", "--in", "readmes"]}, {"args": ["search", "widget"]}, {"args": ["show", "readmes:alpha"]}]}

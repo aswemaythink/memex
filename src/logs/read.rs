@@ -105,7 +105,7 @@ fn entry_doc(stream: &str, file: &str, path: &Path) -> Result<Option<Doc>, Error
         title: title_of(&document.body),
         text: document.body,
         fields: document.fields,
-        origin: Origin::Other,
+        origin: Origin::Log,
     }))
 }
 

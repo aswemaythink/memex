@@ -24,7 +24,7 @@ pub struct Section {
     pub collection: Option<String>,
     /// The id of the doc or file.
     pub id: Option<String>,
-    /// The root-relative path of an intent target, or of the CASES.md that defines a case; None for a log.
+    /// The root-relative path of an intent target, or of the file that defines a collection doc; None for a log.
     pub path: Option<String>,
     /// The body: a header, a README, a Markdown file or a log body. None prints `missing` instead.
     pub text: Option<String>,
@@ -50,7 +50,7 @@ pub enum Fields {
 
 /// The parts of a case that `show` prints beside its claim and detail (design §3.3 Case).
 pub struct CaseParts {
-    /// The heading above the case in its CASES.md; None when no heading comes above it.
+    /// The heading above the entry in its file; None when no heading comes above it.
     pub group: Option<String>,
     /// The root-relative paths of the files that evidence the case, in the order its text gives them.
     pub evidence: Vec<String>,

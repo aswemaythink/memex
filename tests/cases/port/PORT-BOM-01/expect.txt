@@ -2,8 +2,9 @@ $ memex info
 exit 0
 stdout
 | memex  $SANDBOX/repo · log store .memex/logs/
-| intent  0 readmes · 0 headers · 1 case
-| use     memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+| graph        0 readmes · 0 headers
+| collections  cases 1
+| use          memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr (empty)
 
 $ memex show cases:BOM-TOPIC-01

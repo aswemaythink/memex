@@ -1,0 +1,1 @@
+{"name": "notes", "kind": "json", "roots": ["feed"], "include": ["*.json"], "at": "/items", "id": "id", "title": "title"}

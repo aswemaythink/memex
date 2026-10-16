@@ -1,0 +1,37 @@
+$ memex search widget --in readmes
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   README.md  The widget root of the sample.
+stderr
+| memex: warning: collection 'readmes' (in notes/a.md) shares a name with the graph; --in readmes means the graph — rename it to reach it with --in
+
+$ memex search widget
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   README.md  The widget root of the sample.
+| readmes  (showing 1 of 1)
+|   readmes:alpha  Alpha widget
+stderr
+| memex: warning: collection 'readmes' (in notes/a.md) shares a name with the graph; --in readmes means the graph — rename it to reach it with --in
+
+$ memex show readmes:alpha
+exit 0
+stdout
+| === readmes:alpha ===
+| # Alpha widget
+| 
+| The widget note that names the collection.
+| 
+| fields
+|   id: alpha
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr
+| memex: warning: collection 'readmes' (in notes/a.md) shares a name with the graph; --in readmes means the graph — rename it to reach it with --in

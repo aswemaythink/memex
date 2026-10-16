@@ -1,0 +1,6 @@
+$ memex info --json
+exit 0
+stdout
+| {"root":"$SANDBOX/repo","log_store":"$SANDBOX/repo/.memex/logs","collections":[{"name":"readmes","kind":null,"builtin":true,"count":1,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"readmes","kind":"markdown","builtin":false,"count":1,"description":null,"owner":null}],"warnings":["memex: warning: collection 'readmes' (in notes/a.md) shares a name with the graph; --in readmes means the graph — rename it to reach it with --in"]}
+stderr
+| memex: warning: collection 'readmes' (in notes/a.md) shares a name with the graph; --in readmes means the graph — rename it to reach it with --in

@@ -1,1 +1,1 @@
-{"steps": [{"args": ["log", "logs"], "stdin": "Reserved\n"}, {"args": ["log", "--json", "cases"], "stdin": "Reserved\n"}], "snapshot": ["repo/.memex/logs"]}
+{"steps": [{"args": ["log", "logs"], "stdin": "Reserved\n"}, {"args": ["log", "--json", "readmes"], "stdin": "Reserved\n"}], "snapshot": ["repo/.memex/logs"]}

@@ -7,14 +7,16 @@ use serde_json::{json, Value as Json};
 
 use super::text::clip;
 use crate::collections::frontmatter::Value;
-use crate::corpus::{Doc, LOGS};
+use crate::corpus::Doc;
+use crate::intent::Origin;
 
 /// The separator between the parts of a log's meta column (design §3.2).
 const DOT: &str = " · ";
 
 /// One group of hits: its name, how many docs matched in all, and the hits that are shown.
 pub struct Group<'a> {
-    /// The group's name: `readmes`, `headers`, `cases`, a manifest's name, or `logs`.
+    /// The group's name: `readmes`, `headers`, a collection's name, or `logs`. A collection that shares a graph or log name has its
+    /// own group under that name, so a name is not enough to tell a group's docs apart (design §4.2 Names).
     pub name: String,
     /// How many docs of the group matched, before the limit.
     pub total: usize,
@@ -94,7 +96,7 @@ pub fn document(query: &str, filters: &[(&str, &str)], groups: &[Group]) -> Stri
 fn group_text(group: &Group) -> String {
     let mut out = format!("{}  ({})\n", group.name, heading_parts(group).join("; "));
     for hit in &group.hits {
-        out.push_str(&hit_line(hit, group.name == LOGS));
+        out.push_str(&hit_line(hit, hit.doc.origin == Origin::Log));
     }
     out
 }

@@ -1,8 +1,18 @@
 $ memex show cases:alpha logs:alpha
 exit 1
-stdout (empty)
+stdout
+| === cases:alpha ===
+| Alpha body line.
+| 
+| fields
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
 stderr
-| memex: warning: $SANDBOX/repo/.memex/collections/cases.json: name 'cases' is reserved
 | memex: warning: $SANDBOX/repo/.memex/collections/logs.json: name 'logs' is reserved
-| memex: not found: cases:alpha (find refs with memex search <words>)
 | memex: not found: logs:alpha (find refs with memex search <words>)

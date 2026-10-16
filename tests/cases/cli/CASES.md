@@ -119,7 +119,7 @@ memex: cases
   design §3.5c Messages (not found names the next step). Run: memex show nope.rs.
 - `CLI-HINT-02` With `--json`, the not-found ref's message in `errors` carries the same hint, stdout is the show document, stderr is empty, and exit is 1.
   design §3.5c Messages and §3.6 (the show document's errors). Run: memex show nope.rs --json.
-- `CLI-HINT-03` An unknown `--in` name prints `memex: unknown collection '<name>'; collections: <names>` on stderr, then the usage line, and exits 2. The names are readmes, headers, cases, the manifests in name order, logs, then the streams in name order.
+- `CLI-HINT-03` An unknown `--in` name prints `memex: unknown collection '<name>'; collections: <names>` on stderr, then the usage line, and exits 2. The names are readmes, headers, the collections in name order (manifests and frontmatter alike), logs, then the streams in name order.
   design §3.5c Messages and §3.2 `--in` names. Fixture: a README, a markdown manifest `notes`, and a log entry in stream `impl`. Run: memex search widget --in nope.
 - `CLI-HINT-04` With `--json`, the unknown-collection message is the usage envelope on stdout, with the same names, stderr is empty, and exit is 2.
   design §3.5c Messages and §3.6 (usage errors are JSON with --json). Fixture as CLI-HINT-03. Run: memex search widget --in nope --json.
@@ -145,4 +145,4 @@ memex: cases
 - `CLI-HINTB-01` `log` with no stream names its next step: stderr reads `memex: log needs a stream name: memex log <stream> <<'EOF' … EOF`, then the log usage line, and exits 2; with `--json` the same message is the usage envelope on stdout.
   design §3.5c Messages (log needs a stream name adds the heredoc form). Run: memex log, then memex log --json.
 - `CLI-HINTB-02` A reserved stream name, `logs` for example, names its next step: stderr reads `memex: stream name '<name>' is reserved; pick another name, such as impl`, then the log usage line, and exits 2 with nothing written; with `--json` the same message is the usage envelope on stdout.
-  design §3.5c Messages (stream name is reserved adds the next step). Run: memex log logs, then memex log --json cases, in a root with a `.memex/`.
+  design §3.5c Messages (stream name is reserved adds the next step). Run: memex log logs, then memex log --json readmes, in a root with a `.memex/`. `cases` is no longer reserved (PLAN §13 R14), so it is not used here.

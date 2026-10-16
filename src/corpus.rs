@@ -1,7 +1,7 @@
 //! Loads the read model (design §3.1 and §3.6): the walked entries and the docs built from them.
-//! The docs are READMEs, headers, collection docs read from frontmatter, manifests and logs, with the label map.
+//! The docs are READMEs, headers, collection docs read from frontmatter and manifests, and logs, with the label map.
 //! The walked entries and the intent docs are bulk-built from sorted input; manifest and log docs are inserted one by one.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ORDER-01, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, SHOW-IO-02, INT-NAME-01, INT-NAME-02, INT-CHAIN-01, INT-BOM-01, MAN-LOAD-02, REF-AMBIG-02, REF-AMBIG-03, REF-RESERVED-03, REF-RESERVED-04, COLL-INFO-01, COLL-INFO-02
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ORDER-01, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-LOG-01, SHOW-LOG-02, SHOW-LINE-01, SHOW-IO-02, INT-NAME-01, INT-NAME-02, INT-CHAIN-01, INT-BOM-01, MAN-LOAD-02, REF-AMBIG-02, REF-AMBIG-03, REF-RESERVED-03, REF-RESERVED-04, COLL-INFO-01, COLL-INFO-02, COLL-SHARED-01, COLL-SHARED-02, COLL-SHARED-03, COLL-SHARED-04, COLL-DUP-01, COLL-DUP-02, COLL-DUP-03
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::io;
@@ -14,7 +14,7 @@ use crate::cite;
 use crate::collections::frontmatter::Value;
 use crate::collections::manifest;
 use crate::error::{self, Error};
-use crate::intent::{files, front, Origin};
+use crate::intent::{files, front, shared, Origin};
 use crate::logs::read::load as load_logs;
 use crate::par;
 use crate::walk;
@@ -26,7 +26,7 @@ pub use crate::root::root_of;
 pub struct Doc {
     /// The label `show` takes: a root-relative path for an intent doc, `collection:id` for any other.
     pub label: String,
-    /// The collection: `readmes`, `headers`, `cases`, a manifest's name, or the stream of a log.
+    /// The collection: `readmes` or `headers` for the graph, a collection's name, or a log's stream.
     pub collection: String,
     /// The id within the collection: the path of an intent doc, the file stem of a log.
     pub id: String,
@@ -42,24 +42,15 @@ pub struct Doc {
     pub origin: Origin,
 }
 
-impl Doc {
-    /// True for an entry of an entry index, whose claim is its title and whose path is that index (design §2.2).
-    pub fn is_entry(&self) -> bool {
-        self.origin == Origin::Entry
-    }
-}
-
 /// The built-in collection of READMEs, whose docs are labelled by their path (design §3.1).
 pub const READMES: &str = "readmes";
 /// The built-in collection of headers, whose docs are labelled by their path (design §3.1).
 pub const HEADERS: &str = "headers";
-/// The built-in collection of case docs, which are labelled `cases:ID` (design §3.1).
-pub const CASES: &str = "cases";
 /// The built-in name of the log store: `logs:` names an entry of any stream (design §3.1).
 pub const LOGS: &str = "logs";
-/// The built-in collection names (design §3.1), which no manifest or stream may take. A `collection:id` label may always use
-/// them, whether or not a doc holds them.
-pub const RESERVED: [&str; 4] = [READMES, HEADERS, CASES, LOGS];
+/// The names of the graph and the log store (design §3.1): a manifest and `log` may not take one, and a `collection:id` label may
+/// always use one. A frontmatter collection may take one, with a warning (design §4.2 Names).
+pub const RESERVED: [&str; 3] = [READMES, HEADERS, LOGS];
 
 /// Whether a walked entry is a folder or a file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -187,7 +178,7 @@ impl Corpus {
         corpus
     }
 
-    /// Adds the logs of the store, when there is one. The citations wait until they are asked for.
+    /// Adds the logs of the store, when there is one, then the shared-name warnings, which need the streams (design §4.2 Names).
     fn finish(&mut self, store: Option<&Path>) {
         if let Some(store) = store {
             let before = self.read_warnings.len();
@@ -198,6 +189,9 @@ impl Corpus {
                 self.insert(doc);
             }
         }
+        let shared = shared::name_warnings(self);
+        error::warn(&shared);
+        self.read_warnings.extend(shared);
     }
 
     /// The first doc with this label, which titles and text are read from. `labelled` gives every doc with it.
@@ -243,9 +237,14 @@ impl Corpus {
         self.docs.values().filter_map(|docs| docs.first())
     }
 
-    /// True for a log entry: a doc with no path whose collection is a stream of the log store (design §3.1, `logs`).
+    /// True for a log entry, by its origin (design §4.3): a collection named like a stream is never one.
     pub fn is_log(&self, doc: &Doc) -> bool {
-        doc.path.is_none() && self.streams.contains(&doc.collection)
+        doc.origin == Origin::Log
+    }
+
+    /// True when the log store holds an entry of the stream `name` (design §3.4).
+    pub fn is_stream(&self, name: &str) -> bool {
+        self.streams.contains(name)
     }
 
     /// The root-relative paths of the walked files, in label order.

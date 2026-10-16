@@ -34,7 +34,7 @@ $ memex info
 exit 0
 stdout
 | memex  $SANDBOX/repo · log store none (run memex init)
-| intent  2 readmes · 0 headers · 0 cases
-| use     memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+| graph  2 readmes · 0 headers
+| use    memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr
 | memex: warning: cannot read $SANDBOX/repo/alpha/CASES.md (PermissionDenied)

@@ -2,7 +2,7 @@ $ memex info  [cwd wt]
 exit 0
 stdout
 | memex  $SANDBOX/wt · log store $SANDBOX/repo/.memex/logs
-| intent   1 readme · 0 headers · 0 cases
+| graph    1 readme · 0 headers
 | streams  impl 1 (1 new in 24h)
 | use      memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr (empty)

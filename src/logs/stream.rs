@@ -35,8 +35,8 @@ pub fn check_grammar(stream: &str) -> Result<(), Error> {
     Err(fail(Verb::Log, message))
 }
 
-/// Refuses a name no stream may take: a built-in name, which belongs to a built-in collection (design §3.1 and §3.4), or
-/// a Windows device name, which Windows cannot hold as a folder on any OS (design §3.4).
+/// Refuses a name no stream may take: one of the graph's or the log store's names, `readmes`, `headers` or `logs` (design §3.1 and
+/// §3.4), or a Windows device name, which Windows cannot hold as a folder on any OS (design §3.4).
 pub fn check_reserved(stream: &str) -> Result<(), Error> {
     if RESERVED.contains(&stream) {
         return Err(fail(

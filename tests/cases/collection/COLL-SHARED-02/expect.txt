@@ -1,0 +1,39 @@
+$ memex search widget --in logs
+exit 0
+stdout
+| logs  (showing 1 of 1)
+|   impl:20261013-110000-widget-run  1h  Widget run finished.
+stderr
+| memex: warning: collection 'logs' (in notes/a.md) shares a name with a log stream; --in logs means the stream
+
+$ memex search widget
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   README.md  The widget root of the sample.
+| logs  (showing 1 of 1)
+|   logs:alpha  Alpha widget
+| logs  (showing 1 of 1)
+|   impl:20261013-110000-widget-run  1h  Widget run finished.
+stderr
+| memex: warning: collection 'logs' (in notes/a.md) shares a name with a log stream; --in logs means the stream
+
+$ memex show logs:alpha
+exit 0
+stdout
+| === logs:alpha ===
+| # Alpha widget
+| 
+| The widget note that names the collection.
+| 
+| fields
+|   id: alpha
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr
+| memex: warning: collection 'logs' (in notes/a.md) shares a name with a log stream; --in logs means the stream

@@ -1,5 +1,6 @@
 //! Carries out `memex search` (design §3.2 and §3.6): filters, then ranks, lists or rosters docs.
-//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-IN-01, SRCH-IN-02, SRCH-RANK-03, SRCH-TOKEN-03, SRCH-JSON-01, SRCH-JSON-02, SRCH-LINE-01, SRCH-JSON-03, SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01, SRCH-ORPHAN-02, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-IN-03, SRCH-IN-04, SRCH-IN-05, SRCH-IN-06, SRCH-TOKEN-04, HDR-CAP-03, MAN-LOAD-13, SRCH-NOHITS-01, SRCH-NOHITS-02, SRCH-NOHITS-03, SRCH-NOHITS-04
+//! Each doc is grouped by where it came from: the graph's READMEs, its headers, a collection, or the logs (design §3.2 and §4.2 Names).
+//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-IN-01, SRCH-IN-02, SRCH-RANK-03, SRCH-TOKEN-03, SRCH-JSON-01, SRCH-JSON-02, SRCH-LINE-01, SRCH-JSON-03, SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01, SRCH-ORPHAN-02, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-IN-03, SRCH-IN-04, SRCH-IN-05, SRCH-IN-06, SRCH-TOKEN-04, HDR-CAP-03, MAN-LOAD-13, SRCH-NOHITS-01, SRCH-NOHITS-02, SRCH-NOHITS-03, SRCH-NOHITS-04, COLL-SHARED-01, COLL-SHARED-02, COLL-SHARED-03
 
 mod listing;
 
@@ -8,7 +9,7 @@ use std::collections::BTreeMap;
 use self::listing::{age_of, list_group};
 use crate::cli::Verb;
 use crate::clock::Timestamp;
-use crate::corpus::{Corpus, Doc, CASES, HEADERS, LOGS, READMES};
+use crate::corpus::{Corpus, Doc, HEADERS, LOGS, READMES};
 use crate::error::{warn, Error};
 use crate::index::bm25;
 use crate::index::filter::{self, Filter};
@@ -139,50 +140,72 @@ fn mode_of(has_words: bool, in_given: bool, has_filters: bool) -> Mode {
     }
 }
 
-/// The group of a doc: `logs` for an entry of the log store, whose streams are all one group, and its collection otherwise,
-/// which is a built-in group or a manifest's name.
-fn group_of(corpus: &Corpus, doc: &Doc) -> String {
+/// The group of a doc (design §3.2 and §4.2 Names). A collection that shares a graph or log name is its own group, so the group is
+/// told apart by where the doc came from, and its name is only what the heading shows.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+enum GroupKey {
+    /// The graph's READMEs, which come first.
+    Readmes,
+    /// The graph's headers, which come after the READMEs.
+    Headers,
+    /// A collection, by its name, in name order, after the graph's groups.
+    Collection(String),
+    /// Every log entry, whose streams are one group, after the collections.
+    Logs,
+}
+
+impl GroupKey {
+    /// The name that the group's heading and its JSON `collection` show.
+    fn name(&self) -> &str {
+        match self {
+            GroupKey::Readmes => READMES,
+            GroupKey::Headers => HEADERS,
+            GroupKey::Collection(name) => name.as_str(),
+            GroupKey::Logs => LOGS,
+        }
+    }
+}
+
+/// The group of a doc: the logs for a log entry, the graph's READMEs or headers for those, and its collection otherwise.
+fn key_of(corpus: &Corpus, doc: &Doc) -> GroupKey {
     if corpus.is_log(doc) {
-        LOGS.to_string()
+        GroupKey::Logs
+    } else if doc.is_readme() {
+        GroupKey::Readmes
+    } else if doc.is_header() {
+        GroupKey::Headers
     } else {
-        doc.collection.clone()
+        GroupKey::Collection(doc.collection.clone())
     }
 }
 
 /// The groups that the search reads, each with its docs, in the order of design §3.2. `--in` leaves out the docs that it does not
 /// name, and a group with no doc is left out.
-fn scope_of<'a>(corpus: &'a Corpus, in_: Option<&[String]>) -> Vec<(String, Vec<&'a Doc>)> {
-    let mut groups: BTreeMap<(u8, String), Vec<&'a Doc>> = BTreeMap::new();
+fn scope_of<'a>(corpus: &'a Corpus, in_: Option<&[String]>) -> Vec<(GroupKey, Vec<&'a Doc>)> {
+    let mut groups: BTreeMap<GroupKey, Vec<&'a Doc>> = BTreeMap::new();
     for doc in corpus.first_docs().filter(|doc| wanted(corpus, in_, doc)) {
-        let name = group_of(corpus, doc);
-        groups.entry((rank(&name), name)).or_default().push(doc);
+        groups.entry(key_of(corpus, doc)).or_default().push(doc);
     }
-    groups
-        .into_iter()
-        .map(|((_, name), docs)| (name, docs))
-        .collect()
+    groups.into_iter().collect()
 }
 
-/// True when there is no `--in` list, or when the list names the doc's group. A log entry's group is `logs`, which `logs` names, and
-/// its stream, which a stream name names: so `--in impl` keeps only the entries of stream `impl` (design §3.2).
+/// True when there is no `--in` list, or when one of its names means the doc (design §3.2).
 fn wanted(corpus: &Corpus, in_: Option<&[String]>, doc: &Doc) -> bool {
     let Some(names) = in_ else {
         return true;
     };
-    let group = group_of(corpus, doc);
-    names
-        .iter()
-        .any(|named| *named == group || (group == LOGS && *named == doc.collection))
+    names.iter().any(|name| names_doc(corpus, name, doc))
 }
 
-/// The place of a group in the output: 0 for readmes, 1 for headers, 2 for cases, 3 for a manifest's collection and 4 for logs.
-fn rank(name: &str) -> u8 {
+/// True when an `--in` name means the doc (design §3.2 and §4.2 Names): `readmes` and `headers` name the graph's, `logs` every log
+/// entry, and a stream's name that stream's entries, even when a collection shares the name. Any other name is a collection's docs.
+fn names_doc(corpus: &Corpus, name: &str, doc: &Doc) -> bool {
     match name {
-        READMES => 0,
-        HEADERS => 1,
-        CASES => 2,
-        LOGS => 4,
-        _ => 3,
+        READMES => doc.is_readme(),
+        HEADERS => doc.is_header(),
+        LOGS => corpus.is_log(doc),
+        _ if corpus.is_stream(name) => corpus.is_log(doc) && doc.collection == name,
+        _ => !corpus.is_log(doc) && !doc.is_graph() && doc.collection == name,
     }
 }
 
@@ -191,7 +214,7 @@ fn rank(name: &str) -> u8 {
 fn rank_groups<'a>(
     corpus: &Corpus,
     plan: &Plan,
-    scope: Vec<(String, Vec<&'a Doc>)>,
+    scope: Vec<(GroupKey, Vec<&'a Doc>)>,
 ) -> Vec<Group<'a>> {
     if plan.mode == Mode::Nothing {
         return Vec::new();
@@ -199,22 +222,33 @@ fn rank_groups<'a>(
     let roster = plan.mode == Mode::Roster;
     scope
         .into_iter()
-        .filter_map(|(name, docs)| {
+        .filter_map(|(key, docs)| {
             let kept: Vec<&'a Doc> = docs.into_iter().filter(|doc| plan.keeps(doc)).collect();
             match plan.mode {
-                Mode::Words => search_group(corpus, name, &kept, plan),
-                _ => list_group(corpus, name, kept, plan.limit, plan.now, roster),
+                Mode::Words => search_group(corpus, &key, &kept, plan),
+                _ => list_group(
+                    corpus,
+                    key.name().to_string(),
+                    kept,
+                    plan.limit,
+                    plan.now,
+                    roster,
+                ),
             }
         })
         .collect()
 }
 
-/// The field weights of a group: its manifest's `weights`, or the defaults for a group with no manifest (design §4.2).
-fn weights_of(corpus: &Corpus, name: &str) -> [f64; 3] {
+/// The field weights of a group: its collection's manifest `weights`, or the defaults for the graph and the logs and for a
+/// collection with no manifest (design §4.2).
+fn weights_of(corpus: &Corpus, key: &GroupKey) -> [f64; 3] {
+    let GroupKey::Collection(name) = key else {
+        return bm25::WEIGHTS;
+    };
     corpus
         .manifests
         .iter()
-        .find(|found| found.manifest.name == name)
+        .find(|found| found.manifest.name == *name)
         .map_or(bm25::WEIGHTS, |found| {
             bm25::field_weights(&found.manifest.weights)
         })
@@ -223,11 +257,11 @@ fn weights_of(corpus: &Corpus, name: &str) -> [f64; 3] {
 /// The group of docs that the words rank: its total, and its hits within the limit. None when no doc matches.
 fn search_group<'a>(
     corpus: &Corpus,
-    name: String,
+    key: &GroupKey,
     docs: &[&'a Doc],
     plan: &Plan,
 ) -> Option<Group<'a>> {
-    let weights = weights_of(corpus, &name);
+    let weights = weights_of(corpus, key);
     let sources: Vec<Source> = docs.iter().map(|doc| source_of(doc)).collect();
     let hits = Index::build(&sources, weights).search(&plan.words);
     let total = hits.len();
@@ -243,13 +277,13 @@ fn search_group<'a>(
                 doc,
                 score: Some(hit.score),
                 fuzzy: hit.fuzzy,
-                age: age_of(&name, doc, plan.now),
+                age: age_of(corpus, doc, plan.now),
                 cited_by: None,
             }
         })
         .collect();
     Some(Group {
-        name,
+        name: key.name().to_string(),
         total,
         hits: shown,
     })
@@ -258,7 +292,7 @@ fn search_group<'a>(
 /// A doc as the index reads it. A header is read without its cut note and cut to its first `HEADER_LINES` lines; the text of every
 /// other doc is read whole.
 fn source_of(doc: &Doc) -> Source<'_> {
-    let body = if doc.collection == HEADERS {
+    let body = if doc.is_header() {
         first_lines(header::without_note(&doc.text), HEADER_LINES)
     } else {
         &doc.text

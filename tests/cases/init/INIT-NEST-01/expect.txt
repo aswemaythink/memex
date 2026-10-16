@@ -8,8 +8,8 @@ stdout
 | created AGENTS.md
 | 
 | memex  $SANDBOX/repo/outer · log store .memex/logs/
-| intent  0 readmes · 0 headers · 0 cases
-| use     memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+| graph  0 readmes · 0 headers
+| use    memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr (empty)
 == snapshot repo/outer/inner
 -- notes.txt

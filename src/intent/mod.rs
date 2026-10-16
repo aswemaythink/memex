@@ -1,5 +1,6 @@
 //! The readers of the intent layer and the one-liner rule they share (design §2).
-//! Paragraphs, the first sentence, and the one-liner of a block; `Origin` tells the graph, entries, whole files and the rest apart.
+//! Paragraphs, the first sentence, and the one-liner of a block; `Origin` tells the graph, entries, whole files, manifest docs and
+//! log entries apart.
 //! Cases: SHOW-DIR-01, SHOW-FILE-01, SHOW-LINE-01
 
 pub mod entries;
@@ -7,9 +8,13 @@ pub mod files;
 pub mod front;
 pub mod header;
 pub mod readme;
+pub mod shared;
 
-/// Where a doc was read from (design §2.2 and §4.2): the graph's own docs, an entry of an entry index, a whole Markdown file, or
-/// the doc of a manifest or a log. Each reader sets it, and the citation scan and `show` read it.
+use crate::corpus::{Doc, HEADERS, READMES};
+
+/// Where a doc was read from (design §2.2, §4.2 and §4.3): the graph's own docs, an entry of an entry index, a whole Markdown file,
+/// a manifest's doc, or a log entry. Each reader sets it, and the citation scan, the search groups and `show` read it. A log entry
+/// is its own origin, not a name, so a collection that shares a stream's name is never a log (design §4.2 Names).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Origin {
     /// A README or a header: the graph's doc, labelled by its path.
@@ -18,8 +23,32 @@ pub enum Origin {
     Entry,
     /// A Markdown file that is one doc of its collection (design §2.2), labelled `collection:id`, with its path.
     Whole,
-    /// A manifest's doc or a log entry (design §4.2 and §4.3).
+    /// A manifest's doc (design §4.2), labelled `collection:id`; a json or folder doc has no path.
     Other,
+    /// A log entry (design §4.3), labelled `stream:id`, with no path.
+    Log,
+}
+
+impl Doc {
+    /// True for an entry of an entry index, whose claim is its title and whose path is that index (design §2.2).
+    pub fn is_entry(&self) -> bool {
+        self.origin == Origin::Entry
+    }
+
+    /// True for a doc of the graph, a README or a header, which is labelled by its path (design §3.1).
+    pub fn is_graph(&self) -> bool {
+        self.origin == Origin::Graph
+    }
+
+    /// True for a README of the graph (design §3.1). A collection named `readmes` is not one, whatever its doc's name.
+    pub fn is_readme(&self) -> bool {
+        self.is_graph() && self.collection == READMES
+    }
+
+    /// True for a header of the graph (design §3.1). A collection named `headers` is not one.
+    pub fn is_header(&self) -> bool {
+        self.is_graph() && self.collection == HEADERS
+    }
 }
 
 /// The paragraphs of a block: runs of non-blank lines, each joined with newlines. Blank lines separate them.

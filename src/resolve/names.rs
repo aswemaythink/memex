@@ -1,7 +1,7 @@
 //! Resolves a ref that is not a path: a label, a bare id or a basename (design §3.1, steps 3 to 6).
 //! Cases: REF-COLL-01, REF-COLL-02, REF-AMBIG-02, REF-AMBIG-03, REF-BARE-01, REF-BARE-02, REF-BARE-03, REF-BASE-01, REF-BASE-02, REF-BASE-03, REF-CAND-01, REF-RESERVED-01, REF-RESERVED-02, REF-RESERVED-03, REF-RESERVED-04, REF-TRIP-01, REF-REL-05, CASE-DUP-01, CASE-BARE-01
 
-use crate::corpus::{name_of, Corpus, Doc, Kind, HEADERS, READMES};
+use crate::corpus::{name_of, Corpus, Doc, Kind};
 
 use super::{Outcome, Target};
 
@@ -34,9 +34,9 @@ fn bare_id<'a>(corpus: &'a Corpus, arg: &str) -> Vec<&'a Doc> {
         .collect()
 }
 
-/// True for a README or a header: an intent doc, whose id is its path (design §3.1).
+/// True for a README or a header: a graph doc, whose id is its path (design §3.1). A collection that shares their names is not one.
 fn is_intent(doc: &Doc) -> bool {
-    matches!(doc.collection.as_str(), READMES | HEADERS)
+    doc.is_graph()
 }
 
 /// The outcome for the docs that one ref names: the target of the only one, or else every one as a candidate.
@@ -54,12 +54,13 @@ fn pick<'a>(corpus: &Corpus, docs: Vec<&'a Doc>) -> Outcome<'a> {
 
 /// The target of a doc: a README or a header is its file, which `show` prints as a path; any other doc is a doc.
 fn target_of(doc: &Doc) -> Target<'_> {
-    match doc.collection.as_str() {
-        READMES | HEADERS => Target::Path {
+    if doc.is_graph() {
+        Target::Path {
             rel: doc.id.clone(),
             kind: Kind::File,
-        },
-        _ => Target::Doc(doc),
+        }
+    } else {
+        Target::Doc(doc)
     }
 }
 

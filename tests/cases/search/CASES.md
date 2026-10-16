@@ -51,7 +51,7 @@ memex: cases
 
 ## GROUP
 
-- `SRCH-GROUP-01` Groups come in the order readmes, headers, cases, manifest collections and then logs, and a group with no hit is left out.
+- `SRCH-GROUP-01` Groups come in the order readmes, headers, then the collections by name (a manifest's and a frontmatter collection's alike, cases among them), then logs, and a group with no hit is left out.
   design §3.2 Grouped output. Run: memex search widget, then memex search gizmo.
 - `SRCH-GROUP-02` All log streams form one logs group, and each log line shows its age, agent and branch, leaving out any part that is missing along with its separator.
   design §3.2 Grouped output (logs are one group) and the log line of design §3.2. Run: memex search widget.
@@ -71,7 +71,7 @@ memex: cases
   design §3.2 (--in restricts the groups searched; logs means every stream). Run: memex search widget --in logs, then --in readmes,logs.
 - `SRCH-IN-03` A `--in` name that is no built-in collection, manifest or stream is a usage error: exit 2 with `unknown collection 'nope'`, the valid names (CLI-HINT-03), and the usage line, and nothing on stdout.
   design §3.2 `--in` names (an unknown name is a usage error, never a silently empty result) and §3.6 exit codes. Run: memex search widget --in nope, then --in readmes,nope.
-- `SRCH-IN-04` With `--json`, an unknown `--in` name gives the usage error envelope `{"error":{"code":"usage","message":"unknown collection 'nope'; collections: readmes, headers, cases, logs"}}`, exit 2.
+- `SRCH-IN-04` With `--json`, an unknown `--in` name gives the usage error envelope `{"error":{"code":"usage","message":"unknown collection 'nope'; collections: readmes, headers, logs"}}`, exit 2, since the fixture has no CASES.md, so no `cases` collection exists.
   design §3.6 fatal errors (the JSON envelope) and §3.2 `--in` names. Run: memex search widget --in nope --json.
 - `SRCH-IN-05` A stream name in `--in` keeps only that stream's entries of the logs group: `--in impl` lists the impl entry and not the review entry, `--in review` the reverse, and `--in logs` lists both.
   design §3.2 `--in` names (a stream name is valid; logs means every stream). Run: memex search widget --in impl, then --in review, then --in logs.
