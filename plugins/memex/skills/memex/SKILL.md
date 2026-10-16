@@ -4,15 +4,16 @@ description: Read a repo's intent layer with memex before its code. It shows whe
 ---
 
 ## memex: read intent before code
-This repo keeps an intent layer: README.md per folder, a header comment atop each file
-(first line = purpose), and CASES.md listing test ids with their claims (ids appear in test names).
-- Overview: `memex info`: where everything is (collections, streams, what's new, messages for you).
-- Orient: `memex show <path>`: header, cited cases, who cites it, README chain; folders list children.
-- Find: `memex search <words>` over READMEs, headers, cases, collections and logs. Use `rg` for symbols.
-- Tests for X: `memex show <file>` lists cited case ids; `memex show <ID>` gives claim and evidence.
+This repo keeps an intent layer. The graph: README.md per folder and a header comment atop each file
+(first line = purpose). Dimensions: any Markdown file with `memex: <collection>` in its frontmatter
+joins that collection, such as CASES.md (`memex: cases`): test ids with their claims (ids appear in test names).
+- Overview: `memex info`: where everything is (graph, collections, streams, messages for you).
+- Orient: `memex show <path>`: header, cites, who cites it, README chain; folders list children.
+- Find: `memex search <words>` over READMEs, headers, collections and logs. Use `rg` for symbols.
+- Tests for X: `memex search <words> --in cases`; `memex show <ID>` gives claim and evidence; `rg <ID>` finds the test.
 - Findings: `memex log <stream> [--to <agent>] <<'EOF' … EOF` prints a ref. Hand back the ref, not the report.
 - Messages to you: `memex search to:<your-id>`.
-- When you change code, update its header/README in the same change and cite the case ids it relies on.
+- When you change code, update its header/README in the same change. Cite ids and paths; don't copy.
 
 ## Your memex id
 
@@ -22,7 +23,7 @@ When the memex plugin starts you as a sub-agent, your context says: "your memex 
 
 - **Read the compression before the source.** Go one-liner, then doc, then chain. Open code only when the intent layer can't answer.
 - **Use the right tool.** `rg` finds symbols. memex finds meaning, cases and findings.
-- **Write it where the next reader will look.** If it's true of the code, it goes in the header or README. If it's true of this run, it goes in a log. If it's a claim a test proves, it goes in `CASES.md`.
+- **Write it where the next reader will look.** If it's true of the code, it goes in the header or README. If it's true of this run, it goes in a log. If it's a claim a test proves, it goes in `CASES.md` (`memex: cases`).
 - **Cite instead of copying.** An id or path is enough, because memex builds the links.
 
 **Orient.**
@@ -33,8 +34,7 @@ memex show crates/namer/src/hash.rs   # header, cites (with claims), cited by, c
 
 **Find the tests for X.**
 ```sh
-memex show crates/namer/src/hash.rs   # cites: NAME-001 — Class names are stable…
-memex search stable class names --in cases
+memex search stable class names --in cases   # the claims
 memex show NAME-001                   # claim, evidence, who cites it
 rg NAME-001                           # the test itself (id is in its name)
 ```
@@ -52,28 +52,39 @@ EOF
 **Check intent against code.**
 1. Run `memex show <dir>`, then read the code it describes.
 2. For each claim, does the code do it? Is there a cited case that proves it?
-3. Run `memex search --in cases`. Entries showing `<-0` are cases nobody cites; an `unresolved` entry in `show` is a broken citation.
-4. Fix the README, header or CASES.md in the same change, or log the mismatch to `drift` if it's out of scope.
+3. Run `memex show <dir>` and read its `cites`: an `unresolved` entry is a broken citation. Run `memex search --in cases`: an entry showing `<-0` is a case nobody cites.
+4. Fix the README, header or collection doc in the same change, or log the mismatch to `drift` if it's out of scope.
 
 **Change code.** In the same commit, update the header or README you invalidated, add or adjust case lines, and put the id in new test names.
 
-**Promote a stream.** When a stream has proven durable, copy its files into the repo, add a `markdown` manifest, and give the owning skill the instructions.
+**Promote a stream.** When a stream has proven durable, copy its files into the repo and add `memex: <name>` to their frontmatter; give the owning skill the instructions.
 
 ## Conventions
 
+The intent layer has two parts, tied together by citations.
+
+- **The graph** is found by *where* things are: a README per folder and a header per file. `memex show <path>` walks it.
+- **Dimensions** are found by *what* they are: cases, decisions, perf notes, playtests. Each is a collection, and any Markdown file joins one with a `memex: <name>` frontmatter line. No config is needed.
+- **Citations** link the two both ways. **Logs** are the time dimension: scaffolding that expires.
+
 1. **README.md per unit folder.** Line 1 is `# Name`. The first paragraph says what the folder is and why it exists; its first sentence is the one-liner shown everywhere.
-2. **Header at the top of each non-trivial file.** It is the first comment block, and its first sentence states the file's purpose. That sentence is the file's one-liner.
-3. **Cases have ids and claims in `CASES.md`.** The test's own name contains the id.
-4. **Cite, don't copy.** Write case ids, paths and refs into READMEs, headers and logs. memex derives links both ways from them. There are no mapping files.
+2. **Header at the top of each non-trivial file.** It is the first comment block, and its first sentence states the file's purpose. That sentence is the file's one-liner. Citing case ids in it is optional.
+3. **A frontmatter line joins a dimension.** `memex: <collection>` in a Markdown file's frontmatter makes it a doc in that collection. Cases are the usual first one: a `CASES.md` with `memex: cases` lists test ids with their claims, and each test's own name contains its id.
+4. **Cite, don't copy.** Write ids, paths and refs into READMEs, headers, docs and logs. memex derives links both ways from them. There are no mapping files.
 5. **Intent ships with code.** A change to behaviour updates its header or README in the same commit.
 
 **One-liners.** A README's one-liner is the first sentence of the first paragraph after the H1, or the H1 text if there is no paragraph. A header's is the first sentence of the block. Text output truncates a one-liner at 120 chars with `…`.
 
 **Headers.** The comment syntax follows the file's extension (`//` for Rust, Go and JS, `#` for Python, shell and YAML, `<!-- -->` for HTML and XML, and others). After blank lines, a shebang, pragma lines and one leading license block, the first comment block is the header; it ends at the first line that is neither comment nor blank. memex reads the first 8 KiB of each file. A file with no header shows as `(no header)`.
 
-**CASES.md.** Each list item at column 0 whose first element is a backticked case id is a case. Its claim is the rest of the first line. Indented lines after it are detail. A backticked path inside the item that exists is its evidence.
+**Collections: `memex: <name>`.** A Markdown file whose frontmatter has `memex: <name>` is a doc in that collection, and no config is needed. The name is lowercase letters, digits and hyphens. A README belongs to the graph, so its `memex` key is ignored. A file is one doc: its title is its first heading, its other frontmatter keys are its fields, and its id is the `id` field or else the file name without `.md`. Its label is `<name>:<id>`.
+
+If a column-0 list item outside fenced code opens with a backticked id, the file is an entry index instead: each such item is a doc, and the file itself is not one. The cases are one collection, `cases`: each `CASES.md` that lists them declares it with `memex: cases` in its frontmatter, as this one does:
 
 ```markdown
+---
+memex: cases
+---
 # Namer cases
 
 ## Stability
@@ -83,18 +94,29 @@ EOF
 - `NAME-002` Two atoms with equal declarations share one class.
 ```
 
-A case id is unique across the repo, and a retired id is never reused. A case written before its test exists says "(planned)" in its claim.
+Each item's claim is the rest of its first line. Indented lines after it are detail, a backticked path that exists is its evidence, and the nearest heading above it is its group. An id is uppercase letters and digits joined by hyphens, such as `NAME-001` or `STT-WRAP-06`. Ids are unique within a collection; keep them unique across the repo too, so a bare id names one doc. An entry keeps its id forever, and a retired id is never reused. An entry written before its test exists says "(planned)" in its claim.
+
+A file with no such items is one doc. This one is a doc of the `decisions` collection:
+
+```markdown
+---
+memex: decisions
+status: accepted
+---
+# Logs live in the main checkout
+Worktrees are removed when a slice lands, so their logs would go with them.
+```
 
 **Citations.** memex derives links from what the docs write:
 
 | Form | Matches |
 |---|---|
-| bare id `NAME-001` | a declared case id; prose like `UTF-8` never links |
+| bare id `NAME-001` | any declared id, in any collection; prose like `UTF-8` never links |
 | `NAME-*` | every declared id with that prefix, so a hub README can cite a family |
 | `collection:id` | that doc, when the collection is known |
 | path token | the file or folder it names |
 | `[text](path)` | a file or folder in the repo |
 
-Citations are never read from fenced code blocks. An explicit reference that resolves to nothing shows as `unresolved` in `memex show`.
+Citations are never read from fenced code blocks. An explicit reference that resolves to nothing shows as `unresolved` in `memex show`. A `NAME-*` citation does not count toward `<-N`, so `<-0` still finds the orphans.
 
-**Logs are scaffolding.** A log is what happened in one run. memex prunes logs older than `keep_logs` (3d by default). Anything still true after that belongs in a README, a header or CASES.md.
+**Logs are scaffolding.** A log is what happened in one run. memex prunes logs older than `keep_logs` (3d by default). Anything still true after that belongs in a README, a header or a collection.
