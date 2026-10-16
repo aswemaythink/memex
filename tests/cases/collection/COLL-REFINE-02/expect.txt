@@ -1,0 +1,9 @@
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| graph        0 readmes · 0 headers
+| collections  notes 1
+| use          memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+stderr
+| memex: warning: $SANDBOX/repo/notes/empty.md: 'memex: ' is not a collection name; use a-z, 0-9 and -

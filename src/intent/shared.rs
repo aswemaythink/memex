@@ -22,25 +22,31 @@ pub fn source(doc: &Doc) -> String {
 }
 
 /// The warnings of the collections that a graph or log name also names (design §4.2 Names), one line each, in name order. Each names
-/// the file the collection starts in: the first of its docs' files in byte order, or its manifest's file when it has no doc.
+/// the file the collection starts in: the first of its docs' files in byte order, or its manifest's file when it has no doc. Only
+/// the docs of such collections are looked at, so this costs no allocation per doc on every verb.
 pub fn name_warnings(corpus: &Corpus) -> Vec<String> {
     let mut first: BTreeMap<&str, String> = BTreeMap::new();
     for doc in corpus
         .all_docs()
-        .filter(|doc| !doc.is_graph() && !corpus.is_log(doc))
+        .filter(|doc| !doc.is_graph() && !corpus.is_log(doc) && is_shared(corpus, &doc.collection))
     {
         let file = source(doc);
-        let kept = first
-            .entry(doc.collection.as_str())
-            .or_insert_with(|| file.clone());
-        if file < *kept {
-            *kept = file;
+        match first.get_mut(doc.collection.as_str()) {
+            Some(kept) if file < *kept => *kept = file,
+            Some(_) => {}
+            None => {
+                first.insert(doc.collection.as_str(), file);
+            }
         }
     }
-    for loaded in &corpus.manifests {
-        first
-            .entry(loaded.manifest.name.as_str())
-            .or_insert_with(|| manifest_file(&loaded.manifest.name));
+    for name in corpus
+        .manifests
+        .iter()
+        .map(|loaded| loaded.manifest.name.as_str())
+    {
+        if is_shared(corpus, name) {
+            first.entry(name).or_insert_with(|| manifest_file(name));
+        }
     }
     first
         .into_iter()
@@ -48,8 +54,13 @@ pub fn name_warnings(corpus: &Corpus) -> Vec<String> {
         .collect()
 }
 
+/// True for a collection name that the graph, `logs` or a log stream also takes (design §4.2 Names).
+fn is_shared(corpus: &Corpus, name: &str) -> bool {
+    matches!(name, READMES | HEADERS | LOGS) || corpus.is_stream(name)
+}
+
 /// The warning for a collection named like the graph or a log stream, which names its file (design §4.2 Names). None for any other
-/// name. `logs` takes the stream form, since `--in logs` means every stream (PLAN §13 R10).
+/// name. `logs` takes the stream form, since `--in logs` means every stream (PLAN §13 R15).
 fn shared_line(corpus: &Corpus, name: &str, file: &str) -> Option<String> {
     if name == READMES || name == HEADERS {
         Some(error::warning(&format!(

@@ -3,7 +3,7 @@
 //! Cases: COLL-FRONT-01, COLL-FRONT-02, COLL-FRONT-03, COLL-FRONT-04, COLL-FRONT-05, COLL-FRONT-06, COLL-FRONT-07, COLL-FRONT-08, COLL-NAME-01, COLL-NAME-02, COLL-ONE-01, COLL-ONE-02, COLL-ONE-03, COLL-ONE-04, COLL-README-01, COLL-UNREAD-01, COLL-PLAIN-01, COLL-INFO-02
 
 use std::collections::BTreeMap;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::Read;
 use std::path::Path;
 
@@ -49,9 +49,23 @@ impl Head {
         File::open(path)
             .and_then(|file| file.take(HEAD_BYTES + 1).read_to_end(&mut bytes))
             .map_err(|failure| Error::io_at("cannot read", path, &failure))?;
+        Ok(Head::of(bytes))
+    }
+
+    /// Reads the whole file at `path` in one open, for a reader that always needs all of it, such as a README: its head and its
+    /// text, read as `text::read` reads it (design §4.4). A file that cannot be read is the error `cannot read`.
+    pub fn read_all(path: &Path) -> Result<(Head, String), Error> {
+        let bytes =
+            fs::read(path).map_err(|failure| Error::io_at("cannot read", path, &failure))?;
+        let text = text::decode(&bytes);
+        Ok((Head::of(bytes), text))
+    }
+
+    /// The head of a file whose first bytes are `bytes`: at most `HEAD_BYTES` of them, and whole when there are no more.
+    fn of(mut bytes: Vec<u8>) -> Head {
         let whole = bytes.len() as u64 <= HEAD_BYTES;
         bytes.truncate(HEAD_BYTES as usize);
-        Ok(Head { bytes, whole })
+        Head { bytes, whole }
     }
 
     /// The text of the whole file, read as `text::read` reads it (design §4.4): the head itself when it holds the whole file, else
@@ -74,18 +88,14 @@ impl Head {
             return false;
         }
         let text = text::decode(&self.bytes);
-        let lines: Vec<&str> = text
+        let mut lines = text
             .split_inclusive('\n')
             .filter(|piece| self.whole || piece.ends_with('\n'))
-            .map(text::line_of)
-            .collect();
-        match lines.split_first() {
-            Some((first, rest)) if *first == FENCE => rest
-                .iter()
-                .take_while(|line| **line != FENCE)
-                .any(|line| line.starts_with(KEY_LINE)),
-            _ => false,
-        }
+            .map(text::line_of);
+        lines.next() == Some(FENCE)
+            && lines
+                .take_while(|line| *line != FENCE)
+                .any(|line| line.starts_with(KEY_LINE))
     }
 }
 

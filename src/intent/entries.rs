@@ -102,7 +102,7 @@ impl<'a> Reader<'a> {
         }
     }
 
-    /// Reads a column-0 line that is not a fence: a heading sets the group, and an item opens a case.
+    /// Reads a column-0 line that is not a fence: a heading sets the group, and an item opens an entry.
     fn column_zero(&mut self, line: &str) {
         match heading_text(line) {
             Some(heading) => self.group = (!heading.is_empty()).then(|| heading.to_string()),
@@ -124,9 +124,9 @@ impl<'a> Reader<'a> {
     }
 }
 
-/// A case whose item is being read: its id, its claim, its detail lines and the group above it.
+/// An entry whose item is being read: its id, its claim, its detail lines and the group above it.
 struct Item {
-    /// The case id, which the item opens with.
+    /// The entry id, in the case-id grammar, which the item opens with.
     id: String,
     /// The text after the id on the item's line, trimmed. Empty when the line has nothing after the id.
     claim: String,

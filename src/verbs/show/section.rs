@@ -29,7 +29,7 @@ pub struct Options {
 /// The labels that a section's citations are read by (design §2.3): the doc whose cites it prints, if any, and the label whose
 /// backlinks it lists.
 pub struct CiteLabels {
-    /// The label of the doc whose cites are printed. None when none are printed: a case, or a folder with no README.
+    /// The label of the doc whose cites are printed. None when none are printed: an entry, or a folder with no README.
     cites: Option<String>,
     /// The label whose backlinks are listed.
     cited_by: String,
@@ -193,7 +193,7 @@ fn file_key(corpus: &Corpus, options: &Options, rel: &str) -> String {
     }
 }
 
-/// The section of a doc, such as a log or a case: its text, its fields, and its citations, with no chain.
+/// The section of a doc, such as a log or an entry: its text, its fields, and its citations, with no chain.
 fn doc_section(
     corpus: &Corpus,
     doc: &Doc,
@@ -211,7 +211,7 @@ fn doc_section(
         missing: "(no text)",
         fields: Some(doc_fields(corpus, doc)),
         children: None,
-        // A case shows cited by and no cites (design §3.3 Case), so its JSON cites list is empty too.
+        // An entry shows cited by and no cites (design §3.3 Entry), so its JSON cites list is empty too.
         citations: citations(options, index, labels),
         chain: None,
     }

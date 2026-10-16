@@ -38,11 +38,10 @@ pub fn file_docs(entry: &Entry) -> Result<Found, Error> {
     }
 }
 
-/// The doc of a README, with the warning that its `memex:` key is ignored when it has one (design §2.2). The README is read once
-/// when its head holds all of it.
+/// The doc of a README, with the warning that its `memex:` key is ignored when it has one (design §2.2). The README is read whole,
+/// in one open, and its head is taken from that read.
 fn readme_found(entry: &Entry) -> Result<Found, Error> {
-    let head = front::Head::read(&entry.path)?;
-    let text = head.text(&entry.path)?;
+    let (head, text) = front::Head::read_all(&entry.path)?;
     let mut warnings = Vec::new();
     if front::readme_has_key(&head, &text) {
         warnings.push(format!(

@@ -40,15 +40,15 @@ pub struct Section {
     pub chain: Option<Vec<Link>>,
 }
 
-/// The fields of a doc (design §3.3 and §3.6): a log's or collection doc's frontmatter, or a case's own parts.
+/// The fields of a doc (design §3.3 and §3.6): a log's or collection doc's frontmatter, or an entry's own parts.
 pub enum Fields {
     /// Frontmatter or manifest fields, printed as `key: value` lines.
     Pairs(Vec<(String, Value)>),
-    /// A case's group and evidence, printed as blocks of their own in the case section.
+    /// An entry's group and evidence, printed as blocks of their own in the entry's section.
     Case(CaseParts),
 }
 
-/// The parts of a case that `show` prints beside its claim and detail (design §3.3 Case).
+/// The parts of an entry that `show` prints beside its claim and detail (design §3.3 Entry).
 pub struct CaseParts {
     /// The heading above the entry in its file; None when no heading comes above it.
     pub group: Option<String>,

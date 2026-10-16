@@ -36,7 +36,7 @@ fn doc(section: &Section) -> Json {
     value
 }
 
-/// The fields object of a doc: none for a file or a folder, the frontmatter of a log, or a case's group and evidence.
+/// The fields object of a doc: none for a file or a folder, the frontmatter of a log, or an entry's group and evidence.
 fn fields(section_fields: Option<&Fields>) -> Json {
     match section_fields {
         None => json!({}),
@@ -58,7 +58,7 @@ pub fn pairs(list: &[(String, Value)]) -> Json {
     Json::Object(map)
 }
 
-/// A case's fields: its group when a heading is above it, and its evidence as an array of paths, empty when it has none.
+/// An entry's fields: its group when a heading is above it, and its evidence as an array of paths, empty when it has none.
 fn case_fields(case: &CaseParts) -> Json {
     let mut map = Map::new();
     if let Some(group) = &case.group {

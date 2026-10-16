@@ -103,3 +103,10 @@ memex: cases
   design §2.2 (duplicate ids) and §4.2 (kind json). The naming of a doc with no path by its manifest's file is a ruling for PLAN §13. Run: memex info.
 - `COLL-DUP-03` Two entries with the same id in one entry index make `info` warn once, naming that file once, exit 0.
   design §2.2 (duplicate ids: each path once). Run: memex info.
+
+## REFINE
+
+- `COLL-REFINE-01` A README longer than 8 KiB whose frontmatter holds `memex:` gives the README warning once and keeps its whole text, so `search zebratail`, a word past the first 8 KiB, finds `docs/README.md`, exit 0.
+  design §2.2 (a README's key is ignored with the warning) and §2 (a README is read in full). Run: memex search zebratail.
+- `COLL-REFINE-02` An empty `memex:` value is not a collection name: one warning, `'memex: ' is not a collection name`, skips its file, and the other file of `notes` still counts, exit 0.
+  design §2.2 (Name: any other value is a warning and the file is skipped). Run: memex info.
