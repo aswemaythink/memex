@@ -51,7 +51,7 @@ memex: cases
 - `INIT-INSTALL-01` With no memex on PATH, unix init copies the running binary to `$HOME/.local/bin/memex`, reports it `created`, and prints the PATH hint, exit 0.
   Scenario: `memex_on_path` is false; the snapshot of `home/.local/bin` shows the binary. design §3.5b item 3 and PLAN §1 fix 16.
 - `INIT-INSTALL-02` On Windows, init installs to `%LOCALAPPDATA%\Programs\memex\memex.exe`, read from the variable, and prints the PATH hint, exit 0.
-  Scenario: the Windows twin of INSTALL-01, with LOCALAPPDATA under the sandbox home. design §3.5b item 3.
+  Scenario: the Windows twin of INIT-INSTALL-01, with LOCALAPPDATA under the sandbox home. design §3.5b item 3.
 - `INIT-INSTALL-03` An installed binary whose bytes differ from the running one is replaced and reported `updated`, exit 0.
   Scenario: `home/.local/bin/memex` holds older text in the fixture. design §3.5b item 3 (replaced only if the bytes differ).
 - `INIT-INSTALL-04` An empty or relative `$HOME` is an environment error: init prints the lines it made, names the HOME variable on stderr and exits 3, and writes no binary under the cwd, unix only.

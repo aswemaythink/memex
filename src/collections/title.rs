@@ -1,7 +1,7 @@
 //! Gives a collection doc its one-liner, by one rule for every kind (design §4.2 `title`).
 //! It is the `title` field when that field has text, else the default line of the doc's text: its first ATX heading outside a
 //! code fence, else its first line with text. No sentence is cut from either.
-//! Cases: MAN-MD-07, MAN-MD-08, MANK-FOLDER-07, MANK-JSON-05, MANK-TITLE-01, MANK-TITLE-02, MANK-TITLE-03
+//! Cases: COLL-TITLE-01, MANK-FOLDER-07, MANK-JSON-05, MANK-TITLE-01, MANK-TITLE-02, MANK-TITLE-03
 
 use super::frontmatter::Value;
 use crate::fence;
@@ -56,7 +56,7 @@ fn first_line(text: &str) -> Option<String> {
 mod tests {
     use super::*;
 
-    /// MAN-MD-07 and MANK-TITLE-01: a heading inside a code fence is not the default title, a fence indented four spaces is text,
+    /// COLL-TITLE-01 and MANK-TITLE-01: a heading inside a code fence is not the default title, a fence indented four spaces is text,
     /// and a `#` with no space after it is text.
     #[test]
     fn headings_skip_fences_and_need_a_space_after_the_marks() {

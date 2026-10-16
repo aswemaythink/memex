@@ -127,7 +127,7 @@ mod tests {
         assert_eq!(normalize("a", "../../x"), None);
     }
 
-    /// Pins REF-ABS-02 by a unit test: a case cannot name the sandbox's absolute path, so the path is built here.
+    /// A unit test for an absolute path inside the root: no case can name the sandbox's absolute path, so the path is built here.
     #[test]
     fn an_absolute_path_inside_the_root_names_its_root_relative_entry() {
         let dir = tempfile::tempdir().expect("a temporary folder");

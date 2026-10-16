@@ -121,7 +121,7 @@ fn collection_of(found: &Loaded) -> Collection {
     }
 }
 
-/// The word that a manifest's `kind` key takes (design §4.2).
+/// The word that `info` shows as a collection's kind (design §3.6): `markdown` for one that frontmatter declares, else its manifest's `folder` or `json`.
 fn kind_word(kind: Kind) -> &'static str {
     match kind {
         Kind::Markdown => "markdown",

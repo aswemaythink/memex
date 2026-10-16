@@ -39,12 +39,12 @@ pub struct Intent {
     pub headers: usize,
 }
 
-/// A manifest collection: its name, its kind, its doc count and what its manifest says about itself.
+/// A collection: its name, its kind, its doc count and what its manifest says about itself, when it has one.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Collection {
-    /// The collection's name, which is its manifest's file stem.
+    /// The collection's name: its manifest's file stem, or the `memex:` name its files give.
     pub name: String,
-    /// The manifest's kind: `markdown`, `folder` or `json`.
+    /// The kind (design §3.6): `markdown` for a collection that frontmatter declares, else its manifest's `folder` or `json`.
     pub kind: &'static str,
     /// The docs the manifest gives.
     pub count: usize,
