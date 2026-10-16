@@ -104,7 +104,7 @@ The intent layer has two parts, tied together by citations. The **graph** sits o
 - **A README per folder.** Line 1 is `# Name`. The first paragraph says what the folder is and why it exists.
 - **A header per file.** The first comment block in a non-trivial file. Its first sentence states the file's purpose.
 
-The comment syntax comes from the file's extension: `//` for Rust, Go and TypeScript, `#` for Python, shell and YAML, `<!-- -->` for HTML and XML, and more. Files with other extensions are not harvested.
+The comment syntax comes from the file's extension: `//` for Rust, Go and TypeScript, `#` for Python, shell and YAML (a Python file with no leading `#` block uses its module docstring), `<!-- -->` for HTML and XML, and more. Files with other extensions are not harvested. A Markdown file has no header: `show` prints it in full, and a collection doc's one-liner is its first heading.
 
 The one-liner is the first sentence of a README's first paragraph, or of a header's block. Text output cuts it at 120 characters with `…`. JSON keeps all of it.
 
@@ -138,6 +138,8 @@ memex: cases
 
 - A doc's label is `<collection>:<id>`. Its id is its `id` field, or else its file stem.
 - An entry's id has the form `[A-Z][A-Z0-9]*(-[A-Z0-9]+)+`, such as `NAME-001`, and is kept forever. Its claim is the rest of its first line. Backticked paths that name existing files are its evidence.
+- Put each id where `rg <ID>` finds its test: in the test's name where the language allows it (`it("NAME-001 …")`), else in a comment on the test (`// NAME-001`, `# NAME-001`).
+- An entry index is not itself a doc: `memex show NAME-001` prints an entry with its claim, evidence and cited by, while `memex show tests/CASES.md` prints the file.
 - Collection names match `[a-z0-9][a-z0-9-]{0,39}`. README.md belongs to the graph, so a `memex:` key in a README is ignored with a warning.
 - Manifests in `.memex/collections/` cover structures that are not Markdown: a `folder` kind has one doc per folder with a marker file (such as `case.json`), and a `json` kind has one doc per entry of a JSON array.
 
