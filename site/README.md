@@ -10,7 +10,7 @@
 4. Context compression: three inline SVG diagrams, the compression ladder, two-way citations and hand-off by reference (design.md §1, §5).
 5. Patterns: cases, doom hunts, performance verdicts, hand-off and messages, checking intent against code (drift), promoting a stream (design.md §2.2, §4.2, §5).
 6. Principles (design.md §1).
-7. Story: STORY.md retold, kept compact.
+7. Story: STORY.md retold in full, on a dashed trail rail with orange markers (1945, the camera and the trail, now, memex, why this matters), the desk sketch and the pull quote.
 
 Colours are CSS custom properties on `:root`, switched by `prefers-color-scheme`, and the Tailwind config maps its colour names to them. The reading column is 90ch wide, the layout holds at 375px, and terminal blocks scroll inside themselves.
 
