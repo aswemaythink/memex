@@ -1,4 +1,5 @@
 ---
+memex: notes
 title: Alpha note
 tags: [x, y]
 ---

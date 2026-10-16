@@ -1,1 +1,1 @@
-{"name": "links", "kind": "markdown", "roots": ["linked", "shortcut"]}
+{"name": "links", "kind": "folder", "roots": ["linked", "shortcut"], "marker": "index.md"}

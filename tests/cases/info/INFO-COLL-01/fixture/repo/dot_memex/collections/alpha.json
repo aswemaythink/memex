@@ -1,1 +1,1 @@
-{"name": "alpha", "kind": "markdown", "roots": ["alpha-missing"]}
+{"name": "alpha", "kind": "folder", "roots": ["alpha-missing"], "marker": "index.md"}

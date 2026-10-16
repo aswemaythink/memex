@@ -5,8 +5,8 @@ memex: cases
 
 ## LOAD
 
-- `MAN-LOAD-01` A valid markdown manifest loads, so `show notes:alpha` prints its doc, and a non-JSON file, a dot-named manifest and a root folder that does not exist raise no warning, exit 0.
-  design §4.2 manifests and keys; §4.2 Invalid manifests. Run: memex show notes:alpha. The fixture has `notes.txt` and `dot_draft.json` beside `notes.json`, and `notes.json` names the roots `notes` and `missing`.
+- `MAN-LOAD-01` A valid folder manifest loads, so `show notes:alpha` prints its doc, and a non-JSON file, a dot-named manifest and a root folder that does not exist raise no warning, exit 0.
+  design §4.2 manifests and keys; §4.2 Invalid manifests. Run: memex show notes:alpha. The fixture has `notes.txt` and `dot_draft.json` beside `notes.json`, and `notes.json` names the roots `notes` and `missing` with the marker `index.md`, so its doc is `notes/alpha/index.md`.
 - `MAN-LOAD-02` A manifest whose `name` is not its file name is skipped with one warning, which prints once for a run with two refs, and both refs are not found, exit 1.
   design §4.2 `name` (must equal the file stem) and Invalid manifests. Run: memex show journal:alpha notes:alpha. The fixture's `notes.json` names itself `journal`.
 - `MAN-LOAD-03` A manifest named after a reserved collection, `readmes`, `headers` or `logs`, is refused with a warning and skipped, so its refs are not found, exit 1, while a manifest named `cases` loads, so `cases:alpha` is found.
@@ -24,50 +24,19 @@ memex: cases
 - `MAN-LOAD-09` A manifest with no `kind` and a manifest with no `roots` each give a warning that names the missing key, and both are skipped, exit 1.
   design §4.2 `roots` (required) and `kind` (the table's kinds). Run: memex show nokind:alpha noroots:alpha.
 - `MAN-LOAD-10` A manifest with an unknown kind, a root that climbs out of the root, or an include glob that does not parse each give one warning and are skipped, exit 1.
-  design §4.2 `kind`, `roots` (root-relative folders) and `include` (globs). Run: memex show badglob:alpha badkind:alpha outside:alpha, with warnings in file-name order.
-- `MAN-LOAD-11` A key that its kind does not use, `at` on a markdown manifest, gives the warning `key 'at' does not apply to kind 'markdown'` and skips the manifest, exit 1.
+  design §4.2 `kind` (folder or json), `roots` (root-relative folders) and `include` (globs, json only). Run: memex show badglob:alpha badkind:alpha outside:alpha, with warnings in file-name order. The unknown kind is `table`, and the bad glob sits in a json manifest, since `include` is json only.
+- `MAN-LOAD-11` A key that its kind does not use, `at` on a folder manifest, gives the warning `key 'at' does not apply to kind 'folder'` and skips the manifest, exit 1.
   design §4.2 Kinds column (`at` applies to json only) and Invalid manifests. Run: memex show notes:alpha.
 - `MAN-LOAD-12` A json manifest with no `id` gives a warning and is skipped, so its ref is not found, exit 1.
   design §4.2 `id` (json: entry field, required). Run: memex show rows:one.
 - `MAN-LOAD-13` A manifest's `weights` raise its fields' ranking, so with `title` at 12 a doc whose title holds the word ranks above a body-only match that ranks first under the default weights.
   design §4.2 `weights` (a per-field ranking boost, with the defaults id 4, title 3, body 1). Run: memex search meridian --in plain, then memex search meridian --in raised.
+- `MAN-LOAD-14` A manifest with `kind: markdown` is skipped with the warning `kind 'markdown' is gone; add 'memex: notes' to its files' frontmatter instead`, so the collections line names no `notes`, and its Markdown file with no `memex:` key is no doc, exit 0.
+  design §4.2 `kind: markdown` (the manifest is skipped with that warning). Run: memex info. The fixture's `notes.json` says `kind: markdown`, and `notes/alpha.md` has no frontmatter.
 
-## MD
-
-- `MAN-MD-01` A markdown doc's frontmatter scalars and flow lists are its fields in file order, and its body is its text, in the text and the `--json` output of `show`, exit 0.
-  design §4.2 Frontmatter and `markdown`; §3.3 Log or collection doc; §3.6 Doc. Run: memex show notes:alpha, then memex show notes:alpha --json.
-- `MAN-MD-02` A `- item` block list is a list field with its quotes removed, shown as `[a, b]` in text and as a JSON array, exit 0.
-  design §4.2 Frontmatter (`- item` lists). Run: memex show notes:beta, then memex show notes:beta --json.
-- `MAN-MD-03` A nested frontmatter block is kept as its text under its key and is not split into fields, exit 0.
-  design §4.2 Frontmatter (nested text is kept as written and cannot be filtered). Run: memex show notes:gamma, then memex show notes:gamma --json.
-- `MAN-MD-04` An `id` of `stem`, the default, names a doc by its file stem even when it has a `slug` field, a doc with no frontmatter has no fields, and the slug is not an id, exit 1 for the slug ref.
-  design §4.2 `id` (stem is the default) and §3.1 labels. Run: memex show notes:alpha notes:plain, then memex show notes:alpha-slug.
-- `MAN-MD-05` An `id` of `path` names a doc by its root-relative path with its folders and extension, so `paths:notes/alpha.md` and `paths:notes/deep/delta.md` are the docs, exit 0.
-  design §4.2 `id` (path). Run: memex show paths:notes/alpha.md paths:notes/deep/delta.md --json.
-- `MAN-MD-06` An `id` that names a frontmatter field takes that field's value as the id, and a doc without the field keeps its file stem, so `slugs:alpha-slug` and `slugs:beta` both resolve, exit 0.
-  design §4.2 `id` (a frontmatter field) and §4.2 Frontmatter (missing fields simply do not score). Run: memex show slugs:alpha-slug slugs:beta.
-- `MAN-MD-07` A doc's default title is its first `#` heading outside a code fence, or its first non-blank line when it has no heading, as the `--json` output shows, exit 0.
-  design §4.2 `title` (default: first # heading, else first line). Run: memex show notes:fenced notes:plainline --json.
-- `MAN-MD-08` A manifest `title` that names a frontmatter field gives the doc its one-liner from that field, and a doc without the field falls back to its default title, exit 0.
-  design §4.2 `title` (field for the one-liner). Run: memex show titled:alpha titled:fenced --json.
-- `MAN-MD-09` A matched `.json` file is a doc whose top-level string, number and boolean values are its fields in key order, with arrays, objects and nulls left out and no text, exit 0.
-  design §4.2 `markdown` (matched `.json` sidecars are docs with their top-level scalars as fields). Run: memex show sidecars:meta, then memex show sidecars:meta --json.
-- `MAN-MD-10` A sidecar that is not valid JSON gives a warning and no doc, while the valid sidecar beside it still shows, exit 1.
-  design §4.2 Invalid manifests (a warning, and the file is skipped), applied to one file. Run: memex show sidecars:broken sidecars:meta.
-- `MAN-MD-11` The include globs choose the files: the default `**/*.md` matches Markdown at any depth but not a `.txt`, a glob with a slash is anchored at its root, and a glob without one matches at any depth, exit 1 for the refs that match nothing.
-  design §4.2 `include` (markdown default `**/*.md`); the glob rules are those of `ignore`'s override matcher. Run: memex show notes:delta anchored:delta anywhere:delta notes:readme, then memex show anchored:alpha anywhere:alpha.
-- `MAN-MD-12` A UTF-8 byte-order mark before the frontmatter is dropped and CRLF line ends are read, so the fields parse, exit 0.
-  design §4.4 Text (a leading BOM is dropped on read; \r\n is accepted in frontmatter). Run: memex show notes:bom.
-- `MAN-MD-13` A root of `.` is the root itself, so the manifest reads the whole tree, but the walk skips a `.ignore`d file, `node_modules` and `target`, so the three refs that are not read are not found, exit 1.
-  design §4.1 item 2 (the skip list: ignored files, node_modules and target) and §4.2 `roots`. Run: memex show everything:top everything:deep everything:private everything:pkg everything:built.
-- `MAN-MD-14` A fence indented four spaces is not a fence, so the heading after it is the default title, while one indented three spaces still hides the heading under it, exit 0.
-  design §2.3 (a fence is indented at most three spaces), applied to markdown docs. Run: memex show notes:four notes:three --json.
-- `MAN-MD-15` A fence closes only at a bare line of its own mark, at least as long, so a tilde line or a line with other text does not close a backtick fence, and a fence never closed runs to the end of the doc, exit 0.
-  design §2.3 (the fence definition and an unclosed fence), applied to markdown docs. Run: memex show notes:closers notes:unclosed --json.
-
-The folder and json kinds of design §4.2 are cased as `MANK-*` in the [manifest-kinds](../manifest-kinds/CASES.md) family.
+The folder and json kinds of design §4.2 are cased as `MANK-*` in the [manifest-kinds](../manifest-kinds/CASES.md) family. The Markdown kind is gone: a Markdown collection is a `memex:` frontmatter collection, pinned by the [collection](../collection/CASES.md) family.
 
 ## IO
 
 - `MAN-IO-01` A manifest that cannot be read is one stderr warning, `memex: warning: cannot read <path> (PermissionDenied)`, its collection is left out of `info`, and the other collection still loads, so `info` and `show notes:alpha` exit 0.
-  design §4.2 Unreadable files (the form, applied to a manifest file). Run: memex info, then memex show notes:alpha. The fixture's `locked.json` is chmod 000 beside `notes.json`, which still loads.
+  design §4.2 Unreadable files (the form, applied to a manifest file). Run: memex info, then memex show notes:alpha. The fixture's `locked.json` is chmod 000 beside `notes.json`, a folder manifest, which still loads.

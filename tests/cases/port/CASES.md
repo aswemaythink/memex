@@ -13,8 +13,8 @@ memex: cases
   design §4.4 Text and §2.1 pragma skip. Run: memex show tools/run.sh --up 0, from a CRLF root and from its LF twin.
 - `PORT-CRLF-04` A CASES.md with CRLF line ends gives the same case as its LF twin, with no carriage return.
   design §4.4 Text and §2.2 case index. Run: memex show cases:CRL-TOPIC-01, from a CRLF root and from its LF twin.
-- `PORT-CRLF-05` A Markdown manifest doc with CRLF frontmatter gives the same fields and body as its LF twin, with no carriage return.
-  design §4.4 Text and §4.2 frontmatter. Run: memex show notes:alpha, from a CRLF root and from its LF twin.
+- `PORT-CRLF-05` A Markdown collection doc with CRLF frontmatter gives the same fields and body as its LF twin, with no carriage return.
+  design §4.4 Text and §2.2 frontmatter. Run: memex show notes:alpha, from a CRLF root and from its LF twin.
 - `PORT-CRLF-06` A log body piped in with CRLF line ends is stored with LF line ends, and its ref, its `show` text and its stored file match its LF twin.
   design §4.4 Text: write `\n`; §3.4 Body. Run: memex log impl with the CRLF body from a CRLF root, and with the LF body from its twin, then memex show each ref and snapshot both stores.
 

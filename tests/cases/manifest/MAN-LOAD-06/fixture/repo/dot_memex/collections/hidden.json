@@ -1,1 +1,1 @@
-{"name": "hidden", "kind": "markdown", "roots": [".hidden-notes"]}
+{"name": "hidden", "kind": "folder", "roots": [".hidden-notes"], "marker": "index.md"}

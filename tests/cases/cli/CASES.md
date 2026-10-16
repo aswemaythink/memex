@@ -120,7 +120,7 @@ memex: cases
 - `CLI-HINT-02` With `--json`, the not-found ref's message in `errors` carries the same hint, stdout is the show document, stderr is empty, and exit is 1.
   design §3.5c Messages and §3.6 (the show document's errors). Run: memex show nope.rs --json.
 - `CLI-HINT-03` An unknown `--in` name prints `memex: unknown collection '<name>'; collections: <names>` on stderr, then the usage line, and exits 2. The names are readmes, headers, the collections in name order (manifests and frontmatter alike), logs, then the streams in name order.
-  design §3.5c Messages and §3.2 `--in` names. Fixture: a README, a markdown manifest `notes`, and a log entry in stream `impl`. Run: memex search widget --in nope.
+  design §3.5c Messages and §3.2 `--in` names. Fixture: a README, a frontmatter collection `notes` (its `notes/alpha.md` has `memex: notes`), and a log entry in stream `impl`. Run: memex search widget --in nope.
 - `CLI-HINT-04` With `--json`, the unknown-collection message is the usage envelope on stdout, with the same names, stderr is empty, and exit is 2.
   design §3.5c Messages and §3.6 (usage errors are JSON with --json). Fixture as CLI-HINT-03. Run: memex search widget --in nope --json.
 - `CLI-HINT-05` A blank log body prints `memex: log body is empty: memex log <stream> <<'EOF' … EOF` on stderr, then the log usage line, writes nothing, and exits 2.

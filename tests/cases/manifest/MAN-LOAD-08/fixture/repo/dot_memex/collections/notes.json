@@ -1,1 +1,1 @@
-{"name": "notes", "kind": "markdown", "roots": ["notes"], "weights": {"id": "four"}}
+{"name": "notes", "kind": "folder", "roots": ["notes"], "weights": {"id": "four"}}

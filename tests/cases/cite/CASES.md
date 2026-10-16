@@ -60,8 +60,8 @@ memex: cases
 
 ## MAN
 
-- `CITE-MAN-01` A markdown manifest doc is cited like a file: a link to it lists the linking README under its cited by, and `notes:beta` in a README cites that doc, which lists the README under its cited by.
-  design §2.3 `[text](path)` and `collection:id` with a known collection, and §4.2 markdown manifests. Run: memex show notes:alpha, then memex show README.md, then memex show notes:beta.
+- `CITE-MAN-01` A collection doc is cited like a file: a link to it lists the linking README under its cited by, and `notes:beta` in a README cites that doc, which lists the README under its cited by.
+  design §2.3 `[text](path)` and `collection:id` with a known collection, and §2.2 frontmatter collections. Run: memex show notes:alpha, then memex show README.md, then memex show notes:beta. The fixture's notes are `memex: notes` frontmatter docs.
 
 ## UNRES
 

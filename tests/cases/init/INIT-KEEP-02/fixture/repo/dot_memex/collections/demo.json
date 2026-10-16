@@ -1,1 +1,1 @@
-{"name": "demo", "kind": "markdown", "roots": ["docs"]}
+{"name": "demo", "kind": "folder", "roots": ["docs"], "marker": "index.md"}

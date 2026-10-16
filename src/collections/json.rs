@@ -1,5 +1,5 @@
 //! Reads a `json` manifest's docs: each object of the array at `at` is one doc (design §4.2).
-//! It also holds the field and doc helpers that the folder and markdown kinds share with it.
+//! It also holds the scalar, field and doc helpers that the folder kind shares with it.
 //! Cases: MANK-JSON-01, MANK-JSON-02, MANK-JSON-03, MANK-JSON-04, MANK-JSON-05, MANK-JSON-06, MANK-JSON-07, MANK-JSON-08, MANK-TITLE-01, MANK-TITLE-02, MANK-TITLE-03
 
 use std::path::Path;

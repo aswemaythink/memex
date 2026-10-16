@@ -32,12 +32,12 @@ The ref family pins design §3.1: how a ref becomes the file, folder or doc it n
 - `REF-AMBIG-02` A bare id that two CASES.md files declare is ambiguous: stdout is empty, stderr names the ref and lists both CASES.md paths, exit 1.
   Scenario: show DUP-001, with CASES.md and sub/CASES.md both declaring it. design §4.2 and §3.1 steps 4 and 6.
 - `REF-AMBIG-03` A bare id that names docs in two collections is ambiguous, and its candidates are their labels, sorted, exit 1.
-  Scenario: show NAME-001, with the case NAME-001 and the doc doom:NAME-001 of a markdown manifest. design §3.1 steps 4 and 6.
+  Scenario: show NAME-001, with the case NAME-001 and the doc doom:NAME-001 of a frontmatter collection, doom. design §3.1 steps 4 and 6.
 
 ## COLL
 
-- `REF-COLL-01` A `collection:id` label names the doc of a manifest collection and prints it under that label, exit 0.
-  Scenario: show doom:NOTE-1, where notes/NOTE-1.md is a markdown doc of the doom manifest. design §3.1 step 3 and §4.2.
+- `REF-COLL-01` A `collection:id` label names the doc of a collection and prints it under that label, exit 0.
+  Scenario: show doom:NOTE-1, where notes/NOTE-1.md has `memex: doom` frontmatter. design §3.1 step 3 and §2.2.
 - `REF-COLL-02` A collection prefix is never dropped: doom:NAME-001 is not found, though the id NAME-001 exists in cases, exit 1.
   Scenario: show doom:NAME-001 in the same repo as REF-COLL-01, where only the case NAME-001 holds that id. design §3.1 step 3, exact match, then step 6.
 
@@ -48,7 +48,7 @@ The ref family pins design §3.1: how a ref becomes the file, folder or doc it n
 - `REF-BARE-02` A bare id that differs from a case id only in case names that case when no id matches exactly, exit 0.
   Scenario: show name-001 with the case NAME-001 declared. design §3.1 step 4, case-insensitive.
 - `REF-BARE-03` An exact bare id match is taken before a case-insensitive one, so note-a names notes:note-a even though notes:Note-A exists, exit 0.
-  Scenario: a markdown manifest whose id is a frontmatter field, with two docs whose ids differ only in case. design §3.1 step 4.
+  Scenario: a frontmatter collection, notes, whose docs take their id from the `id` field, with two docs whose ids differ only in case. design §3.1 step 4 and §2.2 (one file, one doc: the id field).
 
 ## BASE
 

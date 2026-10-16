@@ -1,4 +1,5 @@
 ---
-code: Note-A
+memex: notes
+id: Note-A
 ---
 The first note.

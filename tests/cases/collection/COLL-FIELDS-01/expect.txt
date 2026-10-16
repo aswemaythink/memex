@@ -1,0 +1,24 @@
+$ memex show decisions:0101-nested
+exit 0
+stdout
+| === decisions:0101-nested ===
+| Nested body line.
+| 
+| fields
+|   meta:   owner: ada
+|       team: core
+|   kind: note
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show decisions:0101-nested --json
+exit 0
+stdout
+| {"docs":[{"ref":"decisions:0101-nested","collection":"decisions","id":"0101-nested","path":"decisions/0101-nested.md","title":"Nested body line.","fields":{"meta":"  owner: ada\n  team: core","kind":"note"},"text":"Nested body line.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
+stderr (empty)

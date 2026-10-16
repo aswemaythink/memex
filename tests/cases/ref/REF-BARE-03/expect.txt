@@ -5,7 +5,7 @@ stdout
 | The second note.
 | 
 | fields
-|   code: note-a
+|   id: note-a
 | 
 | cites
 |   (none)

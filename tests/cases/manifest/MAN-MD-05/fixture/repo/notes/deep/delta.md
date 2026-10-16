@@ -1,1 +1,0 @@
-Delta body line.

@@ -1,0 +1,4 @@
+---
+memex: notes
+---
+# Ok note

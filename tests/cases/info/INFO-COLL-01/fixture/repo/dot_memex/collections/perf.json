@@ -1,1 +1,1 @@
-{"name": "perf", "kind": "markdown", "roots": ["perf"]}
+{"name": "perf", "kind": "folder", "roots": ["perf"], "marker": "index.md"}

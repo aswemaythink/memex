@@ -1,1 +1,1 @@
-{"name": "outside", "kind": "markdown", "roots": ["../elsewhere"]}
+{"name": "outside", "kind": "folder", "roots": ["../elsewhere"]}

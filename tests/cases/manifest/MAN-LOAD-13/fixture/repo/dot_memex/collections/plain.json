@@ -1,1 +1,1 @@
-{"name": "plain", "description": "Notes with the default field weights.", "owner": "demo", "kind": "markdown", "roots": ["notes"]}
+{"name": "plain", "description": "Notes with the default field weights.", "owner": "demo", "kind": "folder", "roots": ["notes"], "marker": "index.md"}

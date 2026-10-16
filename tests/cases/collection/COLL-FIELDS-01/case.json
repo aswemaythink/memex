@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "decisions:0101-nested"]}, {"args": ["show", "decisions:0101-nested", "--json"]}]}

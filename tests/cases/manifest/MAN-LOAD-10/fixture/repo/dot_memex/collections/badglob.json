@@ -1,1 +1,1 @@
-{"name": "badglob", "kind": "markdown", "roots": ["notes"], "include": ["notes/["]}
+{"name": "badglob", "kind": "json", "roots": ["notes"], "include": ["notes/["]}

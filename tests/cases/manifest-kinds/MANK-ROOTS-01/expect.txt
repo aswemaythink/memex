@@ -1,7 +1,7 @@
 $ memex show links:SHORT-1 links:Outside --json
 exit 1
 stdout
-| {"docs":[{"ref":"links:SHORT-1","collection":"links","id":"SHORT-1","path":"shortcut/SHORT-1.md","title":"Shortcut doc","fields":{},"text":"# Shortcut doc\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[{"arg":"links:Outside","code":"not_found","message":"not found: links:Outside (find refs with memex search <words>)"}]}
+| {"docs":[{"ref":"links:SHORT-1","collection":"links","id":"SHORT-1","path":null,"title":"Shortcut doc","fields":{},"text":"# Shortcut doc","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[{"arg":"links:Outside","code":"not_found","message":"not found: links:Outside (find refs with memex search <words>)"}]}
 stderr
 | memex: warning: links: root linked leads outside the repo; skipped
 

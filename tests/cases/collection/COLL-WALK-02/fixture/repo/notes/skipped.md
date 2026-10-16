@@ -1,0 +1,4 @@
+---
+memex: notes
+---
+# Skipped note

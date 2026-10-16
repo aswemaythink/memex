@@ -1,1 +1,1 @@
-{"name": "empty-set", "kind": "markdown", "roots": ["notes"]}
+{"name": "empty-set", "kind": "folder", "roots": ["notes"], "marker": "index.md"}

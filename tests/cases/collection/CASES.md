@@ -112,3 +112,24 @@ memex: cases
   design §2.2 (Name: any other value is a warning and the file is skipped). Run: memex info.
 - `COLL-REFINE-03` A README whose closed frontmatter holds no `memex:` key (`title: Docs`) gets no warning and takes its one-liner from the first paragraph after its H1, so `show .` lists `docs` with it and `search guides` shows it; the frontmatter is not searched, so `search title` has no hits, exit 0.
   design §2 One-liners (the first sentence of the first paragraph after the H1) and PLAN §13 R20 (orchestrator ruling, 2026-10-16: a closed frontmatter block at a README's top is not part of its one-liner or search text; `show` still prints the whole file). Run: memex show .; memex search guides; memex search title.
+
+## FIELDS
+
+- `COLL-FIELDS-01` A nested frontmatter block is kept as its text under its key and is not split into fields: `show decisions:0101-nested` prints the indented lines as one field value, and `--json` gives that value as one string, exit 0.
+  design §2.2 (frontmatter: nested text is kept as written and cannot be filtered). Run: memex show decisions:0101-nested, then memex show decisions:0101-nested --json. The fixture's `meta` key holds two indented lines, and its `kind` key follows them.
+- `COLL-FIELDS-02` A `- item` block list and a flow list are list fields: `show decisions:0102-lists` prints each as `[a, b]` with its quotes removed, and `--json` gives each as a JSON array, exit 0.
+  design §2.2 (frontmatter: flat YAML, `key: [a, b]` or `- item` lists). Run: memex show decisions:0102-lists, then memex show decisions:0102-lists --json.
+
+## TITLE
+
+- `COLL-TITLE-01` A fence indented four spaces is not a fence, so the heading after it is the doc's title, while a fence indented three spaces still hides the heading under it, so both docs have the title `Real title`, exit 0.
+  design §2.3 (a fence is indented at most three spaces) and §2.2 (the title rule). Run: memex show notes:four notes:three --json.
+- `COLL-TITLE-02` A fence closes only at a bare line of its own mark, at least as long, so a tilde line or a line with other text does not close a backtick fence, and a fence never closed runs to the end of the doc, so its title is its first non-blank line, exit 0.
+  design §2.3 (the fence definition and an unclosed fence) and §2.2 (the title rule). Run: memex show notes:closers notes:unclosed --json.
+
+## WALK
+
+- `COLL-WALK-01` A file whose name does not end in `.md`, `notes.txt` or `NOTES.MD`, is no doc even with a `memex:` key, so `info` counts one `notes` doc, the `.md` file, exit 0.
+  design §2.2 (a walked file whose listed name ends in `.md`) and §4.4 Name matching (the extension is matched on the listed name, exactly). Run: memex info.
+- `COLL-WALK-02` A Markdown file that a `.ignore` file names is no doc even with a `memex:` key, so `info` counts only the other file, exit 0.
+  design §4.1 item 2 (the walk honours `.ignore`) and §2.2 (a walked file). Run: memex info.

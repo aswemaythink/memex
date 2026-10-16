@@ -1,6 +1,6 @@
 //! Loads and validates the manifests of design §4.2.
 //! Each manifest's docs come from the reader of its kind; a file whose name has no label is skipped before any io (design §4.4).
-//! Cases: MAN-LOAD-01, MAN-LOAD-02, MAN-LOAD-03, MAN-LOAD-04, MAN-LOAD-05, MAN-LOAD-06, MAN-LOAD-07, MAN-LOAD-08, MAN-LOAD-09, MAN-LOAD-10, MAN-LOAD-11, MAN-LOAD-12, MAN-IO-01
+//! Cases: MAN-LOAD-01, MAN-LOAD-02, MAN-LOAD-03, MAN-LOAD-04, MAN-LOAD-05, MAN-LOAD-06, MAN-LOAD-07, MAN-LOAD-08, MAN-LOAD-09, MAN-LOAD-10, MAN-LOAD-11, MAN-LOAD-12, MAN-LOAD-14, MAN-IO-01
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use ignore::overrides::OverrideBuilder;
 use serde_json::{Map, Value as Json};
 
-use super::{folder, json, markdown, roots};
+use super::{folder, json, roots};
 use crate::corpus::{Doc, RESERVED};
 use crate::error;
 use crate::root::{lists, slash};
@@ -20,7 +20,7 @@ use crate::walk::is_label_name;
 /// How a manifest's roots are read (design §4.2 `kind`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
-    /// Each matched Markdown file is one doc.
+    /// The kind of a collection that only frontmatter names (design §3.6 info's `kind`, PLAN §13 R7). No manifest can name it.
     Markdown,
     /// Each folder that holds the marker file is one doc.
     Folder,
@@ -41,7 +41,7 @@ pub struct Manifest {
     pub kind: Kind,
     /// The root-relative folders the collection reads, with `/` separators; empty for the root itself.
     pub roots: Vec<String>,
-    /// Globs under the roots; markdown and json only.
+    /// Globs under the roots; json only.
     pub include: Vec<String>,
     /// The field or rule that gives each doc its id.
     pub id: Option<String>,
@@ -90,7 +90,8 @@ pub fn load(root: &Path, warnings: &mut Vec<String>) -> Vec<Manifest> {
 pub fn docs(manifest: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Vec<Doc> {
     let usable = roots::inside_repo(manifest, root, warnings);
     match usable.kind {
-        Kind::Markdown => markdown::docs(&usable, root, warnings),
+        // A collection that only frontmatter names has no manifest, so no manifest reads it.
+        Kind::Markdown => Vec::new(),
         Kind::Folder => folder::docs(&usable, root, warnings),
         Kind::Json => json::docs(&usable, root, warnings),
     }
@@ -157,7 +158,7 @@ fn parse(stem: &str, value: &Json) -> Result<Manifest, String> {
         return Err(format!("unknown key '{key}'"));
     }
     let name = name_of(object, stem)?;
-    let kind = kind_of(object)?;
+    let kind = kind_of(object, &name)?;
     if let Some(key) = object.keys().find(|key| !applies(key, kind)) {
         let word = format!("{kind:?}").to_lowercase();
         return Err(format!("key '{key}' does not apply to kind '{word}'"));
@@ -189,12 +190,12 @@ fn parse(stem: &str, value: &Json) -> Result<Manifest, String> {
 
 /// The kinds that a manifest key belongs to (design §4.2 table). None for a key the table does not have.
 fn kinds_of(key: &str) -> Option<&'static [Kind]> {
-    const ALL: &[Kind] = &[Kind::Markdown, Kind::Folder, Kind::Json];
+    const ALL: &[Kind] = &[Kind::Folder, Kind::Json];
     match key {
         "name" | "description" | "owner" | "kind" | "roots" | "id" | "title" | "weights" => {
             Some(ALL)
         }
-        "include" => Some(&[Kind::Markdown, Kind::Json]),
+        "include" => Some(&[Kind::Json]),
         "marker" | "merge" => Some(&[Kind::Folder]),
         "at" => Some(&[Kind::Json]),
         _ => None,
@@ -218,14 +219,17 @@ fn name_of(object: &Map<String, Json>, stem: &str) -> Result<String, String> {
     Ok(name)
 }
 
-/// The kind: present, and one of the three words of design §4.2.
-fn kind_of(object: &Map<String, Json>) -> Result<Kind, String> {
+/// The kind: present, and one of the two words of design §4.2. The word `markdown` is gone: the manifest is skipped with the
+/// warning that names the fix, which is the frontmatter `memex:` key of each file (design §4.2 `kind: markdown`).
+fn kind_of(object: &Map<String, Json>, name: &str) -> Result<Kind, String> {
     let word = text_of(object, "kind")?.ok_or("missing key 'kind'")?;
     match word.as_str() {
-        "markdown" => Ok(Kind::Markdown),
+        "markdown" => Err(format!(
+            "kind 'markdown' is gone; add 'memex: {name}' to its files' frontmatter instead"
+        )),
         "folder" => Ok(Kind::Folder),
         "json" => Ok(Kind::Json),
-        other => Err(format!("kind '{other}' is not markdown, folder or json")),
+        other => Err(format!("kind '{other}' is not folder or json")),
     }
 }
 
@@ -295,7 +299,7 @@ mod tests {
         let dir = tempfile::tempdir().expect("a temporary folder");
         let other = dir.path().join(".memex").join("Collections");
         fs::create_dir_all(&other).expect("a folder");
-        let manifest = r#"{"name": "notes", "kind": "markdown", "roots": ["."]}"#;
+        let manifest = r#"{"name": "notes", "kind": "folder", "roots": ["."]}"#;
         fs::write(other.join("notes.json"), manifest).expect("a manifest");
         let mut warnings = Vec::new();
         assert!(load(dir.path(), &mut warnings).is_empty());
@@ -314,7 +318,7 @@ mod tests {
         let folder = dir.path().join(".memex").join("collections");
         fs::create_dir_all(&folder).expect("a folder");
         let file = folder.join("notes.json");
-        let manifest = r#"{"name": "notes", "kind": "markdown", "roots": ["."]}"#;
+        let manifest = r#"{"name": "notes", "kind": "folder", "roots": ["."]}"#;
         fs::write(&file, manifest).expect("a manifest");
         fs::set_permissions(&file, fs::Permissions::from_mode(0o000)).expect("a mode");
         if fs::read(&file).is_ok() {
@@ -340,7 +344,7 @@ mod tests {
         let dir = tempfile::tempdir().expect("a temporary folder");
         let folder = dir.path().join(".memex").join("collections");
         fs::create_dir_all(&folder).expect("a folder");
-        let text = r#"{"name": "esc\u001b", "kind": "markdown", "roots": ["."]}"#;
+        let text = r#"{"name": "esc\u001b", "kind": "folder", "roots": ["."]}"#;
         fs::write(folder.join("esc\u{1b}.json"), text).expect("a manifest");
         let mut warnings = Vec::new();
         assert!(load(dir.path(), &mut warnings).is_empty());

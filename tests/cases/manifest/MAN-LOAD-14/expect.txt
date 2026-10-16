@@ -1,0 +1,8 @@
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| graph  0 readmes · 0 headers
+| use    memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+stderr
+| memex: warning: $SANDBOX/repo/.memex/collections/notes.json: kind 'markdown' is gone; add 'memex: notes' to its files' frontmatter instead

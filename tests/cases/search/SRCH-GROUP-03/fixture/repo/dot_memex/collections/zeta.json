@@ -1,1 +1,1 @@
-{"name": "zeta", "description": "Zeta notes.", "owner": "demo", "kind": "markdown", "roots": ["zeta"]}
+{"name": "zeta", "description": "Zeta notes.", "owner": "demo", "kind": "folder", "roots": ["zeta"], "marker": "index.md"}

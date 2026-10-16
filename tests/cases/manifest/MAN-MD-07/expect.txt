@@ -1,5 +1,0 @@
-$ memex show notes:fenced notes:plainline --json
-exit 0
-stdout
-| {"docs":[{"ref":"notes:fenced","collection":"notes","id":"fenced","path":"notes/fenced.md","title":"Real title","fields":{},"text":"```text\n# not a heading\n```\n# Real title\nBody line.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]},{"ref":"notes:plainline","collection":"notes","id":"plainline","path":"notes/plainline.md","title":"First line of plain.","fields":{},"text":"\nFirst line of plain.\nSecond line.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
-stderr (empty)

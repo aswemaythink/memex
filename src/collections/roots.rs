@@ -70,7 +70,7 @@ mod tests {
     #[test]
     fn a_missing_root_is_kept_with_no_warning() {
         let dir = tempfile::tempdir().expect("a temporary folder");
-        let manifest = testing::manifest(Kind::Markdown, &["missing"]);
+        let manifest = testing::manifest(Kind::Folder, &["missing"]);
         let mut warnings = Vec::new();
         assert_eq!(
             inside_repo(&manifest, dir.path(), &mut warnings).roots,
@@ -93,7 +93,7 @@ mod tests {
         fs::create_dir_all(dir.path().join("outside")).expect("a folder");
         symlink(dir.path().join("outside"), repo.join("linked")).expect("a symlink");
         symlink("units", repo.join("shortcut")).expect("a symlink");
-        let manifest = testing::manifest(Kind::Markdown, &["linked", "shortcut", "units"]);
+        let manifest = testing::manifest(Kind::Folder, &["linked", "shortcut", "units"]);
         let mut warnings = Vec::new();
         let usable = inside_repo(&manifest, &repo, &mut warnings);
         assert_eq!(usable.roots, ["shortcut", "units"]);

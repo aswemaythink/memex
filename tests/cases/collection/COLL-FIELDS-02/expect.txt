@@ -1,0 +1,23 @@
+$ memex show decisions:0102-lists
+exit 0
+stdout
+| === decisions:0102-lists ===
+| List body line.
+| 
+| fields
+|   tags: [parse, lists]
+|   owners: [ada, grace]
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show decisions:0102-lists --json
+exit 0
+stdout
+| {"docs":[{"ref":"decisions:0102-lists","collection":"decisions","id":"0102-lists","path":"decisions/0102-lists.md","title":"List body line.","fields":{"tags":["parse","lists"],"owners":["ada","grace"]},"text":"List body line.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[]}
+stderr (empty)
