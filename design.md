@@ -101,6 +101,8 @@ memex: cases
 
 memex scans every indexed doc (READMEs, headers, collection docs and entries, logs) for citations. Citations are never extracted from fenced code blocks (a fence is a line of three or more backticks or tildes indented at most three spaces; an unclosed fence runs to the end of the doc). A fence closes at a line of the same mark, at least as long, with nothing else on it; a backtick opener's info string holds no backticks. This one fence definition applies everywhere memex skips fenced code: citations, entries, titles and init's markers. Self-citations are dropped.
 
+In a collection doc, the values of its frontmatter fields other than `memex` are scanned too, before its body, so metadata such as `case: NAME-001` or `spec: docs/spec.md` links both ways; each item of a list value is scanned on its own. A log's frontmatter is memex's own record of the run and is not scanned.
+
 | Form | Matches |
 |---|---|
 | bare id `NAME-001` | any doc whose id matches the case-id grammar and is **declared** somewhere, so prose like `UTF-8` never links |
