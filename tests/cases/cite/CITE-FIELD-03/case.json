@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "decisions:pricing"]}, {"args": ["show", "decisions:fees"]}, {"args": ["show", "docs/spec.md"]}, {"args": ["show", "archive/docs/spec.md"]}]}

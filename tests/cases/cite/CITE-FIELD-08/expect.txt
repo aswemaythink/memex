@@ -1,0 +1,27 @@
+$ memex show ledger:LEDGER-001
+exit 0
+stdout
+| === ledger:LEDGER-001 ===
+| LEDGER-001
+| See MONEY-002.
+| ```
+| MONEY-003
+| ```
+| MONEY-001
+| 
+| fields
+|   id: LEDGER-001
+|   claim: See MONEY-002.
+|   open: ```
+|   sample: MONEY-003
+|   close: ```
+|   case: MONEY-001
+| 
+| cites
+|   cases:MONEY-002  Refunds post to the same account.
+|   cases:MONEY-001  Totals add up to the ledger.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

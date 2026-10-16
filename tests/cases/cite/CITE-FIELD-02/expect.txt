@@ -1,0 +1,63 @@
+$ memex show decisions:pricing
+exit 0
+stdout
+| === decisions:pricing ===
+| # Pricing
+| 
+| Prices are whole cents.
+| 
+| fields
+|   cases: [MONEY-001, MONEY-002]
+|   related: [MONEY-003, ```, MONEY-004]
+|   family: MONEY-*
+| 
+| cites
+|   cases:MONEY-001  Totals add up to the ledger.
+|   cases:MONEY-002  Refunds post to the same account.
+|   cases:MONEY-003  Fees are rounded to whole cents.
+|   cases:MONEY-004  Taxes are added after discounts.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show MONEY-004
+exit 0
+stdout
+| === cases:MONEY-004 ===
+| Taxes are added after discounts.
+| 
+| group
+|   MONEY
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   decisions:pricing  Pricing
+|   showing 1 of 1
+stderr (empty)
+
+$ memex show MONEY-005
+exit 0
+stdout
+| === cases:MONEY-005 ===
+| Discounts are shown on the receipt.
+| 
+| group
+|   MONEY
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   decisions:pricing  Pricing (via MONEY-*)
+|   showing 1 of 1
+stderr (empty)

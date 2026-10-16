@@ -87,7 +87,11 @@ fn entry_doc(manifest: &Manifest, key: &str, item: &Json, folder: &str) -> Optio
     let id = field_text(&fields, key).filter(|id| !id.is_empty())?;
     let lead = text_of(members, Some(key));
     let text = text_of(members, None);
-    Some(doc(manifest, id, text, fields, &lead, folder.to_string()))
+    let origin = Origin::Other {
+        folder: folder.to_string(),
+        frontmatter: false,
+    };
+    Some(doc(manifest, id, text, fields, &lead, origin))
 }
 
 /// The text of an entry: its string scalars, one per line, in source order. The member named `skip`, when there is one, is
@@ -132,14 +136,15 @@ pub(super) fn field_text(fields: &[(String, Value)], key: &str) -> Option<String
 }
 
 /// The doc of a manifest: labelled `<name>:<id>`, with its one-liner by the rule of `title` (design §4.2), read from `lead`, the
-/// text that the default line is read from. `folder` is the root-relative folder its relative citations resolve from (design §2.3).
+/// text that the default line is read from. `origin` says where it was read from, and so the folder its relative citations resolve
+/// from first (design §2.3).
 pub(super) fn doc(
     manifest: &Manifest,
     id: String,
     text: String,
     fields: Vec<(String, Value)>,
     lead: &str,
-    folder: String,
+    origin: Origin,
 ) -> Doc {
     let title = title::one_liner(manifest.title.as_deref(), &fields, lead);
     Doc {
@@ -150,7 +155,7 @@ pub(super) fn doc(
         title,
         text,
         fields,
-        origin: Origin::Other { folder },
+        origin,
     }
 }
 

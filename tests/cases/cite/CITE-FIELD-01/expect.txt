@@ -1,0 +1,38 @@
+$ memex show MONEY-001
+exit 0
+stdout
+| === cases:MONEY-001 ===
+| Totals add up to the ledger.
+| 
+| group
+|   MONEY
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   decisions:rounding  Round half to even
+|   showing 1 of 1
+stderr (empty)
+
+$ memex show decisions:rounding
+exit 0
+stdout
+| === decisions:rounding ===
+| # Round half to even
+| 
+| Money rounds half to even.
+| 
+| fields
+|   case: MONEY-001
+| 
+| cites
+|   cases:MONEY-001  Totals add up to the ledger.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

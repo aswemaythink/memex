@@ -1,7 +1,8 @@
 //! The readers of the intent layer and the one-liner rule they share (design §2).
 //! Paragraphs, the first sentence, and the one-liner of a block; `Origin` tells the graph, entries, whole files, manifest docs and
-//! log entries apart, and `by_label` groups the docs by label (design §3.1).
-//! Cases: SHOW-DIR-01, SHOW-FILE-01, SHOW-LINE-01
+//! log entries apart, `cites_fields` says which docs' frontmatter fields are cited (design §2.3), and `by_label` groups the docs by
+//! label (design §3.1).
+//! Cases: SHOW-DIR-01, SHOW-FILE-01, SHOW-LINE-01, CITE-FIELD-01, CITE-FIELD-06, CITE-FIELD-07, CITE-FIELD-09
 
 pub mod entries;
 pub mod files;
@@ -27,8 +28,9 @@ pub enum Origin {
     Whole,
     /// A manifest's doc (design §4.2), labelled `collection:id`, with no path. `folder` is the root-relative folder its relative
     /// citations resolve from first (design §2.3): the folder that holds a folder doc's marker, or the folder of a json doc's file.
-    /// It is empty when that folder is the root.
-    Other { folder: String },
+    /// It is empty when that folder is the root. `frontmatter` is true for a folder doc whose marker is a Markdown file, so its fields
+    /// are that file's frontmatter, which design §2.3 cites.
+    Other { folder: String, frontmatter: bool },
     /// A log entry (design §4.3), labelled `stream:id`, with no path.
     Log,
 }
@@ -42,6 +44,16 @@ impl Doc {
     /// True for a doc of the graph, a README or a header, which is labelled by its path (design §3.1).
     pub fn is_graph(&self) -> bool {
         self.origin == Origin::Graph
+    }
+
+    /// True when the doc's frontmatter fields are cited like its text (design §2.3): a frontmatter collection doc, and a folder doc
+    /// whose marker is a Markdown file. A log's frontmatter is memex's own record of the run, so a log is not one.
+    pub fn cites_fields(&self) -> bool {
+        match &self.origin {
+            Origin::Whole => true,
+            Origin::Other { frontmatter, .. } => *frontmatter,
+            Origin::Graph | Origin::Entry | Origin::Log => false,
+        }
     }
 
     /// True for a README of the graph (design §3.1). A collection named `readmes` is not one, whatever its doc's name.

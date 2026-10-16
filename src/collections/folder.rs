@@ -1,6 +1,6 @@
 //! Reads a `folder` manifest's docs: each folder with its marker file is one doc (design §4.2).
 //! The marker gives the fields and, when it is Markdown, the start of the text; `merge` files add the rest, and one that cannot be read warns.
-//! Cases: MANK-FOLDER-01, MANK-FOLDER-02, MANK-FOLDER-03, MANK-FOLDER-04, MANK-FOLDER-05, MANK-FOLDER-06, MANK-FOLDER-07, MANK-FOLDER-08, MANK-FOLDER-09, MANK-MERGE-01, MANK-CITE-01
+//! Cases: MANK-FOLDER-01, MANK-FOLDER-02, MANK-FOLDER-03, MANK-FOLDER-04, MANK-FOLDER-05, MANK-FOLDER-06, MANK-FOLDER-07, MANK-FOLDER-08, MANK-FOLDER-09, MANK-MERGE-01, MANK-CITE-01, CITE-FIELD-07, CITE-FIELD-09
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -10,7 +10,7 @@ use super::globs;
 use super::json::{doc, field_text, folder_under, read_json, scalar_fields, warn};
 use super::manifest::{self, Manifest};
 use crate::corpus::{name_of, parent_of, Doc};
-use crate::intent::header;
+use crate::intent::{header, Origin};
 use crate::text;
 use crate::walk::{self, Entry};
 
@@ -65,7 +65,12 @@ fn folder_doc(
         return None;
     }
     let text = joined(body, merge_pieces(manifest, marker, siblings, warnings));
-    Some(doc(manifest, id, text.clone(), fields, &text, folder))
+    let frontmatter = extension(&marker.path) == Some("md");
+    let origin = Origin::Other {
+        folder,
+        frontmatter,
+    };
+    Some(doc(manifest, id, text.clone(), fields, &text, origin))
 }
 
 /// The id of a folder doc: the marker field that the manifest's `id` names, which must be present and not empty, or else the

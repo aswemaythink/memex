@@ -1,0 +1,75 @@
+$ memex show decisions:pricing
+exit 0
+stdout
+| === decisions:pricing ===
+| # Pricing
+| 
+| Prices are whole cents.
+| 
+| fields
+|   spec: docs/spec.md
+| 
+| cites
+|   docs/spec.md
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show decisions:fees
+exit 0
+stdout
+| === decisions:fees ===
+| # Fees
+| 
+| Fees are archived.
+| 
+| fields
+|   spec: docs/spec.md
+| 
+| cites
+|   archive/docs/spec.md
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show docs/spec.md
+exit 0
+stdout
+| === docs/spec.md ===
+| # Ledger spec
+| 
+| The ledger keeps every total.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   decisions:pricing  Pricing
+|   showing 1 of 1
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show archive/docs/spec.md
+exit 0
+stdout
+| === archive/docs/spec.md ===
+| # Old ledger spec
+| 
+| The archived ledger spec.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   decisions:fees  Fees
+|   showing 1 of 1
+| 
+| chain
+|   (none)
+stderr (empty)

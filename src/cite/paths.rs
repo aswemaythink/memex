@@ -4,14 +4,15 @@
 //! A scan for some targets (`Wanted`) skips every token that cannot name any of them, a necessary condition: a bare id or a prefix
 //! must be an id of a doc that holds a target's label; a label must be a target's, or name such a doc by its id; a path must end in
 //! a name that a target's paths end in, unless it ends in `..` or in nothing, when it is always resolved (`last_name`).
-//! Cases: CITE-BARE-01, CITE-BARE-02, CITE-BARE-03, CITE-PREFIX-01, CITE-PREFIX-02, CITE-COLL-01, CITE-COLL-02, CITE-COLL-03, CITE-COLL-04, CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-04, CITE-PATH-05, CITE-PATH-06, CITE-LINK-01, CITE-LINK-02, CITE-LINK-03, CITE-LINK-05, CITE-MAN-01, CITE-UNRES-01, CITE-FOLDER-01, CITE-FOLDER-02, COLL-CITE-01, COLL-CITE-02, COLL-CITE-03, COLL-CITE-04, MANK-CITE-01, MANK-CITE-02
+//! A doc's cited lines are its frontmatter field values, when they are cited, and then its text (`lines.rs`, design §2.3).
+//! Cases: CITE-BARE-01, CITE-BARE-02, CITE-BARE-03, CITE-PREFIX-01, CITE-PREFIX-02, CITE-COLL-01, CITE-COLL-02, CITE-COLL-03, CITE-COLL-04, CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-04, CITE-PATH-05, CITE-PATH-06, CITE-LINK-01, CITE-LINK-02, CITE-LINK-03, CITE-LINK-05, CITE-MAN-01, CITE-UNRES-01, CITE-FOLDER-01, CITE-FOLDER-02, CITE-FIELD-01, CITE-FIELD-02, CITE-FIELD-03, CITE-FIELD-04, CITE-FIELD-05, CITE-FIELD-06, CITE-FIELD-07, CITE-FIELD-08, CITE-FIELD-09, COLL-CITE-01, COLL-CITE-02, COLL-CITE-03, COLL-CITE-04, MANK-CITE-01, MANK-CITE-02
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::Bound;
 
+use super::lines::cited_lines;
 use super::tokens::{self, Token};
 use crate::corpus::{label_of, name_of, parent_of, readme_label, Corpus, Doc, Kind, RESERVED};
-use crate::fence;
 use crate::intent::Origin;
 use crate::refs::{candidates, has_extension, is_case_id};
 
@@ -216,14 +217,14 @@ pub fn title_of(corpus: &Corpus, label: &str) -> String {
         .unwrap_or_default()
 }
 
-/// The hits of every token in a doc's live lines, in order. Its path tokens resolve from the folder it was read from first, then the
-/// root (design §2.3). With a `wanted` target, a token that cannot name it is skipped before it is resolved.
+/// The hits of every token in a doc's cited lines, in order (`cited_lines`). Its path tokens resolve from the folder it was read from
+/// first, then the root (design §2.3). With a `wanted` target, a token that cannot name it is skipped before it is resolved.
 pub fn hits_of(corpus: &Corpus, doc: &Doc, names: &Names, wanted: Option<&Wanted>) -> Vec<Hit> {
     let base = base_folder(doc);
     let known = |name: &str| names.collections.contains(name);
     let mut hits = Vec::new();
     let mut found = Vec::new();
-    for line in fence::live_lines(&doc.text) {
+    for line in cited_lines(doc) {
         tokens::tokens(line, &known, &mut found);
         for token in found.drain(..) {
             if wanted.is_none_or(|wanted| wanted.admits(&token)) {
@@ -239,7 +240,7 @@ pub fn hits_of(corpus: &Corpus, doc: &Doc, names: &Names, wanted: Option<&Wanted
 /// which has no folder of its own (design §2.3).
 fn base_folder(doc: &Doc) -> &str {
     match &doc.origin {
-        Origin::Other { folder } => folder.as_str(),
+        Origin::Other { folder, .. } => folder.as_str(),
         _ => doc.path.as_deref().and_then(parent_of).unwrap_or(""),
     }
 }
@@ -302,6 +303,7 @@ mod tests {
             fields: Vec::new(),
             origin: Origin::Other {
                 folder: String::new(),
+                frontmatter: false,
             },
         }
     }

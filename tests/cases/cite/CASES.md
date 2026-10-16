@@ -110,3 +110,24 @@ memex: cases
   design §3.6 show: cites. Run: memex show README.md --json.
 - `CITE-JSON-02` `--json` gives cited_by its total and its refs, and a ref has a `via` key only when it cites by prefix.
   design §3.6 show: cited_by. Run: memex show cases:NAME-001 --json.
+
+## FIELD
+
+- `CITE-FIELD-01` A decision whose frontmatter has `case: MONEY-001` is listed under cited by on MONEY-001, and its own cites list MONEY-001.
+  design §2.3: the values of a collection doc's frontmatter fields are scanned, so metadata links both ways. Run: memex show MONEY-001, then memex show decisions:rounding.
+- `CITE-FIELD-02` A flow list and a block list of ids in a decision's frontmatter cite every id in the order the fields give them, each list item is scanned on its own, and a `PREFIX-*` value is a backlink on each id it names.
+  design §2.3: each item of a list value is scanned on its own, so a `"```"` item does not hide the item after it; a prefix is never a cite. Run: memex show decisions:pricing, then memex show MONEY-004, then memex show MONEY-005.
+- `CITE-FIELD-03` A path in a frontmatter field resolves from the decision's folder first and then from the root, as a path in the body does.
+  design §2.3: a path token resolves from the citing doc's folder, then the root. Run: memex show decisions:pricing, then memex show decisions:fees, then memex show docs/spec.md, then memex show archive/docs/spec.md.
+- `CITE-FIELD-04` An explicit ref in a field is cited when it resolves, a `coll:id` or a link, and is listed as unresolved when it names nothing, while a bare undeclared id and a bare path that names no file are not cited.
+  design §2.3: explicit refs that resolve to nothing are unresolved, and bare tokens never are. Run: memex show decisions:pricing.
+- `CITE-FIELD-05` A collection doc's `memex` key is not one of its fields, and its field cites come before its body's cites, each id listed once at its first appearance.
+  design §2.3: the memex key is never scanned, and field cites come before body cites in cites. Run: memex show decisions:rounding.
+- `CITE-FIELD-06` A log's frontmatter is not scanned, so a log whose tags hold a declared id does not cite it, while an id in its body is cited.
+  design §2.3: a log's frontmatter is memex's own record of the run and is not scanned. Run: memex show MONEY-001, then memex show MONEY-002, then memex show impl:20261013-120000-pricing.
+- `CITE-FIELD-07` A folder doc whose marker is a Markdown file cites through the fields of that file's frontmatter, as a collection doc does.
+  design §2.3 and §4.2: a folder doc whose marker is `.md` takes its fields from that frontmatter. Run: memex show MONEY-001, then memex show specs:ledger.
+- `CITE-FIELD-08` A json manifest's doc cites from its text alone, as before: its strings are the text, so a fence that opens in one string and closes in a later one hides the ids between them, and its fields are not read again.
+  design §2.3: the scanned fields are a collection doc's frontmatter fields, and a json doc's strings are its text. Run: memex show ledger:LEDGER-001.
+- `CITE-FIELD-09` A folder doc whose marker is a JSON file is not cited through its fields, as before, since its fields are not frontmatter.
+  design §2.3 and PLAN §13 R28: the scanned fields are a collection doc's frontmatter fields. Run: memex show MONEY-001, then memex show ledgers:cash.

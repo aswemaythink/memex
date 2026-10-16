@@ -1,0 +1,21 @@
+$ memex show decisions:rounding
+exit 0
+stdout
+| === decisions:rounding ===
+| # Round half to even
+| 
+| See MONEY-003, and again MONEY-002.
+| 
+| fields
+|   case: MONEY-002
+|   ref: MONEY-001
+| 
+| cites
+|   cases:MONEY-002  Refunds post to the same account.
+|   cases:MONEY-001  Totals add up to the ledger.
+|   cases:MONEY-003  Fees are rounded to whole cents.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

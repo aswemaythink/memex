@@ -1,0 +1,39 @@
+$ memex show MONEY-001
+exit 0
+stdout
+| === cases:MONEY-001 ===
+| Totals add up to the ledger.
+| 
+| group
+|   MONEY
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   specs:ledger  Ledger spec
+|   showing 1 of 1
+stderr (empty)
+
+$ memex show specs:ledger
+exit 0
+stdout
+| === specs:ledger ===
+| # Ledger spec
+| 
+| The ledger keeps every total.
+| 
+| fields
+|   case: MONEY-001
+|   spec_of: ledger
+| 
+| cites
+|   cases:MONEY-001  Totals add up to the ledger.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

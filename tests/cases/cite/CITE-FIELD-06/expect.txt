@@ -1,0 +1,59 @@
+$ memex show MONEY-001
+exit 0
+stdout
+| === cases:MONEY-001 ===
+| Totals add up to the ledger.
+| 
+| group
+|   MONEY
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show MONEY-002
+exit 0
+stdout
+| === cases:MONEY-002 ===
+| Refunds post to the same account.
+| 
+| group
+|   MONEY
+| 
+| defined in
+|   CASES.md
+| 
+| evidence
+|   (none)
+| 
+| cited by
+|   impl:20261013-120000-pricing  Pricing note. See MONEY-002.
+|   showing 1 of 1
+stderr (empty)
+
+$ memex show impl:20261013-120000-pricing
+exit 0
+stdout
+| === impl:20261013-120000-pricing ===
+| Pricing note. See MONEY-002.
+| 
+| fields
+|   stream: impl
+|   time: 2026-10-13T12:00:00Z
+|   agent: cook-2
+|   tags: [MONEY-001]
+| 
+| cites
+|   cases:MONEY-002  Refunds post to the same account.
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
