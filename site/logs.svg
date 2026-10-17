@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 300" width="520" height="300" role="img">
-<!-- The logs diagram of the memex site: two cooks each add an entry to the top of an impl log stream and send the orchestrator one line, its ref; the orchestrator opens one ref, the oldest entries are pruned as new ones push the stack down, and one true line from the opened entry is written into a README. It follows light and dark through its own prefers-color-scheme block. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-16 0 536 300" width="536" height="300" role="img">
+<!-- The logs diagram of the memex site: two workers each add an entry to the top of an impl log stream and send the orchestrator one line, its ref; the orchestrator opens one ref, the oldest entries are pruned as new ones push the stack down, and one true line from the opened entry is written into a README. It follows light and dark through its own prefers-color-scheme block. -->
 <title>Logs hand back a ref, not a report</title>
-<desc>Two agents, cook-1 and cook-2, on the left; an orchestrator on the right; between them, below, an impl log stream drawn as a stack of entry cards with the newest on top, each labelled with its ref. cook-1 adds impl:…-parallel-walk to the top of the stack and sends the orchestrator one line, report: impl:…-parallel-walk. cook-2 does the same with impl:…-show-cites. Each new entry pushes the stack down and the oldest entry at the bottom fades out. The orchestrator opens one ref, parallel-walk, and that entry lights up. One line from it moves into a README chip, which lights: what is still true is written down.</desc>
+<desc>Two agents, worker-1 and worker-2, on the left; an orchestrator on the right; between them, below, an impl log stream drawn as a stack of entry cards with the newest on top, each labelled with its ref. worker-1 adds impl:…-parallel-walk to the top of the stack and sends the orchestrator one line, report: impl:…-parallel-walk. worker-2 does the same with impl:…-show-cites. Each new entry pushes the stack down and the oldest entry at the bottom fades out. The orchestrator opens one ref, parallel-walk, and that entry lights up. One line from it moves into a README chip, which lights: what is still true is written down.</desc>
 <style>
 svg { --bg: #faf7f0; --fg: #1c1a17; --muted: #5c574d; --accent: #9a3d17; --on-accent: #faf7f0; --rule: #d8d1c0; --code: #ebe5d7; --code-line: #d3cab6; color: var(--fg); }
 @media (prefers-color-scheme: dark) { svg { --bg: #141310; --fg: #ebe7dd; --muted: #a8a295; --accent: #eca071; --on-accent: #141310; --rule: #35322a; --code: #0c0b09; --code-line: #2a2722; } }
@@ -51,8 +51,8 @@ text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; fo
 <!-- agents, lanes and the orchestrator -->
 <path class="rail" d="M68 52C92 52 92 72 116 72H490M68 92C92 92 92 72 116 72"/>
 <path class="rail" d="M64 56V132H128"/>
-<text x="54" y="56" class="mono node" text-anchor="end">cook-1</text>
-<text x="54" y="96" class="mono node" text-anchor="end">cook-2</text>
+<text x="54" y="56" class="mono node" text-anchor="end">worker-1</text>
+<text x="54" y="96" class="mono node" text-anchor="end">worker-2</text>
 <text x="500" y="56" class="mono node" text-anchor="end">orchestrator</text>
 <!-- the impl stream: every entry is drawn where it ends, and moves there -->
 <text x="130" y="108" class="mono"><tspan class="lab">LOG</tspan><tspan dx="6" class="node">impl</tspan></text>
