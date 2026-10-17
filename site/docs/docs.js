@@ -1,7 +1,7 @@
 // Renders the docs pages' shared chrome: sidebar nav, table of contents and mobile drawer.
 // The nav is defined once here (NAV, paths relative to docs/), so every page under docs/ gets the same sidebar,
 // with the current page marked. Links are resolved against this script's own URL, so they work from docs/,
-// docs/patterns/ and docs/reference/, over http and from file://. Each page loads it last, after its <main>.
+// docs/guides/, docs/patterns/ and docs/reference/, over http and from file://. Each page loads it last, after its <main>.
 // Without JavaScript, the sidebar's <noscript> link to docs/get-started.html, where the docs open, is the fallback.
 (function () {
   'use strict';
@@ -9,13 +9,15 @@
   const NAV = [
     { title: 'Guides', items: [
       ['Getting started', 'get-started.html'],
-      ['Patterns', 'patterns/index.html'],
+      ['Hand-off and messages', 'guides/hand-off.html'],
+      ['Checking drift', 'guides/drift.html'],
+    ] },
+    { title: 'Patterns', items: [
+      ['Overview', 'patterns/index.html'],
       ['Test cases', 'patterns/cases.html'],
       ['Doom hunts', 'patterns/doom-hunts.html'],
       ['Performance optimisation', 'patterns/perf-optimisation.html'],
-      ['Hand-off and messages', 'patterns/hand-off.html'],
-      ['Check intent against code', 'patterns/drift.html'],
-      ['Distill a log', 'patterns/distill-logs.html'],
+      ['Promote findings', 'patterns/promote-findings.html'],
     ] },
     { title: 'Reference', items: [
       ['Verbs', 'reference/index.html'],

@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <!--
-The hand-off pattern: when to use it, the steps, and a hand-off by ref with the recipient’s search.
+The promote-findings pattern: write down what a log found that is still true, where readers look.
 Layout and chrome are shared by every page under docs/: the header, footer, site.css and site.js match the intro; docs.js renders the sidebar, the "On this page" table of contents and the mobile drawer.
 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hand-off and messages · memex docs</title>
-<meta name="description" content="A sub-agent logs its full report and returns one line, a ref. Messages are logs with --to.">
+<title>Promote findings · memex docs</title>
+<meta name="description" content="Write down what a log found that is still true, once, where the next reader will look.">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#faf7f0" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#141310" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="memex">
-<meta property="og:title" content="Hand-off and messages · memex docs">
-<meta property="og:description" content="A sub-agent logs its full report and returns one line, a ref. Messages are logs with --to.">
+<meta property="og:title" content="Promote findings · memex docs">
+<meta property="og:description" content="Write down what a log found that is still true, once, where the next reader will look.">
 <meta name="twitter:card" content="summary">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23faf7f0'/%3E%3Crect x='5.5' y='5.5' width='5.5' height='21' rx='2.75' fill='%231c1a17'/%3E%3Crect x='13.25' y='14' width='5.5' height='12.5' rx='2.75' fill='%239a3d17'/%3E%3Crect x='21' y='5.5' width='5.5' height='21' rx='2.75' fill='%231c1a17'/%3E%3C/svg%3E">
 <script src="https://cdn.tailwindcss.com/3.4.17"></script>
@@ -50,27 +50,24 @@ Layout and chrome are shared by every page under docs/: the header, footer, site
 
   <main id="main" class="min-w-0 pb-6 pt-10 sm:pt-14">
     <p class="mb-3 font-mono text-[0.78rem] font-semibold uppercase tracking-[0.06em] text-accent">Pattern</p>
-    <h1 class="font-serif text-[2rem] leading-[1.15] font-medium sm:text-[2.4rem]">Hand-off and messages <span class="ml-1 font-mono text-[0.8rem] font-normal text-muted">--to · to:</span></h1>
-    <p class="mt-4 font-serif text-[1.2rem] leading-[1.5] sm:text-[1.3rem]">A sub-agent logs its full report and returns one line, a ref. Messages are logs with --to.</p>
+    <h1 class="font-serif text-[2rem] leading-[1.15] font-medium sm:text-[2.4rem]">Promote findings</h1>
+    <p class="mt-4 font-serif text-[1.2rem] leading-[1.5] sm:text-[1.3rem]">When a log holds something worth keeping, write down what is still true, once, where the next reader will look.</p>
     <section class="mt-16" aria-labelledby="when">
       <h2 id="when" class="font-serif text-[1.5rem] leading-tight font-medium">When to use it</h2>
-      <p class="mt-3">When an orchestrator runs sub-agents and should not carry every report in its context, or when one agent leaves word for another.</p>
+      <p class="mt-3">A run has turned up a fact about the code, or a result, that will still matter after the run is over. A log records one run with everything that happened in it, so the finding belongs in a README, a header or a collection instead.</p>
     </section>
     <section class="mt-16" aria-labelledby="steps">
       <h2 id="steps" class="font-serif text-[1.5rem] leading-tight font-medium">Steps</h2>
-      <ol class="mt-3 list-decimal space-y-1.5 pl-6 marker:text-muted"><li>The sub-agent logs its full report: <code>memex log &lt;stream&gt; --agent &lt;id&gt; --to &lt;recipient&gt;</code>.</li><li>It returns one line, <code>report: &lt;ref&gt;</code>.</li><li>The orchestrator runs <code>memex show &lt;ref&gt;</code> only when it needs the detail.</li><li>Recipients find their messages with <code>memex search to:&lt;id&gt;</code>; <code>memex info --agent &lt;id&gt;</code> counts what is waiting.</li></ol>
+      <ol class="mt-3 list-decimal space-y-1.5 pl-6 marker:text-muted"><li>Read the log for what is still true.</li><li>Write that down once, in your own words, where the next reader will look: a README, a header, or a doc in a collection.</li><li>Cite the ids, and let the log expire.</li></ol>
     </section>
     <section class="mt-16" aria-labelledby="sample">
-      <h2 id="sample" class="font-serif text-[1.5rem] leading-tight font-medium">A hand-off by reference</h2>
-      <div class="mt-5 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="Hand-off by reference"><code><span class="p">$</span> <span class="c">memex log impl --agent worker-2 --to orchestrator &lt;&lt;'EOF'</span>
-<span class="c">show walks hub READMEs</span>
-<span class="c">`show &lt;file&gt;` now lists "cited by", through crates/README.md.</span>
-<span class="c">EOF</span>
-<span class="l">impl:20261013-214107-show-walks-hub-readmes</span>
+      <h2 id="sample" class="font-serif text-[1.5rem] leading-tight font-medium">Copy, or distill</h2>
+      <div class="mt-5 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="Copying a log compared with distilling it"><code><span class="d"># copies every run, noise included</span>
+<span class="p">$</span> <span class="c">cp .memex/logs/playtest/*.md docs/playtests/</span>
 
-<span class="p">$</span> <span class="c">memex search to:orchestrator</span>
-<span class="g">logs</span>  <span class="d">(showing 1 of 1)</span>
-  <span class="l">impl:20261013-214107-show-walks-hub-readmes</span>  <span class="d">2m · worker-2 · feat/show</span>  show walks hub READMEs</code></pre></div><p class="mt-4 text-[0.95rem] text-muted">Live back-and-forth stays in the harness’s own messaging.</p>
+<span class="d"># writes down the one thing still true</span>
+<span class="d"># crates/namer/README.md</span>
+Hashes are stable across runs; see NAME-001.</code></pre></div>
     </section><p class="mt-16 border-t border-rule pt-5 text-[0.95rem]"><a href="index.html">← All patterns</a></p>
   </main>
 

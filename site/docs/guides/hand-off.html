@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <!--
-The drift pattern: when to use it, the steps, and logging a mismatch to the drift stream.
+The hand-off guide: when to use it, the steps, and a hand-off by ref with the recipient’s search.
 Layout and chrome are shared by every page under docs/: the header, footer, site.css and site.js match the intro; docs.js renders the sidebar, the "On this page" table of contents and the mobile drawer.
 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Check intent against code · memex docs</title>
-<meta name="description" content="Read the intent, read the code, and fix whichever is wrong, in the same change.">
+<title>Hand-off and messages · memex docs</title>
+<meta name="description" content="A sub-agent logs its full report and returns one line, a ref. Messages are logs with --to.">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#faf7f0" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#141310" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="memex">
-<meta property="og:title" content="Check intent against code · memex docs">
-<meta property="og:description" content="Read the intent, read the code, and fix whichever is wrong, in the same change.">
+<meta property="og:title" content="Hand-off and messages · memex docs">
+<meta property="og:description" content="A sub-agent logs its full report and returns one line, a ref. Messages are logs with --to.">
 <meta name="twitter:card" content="summary">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23faf7f0'/%3E%3Crect x='5.5' y='5.5' width='5.5' height='21' rx='2.75' fill='%231c1a17'/%3E%3Crect x='13.25' y='14' width='5.5' height='12.5' rx='2.75' fill='%239a3d17'/%3E%3Crect x='21' y='5.5' width='5.5' height='21' rx='2.75' fill='%231c1a17'/%3E%3C/svg%3E">
 <script src="https://cdn.tailwindcss.com/3.4.17"></script>
@@ -49,23 +49,29 @@ Layout and chrome are shared by every page under docs/: the header, footer, site
   </aside>
 
   <main id="main" class="min-w-0 pb-6 pt-10 sm:pt-14">
-    <p class="mb-3 font-mono text-[0.78rem] font-semibold uppercase tracking-[0.06em] text-accent">Pattern</p>
-    <h1 class="font-serif text-[2rem] leading-[1.15] font-medium sm:text-[2.4rem]">Check intent against code <span class="ml-1 font-mono text-[0.8rem] font-normal text-muted">drift</span></h1>
-    <p class="mt-4 font-serif text-[1.2rem] leading-[1.5] sm:text-[1.3rem]">Read the intent, read the code, and fix whichever is wrong, in the same change.</p>
+    <p class="mb-3 font-mono text-[0.78rem] font-semibold uppercase tracking-[0.06em] text-accent">Guide</p>
+    <h1 class="font-serif text-[2rem] leading-[1.15] font-medium sm:text-[2.4rem]">Hand-off and messages</h1>
+    <p class="mt-4 font-serif text-[1.2rem] leading-[1.5] sm:text-[1.3rem]">A sub-agent logs its full report and returns one line, a ref. Messages are logs with --to.</p>
     <section class="mt-16" aria-labelledby="when">
       <h2 id="when" class="font-serif text-[1.5rem] leading-tight font-medium">When to use it</h2>
-      <p class="mt-3">When code has moved and its READMEs, headers or cases may no longer say what it does, or as a routine pass over one folder.</p>
+      <p class="mt-3">When an orchestrator runs sub-agents and should not carry every report in its context, or when one agent leaves word for another.</p>
     </section>
     <section class="mt-16" aria-labelledby="steps">
       <h2 id="steps" class="font-serif text-[1.5rem] leading-tight font-medium">Steps</h2>
-      <ol class="mt-3 list-decimal space-y-1.5 pl-6 marker:text-muted"><li>Run <code>memex show &lt;dir&gt;</code>, then read the code it describes.</li><li>For each claim: does the code do it? Is there a cited case that proves it?</li><li>Run <code>memex audit &lt;dir&gt;</code> for unresolved citations, missing headers and missing READMEs.</li><li>Fix the README, header or collection doc in the same change, or, if it’s out of scope, log the mismatch to <code>drift</code>.</li></ol>
+      <ol class="mt-3 list-decimal space-y-1.5 pl-6 marker:text-muted"><li>The sub-agent logs its full report: <code>memex log &lt;stream&gt; --agent &lt;id&gt; --to &lt;recipient&gt;</code>.</li><li>It returns one line, <code>report: &lt;ref&gt;</code>.</li><li>The orchestrator runs <code>memex show &lt;ref&gt;</code> only when it needs the detail.</li><li>Recipients find their messages with <code>memex search to:&lt;id&gt;</code>; <code>memex info --agent &lt;id&gt;</code> counts what is waiting.</li></ol>
     </section>
     <section class="mt-16" aria-labelledby="sample">
-      <h2 id="sample" class="font-serif text-[1.5rem] leading-tight font-medium">Log a mismatch</h2>
-      <div class="mt-5 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="Logging drift"><code><span class="p">$</span> <span class="c">memex log drift --tag namer &lt;&lt;'EOF'</span>
-<span class="c">crates/namer/README.md claims collisions are kept apart; no case proves it</span>
-<span class="c">EOF</span></code></pre></div><p class="mt-4 text-[0.95rem] text-muted">When you change code, update the header or README you invalidated in the same commit, put the id in each new test, then run <code>memex audit &lt;paths&gt;</code> and fix what it lists.</p>
-    </section><p class="mt-16 border-t border-rule pt-5 text-[0.95rem]"><a href="index.html">← All patterns</a></p>
+      <h2 id="sample" class="font-serif text-[1.5rem] leading-tight font-medium">A hand-off by reference</h2>
+      <div class="mt-5 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="Hand-off by reference"><code><span class="p">$</span> <span class="c">memex log impl --agent worker-2 --to orchestrator &lt;&lt;'EOF'</span>
+<span class="c">show walks hub READMEs</span>
+<span class="c">`show &lt;file&gt;` now lists "cited by", through crates/README.md.</span>
+<span class="c">EOF</span>
+<span class="l">impl:20261013-214107-show-walks-hub-readmes</span>
+
+<span class="p">$</span> <span class="c">memex search to:orchestrator</span>
+<span class="g">logs</span>  <span class="d">(showing 1 of 1)</span>
+  <span class="l">impl:20261013-214107-show-walks-hub-readmes</span>  <span class="d">2m · worker-2 · feat/show</span>  show walks hub READMEs</code></pre></div><p class="mt-4 text-[0.95rem] text-muted">Live back-and-forth stays in the harness’s own messaging.</p>
+    </section><p class="mt-16 border-t border-rule pt-5 text-[0.95rem]"><a href="../get-started.html">← All guides</a></p>
   </main>
 
   <aside id="docs-toc" class="hidden xl:sticky xl:top-14 xl:block xl:h-[calc(100vh-3.5rem)] xl:overflow-y-auto xl:py-14 [scrollbar-width:thin] [scrollbar-color:var(--rule)_transparent]" aria-label="On this page"></aside>

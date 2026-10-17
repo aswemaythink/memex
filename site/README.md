@@ -15,7 +15,7 @@
 `docs/` holds the docs, organised as a very light Diátaxis: short pages, one idea per section, with generous spacing. There is no docs home: the docs open on `docs/get-started.html`, and every Docs link points there. Its own README.md lists the pages. Every docs page shares one layout:
 
 - The intro's header, logo, fonts, colours, `site.css` and `site.js`; the header links to the intro and to the docs (Getting started).
-- A left sidebar with the full docs navigation, grouped Guides, Reference and Concepts, the current page marked. Below 1024px it collapses behind a hamburger button in the header and opens as a drawer (`aria-expanded`, Escape closes it, focus moves into it and back).
+- A left sidebar with the full docs navigation, grouped Guides, Patterns, Reference and Concepts, the current page marked. Below 1024px it collapses behind a hamburger button in the header and opens as a drawer (`aria-expanded`, Escape closes it, focus moves into it and back).
 - A right "On this page" table of contents built from the page's h2 and h3, shown only at 1280px and wider.
 - A content column of up to 46rem, like the intro's.
 
