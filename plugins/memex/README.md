@@ -1,6 +1,6 @@
 # memex plugin
 
-The memex plugin is an optional Claude Code plugin for memex: one skill and one hook script. Nothing else is in it. It adds no MCP server, no other hooks and no per-agent code. The design is in design.md §6, and the install lines are in §6.1.
+The memex plugin is an optional Claude Code plugin for memex: one skill and one hook script. Nothing else is in it. It adds no MCP server, no other hooks and no per-agent code. The design is in DESIGN.md §6, and the install lines are in §6.1.
 
 ## Contents
 

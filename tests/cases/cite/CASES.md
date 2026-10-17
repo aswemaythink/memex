@@ -130,4 +130,4 @@ memex: cases
 - `CITE-FIELD-08` A json manifest's doc cites from its text alone, as before: its strings are the text, so a fence that opens in one string and closes in a later one hides the ids between them, and its fields are not read again.
   design §2.3: the scanned fields are a collection doc's frontmatter fields, and a json doc's strings are its text. Run: memex show ledger:LEDGER-001.
 - `CITE-FIELD-09` A folder doc whose marker is a JSON file is not cited through its fields, as before, since its fields are not frontmatter.
-  design §2.3 and PLAN §13 R28: the scanned fields are a collection doc's frontmatter fields. Run: memex show MONEY-001, then memex show ledgers:cash.
+  design §2.3 and a ruling: the scanned fields are a collection doc's frontmatter fields. Run: memex show MONEY-001, then memex show ledgers:cash.

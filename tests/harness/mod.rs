@@ -16,7 +16,7 @@ use std::path::Path;
 
 use serde::Deserialize;
 
-/// A case's case.json (PLAN.md §2). Unknown keys are an error.
+/// A case's case.json. Unknown keys are an error.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CaseSpec {
@@ -35,7 +35,7 @@ pub struct CaseSpec {
     /// Absent means every OS.
     #[serde(default)]
     pub platforms: Option<Vec<Platform>>,
-    /// Permission changes made after setup and before the steps. Unix only (PLAN §2).
+    /// Permission changes made after setup and before the steps. Unix only.
     #[serde(default)]
     pub chmod: Vec<ChmodStep>,
     /// Files made at test time at their real lengths, instead of committed (see fill.rs).
@@ -105,7 +105,7 @@ pub struct Step {
 }
 
 impl CaseSpec {
-    /// True when the case changes permissions, which only unix can do (PLAN §2).
+    /// True when the case changes permissions, which only unix can do.
     pub fn uses_chmod(&self) -> bool {
         !self.chmod.is_empty()
     }

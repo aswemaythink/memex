@@ -6,37 +6,37 @@ memex: cases
 ## RANK
 
 - `SRCH-RANK-01` Any word may match, and a doc that matches both words ranks above a doc that matches one of them.
-  design §3.2 Words; PLAN §4 BM25F. Run: memex search apples bananas (two READMEs, one with both words).
+  design §3.2 Words; BM25F. Run: memex search apples bananas (two READMEs, one with both words).
 - `SRCH-RANK-02` A rarer word counts for more: a doc that holds only a word few docs hold ranks above docs that hold only a common word, which tie and rank by label.
-  design §3.2 Words (more matches rank higher); PLAN §4 BM25F idf. Run: memex search apples kiwi.
+  design §3.2 Words (more matches rank higher); BM25F idf. Run: memex search apples kiwi.
 - `SRCH-RANK-03` A query that matches nothing prints nothing on stdout and exits 0; its stderr hint is pinned by SRCH-NOHITS-01.
   design §3.2 Words; design §3.6 exit codes (0 includes zero hits). Run: memex search zzqq.
 
 ## WEIGHT
 
 - `SRCH-WEIGHT-01` A word in a doc's id outranks the same word in its body, so a header whose path holds the word comes before one that only mentions it.
-  design §3.2 Words; PLAN §4 field weights (id 4, title 3, body 1). Run: memex search zephyr.
+  design §3.2 Words; field weights (id 4, title 3, body 1). Run: memex search zephyr.
 - `SRCH-WEIGHT-02` A header is indexed only through its first 60 lines, so a word on line 61 of a header is not found, while the same word on line 70 of a README is.
   design §2.1 Limits (the index keeps the first 60 lines) and §3.2. Run: memex search marker.
 
 ## STEM
 
 - `SRCH-STEM-01` A word matches its stem-mates, so `walking` finds a doc that says `walks` and leaves out a doc that shares no stem.
-  design §3.2 Words (English stemming); PLAN §4 (exact or stem, multiplier 1.0). Run: memex search walking.
+  design §3.2 Words (English stemming; exact or stem, multiplier 1.0). Run: memex search walking.
 
 ## PREFIX
 
 - `SRCH-PREFIX-01` A word of 3 or more characters matches the start of a longer word, so `wal` finds a doc that says `walrus`.
-  design §3.2 Words (prefix matching); PLAN §4 (prefix multiplier 0.5 for query words of 3 or more characters). Run: memex search wal.
+  design §3.2 Words (prefix matching; prefix multiplier 0.5 for query words of 3 or more characters). Run: memex search wal.
 - `SRCH-PREFIX-02` A word of 2 characters does not match by prefix, so `wa` finds nothing although `walrus` begins with it.
-  design §3.2 and PLAN §4 (prefix only for query words of 3 or more characters). Run: memex search wa.
+  design §3.2 (prefix only for query words of 3 or more characters). Run: memex search wa.
 
 ## FUZZY
 
 - `SRCH-FUZZY-01` A word of 5 or more characters matches a word one edit away, the hit is marked `[~variant]`, and it ranks below an exact match.
-  design §3.2 Words (fuzzy: one edit for words of 5 or more, marked `[~variant]`); PLAN §4 (fuzzy multiplier 0.3). Run: memex search grammar.
+  design §3.2 Words (fuzzy: one edit for words of 5 or more, marked `[~variant]`; fuzzy multiplier 0.3). Run: memex search grammar.
 - `SRCH-FUZZY-02` A word of 4 characters does not match one edit away, so `hasp` finds nothing although `hash` is one substitution away.
-  design §3.2 and PLAN §4 (fuzzy only for query words of 5 or more characters). Run: memex search hasp.
+  design §3.2 (fuzzy only for query words of 5 or more characters). Run: memex search hasp.
 
 ## TOKEN
 

@@ -1,10 +1,10 @@
 ## Summary
 
-<!-- What changes and why. Link the design.md section or the issue this closes. -->
+<!-- What changes and why. Link the DESIGN.md section or the issue this closes. -->
 
 ## Checklist
 
-- [ ] Order of change: design.md first (if behaviour changes), then the case in `tests/cases/`, then the code.
+- [ ] Order of change: DESIGN.md first (if behaviour changes), then the case in `tests/cases/`, then the code.
 - [ ] Every behaviour change is pinned by a conformance case. Unit tests do not count as pinning.
 - [ ] Goldens are re-blessed only for the case ids this PR names, and `git diff tests/cases` has been read.
 - [ ] Headers and folder READMEs are updated for everything this PR changes.

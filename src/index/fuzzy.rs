@@ -1,4 +1,4 @@
-//! Tells whether two plain words differ by exactly one edit, the fuzzy match of PLAN §4.
+//! Tells whether two plain words differ by exactly one edit, the fuzzy match.
 //! Cases: SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-UNICODE-01, SRCH-UNICODE-02
 
 /// True when `a` and `b` differ by exactly one insertion, deletion or substitution of a character. Equal words differ by none, so

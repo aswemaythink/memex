@@ -1,4 +1,4 @@
-//! Finds the `$NAME` placeholders a golden may not hold (rule 5 of PLAN.md §2).
+//! Finds the `$NAME` placeholders a golden may not hold (rule 5).
 //! Bless uses it too, so it never writes such a golden.
 //! Cases: all (runner)
 

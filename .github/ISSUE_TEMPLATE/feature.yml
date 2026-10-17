@@ -1,14 +1,14 @@
 # Feature request form: the problem first, then the proposed behaviour.
-# A feature needs a design.md change, approved by a maintainer, before any code is written.
+# A feature needs a DESIGN.md change, approved by a maintainer, before any code is written.
 name: Feature request
-description: Propose a change in behaviour. A feature needs a design.md change first.
+description: Propose a change in behaviour. A feature needs a DESIGN.md change first.
 labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
         memex adds a feature only when it removes friction that an agent actually hit in a playtest.
-        The behaviour is written into [design.md](https://github.com/aswemaythink/memex/blob/main/design.md) first;
+        The behaviour is written into [DESIGN.md](https://github.com/aswemaythink/memex/blob/main/DESIGN.md) first;
         section 1 of that file sets the principles.
   - type: textarea
     id: problem
@@ -34,5 +34,5 @@ body:
     attributes:
       label: Design check
       options:
-        - label: I have read design.md section 1, and I know a feature needs a design.md change approved first.
+        - label: I have read DESIGN.md section 1, and I know a feature needs a DESIGN.md change approved first.
           required: true

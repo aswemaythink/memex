@@ -1,6 +1,6 @@
 # src
 
-`src/` is the crate's source: the `memex` library and a thin binary around it. The library is `lib.rs`, whose module map is in PLAN.md §4; `main.rs` turns `memex::run`'s result into the process exit code.
+`src/` is the crate's source: the `memex` library and a thin binary around it. The library is `lib.rs`, which holds the module map; `main.rs` turns `memex::run`'s result into the process exit code.
 
 - `cli.rs`: the argv grammar of design §3, parsed into a typed `Command`, or into the usage error the grammar calls for.
 - `grammar.rs`: the grammar's tables: the flags each verb takes, what each flag takes after it, and the words each verb takes.
@@ -25,6 +25,6 @@
 - `intent/`: the readers of the graph (READMEs, headers) and of the Markdown files that join a collection by `memex:` frontmatter (`front.rs`, `entries.rs`), and the one-liner rule they share (design §2); `files.rs` picks the reader for each walked file.
 - `collections/`: manifests, their flat-YAML frontmatter, and the two kinds (`folder` and `json`), each read by its own module (design §4.2); a collection that only frontmatter names has no manifest and is read in `intent/`.
 - `verbs/`: one module per verb (`search`, `show`, `log`, `info`, `audit`, `init`), and `here.rs`, which loads what the reading verbs share. `lib.rs` reads the clock once as each verb starts.
-- `index/`: the search index of design §3.2 and PLAN §4, built in memory per run: tokens, stems, BM25F, prefix and one-edit matches, and the ranking; and `filter.rs`, the `field:value` and `since:` filters that narrow the docs first.
+- `index/`: the search index of design §3.2, built in memory per run: tokens, stems, BM25F, prefix and one-edit matches, and the ranking; and `filter.rs`, the `field:value` and `since:` filters that narrow the docs first.
 - `render/search.rs`: `search`'s groups as text, with the `(showing N of M)` headings, and as its `--json` document (design §3.2, §3.6).
 - `render/audit.rs`: `audit`'s report as text, with each kind's heading and fix line, and as its `--json` document (design §3.5d, §3.6).

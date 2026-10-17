@@ -66,7 +66,7 @@ impl Error {
         }
     }
 
-    /// An I/O error: exit 3. It names what failed and the io::ErrorKind, never the OS text (PLAN §1 fix 17).
+    /// An I/O error: exit 3. It names what failed and the io::ErrorKind, never the OS text.
     pub fn io(what: &str, error: &io::Error) -> Error {
         Error {
             code: Code::Io,

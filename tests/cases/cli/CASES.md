@@ -37,7 +37,7 @@ memex: cases
 ## VERB
 
 - `CLI-VERB-01` An unknown verb is a usage error that names it and prints the whole grammar block, exit 2.
-  design §3 grammar; PLAN §1 fix 14. Run: memex bogus.
+  design §3 grammar. Run: memex bogus.
 - `CLI-VERB-02` `help` is not a verb, so `memex help` is an unknown verb, exit 2.
   design §3 grammar lists `memex --help | --version` and no help verb. Run: memex help.
 - `CLI-VERB-03` A flag before any verb, with no verb after it, is an unknown flag and prints the whole grammar block, exit 2.
@@ -98,7 +98,7 @@ memex: cases
 - `CLI-JSON-04` After `--`, `--json` is a word, so an error about `init -- --json` stays text on stderr, exit 2.
   design §3: `--json` anywhere before `--` makes usage errors JSON. Run: memex init -- --json.
 - `CLI-JSON-05` The JSON envelope escapes quotes, backslashes and control characters in its message, exit 2.
-  design §3.6 fatal errors; PLAN §1 fix 17. Run: memex search --json with the flag `--bad"\` followed by a tab.
+  design §3.6 fatal errors. Run: memex search --json with the flag `--bad"\` followed by a tab.
 
 ## EXIT
 
@@ -111,7 +111,7 @@ memex: cases
 - `CLI-EXIT-04` `no_root` exits 3, and with `--json` prints its envelope on stdout.
   design §3.6 exit codes and §4.1 item 3. Run: memex log impl --json in a git repo with no `.memex/`, the setup of DISC-ROOT-04.
 - `CLI-EXIT-05` `io` exits 3, and names the io::ErrorKind, never the OS text.
-  design §3.6 exit codes: 3 for an I/O failure that stops the verb (a show ref that fails on I/O is that ref's error, exit 1, §3.3); PLAN §1 fix 17. Run: memex log impl with .memex/logs a regular file. Pinned by the PORT family, which also pins the JSON form.
+  design §3.6 exit codes: 3 for an I/O failure that stops the verb (a show ref that fails on I/O is that ref's error, exit 1, §3.3). Run: memex log impl with .memex/logs a regular file. Pinned by the PORT family, which also pins the JSON form.
 
 ## HINT
 
@@ -145,4 +145,4 @@ memex: cases
 - `CLI-HINTB-01` `log` with no stream names its next step: stderr reads `memex: log needs a stream name: memex log <stream> <<'EOF' … EOF`, then the log usage line, and exits 2; with `--json` the same message is the usage envelope on stdout.
   design §3.5c Messages (log needs a stream name adds the heredoc form). Run: memex log, then memex log --json.
 - `CLI-HINTB-02` A reserved stream name, `logs` for example, names its next step: stderr reads `memex: stream name '<name>' is reserved; pick another name, such as impl`, then the log usage line, and exits 2 with nothing written; with `--json` the same message is the usage envelope on stdout.
-  design §3.5c Messages (stream name is reserved adds the next step). Run: memex log logs, then memex log --json readmes, in a root with a `.memex/`. `cases` is no longer reserved (PLAN §13 R14), so it is not used here.
+  design §3.5c Messages (stream name is reserved adds the next step). Run: memex log logs, then memex log --json readmes, in a root with a `.memex/`. `cases` is no longer reserved, so it is not used here.

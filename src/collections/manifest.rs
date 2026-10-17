@@ -20,7 +20,7 @@ use crate::walk::is_label_name;
 /// How a manifest's roots are read (design §4.2 `kind`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
-    /// The kind of a collection that only frontmatter names (design §3.6 info's `kind`, PLAN §13 R7). No manifest can name it.
+    /// The kind of a collection that only frontmatter names (design §3.6 info's `kind`). No manifest can name it.
     Markdown,
     /// Each folder that holds the marker file is one doc.
     Folder,

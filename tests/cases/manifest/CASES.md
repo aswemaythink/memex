@@ -10,7 +10,7 @@ memex: cases
 - `MAN-LOAD-02` A manifest whose `name` is not its file name is skipped with one warning, which prints once for a run with two refs, and both refs are not found, exit 1.
   design §4.2 `name` (must equal the file stem) and Invalid manifests. Run: memex show journal:alpha notes:alpha. The fixture's `notes.json` names itself `journal`.
 - `MAN-LOAD-03` A manifest named after a reserved collection, `readmes`, `headers` or `logs`, is refused with a warning and skipped, so its refs are not found, exit 1, while a manifest named `cases` loads, so its doc `alpha` is found.
-  design §3.1 Built-in collections and §4.2 `name` (reserved names rejected); PLAN §13 R14. Run: memex show `cases:<id>` and `logs:<id>` for the id alpha.
+  design §3.1 Built-in collections and §4.2 `name` (reserved names rejected). Run: memex show `cases:<id>` and `logs:<id>` for the id alpha.
 - `MAN-LOAD-04` A manifest with a key the table does not define gives the warning `unknown key 'colour'` and is skipped, exit 1.
   design §4.2 Invalid manifests (an unknown key is a warning, and the collection is skipped). Run: memex show notes:alpha.
 - `MAN-LOAD-05` A manifest that is not valid JSON gives a warning that names the parser's reason and is skipped, exit 1.

@@ -263,7 +263,7 @@ pub fn join(counts: BTreeMap<String, usize>, loaded: &mut Vec<Loaded>) {
     }
 }
 
-/// The stand-in manifest of a collection that only frontmatter names: it has no file, and its kind is `markdown` (PLAN §13 R7), with no roots and the default ranking (design §4.2).
+/// The stand-in manifest of a collection that only frontmatter names: it has no file, and its kind is `markdown`, with no roots and the default ranking (design §4.2).
 fn markdown_manifest(name: String) -> Manifest {
     Manifest {
         name,
