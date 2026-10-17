@@ -1,6 +1,6 @@
 // The Tailwind Play CDN config for the memex site.
 // It maps colour names to the custom properties in site.css, and sets the fonts and the page width.
-// index.html loads it right after the pinned CDN script, so the CDN picks it up before it styles the page.
+// Every page (index.html and the pages in docs/) loads it right after the pinned CDN script, so the CDN picks it up before it styles the page.
 tailwind.config = {
   darkMode: 'media',
   theme: {

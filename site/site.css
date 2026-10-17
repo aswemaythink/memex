@@ -1,5 +1,5 @@
 /* The memex site's own styles: what Tailwind utilities cannot do.
-   Colour tokens for light and dark, links, inline code, terminals, the details marker and the logo mark. Loaded by index.html. */
+   Colour tokens for light and dark, links, inline code, terminals, the details marker and the logo mark. Loaded by index.html and every page in docs/. */
 :root {
   color-scheme: light dark;
   --bg: #faf7f0; --bg-soft: #f1ece0; --fg: #1c1a17; --muted: #5c574d;
