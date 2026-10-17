@@ -134,10 +134,10 @@ memex: cases
 
 - `LOG-PRUNE-19` With keep_logs 3d, `search`, `show` and `info` leave an entry 4 days old in place: it is still listed, shown and counted, and its file is still in the store, since pruning happens only on write.
   design §4.3 Cleanup (pruning happens only on write, and reads never delete). Run: memex search widget, then memex show 20261009-110000-widget-old, then memex info, with the store snapshot after.
-- `LOG-PRUNE-01` With no config.json, a write deletes an entry older than 3 days by its filename stamp, keeps one 2 days old, and keeps the new entry.
-  design §4.3 Cleanup and §4.1 item 4 (the default 3d); PLAN §1 fix 6. Run: memex log impl over a 4-day-old and a 2-day-old entry, with no config.json.
-- `LOG-PRUNE-02` With a config.json that has no keep_logs key, the default 3d applies: an entry exactly 3 days old stays, one second older is deleted, and a future-stamped entry stays.
-  design §4.1 item 4 (a missing key means 3d) and §4.3 (older than keep_logs). Run: memex log impl with config `{}` over entries at 3 days, at 3 days and one second, and 7 days ahead.
+- `LOG-PRUNE-01` With no config.json there is no age limit: a write keeps an entry 4 days old and one 2 days old, and the new entry.
+  design §4.3 Cleanup (keep_logs is off unless set) and §4.1 item 4. Run: memex log impl over a 4-day-old and a 2-day-old entry, with no config.json.
+- `LOG-PRUNE-02` keep_logs `3d` deletes by filename stamp: an entry exactly 3 days old stays, one second older is deleted, and a future-stamped entry stays.
+  design §4.3 Age limit (older than keep_logs). Run: memex log impl with keep_logs 3d over entries at 3 days, at 3 days and one second, and 7 days ahead.
 - `LOG-PRUNE-03` keep_logs `90m` deletes an entry older than 90 minutes and keeps one younger.
   design §4.3 (keep_logs takes Nm). Run: memex log impl with keep_logs 90m over entries 91 and 89 minutes old.
 - `LOG-PRUNE-04` keep_logs `36h` deletes an entry older than 36 hours and keeps one younger.
@@ -146,31 +146,62 @@ memex: cases
   design §4.3 (keep_logs takes Nw). Run: memex log impl with keep_logs 2w over entries 15 and 13 days old.
 - `LOG-PRUNE-06` keep_logs `forever` deletes nothing, however old the entry.
   design §4.3 ("forever" disables pruning). Run: memex log impl with keep_logs forever over an entry stamped 2020-01-01.
-- `LOG-PRUNE-07` An invalid keep_logs, such as `soon`, prints one warning on stderr that names the config file and the value, and deletes nothing.
-  design §4.3 (a warning and no pruning); PLAN §1 fix 6. Run: memex log impl with keep_logs soon over a 4-day-old entry.
-- `LOG-PRUNE-08` A config.json that is not valid JSON prints its warning and deletes nothing, so the 3-day default does not apply.
-  design §4.1 item 4 and §4.3 (never delete on config it can't read); PLAN §1 fix 6. Run: memex log impl with config.json `{not json` over a 4-day-old entry.
-- `LOG-PRUNE-09` A config.json with an unknown key prints its warning and deletes nothing.
-  design §4.1 item 4 and §4.3; PLAN §1 fix 6. Run: memex log impl with config.json `{"keep_log": "3d"}` over a 4-day-old entry.
+- `LOG-PRUNE-07` An invalid keep_logs, such as `soon`, prints one warning on stderr that names the config file and the value and ends `not pruning by age`, and deletes nothing by age.
+  design §4.3 Bad config (the value disables its own limit); PLAN §1 fix 6. Run: memex log impl with keep_logs soon over a 4-day-old entry.
+- `LOG-PRUNE-08` A config.json that is not valid JSON prints its warning and deletes nothing.
+  design §4.1 item 4 and §4.3 Bad config (never delete on config it can't read); PLAN §1 fix 6. Run: memex log impl with config.json `{not json` over a 4-day-old entry.
+- `LOG-PRUNE-09` A config.json with an unknown key prints its warning, which names both known keys, and deletes nothing.
+  design §4.1 item 4 and §4.3 Bad config; PLAN §1 fix 6. Run: memex log impl with config.json `{"keep_log": "3d"}` over a 4-day-old entry.
 - `LOG-PRUNE-10` Only regular files named `YYYYMMDD-HHMMSS-*.md` directly inside a stream folder are deleted: other names, dotfiles, files in subfolders and dot-named stream folders survive.
-  design §4.3 ("only files matching"); PLAN §1 fix 6. Run: memex log impl over old entries of each kind, beside one old entry that is deleted.
+  design §4.3 ("only files matching"); PLAN §1 fix 6. Run: memex log impl with keep_logs 3d over old entries of each kind, beside one old entry that is deleted.
 - `LOG-PRUNE-11` A name whose stamp is not a real UTC date-time, such as month 13, February 30 or hour 25, survives, while a real leap day is deleted like any old entry.
-  design §4.3 and §3.6 (UTC); PLAN §1 fix 6. Run: memex log impl over old names with those stamps, and over 20240229-120000.
+  design §4.3 and §3.6 (UTC); PLAN §1 fix 6. Run: memex log impl with keep_logs 3d over old names with those stamps, and over 20240229-120000.
 - `LOG-PRUNE-12` A stream folder that prune empties is removed, and prune reaches streams other than the one written.
-  design §4.3 (stream folders emptied by a prune are removed); PLAN §1 fix 6. Run: memex log impl over an old entry alone in stream gone, and an old entry in stream other beside a recent one.
+  design §4.3 (stream folders emptied by a prune are removed); PLAN §1 fix 6. Run: memex log impl with keep_logs 3d over an old entry alone in stream gone, and an old entry in stream other beside a recent one.
 - `LOG-PRUNE-13` A stream folder that was already empty, and that prune did not empty, is left alone.
-  design §4.3 (only folders a prune emptied are removed). Run: memex log impl beside an empty folder idle, which setup makes with git clean.
+  design §4.3 (only folders a prune emptied are removed). Run: memex log impl with keep_logs 3d beside an empty folder idle, which setup makes with git clean.
 - `LOG-PRUNE-14` A symlink named like a log entry is never deleted, and the file it points to is untouched.
-  design §4.3 is silent on symlinks; PLAN §1 fix 6 deletes only log entries, and the S1.3 ruling is regular files only. Run: memex log impl over an old symlink into a sibling folder.
+  design §4.3 is silent on symlinks; PLAN §1 fix 6 deletes only log entries, and the S1.3 ruling is regular files only. Run: memex log impl with keep_logs 3d over an old symlink into a sibling folder.
 - `LOG-PRUNE-15` A symlinked stream folder is never followed, so the old entries behind it survive.
-  design §4.3 is silent on symlinks; PLAN §1 fix 6 and the S1.3 ruling as in LOG-PRUNE-14. Run: memex log impl beside a stream folder symlink into a sibling folder that holds an old entry.
-- `LOG-PRUNE-16` A config.json that is a dangling symlink prints a warning that it cannot be read and deletes nothing, so the 3-day default does not apply.
+  design §4.3 is silent on symlinks; PLAN §1 fix 6 and the S1.3 ruling as in LOG-PRUNE-14. Run: memex log impl with keep_logs 3d beside a stream folder symlink into a sibling folder that holds an old entry.
+- `LOG-PRUNE-16` A config.json that is a dangling symlink prints a warning that it cannot be read and deletes nothing.
   design §4.1 item 4 and §4.3 (never delete on config it can't read); PLAN §1 fix 6. Run: memex log impl with .memex/config.json a symlink to a missing file, over a 4-day-old entry.
 - `LOG-PRUNE-17` A store that is itself a symlink is followed: the entry is written behind it, and the old entries there are pruned.
-  design §4.3 is silent on symlinks; the S1.3 review ruling as in LOG-WRITE-14. Run: memex log impl with .memex/logs a symlink to a sibling folder that holds a 4-day-old and a 2-day-old entry.
+  design §4.3 is silent on symlinks; the S1.3 review ruling as in LOG-WRITE-14. Run: memex log impl with keep_logs 3d with .memex/logs a symlink to a sibling folder that holds a 4-day-old and a 2-day-old entry.
 - `LOG-PRUNE-18` A config.json that is a JSON array, `["1h"]`, prints one warning that it is not a JSON object and deletes nothing, so the array is not read by position.
   design §4.1 item 4 and §4.3 (never delete on config it can't read). Run: memex log impl with config.json `["1h"]` over a 4-day-old entry.
 - `LOG-PRUNE-20` A prune delete that the OS refuses, an expired entry in a stream folder at mode 555 while `log` writes to another stream, prints one warning that names the entry, leaves it in place, and the `log` exits 0.
   design §4.4 Atomic writes (a delete the OS refuses is a warning, never an error) and §4.3 Cleanup. Run: memex log impl with a fresh body, over a 4-day-old entry in stream old at mode 555.
+- `LOG-PRUNE-21` A config.json `{}` sets no age limit: an entry 4 days old stays.
+  design §4.3 Age limit (off unless set) and §4.1 item 4 (a missing key means its default). Run: memex log impl with config `{}` over a 4-day-old entry.
 
+## CAP
 
+- `LOG-CAP-01` With max_logs_mb 1, a write that takes the store over 1 MiB deletes the oldest entries by filename stamp, across all streams, until the total is at or under the cap: the store was under the cap before the write, so the new entry's size counts; the next-oldest entry and the new entry stay.
+  design §4.3 Size cap. Run: memex log impl with max_logs_mb 1 over entries totalling just under 1 MiB in two streams, the oldest in the stream not written.
+- `LOG-CAP-02` With no config.json the cap is 10 MiB: a 10,485,000-byte entry, an older 1,000-byte entry and the new entry total over 10 MiB, so only the older entry is deleted.
+  design §4.3 Size cap (default 10) and §4.1 item 4. Run: memex log impl over those two entries, with no config.json.
+- `LOG-CAP-03` Entries with the same stamp go in byte order of entry name, then of stream name: of `a/<stamp>-same.md`, `b/<stamp>-same.md` and `a/<stamp>-zz.md`, with the store over the cap, only `a/<stamp>-same.md` is deleted.
+  design §4.3 Size cap (ties). Run: memex log impl with max_logs_mb 1 over those three entries and a newer large one, sized so one delete brings the total under the cap.
+- `LOG-CAP-04` The entry just written is never deleted, even when it is the oldest: beside a future-stamped entry of 1 MiB, the future entry is deleted and the new entry stays.
+  design §4.3 Size cap (the new entry is never deleted). Run: memex log impl with max_logs_mb 1 over a 1,048,576-byte entry stamped 2026-10-20.
+- `LOG-CAP-05` Only entries count toward the cap: over 1 MiB of non-entry files (other names, a dotfile, a file in a subfolder, a name whose stamp is not a real date) leaves the store under the cap, so nothing is deleted and those files are untouched.
+  design §4.3 What counts. Run: memex log impl with max_logs_mb 1 over a small old entry beside those large files.
+- `LOG-CAP-06` With keep_logs 1d and max_logs_mb 1 both apply: the entry older than a day is deleted by age, then the oldest remaining entry is deleted by size.
+  design §4.3 Age limit (both apply). Run: memex log impl over a 2-day-old small entry and two recent entries that total over 1 MiB with the new one.
+- `LOG-CAP-07` An invalid max_logs_mb of `0` prints one warning on stderr, `invalid max_logs_mb 0: not pruning by size`, deletes nothing by size, and keep_logs still prunes by age.
+  design §4.3 Bad config. Run: memex log impl with `{"keep_logs": "1d", "max_logs_mb": 0}` over a 2-day-old entry and recent entries over 1 MiB.
+- `LOG-CAP-08` An invalid max_logs_mb that is a string, `"1"`, prints one warning that shows it in single quotes, `invalid max_logs_mb '1': not pruning by size`, and deletes nothing.
+  design §4.3 Bad config (a string value in single quotes). Run: memex log impl with max_logs_mb "1" over entries over 1 MiB.
+- `LOG-CAP-09` An invalid keep_logs beside a valid max_logs_mb prints the keep_logs warning and still prunes by size: the oldest entry over the cap is deleted.
+  design §4.3 Bad config (the other limit still applies). Run: memex log impl with `{"keep_logs": "soon", "max_logs_mb": 1}` over entries over 1 MiB.
+- `LOG-CAP-10` A config.json with an unknown key beside max_logs_mb 1 prints its warning and deletes nothing, though the store is over 1 MiB.
+  design §4.3 Bad config (a file it can't use prunes nothing). Run: memex log impl with `{"max_logs_mb": 1, "extra": true}` over entries over 1 MiB.
+- `LOG-CAP-11` A stream folder that a size prune empties is removed, and the stream written keeps its folder.
+  design §4.3 Folders. Run: memex log impl with max_logs_mb 1 over an old large entry alone in stream gone.
+- `LOG-CAP-12` A size-prune delete that the OS refuses warns and names the entry, which stays and still counts, so the next-oldest entry is deleted instead, and the `log` exits 0.
+  design §4.3 Size cap and §4.4 Atomic writes. Run: memex log impl with max_logs_mb 1, the oldest entry in stream old at mode 555.
+- `LOG-CAP-13` Symlinks neither count nor go: a symlink named like an entry and a symlinked stream folder, pointing at over 1 MiB of entries, leave the store under the cap, and the files behind them are untouched.
+  design §4.3 What counts. Run: memex log impl with max_logs_mb 1 beside an entry symlink and a stream folder symlink into a sibling folder.
+- `LOG-CAP-14` With max_logs_mb 1 and a store under the cap after the write, nothing is deleted, however old the entries.
+  design §4.3 Size cap (at or under the cap stays). Run: memex log impl with max_logs_mb 1 over a 2020-01-01 entry.

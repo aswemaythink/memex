@@ -7,8 +7,8 @@ memex: cases
 
 - `INIT-FRESH-01` In a fresh git repo, init creates `.memex/` with `.gitignore`, `config.json` and `collections/.gitkeep`, creates AGENTS.md with the marked block, and prints the four `created` lines, a blank line and the atlas, exit 0.
   Scenario: `repo/` is a git repo holding a README and no memex files. design §3.5b items 1, 2 and 4.
-- `INIT-FRESH-02` In a fresh git repo, init writes `.memex/config.json` as exactly `{"keep_logs": "3d"}` and one newline, exit 0.
-  Scenario: `repo/` is a git repo with no files; the snapshot shows the bytes, and a missing final newline would show as `\ no newline at end`. design §3.5b item 1 (`config.json` holds `{"keep_logs": "3d"}`).
+- `INIT-FRESH-02` In a fresh git repo, init writes `.memex/config.json` as exactly `{"max_logs_mb": 10}` and one newline, exit 0.
+  Scenario: `repo/` is a git repo with no files; the snapshot shows the bytes, and a missing final newline would show as `\ no newline at end`. design §3.5b item 1 (`config.json` holds `{"max_logs_mb": 10}`).
 
 ## KEEP
 
