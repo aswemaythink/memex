@@ -1,10 +1,8 @@
 //! Which docs hold a search's `+` or `!` words, at tier 0 only (design §3.2 Operators).
 //! Only tier 0 holds: the exact word or a stem-mate, or for an id or path the whole token or a longer one it begins at `-`, `/` or `.`.
-//! Prefix and one-edit matches never hold, and the scores are never read or changed here.
-//! Cases: SRCH-REQUIRE-01, SRCH-REQUIRE-02, SRCH-EXCLUDE-01, SRCH-EXCLUDE-02, SRCH-EXCLUDE-03
+//! `Index::scan_run` finds them with prefix and one-edit matches off, so a prefix or a one-edit match never holds, and the scores are never read or changed here.
+//! Cases: SRCH-REQUIRE-01, SRCH-REQUIRE-02, SRCH-EXCLUDE-01, SRCH-EXCLUDE-02, SRCH-EXCLUDE-03, SRCH-EXCLUDE-07
 
-use super::tokenize;
-use super::vocab::Posting;
 use super::{Index, Probe};
 use crate::par;
 
@@ -22,61 +20,31 @@ impl Index<'_> {
             .collect()
     }
 
-    /// Which docs hold each word at tier 0: `holders(words)[word][doc]` is true when that doc holds `words[word]`. No run is
-    /// scanned when there are no words.
+    /// Which docs hold each word at tier 0: `holders(words)[word][doc]` is true when that doc holds `words[word]`. Each run is
+    /// scanned once for all the words by `scan_run`, with prefix and one-edit matches off, so its candidates are tier 0 only; each
+    /// candidate's postings mark the docs it holds. No run is scanned when there are no words.
     fn holders(&self, words: &[String]) -> Vec<Vec<bool>> {
         if words.is_empty() {
             return Vec::new();
         }
         let probes: Vec<Probe> = words
             .iter()
-            .map(|word| Probe::new(word, &self.stemmer))
+            .map(|word| Probe {
+                prefix: false,
+                fuzzy: false,
+                ..Probe::new(word, &self.stemmer)
+            })
             .collect();
         let runs: Vec<usize> = (0..self.runs.len()).collect();
         let mut holding = vec![vec![false; self.labels.len()]; words.len()];
-        for found in par::map(&runs, |&run| self.holding_run(run, &probes)) {
-            for (word, doc) in found {
-                holding[word][doc] = true;
+        for candidate in par::map(&runs, |&run| self.scan_run(run, &probes))
+            .into_iter()
+            .flatten()
+        {
+            for posting in self.runs[candidate.run].postings(candidate.id) {
+                holding[candidate.word][posting.doc] = true;
             }
         }
         holding
     }
-
-    /// The (word, doc) pairs that one run holds at tier 0. A whole word holds through its exact term, and through each longer whole
-    /// term that it begins; a plain word holds through each plain term with its stem.
-    fn holding_run(&self, run: usize, probes: &[Probe]) -> Vec<(usize, usize)> {
-        let vocab = &self.runs[run];
-        let mut found = Vec::new();
-        for (word, probe) in probes.iter().enumerate() {
-            if probe.stem.is_none() {
-                if let Some((_, id)) = vocab.get(probe.word) {
-                    found.extend(docs_of(word, vocab.postings(id)));
-                }
-            }
-        }
-        let plain = probes.iter().any(|probe| probe.stem.is_some());
-        for (term, id) in vocab.terms() {
-            if tokenize::is_whole(term) {
-                for (word, probe) in probes.iter().enumerate() {
-                    if probe.matches_longer(term) {
-                        found.extend(docs_of(word, vocab.postings(id)));
-                    }
-                }
-            } else if plain {
-                let stem = self.stemmer.stem(term);
-                let stem: &str = &stem;
-                for (word, probe) in probes.iter().enumerate() {
-                    if probe.stem.as_deref() == Some(stem) {
-                        found.extend(docs_of(word, vocab.postings(id)));
-                    }
-                }
-            }
-        }
-        found
-    }
-}
-
-/// The (word, doc) pairs of one word and the postings of a term that it holds.
-fn docs_of(word: usize, postings: &[Posting]) -> impl Iterator<Item = (usize, usize)> + '_ {
-    postings.iter().map(move |posting| (word, posting.doc))
 }
