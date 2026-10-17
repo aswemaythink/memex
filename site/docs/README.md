@@ -1,6 +1,6 @@
 # Docs
 
-`site/docs/` is memex's documentation: short, separate pages of plain HTML, organised as a very light Diátaxis (guides, reference, concepts), with no build step. The layout every page shares, and `docs.js`, are described in `site/README.md`.
+`site/docs/` is memex's documentation: short, separate pages of plain HTML with no build step. It is organised as a very light Diátaxis (guides, reference, concepts). The layout every page shares, and `docs.js`, are described in `site/README.md`.
 
 There is no docs home: the docs open on `get-started.html`.
 

@@ -1,4 +1,4 @@
-// Renders the docs pages' shared chrome: the sidebar nav, the "On this page" table of contents and the mobile drawer.
+// Renders the docs pages' shared chrome: sidebar nav, table of contents and mobile drawer.
 // The nav is defined once here (NAV, paths relative to docs/), so every page under docs/ gets the same sidebar,
 // with the current page marked. Links are resolved against this script's own URL, so they work from docs/,
 // docs/patterns/ and docs/reference/, over http and from file://. Each page loads it last, after its <main>.
