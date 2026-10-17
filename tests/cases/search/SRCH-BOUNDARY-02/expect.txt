@@ -1,0 +1,7 @@
+$ memex search src/verbs/search
+exit 0
+stdout
+| headers  (showing 2 of 2)
+|   src/verbs/search.rs  Carries out the search verb.
+|   src/verbs/search/listing.rs  Lists the docs of a search group.
+stderr (empty)

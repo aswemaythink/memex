@@ -1,0 +1,23 @@
+$ memex search --in logs '!tag:show'
+exit 0
+stdout
+| logs  (showing 2 of 2; <-N cited by N)
+|   impl:20261013-110000-widget-build  1h · cook-1 · main  Widget build  <-0
+|   impl:20260929-090000-widget-older  14d · cook-3 · main  Older widget note  <-0
+stderr (empty)
+
+$ memex search '!since:2d'
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   alpha/README.md  A plain README with no time.
+| logs  (showing 2 of 2)
+|   impl:20260930-090000-widget-old  13d · cook-2 · feat/show  Old widget note
+|   impl:20260929-090000-widget-older  14d · cook-3 · main  Older widget note
+stderr (empty)
+
+$ memex search --in logs '!tag:show' --json
+exit 0
+stdout
+| {"query":"!tag:show","filters":{"!tag":["show"]},"groups":[{"collection":"logs","total":2,"hits":[{"ref":"impl:20261013-110000-widget-build","collection":"impl","id":"20261013-110000-widget-build","path":null,"title":"Widget build","fields":{"stream":"impl","time":"2026-10-13T11:00:00Z","agent":"cook-1","tags":["build"],"branch":"main"},"score":null,"snippet":"Widget build","fuzzy":[],"cited_by":0},{"ref":"impl:20260929-090000-widget-older","collection":"impl","id":"20260929-090000-widget-older","path":null,"title":"Older widget note","fields":{"stream":"impl","time":"2026-09-29T09:00:00Z","agent":"cook-3","branch":"main"},"score":null,"snippet":"Older widget note","fuzzy":[],"cited_by":0}]}]}
+stderr (empty)

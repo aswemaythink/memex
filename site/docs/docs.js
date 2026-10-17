@@ -12,7 +12,7 @@
       ['Patterns', 'patterns/index.html'],
       ['Test cases', 'patterns/cases.html'],
       ['Doom hunts', 'patterns/doom-hunts.html'],
-      ['Performance verdicts', 'patterns/perf-verdicts.html'],
+      ['Performance optimisation', 'patterns/perf-optimisation.html'],
       ['Hand-off and messages', 'patterns/hand-off.html'],
       ['Check intent against code', 'patterns/drift.html'],
       ['Distill a log', 'patterns/distill-logs.html'],

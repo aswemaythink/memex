@@ -1,0 +1,17 @@
+$ memex search '!widget'
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   beta/README.md  A gear tool.
+| cases  (showing 2 of 2)
+|   cases:GEAR-ONE-01  A gear turns.
+|   cases:GEAR-ONE-03  A cog turns.
+stderr (empty)
+
+$ memex search --in cases '!widget'
+exit 0
+stdout
+| cases  (showing 2 of 2; <-N cited by N)
+|   cases:GEAR-ONE-01  A gear turns.  <-0
+|   cases:GEAR-ONE-03  A cog turns.  <-0
+stderr (empty)

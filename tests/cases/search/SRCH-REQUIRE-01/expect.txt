@@ -1,0 +1,16 @@
+$ memex search widget
+exit 0
+stdout
+| readmes  (showing 3 of 3)
+|   beta/README.md  A widget with nothing else.
+|   gamma/README.md  The gizmo pairs with the widget.
+|   alpha/README.md  A widget that also needs a gizmo.
+stderr (empty)
+
+$ memex search widget +gizmo
+exit 0
+stdout
+| readmes  (showing 2 of 2)
+|   gamma/README.md  The gizmo pairs with the widget.
+|   alpha/README.md  A widget that also needs a gizmo.
+stderr (empty)

@@ -1,0 +1,16 @@
+$ memex search widget
+exit 0
+stdout
+| readmes  (showing 3 of 3)
+|   alpha/README.md  A widget for the fixtures.
+|   beta/README.md  A widget with a mixture.
+|   gamma/README.md  A widget that is fixtureless.
+stderr (empty)
+
+$ memex search widget '!fixture'
+exit 0
+stdout
+| readmes  (showing 2 of 2)
+|   beta/README.md  A widget with a mixture.
+|   gamma/README.md  A widget that is fixtureless.
+stderr (empty)

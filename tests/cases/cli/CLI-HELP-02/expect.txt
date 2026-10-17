@@ -3,6 +3,7 @@ exit 0
 stdout
 | memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]
 | Find docs by words and field:value filters, grouped by collection.
+|   +word / !word            must hold / must not hold the word (exact or stem); !field:value leaves those docs out
 |   --in <coll>[,<coll>...]  search only these collections; with no words, list their roster
 |   --limit N                hits per group (default 5; 20 with --in)
 |   --json                   print one JSON document instead of text

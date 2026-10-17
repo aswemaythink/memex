@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 348" width="720" height="348" role="img">
-<!-- The scale diagram of the memex site: sixty files, each a dim block of code under a thin orange header strip; an agent zigzags down the gutters, lights the few strips it reads, then reads the code of three files those headers pointed to. It follows light and dark through its own prefers-color-scheme block. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" width="720" height="340" role="img">
+<!-- The scale diagram of the memex site: forty files, each a dim block of code under a thin orange header strip; an agent zigzags down the gutters, lights the few strips it reads, then reads the code of three files those headers pointed to. It follows light and dark through its own prefers-color-scheme block. -->
 <title>A short path through the intent layer</title>
-<desc>A grid of sixty dim blocks of code, each topped by a faint orange strip: its README or header. An agent starts at the top left and zigzags down the gaps between the blocks, never over them. Each strip it reads on the way lights up and stays lit, one per row. Then the code of three of those files lights up, one after another: the files the headers pointed to. The other strips and blocks stay faint.</desc>
+<desc>A grid of forty dim blocks of code, each topped by a faint orange strip: its README or header. An agent starts at the top left and zigzags down the gaps between the blocks, never over them. Each strip it reads on the way lights up and stays lit, one per row. Then the code of three of those files lights up, one after another: the files the headers pointed to. The other strips and blocks stay faint.</desc>
 <style>
 svg { --bg: #faf7f0; --accent: #9a3d17; --rule: #d8d1c0; --code: #ebe5d7; --code-line: #d3cab6; }
 @media (prefers-color-scheme: dark) { svg { --bg: #141310; --accent: #eca071; --rule: #35322a; --code: #0c0b09; --code-line: #2a2722; } }
@@ -11,95 +11,73 @@ svg { --bg: #faf7f0; --accent: #9a3d17; --rule: #d8d1c0; --code: #ebe5d7; --code
 .read { fill: var(--accent); }
 .trail { fill: none; stroke: var(--accent); stroke-width: 1.25; stroke-dasharray: 1.5 4; stroke-linecap: round; opacity: .3; }
 .run { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; opacity: .4; stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: run 10s linear infinite; }
-.agent { fill: var(--accent); stroke: var(--bg); stroke-width: 2; offset-path: path('M5 13L212.00 13.00Q218 13 218.00 19.00L218.00 63.00Q218 69 212.00 69.00L11.00 69.00Q5 69 5.00 75.00L5.00 119.00Q5 125 11.00 125.00L425.00 125.00Q431 125 431.00 131.00L431.00 175.00Q431 181 425.00 181.00L224.00 181.00Q218 181 218.00 187.00L218.00 231.00Q218 237 224.00 237.00L567.00 237.00Q573 237 573.00 243.00L573.00 287.00Q573 293 567.00 293.00L466.5 293'); animation: agent 10s linear infinite; }
+.agent { fill: var(--accent); stroke: var(--bg); stroke-width: 2; offset-path: path('M5 13L265 13Q271 13 271 19L271 73Q271 79 265 79L11 79Q5 79 5 85L5 139Q5 145 11 145L532 145Q538 145 538 151L538 205Q538 211 532 211L277 211Q271 211 271 217L271 271Q271 277 277 277L582.5 277'); animation: agent 10s linear infinite; }
 .hl { opacity: 0; animation: 10s linear infinite; }
 .hl rect { fill: var(--accent); fill-opacity: .07; stroke: var(--accent); stroke-width: 1.25; }
 .hl path { stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; opacity: .6; }
 @keyframes run { 0% { stroke-dashoffset: 1000; } 70%, 92% { stroke-dashoffset: 0; opacity: .4; } 100% { stroke-dashoffset: 0; opacity: 0; } }
 @keyframes agent { 0% { offset-distance: 0%; opacity: 1; } 70%, 92% { offset-distance: 100%; opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
+@keyframes lit0 { 0%, 7.5% { opacity: .28; } 9.0%, 92% { opacity: 1; } 100% { opacity: .28; } }
+@keyframes lit1 { 0%, 19.6% { opacity: .28; } 21.1%, 92% { opacity: 1; } 100% { opacity: .28; } }
+@keyframes lit2 { 0%, 38.3% { opacity: .28; } 39.8%, 92% { opacity: 1; } 100% { opacity: .28; } }
+@keyframes lit3 { 0%, 53.8% { opacity: .28; } 55.3%, 92% { opacity: 1; } 100% { opacity: .28; } }
+@keyframes lit4 { 0%, 69.2% { opacity: .28; } 70.8%, 92% { opacity: 1; } 100% { opacity: .28; } }
 @keyframes hl0 { 0%, 71% { opacity: 0; } 73%, 92% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes hl1 { 0%, 75% { opacity: 0; } 77%, 92% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes hl2 { 0%, 79% { opacity: 0; } 81%, 92% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes lit0 { 0%, 6.8% { opacity: .28; } 8.3%, 92% { opacity: 1; } 100% { opacity: .28; } }
-@keyframes lit1 { 0%, 17.2% { opacity: .28; } 18.7%, 92% { opacity: 1; } 100% { opacity: .28; } }
-@keyframes lit2 { 0%, 35.9% { opacity: .28; } 37.4%, 92% { opacity: 1; } 100% { opacity: .28; } }
-@keyframes lit3 { 0%, 46.3% { opacity: .28; } 47.8%, 92% { opacity: 1; } 100% { opacity: .28; } }
-@keyframes lit4 { 0%, 62.2% { opacity: .28; } 63.7%, 92% { opacity: 1; } 100% { opacity: .28; } }
-@keyframes lit5 { 0%, 68.5% { opacity: .28; } 70.0%, 92% { opacity: 1; } 100% { opacity: .28; } }
 @media (prefers-reduced-motion: reduce) { .run, .agent, .hl, .read { animation: none; } .hl { opacity: 1; } .run { stroke-dashoffset: 0; } .agent { offset-distance: 100%; } }
 </style>
-<rect class="code" x="15" y="30" width="51" height="28" rx="3"/>
-<rect class="code" x="86" y="30" width="51" height="28" rx="3"/>
-<rect class="code" x="157" y="30" width="51" height="28" rx="3"/>
-<rect class="code" x="228" y="30" width="51" height="28" rx="3"/>
-<rect class="code" x="299" y="30" width="51" height="28" rx="3"/>
-<rect class="code" x="370" y="30" width="51" height="28" rx="3"/>
-<rect class="code" x="441" y="30" width="51" height="28" rx="3"/>
-<rect class="code" x="512" y="30" width="51" height="28" rx="3"/>
-<rect class="code" x="583" y="30" width="51" height="28" rx="3"/>
-<rect class="code" x="654" y="30" width="51" height="28" rx="3"/>
-<rect class="code" x="15" y="86" width="51" height="28" rx="3"/>
-<rect class="code" x="86" y="86" width="51" height="28" rx="3"/>
-<rect class="code" x="157" y="86" width="51" height="28" rx="3"/>
-<rect class="code" x="228" y="86" width="51" height="28" rx="3"/>
-<rect class="code" x="299" y="86" width="51" height="28" rx="3"/>
-<rect class="code" x="370" y="86" width="51" height="28" rx="3"/>
-<rect class="code" x="441" y="86" width="51" height="28" rx="3"/>
-<rect class="code" x="512" y="86" width="51" height="28" rx="3"/>
-<rect class="code" x="583" y="86" width="51" height="28" rx="3"/>
-<rect class="code" x="654" y="86" width="51" height="28" rx="3"/>
-<rect class="code" x="15" y="142" width="51" height="28" rx="3"/>
-<rect class="code" x="86" y="142" width="51" height="28" rx="3"/>
-<rect class="code" x="157" y="142" width="51" height="28" rx="3"/>
-<rect class="code" x="228" y="142" width="51" height="28" rx="3"/>
-<rect class="code" x="299" y="142" width="51" height="28" rx="3"/>
-<rect class="code" x="370" y="142" width="51" height="28" rx="3"/>
-<rect class="code" x="441" y="142" width="51" height="28" rx="3"/>
-<rect class="code" x="512" y="142" width="51" height="28" rx="3"/>
-<rect class="code" x="583" y="142" width="51" height="28" rx="3"/>
-<rect class="code" x="654" y="142" width="51" height="28" rx="3"/>
-<rect class="code" x="15" y="198" width="51" height="28" rx="3"/>
-<rect class="code" x="86" y="198" width="51" height="28" rx="3"/>
-<rect class="code" x="157" y="198" width="51" height="28" rx="3"/>
-<rect class="code" x="228" y="198" width="51" height="28" rx="3"/>
-<rect class="code" x="299" y="198" width="51" height="28" rx="3"/>
-<rect class="code" x="370" y="198" width="51" height="28" rx="3"/>
-<rect class="code" x="441" y="198" width="51" height="28" rx="3"/>
-<rect class="code" x="512" y="198" width="51" height="28" rx="3"/>
-<rect class="code" x="583" y="198" width="51" height="28" rx="3"/>
-<rect class="code" x="654" y="198" width="51" height="28" rx="3"/>
-<rect class="code" x="15" y="254" width="51" height="28" rx="3"/>
-<rect class="code" x="86" y="254" width="51" height="28" rx="3"/>
-<rect class="code" x="157" y="254" width="51" height="28" rx="3"/>
-<rect class="code" x="228" y="254" width="51" height="28" rx="3"/>
-<rect class="code" x="299" y="254" width="51" height="28" rx="3"/>
-<rect class="code" x="370" y="254" width="51" height="28" rx="3"/>
-<rect class="code" x="441" y="254" width="51" height="28" rx="3"/>
-<rect class="code" x="512" y="254" width="51" height="28" rx="3"/>
-<rect class="code" x="583" y="254" width="51" height="28" rx="3"/>
-<rect class="code" x="654" y="254" width="51" height="28" rx="3"/>
-<rect class="code" x="15" y="310" width="51" height="28" rx="3"/>
-<rect class="code" x="86" y="310" width="51" height="28" rx="3"/>
-<rect class="code" x="157" y="310" width="51" height="28" rx="3"/>
-<rect class="code" x="228" y="310" width="51" height="28" rx="3"/>
-<rect class="code" x="299" y="310" width="51" height="28" rx="3"/>
-<rect class="code" x="370" y="310" width="51" height="28" rx="3"/>
-<rect class="code" x="441" y="310" width="51" height="28" rx="3"/>
-<rect class="code" x="512" y="310" width="51" height="28" rx="3"/>
-<rect class="code" x="583" y="310" width="51" height="28" rx="3"/>
-<rect class="code" x="654" y="310" width="51" height="28" rx="3"/>
-<path class="cl" d="M31 37h25M31 42.5h22M21 48h19M31 53.5h28M92 37h14M102 42.5h17M92 48h13M92 53.5h33M173 37h28M163 42.5h8M163 48h11M163 53.5h20M234 37h9M244 42.5h18M244 48h26M234 53.5h22M310 37h23M305 42.5h13M315 48h28M310 53.5h21M376 37h24M381 42.5h32M376 48h26M376 53.5h12M447 37h33M447 42.5h26M457 48h10M447 53.5h8M518 37h21M518 42.5h38M528 48h20M528 53.5h10M589 37h25M594 42.5h10M594 48h18M589 53.5h34M660 37h16M660 42.5h14M660 48h11M670 53.5h23M21 93h20M31 98.5h24M21 104h16M31 109.5h28M102 93h11M102 98.5h21M92 104h8M97 109.5h33M168 93h8M163 98.5h19M173 104h27M163 109.5h10M234 93h21M244 98.5h16M234 104h29M239 109.5h20M305 93h12M305 98.5h21M305 104h8M310 109.5h19M386 93h12M386 98.5h26M376 104h32M376 109.5h17M452 93h15M447 98.5h20M447 104h20M457 109.5h23M518 93h34M518 98.5h14M518 104h10M523 109.5h15M599 93h16M599 98.5h27M599 104h17M589 109.5h12M660 93h22M670 98.5h25M660 104h25M660 109.5h21M21 149h12M26 154.5h21M31 160h15M21 165.5h10M92 149h26M97 154.5h24M92 160h13M97 165.5h12M173 149h18M163 154.5h10M163 160h38M168 165.5h30M239 149h9M234 154.5h12M244 160h10M239 165.5h18M305 149h12M305 154.5h36M310 160h31M305 165.5h16M381 149h19M376 154.5h38M376 160h34M376 165.5h39M447 149h32M457 154.5h26M447 160h12M447 165.5h13M518 149h24M528 154.5h18M528 160h26M528 165.5h22M599 149h25M589 154.5h9M594 160h27M589 165.5h38M660 149h22M660 154.5h39M670 160h16M660 165.5h31M26 205h12M21 210.5h18M26 216h29M31 221.5h23M92 205h28M102 210.5h29M97 216h14M102 221.5h14M163 205h32M163 210.5h28M163 216h16M163 221.5h39M239 205h34M234 210.5h12M239 216h34M234 221.5h15M315 205h23M310 210.5h14M315 216h20M315 221.5h29M381 205h30M386 210.5h18M376 216h10M381 221.5h27M447 205h25M452 210.5h17M447 216h16M457 221.5h22M518 205h9M523 210.5h15M518 216h11M518 221.5h36M589 205h31M589 210.5h20M589 216h38M594 221.5h13M660 205h38M660 210.5h19M660 216h25M665 221.5h25M21 261h33M21 266.5h13M31 272h20M21 277.5h36M102 261h14M92 266.5h32M97 272h22M97 277.5h28M163 261h14M163 266.5h21M163 272h32M163 277.5h27M239 261h16M234 266.5h30M234 272h10M244 277.5h18M315 261h16M315 266.5h8M305 272h12M315 277.5h9M376 261h29M376 266.5h38M376 272h36M386 277.5h26M447 261h22M457 266.5h24M452 272h34M447 277.5h24M523 261h29M528 266.5h27M518 272h27M518 277.5h25M599 261h14M599 266.5h25M589 272h8M599 277.5h8M660 261h33M660 266.5h39M660 272h18M660 277.5h37M31 317h20M26 322.5h15M31 328h23M21 333.5h29M102 317h23M97 322.5h11M92 328h34M92 333.5h24M163 317h9M163 322.5h20M163 328h22M163 333.5h26M239 317h31M239 322.5h15M244 328h11M244 333.5h26M305 317h24M305 322.5h35M305 328h32M315 333.5h24M376 317h21M376 322.5h21M376 328h22M381 333.5h13M452 317h27M452 322.5h14M447 328h20M447 333.5h16M518 317h16M518 322.5h24M528 328h11M528 333.5h21M589 317h20M599 322.5h28M589 328h14M589 333.5h30M665 317h11M665 322.5h24M660 328h12M670 333.5h11"/>
-<path class="strip" d="M15 24h51v4h-51zM86 24h51v4h-51zM228 24h51v4h-51zM299 24h51v4h-51zM370 24h51v4h-51zM441 24h51v4h-51zM512 24h51v4h-51zM583 24h51v4h-51zM654 24h51v4h-51zM86 80h51v4h-51zM157 80h51v4h-51zM228 80h51v4h-51zM299 80h51v4h-51zM370 80h51v4h-51zM441 80h51v4h-51zM512 80h51v4h-51zM583 80h51v4h-51zM654 80h51v4h-51zM15 136h51v4h-51zM86 136h51v4h-51zM157 136h51v4h-51zM228 136h51v4h-51zM299 136h51v4h-51zM441 136h51v4h-51zM512 136h51v4h-51zM583 136h51v4h-51zM654 136h51v4h-51zM15 192h51v4h-51zM86 192h51v4h-51zM157 192h51v4h-51zM299 192h51v4h-51zM370 192h51v4h-51zM441 192h51v4h-51zM512 192h51v4h-51zM583 192h51v4h-51zM654 192h51v4h-51zM15 248h51v4h-51zM86 248h51v4h-51zM157 248h51v4h-51zM228 248h51v4h-51zM299 248h51v4h-51zM370 248h51v4h-51zM441 248h51v4h-51zM583 248h51v4h-51zM654 248h51v4h-51zM15 304h51v4h-51zM86 304h51v4h-51zM157 304h51v4h-51zM228 304h51v4h-51zM299 304h51v4h-51zM370 304h51v4h-51zM512 304h51v4h-51zM583 304h51v4h-51zM654 304h51v4h-51z"/>
-<rect class="read" x="157" y="24" width="51" height="4" style="animation: lit0 10s linear infinite"/>
-<rect class="read" x="15" y="80" width="51" height="4" style="animation: lit1 10s linear infinite"/>
-<rect class="read" x="370" y="136" width="51" height="4" style="animation: lit2 10s linear infinite"/>
-<rect class="read" x="228" y="192" width="51" height="4" style="animation: lit3 10s linear infinite"/>
-<rect class="read" x="512" y="248" width="51" height="4" style="animation: lit4 10s linear infinite"/>
-<rect class="read" x="441" y="304" width="51" height="4" style="animation: lit5 10s linear infinite"/>
-<g class="hl" style="animation-name: hl0"><rect x="15" y="86" width="51" height="28" rx="3"/><path d="M21 93h20M31 98.5h24M21 104h16M31 109.5h28"/></g>
-<g class="hl" style="animation-name: hl1"><rect x="228" y="198" width="51" height="28" rx="3"/><path d="M239 205h34M234 210.5h12M239 216h34M234 221.5h15"/></g>
-<g class="hl" style="animation-name: hl2"><rect x="441" y="310" width="51" height="28" rx="3"/><path d="M452 317h27M452 322.5h14M447 328h20M447 333.5h16"/></g>
-<path class="trail" d="M5 13L212.00 13.00Q218 13 218.00 19.00L218.00 63.00Q218 69 212.00 69.00L11.00 69.00Q5 69 5.00 75.00L5.00 119.00Q5 125 11.00 125.00L425.00 125.00Q431 125 431.00 131.00L431.00 175.00Q431 181 425.00 181.00L224.00 181.00Q218 181 218.00 187.00L218.00 231.00Q218 237 224.00 237.00L567.00 237.00Q573 237 573.00 243.00L573.00 287.00Q573 293 567.00 293.00L466.5 293"/>
-<path class="run" pathLength="1000" d="M5 13L212.00 13.00Q218 13 218.00 19.00L218.00 63.00Q218 69 212.00 69.00L11.00 69.00Q5 69 5.00 75.00L5.00 119.00Q5 125 11.00 125.00L425.00 125.00Q431 125 431.00 131.00L431.00 175.00Q431 181 425.00 181.00L224.00 181.00Q218 181 218.00 187.00L218.00 231.00Q218 237 224.00 237.00L567.00 237.00Q573 237 573.00 243.00L573.00 287.00Q573 293 567.00 293.00L466.5 293"/>
+<rect class="code" x="15" y="30" width="67" height="36" rx="3"/>
+<rect class="code" x="104" y="30" width="67" height="36" rx="3"/>
+<rect class="code" x="193" y="30" width="67" height="36" rx="3"/>
+<rect class="code" x="282" y="30" width="67" height="36" rx="3"/>
+<rect class="code" x="371" y="30" width="67" height="36" rx="3"/>
+<rect class="code" x="460" y="30" width="67" height="36" rx="3"/>
+<rect class="code" x="549" y="30" width="67" height="36" rx="3"/>
+<rect class="code" x="638" y="30" width="67" height="36" rx="3"/>
+<rect class="code" x="15" y="96" width="67" height="36" rx="3"/>
+<rect class="code" x="104" y="96" width="67" height="36" rx="3"/>
+<rect class="code" x="193" y="96" width="67" height="36" rx="3"/>
+<rect class="code" x="282" y="96" width="67" height="36" rx="3"/>
+<rect class="code" x="371" y="96" width="67" height="36" rx="3"/>
+<rect class="code" x="460" y="96" width="67" height="36" rx="3"/>
+<rect class="code" x="549" y="96" width="67" height="36" rx="3"/>
+<rect class="code" x="638" y="96" width="67" height="36" rx="3"/>
+<rect class="code" x="15" y="162" width="67" height="36" rx="3"/>
+<rect class="code" x="104" y="162" width="67" height="36" rx="3"/>
+<rect class="code" x="193" y="162" width="67" height="36" rx="3"/>
+<rect class="code" x="282" y="162" width="67" height="36" rx="3"/>
+<rect class="code" x="371" y="162" width="67" height="36" rx="3"/>
+<rect class="code" x="460" y="162" width="67" height="36" rx="3"/>
+<rect class="code" x="549" y="162" width="67" height="36" rx="3"/>
+<rect class="code" x="638" y="162" width="67" height="36" rx="3"/>
+<rect class="code" x="15" y="228" width="67" height="36" rx="3"/>
+<rect class="code" x="104" y="228" width="67" height="36" rx="3"/>
+<rect class="code" x="193" y="228" width="67" height="36" rx="3"/>
+<rect class="code" x="282" y="228" width="67" height="36" rx="3"/>
+<rect class="code" x="371" y="228" width="67" height="36" rx="3"/>
+<rect class="code" x="460" y="228" width="67" height="36" rx="3"/>
+<rect class="code" x="549" y="228" width="67" height="36" rx="3"/>
+<rect class="code" x="638" y="228" width="67" height="36" rx="3"/>
+<rect class="code" x="15" y="294" width="67" height="36" rx="3"/>
+<rect class="code" x="104" y="294" width="67" height="36" rx="3"/>
+<rect class="code" x="193" y="294" width="67" height="36" rx="3"/>
+<rect class="code" x="282" y="294" width="67" height="36" rx="3"/>
+<rect class="code" x="371" y="294" width="67" height="36" rx="3"/>
+<rect class="code" x="460" y="294" width="67" height="36" rx="3"/>
+<rect class="code" x="549" y="294" width="67" height="36" rx="3"/>
+<rect class="code" x="638" y="294" width="67" height="36" rx="3"/>
+<path class="cl" d="M21 37h17M21 42.5h49M21 48h12M31 53.5h14M21 59h45M110 37h40M110 42.5h10M110 48h35M110 53.5h12M110 59h13M209 37h35M199 42.5h44M199 48h22M209 53.5h45M199 59h44M298 37h33M288 42.5h22M288 48h43M288 53.5h26M288 59h17M387 37h15M387 42.5h27M387 48h19M377 53.5h45M387 59h20M466 37h14M476 42.5h12M476 48h11M476 53.5h21M466 59h51M565 37h35M555 42.5h37M565 48h37M555 53.5h27M555 59h19M654 37h23M644 42.5h44M644 48h41M644 53.5h29M654 59h36M21 103h46M21 108.5h15M31 114h34M21 119.5h29M21 125h39M110 103h10M120 108.5h12M120 114h44M110 119.5h29M120 125h30M209 103h39M209 108.5h37M199 114h13M199 119.5h38M209 125h12M288 103h54M298 108.5h27M298 114h44M298 119.5h36M288 125h53M377 103h50M377 108.5h9M377 114h30M377 119.5h47M377 125h39M466 103h21M466 108.5h16M476 114h23M466 119.5h33M466 125h13M555 103h36M555 108.5h43M555 114h16M555 119.5h43M555 125h53M644 103h30M654 108.5h32M644 114h17M644 119.5h19M644 125h22M31 169h22M21 174.5h39M31 180h19M21 185.5h26M21 191h17M110 169h42M110 174.5h47M120 180h28M110 185.5h52M120 191h11M199 169h51M209 174.5h33M199 180h33M199 185.5h14M199 191h48M288 169h11M288 174.5h12M288 180h36M288 185.5h15M288 191h46M377 169h14M377 174.5h44M377 180h42M377 185.5h31M387 191h9M466 169h21M476 174.5h32M466 180h48M466 185.5h30M476 191h31M555 169h15M555 174.5h39M555 180h38M555 185.5h27M555 191h17M644 169h55M644 174.5h55M644 180h38M654 185.5h18M654 191h9M21 235h41M21 240.5h17M31 246h42M21 251.5h41M21 257h49M110 235h52M110 240.5h41M110 246h18M110 251.5h22M120 257h42M209 235h29M209 240.5h22M209 246h20M199 251.5h33M209 257h22M288 235h41M288 240.5h30M298 246h9M288 251.5h25M288 257h24M377 235h52M387 240.5h30M377 246h54M377 251.5h31M377 257h22M466 235h22M466 240.5h20M466 246h21M466 251.5h47M476 257h8M555 235h49M555 240.5h49M555 246h50M555 251.5h32M565 257h20M644 235h19M644 240.5h48M644 246h13M654 251.5h33M644 257h33M31 301h13M31 306.5h18M21 312h16M21 317.5h17M31 323h37M120 301h17M120 306.5h38M120 312h30M110 317.5h43M120 323h16M199 301h8M209 306.5h14M209 312h16M199 317.5h20M199 323h9M288 301h21M288 306.5h40M288 312h45M288 317.5h24M298 323h34M377 301h11M387 306.5h30M377 312h50M387 317.5h41M377 323h40M466 301h42M466 306.5h41M476 312h9M466 317.5h19M476 323h8M555 301h19M555 306.5h38M565 312h15M565 317.5h11M555 323h51M654 301h41M654 306.5h38M644 312h43M644 317.5h23M644 323h25"/>
+<path class="strip" d="M15 24h67v4h-67zM104 24h67v4h-67zM282 24h67v4h-67zM371 24h67v4h-67zM460 24h67v4h-67zM549 24h67v4h-67zM638 24h67v4h-67zM104 90h67v4h-67zM193 90h67v4h-67zM282 90h67v4h-67zM371 90h67v4h-67zM460 90h67v4h-67zM549 90h67v4h-67zM638 90h67v4h-67zM15 156h67v4h-67zM104 156h67v4h-67zM193 156h67v4h-67zM282 156h67v4h-67zM460 156h67v4h-67zM549 156h67v4h-67zM638 156h67v4h-67zM15 222h67v4h-67zM104 222h67v4h-67zM193 222h67v4h-67zM371 222h67v4h-67zM460 222h67v4h-67zM549 222h67v4h-67zM638 222h67v4h-67zM15 288h67v4h-67zM104 288h67v4h-67zM193 288h67v4h-67zM282 288h67v4h-67zM371 288h67v4h-67zM460 288h67v4h-67zM638 288h67v4h-67z"/>
+<rect class="read" x="193" y="24" width="67" height="4" style="animation: lit0 10s linear infinite"/>
+<rect class="read" x="15" y="90" width="67" height="4" style="animation: lit1 10s linear infinite"/>
+<rect class="read" x="371" y="156" width="67" height="4" style="animation: lit2 10s linear infinite"/>
+<rect class="read" x="282" y="222" width="67" height="4" style="animation: lit3 10s linear infinite"/>
+<rect class="read" x="549" y="288" width="67" height="4" style="animation: lit4 10s linear infinite"/>
+<g class="hl" style="animation-name: hl0"><rect x="193" y="30" width="67" height="36" rx="3"/><path d="M209 37h35M199 42.5h44M199 48h22M209 53.5h45M199 59h44"/></g>
+<g class="hl" style="animation-name: hl1"><rect x="371" y="162" width="67" height="36" rx="3"/><path d="M377 169h14M377 174.5h44M377 180h42M377 185.5h31M387 191h9"/></g>
+<g class="hl" style="animation-name: hl2"><rect x="549" y="294" width="67" height="36" rx="3"/><path d="M555 301h19M555 306.5h38M565 312h15M565 317.5h11M555 323h51"/></g>
+<path class="trail" d="M5 13L265 13Q271 13 271 19L271 73Q271 79 265 79L11 79Q5 79 5 85L5 139Q5 145 11 145L532 145Q538 145 538 151L538 205Q538 211 532 211L277 211Q271 211 271 217L271 271Q271 277 277 277L582.5 277"/>
+<path class="run" pathLength="1000" d="M5 13L265 13Q271 13 271 19L271 73Q271 79 265 79L11 79Q5 79 5 85L5 139Q5 145 11 145L532 145Q538 145 538 151L538 205Q538 211 532 211L277 211Q271 211 271 217L271 271Q271 277 277 277L582.5 277"/>
 <circle class="agent" r="4"/>
 </svg>

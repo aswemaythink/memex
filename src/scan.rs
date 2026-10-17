@@ -1,6 +1,6 @@
 //! Reads one verb's arguments against its row of the grammar.
 //! Words, flags and their values, each checked as design §3 says.
-//! Cases: CLI-*, CLI-ARGS-01, CLI-ARGS-02, CLI-ARGS-03, CLI-ARGS-04, CLI-ARGS-05, CLI-BARE-02, CLI-FLAG-01, CLI-FLAG-02, CLI-FLAG-03, CLI-FLAG-04, CLI-FLAG-05, CLI-FLAG-07, CLI-FLAG-08, CLI-FLAG-09, CLI-FLAG-10, CLI-FLAG-11, CLI-FLAG-12, CLI-FLAG-13, CLI-HELP-02, CLI-HELP-03, CLI-HELP-04, CLI-HELP-05, CLI-HELP-06, CLI-HELP-07, CLI-HELP-08, CLI-HINT-07, CLI-HINT-08, CLI-HINT-09, AUD-EXIT-02, AUD-EXIT-03
+//! Cases: CLI-*, CLI-ARGS-01, CLI-ARGS-02, CLI-ARGS-03, CLI-ARGS-04, CLI-ARGS-05, CLI-BARE-02, CLI-FLAG-01, CLI-FLAG-02, CLI-FLAG-03, CLI-FLAG-04, CLI-FLAG-05, CLI-FLAG-07, CLI-FLAG-08, CLI-FLAG-09, CLI-FLAG-10, CLI-FLAG-11, CLI-FLAG-12, CLI-FLAG-13, CLI-HELP-02, CLI-HELP-03, CLI-HELP-04, CLI-HELP-05, CLI-HELP-06, CLI-HELP-07, CLI-HELP-08, CLI-HINT-07, CLI-HINT-08, CLI-HINT-09, AUD-EXIT-02, AUD-EXIT-03, SRCH-EXCLUDE-06
 
 use std::iter::Peekable;
 use std::slice::Iter;
@@ -118,7 +118,7 @@ fn add_flag(
     rest: &mut Rest<'_>,
 ) -> Result<(), Error> {
     let Some((flag, takes)) = flag_entry(name) else {
-        return Err(fail(verb, format!("unknown flag '{name}'")));
+        return Err(fail(verb, unknown_flag(verb, name)));
     };
     if !accepts(verb, flag) {
         let message = format!("misplaced flag '{name}': not a flag of {}", verb.name());
@@ -137,6 +137,18 @@ fn add_flag(
     };
     args.flags.0.push((flag, value));
     Ok(())
+}
+
+/// The message for a flag that no verb takes. In `search` a single-dash word is most likely a word that was meant to be left out, so
+/// the message names the `!` that does that (design §3.2 Operators); the other verbs say only that it is unknown.
+fn unknown_flag(verb: Verb, name: &str) -> String {
+    let message = format!("unknown flag '{name}'");
+    match name.strip_prefix('-') {
+        Some(word) if verb == Verb::Search && !word.is_empty() && !word.starts_with('-') => {
+            format!("{message}; to leave out a word, write '!{word}'")
+        }
+        _ => message,
+    }
 }
 
 /// The next word as a flag's value. A word that starts with `-` is never a value.

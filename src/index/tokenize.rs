@@ -2,7 +2,8 @@
 //! Cases: SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-TOKEN-03, SRCH-UNICODE-01, SRCH-UNICODE-02, SRCH-UNICODE-03, SRCH-UNICODE-04
 
 /// True when a term is a whole id or path, such as `name-001` or `crates/x/hash.rs`: it holds a character that is not a letter or a
-/// digit. Every other term is a plain word, and only plain words are stemmed or matched by prefix or by one edit.
+/// digit. Every other term is a plain word, and only plain words are stemmed or matched by prefix or by one edit. A whole word
+/// matches only whole terms: itself, and the longer ones it begins at `-`, `/` or `.` (design §3.2).
 pub fn is_whole(term: &str) -> bool {
     term.chars().any(|ch| !is_word_char(ch))
 }
@@ -15,7 +16,7 @@ pub fn for_each_token(text: &str, mut emit: impl FnMut(&str)) {
 }
 
 /// The tokens of a query term. A whole id or path stands alone, without its words, so that `NAME-001` matches that id and
-/// no other. Any other run gives its lowercase words, as `for_each_token` does.
+/// the longer ones it begins at `-`, `/` or `.`, never `NAME-0010`. Any other run gives its lowercase words, as `for_each_token` does.
 pub fn query_tokens(text: &str) -> Vec<String> {
     let mut found = Vec::new();
     visit(text, false, &mut |token: &str| {

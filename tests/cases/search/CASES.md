@@ -204,3 +204,25 @@ memex: cases
   design §3.2 Markers (a roster group reads `cases  (showing 50 of 214; <-N cited by N)`, and the heading names the markers its lines use). Fixture: the widget cases of SRCH-ORPHAN-01. Run: memex search --in cases --limit 2, then memex search widget --in cases --limit 2, then memex search --in cases --limit 0.
 - `SRCH-LEGEND-02` A group heading names each fuzzy variant its lines use, once each in alphabetical order as `[~w] fuzzy match on w`, and a group whose hits are all exact has no legend, so `readmes` names `grammer` and `grammir` while `cases` names nothing.
   design §3.2 Markers (a group with a fuzzy hit adds `; [~w] fuzzy match on w`). Fixture: three READMEs holding `grammir`, `grammar` and `grammer`, and a CASES.md entry that says `grammar`. Run: memex search grammar.
+
+## BOUNDARY
+
+- `SRCH-BOUNDARY-01` An id matches the longer ids it begins at a dash, so `ATM-NAME` and `'ATM-NAME-*'` find the entries `ATM-NAME-01` and `ATM-NAME-02`, while `NAME-1` finds `NAME-1` and not `NAME-10`.
+- `SRCH-BOUNDARY-02` A path matches the longer paths it begins at a slash or a dot, so `src/verbs/search` finds the headers of `src/verbs/search.rs` and `src/verbs/search/listing.rs` and not `src/verbs/searcher.rs`.
+
+## REQUIRE
+
+- `SRCH-REQUIRE-01` `+word` keeps only the docs that hold the word, so `widget +gizmo` lists the docs that say both and leaves out those that say only `widget`, and the group total counts only what stays.
+- `SRCH-REQUIRE-02` `+word` holds only by the word or a stem-mate, so `+grammar` finds the doc that says `grammars` and leaves out the docs that say only `grammer` (one edit) or `grammarian` (prefix).
+- `SRCH-REQUIRE-03` Operators never change a score: in `--json`, each hit of `widget +gizmo` has the score it has for `widget gizmo`.
+- `SRCH-REQUIRE-04` `+` on a filter is that filter, and on a term of several words requires each: `+tag:show` gives what `tag:show` gives, with `tag` in the JSON filters, and `+std::io` keeps only the README that holds both `std` and `io`.
+
+## EXCLUDE
+
+- `SRCH-EXCLUDE-01` `!word` leaves out the docs that hold the word or a stem-mate, so `widget !gizmos` drops the docs that say `gizmo` and keeps the other `widget` hits in their order.
+- `SRCH-EXCLUDE-02` `!word` never leaves out by prefix or one edit, so `widget !fixture` drops the doc that says `fixtures` and keeps the docs that say `mixture` and `fixtureless`.
+- `SRCH-EXCLUDE-03` A query whose only words are `!word`s lists the docs that remain: `!widget` lists, per group, the docs that do not hold `widget`, and `--in cases !widget` is the roster without them.
+- `SRCH-EXCLUDE-04` `!field:value` keeps exactly the docs the filter drops: `--in logs !tag:show` lists the logs without the tag, `!since:2d` keeps a README, which has no time, and `--json` echoes `"!tag":["show"]`.
+- `SRCH-EXCLUDE-05` A zero-hit query names its operator words as typed: `widget !widget` prints nothing, exits 0, and stderr reads `memex: no hits for widget !widget; try fewer or other words, or memex info`.
+- `SRCH-EXCLUDE-06` `-word` is not an operator: `memex search widget -gizmo` exits 2 with `unknown flag '-gizmo'; to leave out a word, write '!gizmo'`, and with `--json` that message in the usage envelope.
+- `SRCH-EXCLUDE-07` An operator holds an id through the longer ids it begins at a dash: `names !ATM-NAME` leaves out `ATM-NAME-01` and `ATM-NAME-02`, and `names +NAME-1` keeps `NAME-1` and not `NAME-10`.
