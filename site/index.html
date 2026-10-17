@@ -197,7 +197,6 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
     <p class="mt-3">Agents use the memex CLI to traverse your codebase as a tree of READMEs. At each folder they read its README; at each file, the header comment atop it. They go from the root to the file they need, and open code last: one file, if any.</p>
     <figure class="mt-8">
       <img src="walk.svg" alt="An agent walks a repo tree from the root through src and api to handler.ts, reading each folder's README one-liner and the file's header purpose line. Each file's code is a much larger dim block; the agent opens only handler.ts, at the end." width="362" height="494" class="mx-auto block h-auto w-full max-w-[26rem]">
-      <figcaption class="mt-4 text-center font-serif text-[1.1rem] italic leading-snug">The agent walks the bright layer. The code is there when it needs it.</figcaption>
     </figure>
     <p class="mt-8">In a large codebase, nobody can read every file to see the whole.</p>
     <figure class="mt-8">
