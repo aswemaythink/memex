@@ -1,0 +1,2 @@
+Plain notes.
+// This line looks like a comment, but .txt has no comment family.

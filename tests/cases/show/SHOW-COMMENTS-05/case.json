@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "src/c.rs"]}, {"args": ["show", "src/c.rs", "--json"]}, {"args": ["show", "src/c.rs", "--comments"]}, {"args": ["show", "src/d.rs", "--comments"]}, {"args": ["show", "src/d.rs", "--comments", "--json"]}]}

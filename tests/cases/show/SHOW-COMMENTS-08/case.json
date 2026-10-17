@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "plain"]}, {"args": ["show", "plain", "--comments"]}, {"args": ["show", "notes.md"]}, {"args": ["show", "notes.md", "--comments"]}, {"args": ["show", "notes.txt"]}, {"args": ["show", "notes.txt", "--comments"]}, {"args": ["show", "src/a.rs", "--comments", "--up", "0"]}]}
