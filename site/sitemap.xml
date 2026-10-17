@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+The sitemap of the memex site for search engines; list every page by its canonical URL.
+A new page must be added here too, with the same URL as its canonical link.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://aswemaythink.github.io/memex/</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/get-started.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/guides/hand-off.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/guides/drift.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/patterns/index.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/patterns/cases.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/patterns/doom-hunts.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/patterns/perf-optimisation.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/patterns/promote-findings.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/reference/index.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/reference/init.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/reference/info.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/reference/show.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/reference/search.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/reference/audit.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/reference/log.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/reference/configuration.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/concepts/intent-layer.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/concepts/compression.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/concepts/trails.html</loc></url>
+  <url><loc>https://aswemaythink.github.io/memex/docs/concepts/drift.html</loc></url>
+</urlset>

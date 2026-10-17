@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img">
+<!-- The memex social card: the 1200×630 image every page names in og:image and the GitHub repo uses as its social preview; og.png is its render (headless Chrome, 1200×630). Light palette from site.css, font stacks from site.js; on the right, the scale diagram's motif: dim code blocks under header strips, with a dotted trail through the gutters lighting the few strips it reads. -->
+<title>memex: a codebase map for AI coding agents</title>
+<style>
+.bg { fill: #faf7f0; }
+.ink { fill: #1c1a17; }
+.rust { fill: #9a3d17; }
+.muted { fill: #5c574d; }
+.serif { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "URW Palladio L", P052, "Book Antiqua", Georgia, serif; }
+.mono { font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+.code { fill: #ebe5d7; stroke: #d8d1c0; stroke-width: 1; }
+.code.read { fill: #f6ebe1; stroke: #9a3d17; stroke-width: 1.5; }
+.cl { stroke: #d3cab6; stroke-width: 3; stroke-linecap: round; }
+.cl.hot { stroke: #9a3d17; opacity: .55; }
+.strip { fill: #9a3d17; opacity: .26; }
+.strip.lit { opacity: 1; }
+.trail { fill: none; stroke: #9a3d17; stroke-width: 2; stroke-dasharray: 0.1 7; stroke-linecap: round; stroke-linejoin: round; opacity: .55; }
+.rule { stroke: #948462; stroke-width: 1.5; stroke-dasharray: 5 5; }
+</style>
+<rect class="bg" width="1200" height="630"/>
+<g transform="translate(80 150) scale(3)">
+<rect class="ink" x="4" y="4" width="6" height="24" rx="3"/><rect class="rust" x="13" y="14" width="6" height="14" rx="3"/><rect class="ink" x="22" y="4" width="6" height="24" rx="3"/>
+</g>
+<text class="serif ink" x="194" y="232" font-size="104" font-weight="600" letter-spacing="-2">memex</text>
+<text class="serif ink" x="80" y="336" font-size="50" font-weight="500">a codebase map</text>
+<text class="serif ink" x="80" y="398" font-size="50" font-weight="500">for AI coding agents</text>
+<line class="rule" x1="80" y1="462" x2="640" y2="462"/>
+<text class="mono" x="80" y="522" font-size="26" font-weight="600"><tspan class="muted" font-weight="400">$ </tspan><tspan class="ink">npx @aswemaythink/memex init</tspan></text>
+<text class="mono rust" x="80" y="566" font-size="22">aswemaythink.github.io/memex</text>
+<path class="trail" d="M784 154H1142V249.5H784V349.5H1142V449.5H962"/>
+<rect class="code" x="800" y="171" width="96" height="66" rx="5"/>
+<rect class="strip lit" x="800" y="162" width="96" height="5" rx="2.5"/>
+<path class="cl" d="M812 187H862"/>
+<path class="cl" d="M822 199H880"/>
+<path class="cl" d="M822 211H862"/>
+<path class="cl" d="M812 223H844"/>
+<rect class="code" x="918" y="171" width="96" height="66" rx="5"/>
+<rect class="strip" x="918" y="162" width="96" height="5" rx="2.5"/>
+<path class="cl" d="M930 187H970"/>
+<path class="cl" d="M930 199H962"/>
+<path class="cl" d="M930 211H975"/>
+<path class="cl" d="M930 223H988"/>
+<rect class="code" x="1036" y="171" width="96" height="66" rx="5"/>
+<rect class="strip" x="1036" y="162" width="96" height="5" rx="2.5"/>
+<path class="cl" d="M1048 187H1098"/>
+<path class="cl" d="M1058 199H1103"/>
+<path class="cl" d="M1058 211H1103"/>
+<path class="cl" d="M1048 223H1106"/>
+<rect class="code" x="800" y="271" width="96" height="66" rx="5"/>
+<rect class="strip" x="800" y="262" width="96" height="5" rx="2.5"/>
+<path class="cl" d="M812 287H852"/>
+<path class="cl" d="M812 299H870"/>
+<path class="cl" d="M812 311H862"/>
+<path class="cl" d="M812 323H852"/>
+<rect class="code" x="918" y="271" width="96" height="66" rx="5"/>
+<rect class="strip" x="918" y="262" width="96" height="5" rx="2.5"/>
+<path class="cl" d="M930 287H988"/>
+<path class="cl" d="M940 299H990"/>
+<path class="cl" d="M930 311H980"/>
+<path class="cl" d="M930 323H988"/>
+<rect class="code read" x="1036" y="271" width="96" height="66" rx="5"/>
+<rect class="strip lit" x="1036" y="262" width="96" height="5" rx="2.5"/>
+<path class="cl hot" d="M1048 287H1106"/>
+<path class="cl hot" d="M1048 299H1088"/>
+<path class="cl hot" d="M1048 311H1093"/>
+<path class="cl hot" d="M1048 323H1106"/>
+<rect class="code" x="800" y="371" width="96" height="66" rx="5"/>
+<rect class="strip" x="800" y="362" width="96" height="5" rx="2.5"/>
+<path class="cl" d="M812 387H862"/>
+<path class="cl" d="M822 399H872"/>
+<path class="cl" d="M812 411H844"/>
+<path class="cl" d="M812 423H870"/>
+<rect class="code" x="918" y="371" width="96" height="66" rx="5"/>
+<rect class="strip lit" x="918" y="362" width="96" height="5" rx="2.5"/>
+<path class="cl" d="M930 387H975"/>
+<path class="cl" d="M930 399H988"/>
+<path class="cl" d="M930 411H970"/>
+<path class="cl" d="M930 423H988"/>
+<rect class="code" x="1036" y="371" width="96" height="66" rx="5"/>
+<rect class="strip" x="1036" y="362" width="96" height="5" rx="2.5"/>
+<path class="cl" d="M1048 387H1093"/>
+<path class="cl" d="M1048 399H1098"/>
+<path class="cl" d="M1058 411H1090"/>
+<path class="cl" d="M1048 423H1080"/>
+<rect class="code" x="800" y="471" width="96" height="66" rx="5"/>
+<rect class="strip" x="800" y="462" width="96" height="5" rx="2.5"/>
+<path class="cl" d="M812 487H862"/>
+<path class="cl" d="M812 499H862"/>
+<path class="cl" d="M822 511H880"/>
+<path class="cl" d="M812 523H870"/>
+<rect class="code read" x="918" y="471" width="96" height="66" rx="5"/>
+<rect class="strip lit" x="918" y="462" width="96" height="5" rx="2.5"/>
+<path class="cl hot" d="M930 487H970"/>
+<path class="cl hot" d="M930 499H962"/>
+<path class="cl hot" d="M940 511H998"/>
+<path class="cl hot" d="M930 523H975"/>
+<rect class="code" x="1036" y="471" width="96" height="66" rx="5"/>
+<rect class="strip" x="1036" y="462" width="96" height="5" rx="2.5"/>
+<path class="cl" d="M1048 487H1106"/>
+<path class="cl" d="M1058 499H1108"/>
+<path class="cl" d="M1058 511H1108"/>
+<path class="cl" d="M1048 523H1088"/>
+<circle class="rust" cx="962" cy="449.5" r="7" stroke="#faf7f0" stroke-width="3"/>
+</svg>
