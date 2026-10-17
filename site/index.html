@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 The memex docs site: one static page on what memex is, how to install it and how to use it.
-Order: introduction, get started, context compression (the intent layer), patterns, the verbs, principles, story.
+Order: introduction, principles, get started, context compression (the intent layer), patterns, the verbs, story.
 Behaviour comes from design.md (§1, §2, §3, §5, §6.1) and README.md; the story is STORY.md retold.
 Tailwind comes from its pinned Play CDN; there is no build step. Colours are CSS custom properties, light and dark.
 When a verb's behaviour or the story changes, change design.md or STORY.md first, then this page.
@@ -477,21 +477,20 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
         <p class="mt-3 text-[0.95rem] text-muted">When you change code, update the header or README you invalidated in the same commit, put the id in each new test, then run <code>memex check &lt;paths&gt;</code> and fix what it lists.</p>
       </article>
 
-      <article aria-labelledby="p-promote">
-        <h3 id="p-promote" class="font-serif text-[1.25rem] font-medium leading-snug">Promote a stream</h3>
-        <p class="mt-2">Logs are kept a few days, then pruned. When a stream keeps proving useful, such as playtest notes, keep it: copy its files into the repo and add one line to their frontmatter, <code>memex: &lt;name&gt;</code>. They are now a collection, versioned with the code and searchable like any other. Then tell whoever writes the stream (their skill, or <code>AGENTS.md</code>) where the kept files live.</p>
-        <p class="mt-3 text-[0.95rem] text-muted">Give the collection its own name (<code>playtests</code>, not <code>playtest</code>), so <code>--in playtests</code> finds the kept files and <code>--in playtest</code> still finds new logs.</p>
+      <article aria-labelledby="p-distill">
+        <p class="font-mono text-[0.72rem] font-semibold uppercase tracking-[0.06em] text-accent">Anti-pattern</p>
+        <h3 id="p-distill" class="mt-1 font-serif text-[1.25rem] font-medium leading-snug">Promoting logs into a collection</h3>
+        <p class="mt-2">It is tempting to keep a useful stream by copying its log files into the repo and giving them <code>memex:</code> frontmatter. Don’t. A log is a record of one run, written in the moment; a collection is authored and curated. Copied logs bury the few true things under everything else that happened, and every agent after you has to read through it.</p>
+        <p class="mt-3">Distill instead. When a log holds something still true, write it once, in your own words, where the next reader will look: a README, a header, or a doc in a collection. Cite the ids, and let the log expire.</p>
         <div class="mt-4 overflow-hidden rounded-[10px] border border-term-line bg-term">
-<pre tabindex="0" aria-label="Promoting a stream"><code><span class="p">$</span> <span class="c">mkdir -p docs/playtests</span>
+<pre tabindex="0" aria-label="Distilling a log instead of copying it"><code><span class="d"># don’t</span>
 <span class="p">$</span> <span class="c">cp .memex/logs/playtest/*.md docs/playtests/</span>
 
-<span class="d"># docs/playtests/20261015-091240-first-run.md</span>
-<span class="d">---</span>
-<span class="k">memex:</span> playtests        <span class="d"># the one line you add</span>
-stream: playtest
-time: 2026-10-15T09:12:40Z
-<span class="d">---</span></code></pre>
+<span class="d"># do: one line, where the next reader will look</span>
+<span class="d"># crates/namer/README.md</span>
+Hashes are stable across runs; see NAME-001.</code></pre>
         </div>
+        <p class="mt-3 text-[0.95rem] text-muted">The memex skill tells agents the same: distill a log, never promote it.</p>
       </article>
     </div>
   </section>

@@ -444,7 +444,7 @@ EOF
 
 **Change code.** In the same commit, update the header or README you invalidated, add or adjust case lines, and put the id in each new test (its name, or a comment on it). Then run `memex check <paths>` and fix what it lists.
 
-**Promote a stream.** When a stream has proven durable, copy its files into the repo and add `memex: <name>` to their frontmatter; give the owning skill the instructions.
+**Distill a log; never promote it.** Collections are authored, so never copy log files into the repo or give them `memex:` frontmatter: that turns a run's record into permanent noise. When a log holds something still true, write it once, in your own words, into the README, header or collection doc where the next reader will look, cite the ids, and let the log expire.
 
 ## 6. Agent integration
 

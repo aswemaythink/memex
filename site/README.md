@@ -8,7 +8,7 @@
 2. Principles: Markdown first, agent-agnostic, intent not code, conventions, bounded output, logs expire (design.md §1).
 3. Get started: one command, `npx @rynwhite/memex init`, marked as coming with v0.1.0, with every other route (toolchains, Releases, a checkout, the plugin) in a native `<details>` (design.md §3.5b, §6.1).
 4. Context compression: the intent layer as a table in compression order (READMEs, headers, collections, logs, code), each row with a CSS-only example popover (hover, keyboard focus or tap); then the citation chips, the two-way citation and hand-off-by-ref diagrams, and the citation forms (design.md §1, §2, §4.3, §5).
-5. Patterns: cases, doom hunts, performance verdicts, hand-off and messages, checking intent against code (drift), promoting a stream (design.md §2.2, §4.2, §5).
+5. Patterns: cases, doom hunts, performance verdicts, hand-off and messages, checking intent against code (drift), and one anti-pattern, promoting logs into a collection (design.md §2.2, §4.2, §5).
 6. The verbs agents use: init, info, show, search, check and log, each a short description followed by its terminal sample (design.md §3, README.md).
 7. Story: STORY.md retold in full, on a dashed trail rail with orange markers, the desk sketch and the pull quote.
 
