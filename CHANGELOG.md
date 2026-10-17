@@ -2,6 +2,11 @@
 
 The release notes of memex. Each GitHub release takes its notes from the matching section here.
 
+## 0.1.1 - 2026-10-17
+
+- The docs site, https://aswemaythink.github.io/memex/, is linked from the README (and so from npm and crates.io) and set as the crate's documentation.
+- The Claude Code plugin's homepage is the docs site.
+
 ## 0.1.0 - 2026-10-17
 
 The first release.

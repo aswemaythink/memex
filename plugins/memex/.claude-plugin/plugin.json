@@ -5,7 +5,7 @@
   "author": {
     "name": "As We May Think"
   },
-  "homepage": "https://github.com/aswemaythink/memex",
+  "homepage": "https://aswemaythink.github.io/memex",
   "repository": "https://github.com/aswemaythink/memex",
   "license": "MIT OR Apache-2.0",
   "keywords": ["memex", "intent-layer", "context", "sub-agents"]

@@ -3,13 +3,14 @@
 
 [package]
 name = "agent-memex"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 rust-version = "1.88"
 license = "MIT OR Apache-2.0"
 description = "A CLI that indexes a repo's authored intent layer so agents read intent before code."
 repository = "https://github.com/aswemaythink/memex"
 homepage = "https://aswemaythink.github.io/memex"
+documentation = "https://aswemaythink.github.io/memex/docs/get-started.html"
 readme = "README.md"
 keywords = ["cli", "agents", "markdown", "documentation", "search"]
 categories = ["command-line-utilities", "development-tools"]
