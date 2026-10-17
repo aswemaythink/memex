@@ -1,0 +1,35 @@
+$ memex show src/b.rs
+exit 0
+stdout
+| === src/b.rs ===
+| (no header)
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+| 
+| comments  (showing 3 of 5; --comments for all)
+|   L3
+|     Block one: the first comment after the code.
+|   L6
+|     Block two.
+|     It has two lines.
+|   L10
+|     Block three: a single line.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/b.rs --json
+exit 0
+stdout
+| {"docs":[{"ref":"src/b.rs","collection":null,"id":"src/b.rs","path":"src/b.rs","title":null,"fields":{},"text":null,"cites":[],"cited_by":{"total":0,"refs":[]},"comments":{"total":5,"cut":false,"items":[{"line":3,"text":"Block one: the first comment after the code."},{"line":6,"text":"Block two.\nIt has two lines."},{"line":10,"text":"Block three: a single line."}]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}]}],"errors":[]}
+stderr (empty)

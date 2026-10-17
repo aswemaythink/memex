@@ -40,7 +40,7 @@ fn header_body(family: &Family, lines: &[&str]) -> (Vec<String>, bool, usize) {
 
 /// The index of the first line after the blank, pragma and leading license lines (design §2.1), and the range of the license block
 /// it skips, empty when it skips none. Only the first license block is skipped; a later one is part of the header.
-fn skip_leading(family: &Family, lines: &[&str]) -> (usize, Range<usize>) {
+pub(super) fn skip_leading(family: &Family, lines: &[&str]) -> (usize, Range<usize>) {
     let mut at = 0;
     let mut license = None;
     while let Some(line) = lines.get(at) {
@@ -88,7 +88,7 @@ fn license_end(family: &Family, lines: &[&str], at: usize) -> Option<usize> {
 /// The body lines of the header block from the start of `lines`, whether the block runs to their end, and the index after its last
 /// comment line. A blank line is kept, and does not end the block; the block ends at the first line that is neither a comment nor
 /// blank (design §2.1).
-fn comment_block(family: &Family, lines: &[&str]) -> (Vec<String>, bool, usize) {
+pub(super) fn comment_block(family: &Family, lines: &[&str]) -> (Vec<String>, bool, usize) {
     let mut body = Vec::new();
     let mut at = 0;
     let mut content = 0;
@@ -109,7 +109,11 @@ fn comment_block(family: &Family, lines: &[&str]) -> (Vec<String>, bool, usize) 
 
 /// The body lines of the comment that opens on line `at`, and the index after it. A block runs to its close line, and a line
 /// comment is one line. None when the line opens no comment of the family.
-fn comment_at(family: &Family, lines: &[&str], at: usize) -> Option<(Vec<String>, usize)> {
+pub(super) fn comment_at(
+    family: &Family,
+    lines: &[&str],
+    at: usize,
+) -> Option<(Vec<String>, usize)> {
     let trimmed = lines.get(at)?.trim_start();
     if let Some((open, close)) = family
         .blocks
@@ -146,7 +150,7 @@ fn block_at(lines: &[&str], at: usize, open: &str, close: &str) -> (Vec<String>,
 
 /// The lines of a module docstring that opens with `delimiter` on `first`: the text between its quotes, which runs over `tail` until
 /// the closing delimiter. Also whether it is open at the end of `tail` (no delimiter closes it), and the index after its last line.
-fn docstring(first: &str, tail: &[&str], delimiter: &str) -> (Vec<String>, bool, usize) {
+pub(super) fn docstring(first: &str, tail: &[&str], delimiter: &str) -> (Vec<String>, bool, usize) {
     let opening = first.trim_start();
     let rest = &opening[delimiter.len()..];
     if let Some(end) = rest.find(delimiter) {
@@ -164,7 +168,7 @@ fn docstring(first: &str, tail: &[&str], delimiter: &str) -> (Vec<String>, bool,
 }
 
 /// The docstring delimiter that `trimmed` opens with, when the family has docstrings.
-fn docstring_at(family: &Family, trimmed: &str) -> Option<&'static str> {
+pub(super) fn docstring_at(family: &Family, trimmed: &str) -> Option<&'static str> {
     family
         .docstrings
         .iter()
@@ -195,7 +199,7 @@ fn block_text(text: &str) -> String {
 }
 
 /// The lines without the blank ones at either end.
-fn trim_blank_edges(mut body: Vec<String>) -> Vec<String> {
+pub(super) fn trim_blank_edges(mut body: Vec<String>) -> Vec<String> {
     while body.last().is_some_and(|line| line.trim().is_empty()) {
         body.pop();
     }

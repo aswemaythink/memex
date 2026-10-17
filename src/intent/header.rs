@@ -1,10 +1,14 @@
 //! Reads a file's header (design §2.1): its leading comment block, as the text that `show` prints.
-//! Cases: HDR-BOM-01, HDR-BOM-02, HDR-BIN-01, HDR-EXT-01, HDR-CAP-01, HDR-CAP-02, HDR-CAP-03, HDR-CAP-04, HDR-CAP-05, HDR-NONE-01, HDR-CRLF-01, HDR-LIMIT-01
+//! It also gives the comment blocks past that header, for `show --comments` (design §3.3 Comments).
+//! Cases: HDR-BOM-01, HDR-BOM-02, HDR-BIN-01, HDR-EXT-01, HDR-CAP-01, HDR-CAP-02, HDR-CAP-03, HDR-CAP-04, HDR-CAP-05, HDR-NONE-01, HDR-CRLF-01, HDR-LIMIT-01, SHOW-COMMENTS-01, SHOW-COMMENTS-03, SHOW-COMMENTS-07
 
+mod comments;
 mod families;
 pub mod lines;
 mod scan;
 mod stream;
+
+pub use comments::CommentBlock;
 
 use std::fs::{self, File};
 use std::io::{self, Read};
@@ -78,6 +82,19 @@ pub fn without_note(text: &str) -> &str {
     text.strip_suffix(CUT_NOTE)
         .and_then(|rest| rest.strip_suffix("\n\n"))
         .unwrap_or(text)
+}
+
+/// The comment blocks of the file at `path`, read from `bytes` (design §3.3 Comments): the blocks after its header, or after the
+/// lines it skips when it has none. None for a file with no comment family, and for a binary file (one with a NUL byte), which has
+/// no comments.
+pub fn comment_blocks(path: &Path, bytes: &[u8]) -> Option<Vec<CommentBlock>> {
+    let family = families::family_of(path)?;
+    if bytes.contains(&0) {
+        return None;
+    }
+    let text = text::decode(bytes);
+    let lines: Vec<&str> = text.lines().collect();
+    Some(comments::after_header(family, &lines))
 }
 
 /// True when the file is longer than the bytes read from it, so a header open at their end goes on past the read limit (design

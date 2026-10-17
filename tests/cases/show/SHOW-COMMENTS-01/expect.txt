@@ -1,0 +1,39 @@
+$ memex show src/a.rs --comments
+exit 0
+stdout
+| === src/a.rs ===
+| Adds two numbers for the demo.
+| It has a header of two lines, then code.
+| 
+| comments  (showing 3 of 3)
+|   L8
+|     First block, line one.
+|     First block, line two.
+| 
+|     First block, line three, after a blank line.
+|   L15
+|     inner
+|   L19
+|     Third block, a block comment
+|     that runs over three lines
+|     and closes here.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/a.rs --comments --json
+exit 0
+stdout
+| {"docs":[{"ref":"src/a.rs","collection":"headers","id":"src/a.rs","path":"src/a.rs","title":"Adds two numbers for the demo.","fields":{},"text":"Adds two numbers for the demo.\nIt has a header of two lines, then code.","cites":[],"cited_by":{"total":0,"refs":[]},"comments":{"total":3,"cut":false,"items":[{"line":8,"text":"First block, line one.\nFirst block, line two.\n\nFirst block, line three, after a blank line."},{"line":15,"text":"inner"},{"line":19,"text":"Third block, a block comment\nthat runs over three lines\nand closes here."}]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}]}],"errors":[]}
+stderr (empty)

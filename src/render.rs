@@ -1,6 +1,6 @@
 //! The sections and misses that `show` prints (design §3.3 and §3.6).
 //! Each carries its lists and limits. The text and JSON renderings are in render/.
-//! Cases: SHOW-FILE-01, SHOW-DIR-01, SHOW-LOG-01, SHOW-LIMIT-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-JSON-01, CASE-SECT-01, CASE-JSON-01, SHOW-OTHER-01, CLI-HINT-01, CLI-HINT-02
+//! Cases: SHOW-FILE-01, SHOW-DIR-01, SHOW-LOG-01, SHOW-LIMIT-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-JSON-01, CASE-SECT-01, CASE-JSON-01, SHOW-OTHER-01, CLI-HINT-01, CLI-HINT-02, SHOW-COMMENTS-01, SHOW-COMMENTS-02, SHOW-COMMENTS-03, SHOW-COMMENTS-05, SHOW-COMMENTS-09
 
 pub mod check;
 pub mod info;
@@ -14,6 +14,7 @@ use crate::cite::Cite;
 use crate::collections::frontmatter::Value;
 use crate::corpus::Child;
 use crate::error::Code;
+use crate::intent::header::CommentBlock;
 
 /// One section: a file, a folder or a doc, with the parts that `show` prints for it.
 pub struct Section {
@@ -35,6 +36,8 @@ pub struct Section {
     pub fields: Option<Fields>,
     /// The children of a folder, with the limit applied. None for anything else.
     pub children: Option<Listing<Child>>,
+    /// The comment blocks of a file, when its section lists them (design §3.3 Comments). None for anything else.
+    pub comments: Option<Comments>,
     /// The citations of the target, or, for an entry of another root, the root that holds them (design §3.1).
     pub citations: Citations,
     /// The READMEs above the target, nearest first. None when no chain is printed: under `--up 0`, or for a doc.
@@ -55,6 +58,17 @@ pub struct CaseParts {
     pub group: Option<String>,
     /// The root-relative paths of the files that evidence the case, in the order its text gives them.
     pub evidence: Vec<String>,
+}
+
+/// The comment blocks of a file, as `show` lists them (design §3.3 Comments): the first blocks, with their total, and whether the
+/// file was cut at the read limit.
+pub struct Comments {
+    /// The blocks that the list shows, with the total of the blocks the read found.
+    pub list: Listing<CommentBlock>,
+    /// True when the file is longer than the bytes read, so the list ends with the cut row.
+    pub cut: bool,
+    /// True when `--comments` asked for the list. False for the list of a file with no header, which shows without the flag.
+    pub asked: bool,
 }
 
 /// One README in a chain, with its text in full.

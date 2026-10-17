@@ -1,0 +1,54 @@
+$ memex show src/e.rs --comments --limit 2
+exit 0
+stdout
+| === src/e.rs ===
+| Four blocks follow the header, so --limit 2 shows the first two.
+| It has two lines.
+| 
+| comments  (showing 2 of 4; --limit 4 for all)
+|   L6
+|     Block one.
+|   L9
+|     Block two.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/b.rs --limit 2
+exit 0
+stdout
+| === src/b.rs ===
+| (no header)
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+| 
+| comments  (showing 2 of 5; --comments for all)
+|   L3
+|     Block one: the first comment after the code.
+|   L6
+|     Block two.
+|     It has two lines.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)

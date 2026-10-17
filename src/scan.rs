@@ -194,6 +194,7 @@ fn command(verb: Verb, args: Args) -> Command {
             up: flags.count("--up"),
             limit: flags.count("--limit"),
             json,
+            comments: flags.has("--comments"),
         },
         Verb::Log => Command::Log {
             stream: words.into_iter().next().unwrap_or_default(),

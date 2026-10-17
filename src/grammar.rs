@@ -14,12 +14,13 @@ pub(crate) enum Takes {
 }
 
 /// Every flag memex knows. A verb accepts the ones its grammar line names, and `--help` after any verb.
-pub(crate) const FLAGS: [(&str, Takes); 9] = [
+pub(crate) const FLAGS: [(&str, Takes); 10] = [
     ("--help", Takes::Nothing),
     ("--version", Takes::Nothing),
     ("--in", Takes::List),
     ("--limit", Takes::Count),
     ("--up", Takes::Count),
+    ("--comments", Takes::Nothing),
     ("--json", Takes::Nothing),
     ("--to", Takes::List),
     ("--tag", Takes::List),
@@ -44,7 +45,7 @@ pub(crate) const SPECS: [Spec; 6] = [
         missing: "",
     },
     Spec {
-        flags: &["--up", "--limit", "--json"],
+        flags: &["--up", "--comments", "--limit", "--json"],
         min: 1,
         max: None,
         missing: "show needs at least one path or ref",

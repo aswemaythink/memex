@@ -1,0 +1,33 @@
+$ memex show src/b.rs --comments
+exit 0
+stdout
+| === src/b.rs ===
+| (no header)
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+| 
+| comments  (showing 5 of 5)
+|   L3
+|     Block one: the first comment after the code.
+|   L6
+|     Block two.
+|     It has two lines.
+|   L10
+|     Block three: a single line.
+|   L13
+|     Block four.
+|   L16
+|     Block five.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)

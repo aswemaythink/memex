@@ -7,7 +7,7 @@ use crate::cli::Verb;
 /// The first six lines are in `Verb::ALL` order, so `Verb as usize` indexes them.
 const GRAMMAR: [&str; 7] = [
     "memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]",
-    "memex show   <path|ref>... [--up N] [--limit N] [--json]",
+    "memex show   <path|ref>... [--up N] [--comments] [--limit N] [--json]",
     "memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF",
     "memex info   [--agent <id>] [--json]",
     "memex check  [<path|glob>...] [--limit N] [--json]",
@@ -42,11 +42,12 @@ const SEARCH: [&str; 5] = [
     "  --json                   print one JSON document instead of text",
 ];
 
-const SHOW: [&str; 5] = [
+const SHOW: [&str; 6] = [
     GRAMMAR[1],
     "Print the header, citations and chain of each path or ref, separated by === lines.",
     "  --up N      depth of the chain; --up 0 prints the file alone",
-    "  --limit N   rows in the children and cited-by lists (default 50)",
+    "  --comments  also print the file's other comment blocks (a file with no header prints its first 3)",
+    "  --limit N   rows in the children and cited-by lists (default 50; comments 20)",
     "  --json      print one JSON document instead of text",
 ];
 

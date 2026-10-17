@@ -3,4 +3,4 @@ exit 2
 stdout (empty)
 stderr
 | memex: bad value '-1' for '--up': expected a non-negative integer
-| usage: memex show   <path|ref>... [--up N] [--limit N] [--json]
+| usage: memex show   <path|ref>... [--up N] [--comments] [--limit N] [--json]

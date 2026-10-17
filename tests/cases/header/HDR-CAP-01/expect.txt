@@ -5,6 +5,10 @@ stdout
 | (no header)
 | (no header): add a comment block atop the file; its first sentence states the file's purpose
 | 
+| comments  (showing 1 of 1)
+|   L501
+|     The header comes after the cap.
+| 
 | cites
 |   (none)
 | 

@@ -1,0 +1,80 @@
+$ memex show src/c.rs
+exit 0
+stdout
+| === src/c.rs ===
+| (no header)
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/c.rs --json
+exit 0
+stdout
+| {"docs":[{"ref":"src/c.rs","collection":null,"id":"src/c.rs","path":"src/c.rs","title":null,"fields":{},"text":null,"cites":[],"cited_by":{"total":0,"refs":[]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}]}],"errors":[]}
+stderr (empty)
+
+$ memex show src/c.rs --comments
+exit 0
+stdout
+| === src/c.rs ===
+| (no header)
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+| 
+| comments  (showing 0 of 0)
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/d.rs --comments
+exit 0
+stdout
+| === src/d.rs ===
+| Calls main only; this header is the only comment in the file.
+| It has two lines.
+| 
+| comments  (showing 0 of 0)
+|   (none)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/d.rs --comments --json
+exit 0
+stdout
+| {"docs":[{"ref":"src/d.rs","collection":"headers","id":"src/d.rs","path":"src/d.rs","title":"Calls main only; this header is the only comment in the file.","fields":{},"text":"Calls main only; this header is the only comment in the file.\nIt has two lines.","cites":[],"cited_by":{"total":0,"refs":[]},"comments":{"total":0,"cut":false,"items":[]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}]}],"errors":[]}
+stderr (empty)

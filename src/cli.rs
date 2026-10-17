@@ -79,6 +79,8 @@ pub enum Command {
         limit: Option<usize>,
         /// True when `--json` was given.
         json: bool,
+        /// True when `--comments` was given.
+        comments: bool,
     },
     /// `memex log`, with its stream and flags.
     Log {
@@ -255,6 +257,7 @@ mod tests {
             up: None,
             limit: None,
             json: false,
+            comments: false,
         };
         assert_eq!(parsed, Ok(expected));
     }

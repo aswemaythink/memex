@@ -1,8 +1,9 @@
 //! Carries out `memex show` (design §3.3 and §3.6).
 //! It resolves each ref, takes its section from `show/section.rs`, and reports the sections, the misses and the exit status.
 //! Every ref is resolved before any section is built, so that one citation index serves the sections of all of them.
-//! Cases: SHOW-DUP-01, SHOW-DUP-02, SHOW-ERR-01, SHOW-ERR-02, SHOW-ERR-03, SHOW-IO-01, SHOW-IO-02, SHOW-JSON-01, SHOW-JSON-04, SHOW-JSON-05, SHOW-SEP-01, REF-WT-01, REF-WT-02, SHOW-OTHER-01
+//! Cases: SHOW-DUP-01, SHOW-DUP-02, SHOW-ERR-01, SHOW-ERR-02, SHOW-ERR-03, SHOW-IO-01, SHOW-IO-02, SHOW-JSON-01, SHOW-JSON-04, SHOW-JSON-05, SHOW-SEP-01, REF-WT-01, REF-WT-02, SHOW-OTHER-01, SHOW-COMMENTS-01, SHOW-COMMENTS-02
 
+mod comments;
 mod section;
 
 use std::collections::BTreeSet;
@@ -33,6 +34,8 @@ pub struct Request {
     pub limit: Option<usize>,
     /// True when `--json` was given.
     pub json: bool,
+    /// True when `--comments` was given, which lists a file's other comment blocks (design §3.3 Comments).
+    pub comments: bool,
 }
 
 /// What `show` prints: stdout, stderr, and whether a ref failed, which makes the exit status 1.
@@ -64,6 +67,8 @@ fn show_in(corpus: &Corpus, cwd: &Path, store: Option<&Path>, request: &Request)
         up: request.up,
         limit: request.limit.unwrap_or(DEFAULT_LIMIT),
         other_root: None,
+        comments: request.comments,
+        limit_given: request.limit,
     };
     let outcomes: Vec<(&str, Outcome<'_>)> = distinct(&request.refs)
         .into_iter()
@@ -174,6 +179,7 @@ mod tests {
             up: None,
             limit: None,
             json,
+            comments: false,
         };
         let text = show_in(&corpus, root, None, &request(false));
         let json = show_in(&corpus, root, None, &request(true));
@@ -211,6 +217,7 @@ mod tests {
             up: None,
             limit: None,
             json,
+            comments: false,
         };
         let text = show_in(&corpus, root, None, &request(false));
         let json = show_in(&corpus, root, None, &request(true));

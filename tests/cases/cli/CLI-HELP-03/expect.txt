@@ -1,9 +1,10 @@
 $ memex show --help
 exit 0
 stdout
-| memex show   <path|ref>... [--up N] [--limit N] [--json]
+| memex show   <path|ref>... [--up N] [--comments] [--limit N] [--json]
 | Print the header, citations and chain of each path or ref, separated by === lines.
 |   --up N      depth of the chain; --up 0 prints the file alone
-|   --limit N   rows in the children and cited-by lists (default 50)
+|   --comments  also print the file's other comment blocks (a file with no header prints its first 3)
+|   --limit N   rows in the children and cited-by lists (default 50; comments 20)
 |   --json      print one JSON document instead of text
 stderr (empty)

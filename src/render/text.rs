@@ -1,9 +1,10 @@
 //! Prints `show`'s sections and misses as text (design §3.3).
 //! Each section sits under its `===` line, then its blocks in order, with a limits line after the children and cited-by lists,
-//! and a gap legend after its children (a file: after its body) when it prints a placeholder (design §3.3 Gaps).
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-MD-01, SHOW-MD-02, SHOW-LOG-01, SHOW-UP-01, SHOW-ROOT-01, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, INT-NOHEAD-03, CASE-SECT-01, CITE-PREFIX-01, CITE-UNRES-01, CITE-BACK-01, CITE-BACK-04, CITE-LINK-03, SHOW-OTHER-01, SHOW-GAP-01, SHOW-GAP-02, SHOW-GAP-03, SHOW-MDCHILD-01, SHOW-MDCHILD-02, SHOW-MDCHILD-03, SHOW-MDCHILD-04
+//! a comments list after a file's body (design §3.3 Comments), and a gap legend after its children (a file: after its body) when it
+//! prints a placeholder (design §3.3 Gaps).
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-MD-01, SHOW-MD-02, SHOW-LOG-01, SHOW-UP-01, SHOW-ROOT-01, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, INT-NOHEAD-03, CASE-SECT-01, CITE-PREFIX-01, CITE-UNRES-01, CITE-BACK-01, CITE-BACK-04, CITE-LINK-03, SHOW-OTHER-01, SHOW-GAP-01, SHOW-GAP-02, SHOW-GAP-03, SHOW-MDCHILD-01, SHOW-MDCHILD-02, SHOW-MDCHILD-03, SHOW-MDCHILD-04, SHOW-COMMENTS-01, SHOW-COMMENTS-03, SHOW-COMMENTS-04, SHOW-COMMENTS-05, SHOW-COMMENTS-06, SHOW-COMMENTS-08, SHOW-COMMENTS-09
 
-use super::{CaseParts, Citations, Fields, Link, Listing, Miss, Ref, Section};
+use super::{CaseParts, Citations, Comments, Fields, Link, Listing, Miss, Ref, Section};
 use crate::cite::Cite;
 use crate::collections::frontmatter::Value;
 use crate::corpus::{is_markdown, Child, Kind};
@@ -16,6 +17,9 @@ const NO_README: &str = "(no README)";
 
 /// The placeholder of a file with no header, which is also its body (design §3.3).
 const NO_HEADER: &str = "(no header)";
+
+/// The row that ends a comments list cut at the read limit (design §3.3 Comments).
+const CUT_COMMENTS: &str = "… (comments cut at 1 MiB)";
 
 /// The gap legend: each placeholder with the line that explains it, in the order the legend prints them (design §3.3 Gaps).
 const GAP_LEGEND: [(&str, &str); 2] = [
@@ -64,12 +68,51 @@ fn section(section: &Section) -> String {
         children_block(&mut out, children);
     }
     gap_legend(&mut out, section);
+    comments_block(&mut out, section.comments.as_ref());
     cites_block(&mut out, &section.citations);
     cited_by_block(&mut out, &section.citations);
     if let Some(chain) = &section.chain {
         chain_block(&mut out, chain);
     }
     out
+}
+
+/// The comments block of a file: its heading, then one row per block, its `L<n>` line and its text indented four spaces, with an
+/// empty line kept empty, then the cut row when the read was cut. Nothing when the section lists no comments (design §3.3 Comments).
+fn comments_block(out: &mut String, comments: Option<&Comments>) {
+    let Some(comments) = comments else {
+        return;
+    };
+    start(out, &comments_heading(comments));
+    if comments.list.total == 0 {
+        out.push_str("  (none)\n");
+    }
+    for block in &comments.list.items {
+        out.push_str(&format!("  L{}\n", block.line));
+        for line in block.text.lines() {
+            if line.is_empty() {
+                out.push('\n');
+            } else {
+                out.push_str(&format!("    {line}\n"));
+            }
+        }
+    }
+    if comments.cut {
+        out.push_str(&format!("  {CUT_COMMENTS}\n"));
+    }
+}
+
+/// The heading of a comments block: how many blocks it shows of how many. A list cut short names the flag that shows the rest: the
+/// `--limit` of `--comments`, or `--comments` for the list a file with no header gives without it (design §3.3 Comments).
+fn comments_heading(comments: &Comments) -> String {
+    let shown = comments.list.items.len();
+    let total = comments.list.total;
+    let rest = match (shown < total, comments.asked) {
+        (false, _) => String::new(),
+        (true, true) => format!("; --limit {total} for all"),
+        (true, false) => "; --comments for all".to_string(),
+    };
+    format!("comments  (showing {shown} of {total}{rest})")
 }
 
 /// The gap legend: one line per placeholder that the section prints, each once, in legend order. It follows the children, or a

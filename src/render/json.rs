@@ -1,13 +1,14 @@
 //! Builds the `--json` document of `show` (design §3.6).
-//! Its shape is `{"docs":[...],"errors":[...]}`, with each doc's fields, cites, cited_by, children and chain.
-//! Cases: SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-JSON-01, CITE-JSON-01, CITE-JSON-02, SHOW-OTHER-01
+//! Its shape is `{"docs":[...],"errors":[...]}`, with each doc's fields, cites, cited_by, comments, children and chain.
+//! Cases: SHOW-JSON-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-JSON-04, SHOW-JSON-05, CASE-JSON-01, CITE-JSON-01, CITE-JSON-02, SHOW-OTHER-01, SHOW-COMMENTS-01, SHOW-COMMENTS-03, SHOW-COMMENTS-05, SHOW-COMMENTS-09
 
 use serde_json::{json, Map, Value as Json};
 
-use super::{CaseParts, Citations, Fields, Link, Listing, Miss, Ref, Section};
+use super::{CaseParts, Citations, Comments, Fields, Link, Listing, Miss, Ref, Section};
 use crate::cite::Cite;
 use crate::collections::frontmatter::Value;
 use crate::corpus::{Child, Kind};
+use crate::intent::header::CommentBlock;
 
 /// The whole `show` document, as one JSON line with its newline.
 pub fn document(sections: &[Section], misses: &[Miss]) -> String {
@@ -16,7 +17,8 @@ pub fn document(sections: &[Section], misses: &[Miss]) -> String {
     format!("{}\n", json!({"docs": docs, "errors": errors}))
 }
 
-/// One doc: the section's parts under the names of design §3.6. Absent parts are null, and `children` only for a folder.
+/// One doc: the section's parts under the names of design §3.6. Absent parts are null, and `children` only for a folder. A file's
+/// `comments` come before its chain, and only when the text prints its list (design §3.3 Comments).
 fn doc(section: &Section) -> Json {
     let mut value = json!({
         "ref": section.label,
@@ -28,12 +30,34 @@ fn doc(section: &Section) -> Json {
         "text": section.text,
         "cites": cites(&section.citations),
         "cited_by": cited_by(&section.citations),
-        "chain": section.chain.as_deref().unwrap_or(&[]).iter().map(link).collect::<Vec<Json>>(),
     });
+    if let Some(comments) = &section.comments {
+        value["comments"] = comments_value(comments);
+    }
+    value["chain"] = Json::Array(
+        section
+            .chain
+            .as_deref()
+            .unwrap_or(&[])
+            .iter()
+            .map(link)
+            .collect(),
+    );
     if let Some(children) = &section.children {
         value["children"] = children_value(children);
     }
     value
+}
+
+/// The comments object of a file: the total of the blocks its read found, whether the read was cut, and the blocks shown.
+fn comments_value(comments: &Comments) -> Json {
+    let items: Vec<Json> = comments.list.items.iter().map(comment).collect();
+    json!({"total": comments.list.total, "cut": comments.cut, "items": items})
+}
+
+/// One comment block: the line it starts on, and its text, unindented, with its lines joined by newlines.
+fn comment(block: &CommentBlock) -> Json {
+    json!({"line": block.line, "text": block.text})
 }
 
 /// The fields object of a doc: none for a file or a folder, the frontmatter of a log, or an entry's group and evidence.

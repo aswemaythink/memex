@@ -71,15 +71,8 @@ fn dispatch(command: Command) -> i32 {
             up,
             limit,
             json,
-        } => {
-            let request = verbs::show::Request {
-                refs,
-                up,
-                limit,
-                json,
-            };
-            finish_show(started(|_| verbs::show::run(&request)), json)
-        }
+            comments,
+        } => show_refs(refs, up, limit, json, comments),
         Command::Log {
             stream,
             to,
@@ -109,6 +102,24 @@ fn dispatch(command: Command) -> i32 {
             Err(error) => error::report(&error, false),
         },
     }
+}
+
+/// Shows the refs of a `show` command and prints its report, its stderr misses after its stdout (design §3.3).
+fn show_refs(
+    refs: Vec<String>,
+    up: Option<usize>,
+    limit: Option<usize>,
+    json: bool,
+    comments: bool,
+) -> i32 {
+    let request = verbs::show::Request {
+        refs,
+        up,
+        limit,
+        json,
+        comments,
+    };
+    finish_show(started(|_| verbs::show::run(&request)), json)
 }
 
 /// Runs a verb with the instant of the run: `MEMEX_NOW`, else the system clock, read once as the verb starts. `show` reads no

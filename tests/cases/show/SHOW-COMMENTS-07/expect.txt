@@ -1,0 +1,25 @@
+$ memex show src/tool.py --comments
+exit 0
+stdout
+| === src/tool.py ===
+| tool.py: greets the name given on the command line.
+| It has two lines, so the body shows both.
+| 
+| comments  (showing 1 of 1)
+|   L12
+|     note: this block is after the header, so --comments lists it.
+|     It runs over two lines.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)

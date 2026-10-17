@@ -2,11 +2,12 @@
 //! A folder or a file that cannot be read gives its io error, which `show.rs` reports as that ref's error.
 //! Its cites and cited by come from the citation index that `show` builds once for all of its targets (`index_for`), not from the
 //! index of every doc.
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-LINE-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-IO-01, SHOW-IO-02, CASE-JSON-01, CASE-SECT-01, CITE-BACK-01, CITE-BACK-03, CITE-BACK-04, CITE-COLL-02, CITE-FOLDER-02, CITE-JSON-01, CITE-JSON-02, CITE-MAN-01, CITE-PREFIX-01, CITE-PREFIX-02, CITE-SELF-01, CITE-UNRES-01, SHOW-OTHER-01
+//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-FILE-03, SHOW-MD-01, SHOW-MD-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-ROOT-01, SHOW-ROOT-02, SHOW-ROOT-03, SHOW-LOG-01, SHOW-LOG-02, SHOW-UP-01, SHOW-UP-02, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-LINE-01, SHOW-JSON-02, SHOW-JSON-03, SHOW-IO-01, SHOW-IO-02, CASE-JSON-01, CASE-SECT-01, CITE-BACK-01, CITE-BACK-03, CITE-BACK-04, CITE-COLL-02, CITE-FOLDER-02, CITE-JSON-01, CITE-JSON-02, CITE-MAN-01, CITE-PREFIX-01, CITE-PREFIX-02, CITE-SELF-01, CITE-UNRES-01, SHOW-OTHER-01, SHOW-COMMENTS-01, SHOW-COMMENTS-02, SHOW-COMMENTS-03, SHOW-COMMENTS-08
 
 use std::fs::File;
 use std::io;
 
+use super::comments;
 use crate::cite::{self, Citer};
 use crate::corpus::{self, parent_of, readme_label, Child, Corpus, Doc, Kind};
 use crate::intent::entries;
@@ -24,6 +25,11 @@ pub struct Options {
     /// The root that holds the target, when the target lies in another root. Its citations are then not computed, since they name
     /// labels of that root (design §3.1). None for a target of the current root.
     pub other_root: Option<String>,
+    /// True when `--comments` was given, which lists a file's other comment blocks (design §3.3 Comments).
+    pub comments: bool,
+    /// The `--limit` as given, if any. `limit` already holds the default of the lists; the comments list needs to know whether a
+    /// limit was given, since its own default differs (design §3.3 Comments).
+    pub limit_given: Option<usize>,
 }
 
 /// The labels that a section's citations are read by (design §2.3): the doc whose cites it prints, if any, and the label whose
@@ -130,6 +136,7 @@ fn folder_section(
         missing: "(no README)",
         fields: None,
         children: Some(Listing::of(&children, options.limit)),
+        comments: None,
         citations: citations(options, index, labels),
         chain: chain(corpus, parent_of(rel), options),
     })
@@ -163,6 +170,7 @@ fn file_section(
         File::open(&path)?;
         doc.map(|doc| doc.text.clone())
     };
+    let comments = comments::of_file(&path, doc.is_some(), options)?;
     let folder = parent_of(rel).unwrap_or("");
     let start = if is_readme(rel) {
         parent_of(folder)
@@ -179,6 +187,7 @@ fn file_section(
         missing: "(no header)",
         fields: None,
         children: None,
+        comments,
         citations: citations(options, index, labels),
         chain: chain(corpus, start, options),
     })
@@ -211,6 +220,7 @@ fn doc_section(
         missing: "(no text)",
         fields: Some(doc_fields(corpus, doc)),
         children: None,
+        comments: None,
         // An entry shows cited by and no cites (design §3.3 Entry), so its JSON cites list is empty too.
         citations: citations(options, index, labels),
         chain: None,

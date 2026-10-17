@@ -1,0 +1,32 @@
+$ memex show src/big.rs --comments
+exit 0
+stdout
+| === src/big.rs ===
+| Big demo file: a header, one early block, then over a megabyte of code.
+| It has two lines.
+| 
+| comments  (showing 1 of 1)
+|   L4
+|     early: this block lies inside the first megabyte, so it is read.
+|     It has two lines.
+|   … (comments cut at 1 MiB)
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/big.rs --comments --json
+exit 0
+stdout
+| {"docs":[{"ref":"src/big.rs","collection":"headers","id":"src/big.rs","path":"src/big.rs","title":"Big demo file: a header, one early block, then over a megabyte of code.","fields":{},"text":"Big demo file: a header, one early block, then over a megabyte of code.\nIt has two lines.","cites":[],"cited_by":{"total":0,"refs":[]},"comments":{"total":1,"cut":true,"items":[{"line":4,"text":"early: this block lies inside the first megabyte, so it is read.\nIt has two lines."}]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}]}],"errors":[]}
+stderr (empty)

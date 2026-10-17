@@ -3,7 +3,7 @@ exit 2
 stdout (empty)
 stderr
 | memex: empty ref
-| usage: memex show   <path|ref>... [--up N] [--limit N] [--json]
+| usage: memex show   <path|ref>... [--up N] [--comments] [--limit N] [--json]
 
 $ memex show '' --json
 exit 2

@@ -3,4 +3,4 @@ exit 2
 stdout (empty)
 stderr
 | memex: show needs at least one path or ref
-| usage: memex show   <path|ref>... [--up N] [--limit N] [--json]
+| usage: memex show   <path|ref>... [--up N] [--comments] [--limit N] [--json]

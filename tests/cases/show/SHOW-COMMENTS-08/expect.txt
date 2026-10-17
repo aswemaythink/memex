@@ -1,0 +1,160 @@
+$ memex show plain
+exit 0
+stdout
+| === plain ===
+| # plain
+| 
+| A folder whose one file has a comment block, so --comments can be tried on a folder.
+| 
+| children
+|   tool.rs  A file in the plain folder, with a comment block after its header.
+|   showing 1 of 1
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show plain --comments
+exit 0
+stdout
+| === plain ===
+| # plain
+| 
+| A folder whose one file has a comment block, so --comments can be tried on a folder.
+| 
+| children
+|   tool.rs  A file in the plain folder, with a comment block after its header.
+|   showing 1 of 1
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show notes.md
+exit 0
+stdout
+| === notes.md ===
+| # Notes
+| 
+| Some Markdown text, with an HTML comment below.
+| 
+| <!-- an HTML comment in Markdown, which has no comment family -->
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show notes.md --comments
+exit 0
+stdout
+| === notes.md ===
+| # Notes
+| 
+| Some Markdown text, with an HTML comment below.
+| 
+| <!-- an HTML comment in Markdown, which has no comment family -->
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show notes.txt
+exit 0
+stdout
+| === notes.txt ===
+| (no header)
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show notes.txt --comments
+exit 0
+stdout
+| === notes.txt ===
+| (no header)
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/a.rs --comments --up 0
+exit 0
+stdout
+| === src/a.rs ===
+| Adds nothing; this file shows the comment list under --up 0.
+| It has two lines.
+| 
+| comments  (showing 1 of 1)
+|   L6
+|     One block after the header.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)

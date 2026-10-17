@@ -3,4 +3,4 @@ exit 2
 stdout (empty)
 stderr
 | memex: flag '--up' needs a value
-| usage: memex show   <path|ref>... [--up N] [--limit N] [--json]
+| usage: memex show   <path|ref>... [--up N] [--comments] [--limit N] [--json]
