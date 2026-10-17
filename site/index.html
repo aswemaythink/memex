@@ -479,15 +479,17 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
 
       <article aria-labelledby="p-promote">
         <h3 id="p-promote" class="font-serif text-[1.25rem] font-medium leading-snug">Promote a stream</h3>
-        <p class="mt-2">Logs are scaffolding: useful for a couple of working days, then pruned. When a stream has proven durable, copy its files into the repo, add <code>memex: &lt;name&gt;</code> to their frontmatter, and give the owning skill the instructions. Name the collection apart from the stream, so <code>--in</code> reaches both.</p>
+        <p class="mt-2">Logs are kept a few days, then pruned. When a stream keeps proving useful, such as playtest notes, keep it: copy its files into the repo and add one line to their frontmatter, <code>memex: &lt;name&gt;</code>. They are now a collection, versioned with the code and searchable like any other. Then tell whoever writes the stream (their skill, or <code>AGENTS.md</code>) where the kept files live.</p>
+        <p class="mt-3 text-[0.95rem] text-muted">Give the collection its own name (<code>playtests</code>, not <code>playtest</code>), so <code>--in playtests</code> finds the kept files and <code>--in playtest</code> still finds new logs.</p>
         <div class="mt-4 overflow-hidden rounded-[10px] border border-term-line bg-term">
 <pre tabindex="0" aria-label="Promoting a stream"><code><span class="p">$</span> <span class="c">mkdir -p docs/playtests</span>
 <span class="p">$</span> <span class="c">cp .memex/logs/playtest/*.md docs/playtests/</span>
-<span class="d"># then add one line to each copied file's frontmatter</span>
+
+<span class="d"># docs/playtests/20261015-091240-first-run.md</span>
 <span class="d">---</span>
-<span class="k">memex:</span> playtests
-<span class="k">stream:</span> playtest
-<span class="k">time:</span> 2026-10-15T09:12:40Z
+<span class="k">memex:</span> playtests        <span class="d"># the one line you add</span>
+stream: playtest
+time: 2026-10-15T09:12:40Z
 <span class="d">---</span></code></pre>
         </div>
       </article>
