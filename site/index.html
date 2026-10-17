@@ -174,8 +174,8 @@ Evidence: <span class="l">`tests/namer.test.ts`</span></code></pre></div>
         </li>
         <li class="group relative grid cursor-help gap-x-5 gap-y-0.5 px-4 py-3 outline-none focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:grid-cols-[7.5rem_1fr] border-l-4 border-t border-l-rule border-t-rule bg-bg text-muted rounded-b-[9px]" tabindex="0" aria-describedby="ex-code">
           <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Code</span>
-          <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">What the system does.</span>
-          <span class="text-[0.875rem] leading-normal ">Read it with <code>rg</code>. memex reads only the comment atop a file.</span>
+          <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">The source itself.</span>
+          <span class="text-[0.875rem] leading-normal ">Agents usually scan it wholesale, with <code>grep</code>, <code>rg</code> and the like. memex reads only the comment at the top of each file.</span>
           <div id="ex-code" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 hidden overflow-hidden rounded-lg border border-term-line bg-term shadow-xl shadow-black/30 [@media(hover:hover)]:group-hover:block group-focus:block sm:left-[8.5rem] sm:right-3">
             <div class="border-b border-term-line bg-term-bar px-3 py-1 font-mono text-[0.7rem] text-term-dim [overflow-wrap:anywhere]">crates/namer/src/hash.rs</div>
 <pre class="ex"><code><span class="m">//! FNV-1a over canonical atom strings.</span>
