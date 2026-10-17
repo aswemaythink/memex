@@ -17,7 +17,7 @@ stderr (empty)
 -- collections/.gitkeep
 (empty)
 -- config.json
-| {"keep_logs": "3d"}
+| {"max_logs_mb": 10}
 == snapshot repo/AGENTS.md
 -- AGENTS.md
 | <!-- memex:begin -->

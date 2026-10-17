@@ -1,4 +1,5 @@
 //! Writes the `.memex/` files (design §3.5b item 1) and holds the file helpers the init modules share.
+//! Its config.json holds `max_logs_mb` at its default of 10 MiB (design §4.1 item 4).
 //! Cases: INIT-FRESH-01, INIT-KEEP-01, INIT-KEEP-02, INIT-RERUN-01, INIT-IO-01, INIT-LINK-01, INIT-LINK-02, PORT-MODE-01
 
 use std::fs;
@@ -13,8 +14,8 @@ use crate::error::Error;
 use crate::logs::write::GITIGNORE;
 use crate::root::{self, slash};
 
-/// `.memex/config.json`: its one key, at the default retention (design §4.1 item 4).
-const CONFIG: &[u8] = b"{\"keep_logs\": \"3d\"}\n";
+/// `.memex/config.json`: its one key, `max_logs_mb` at its default of 10 MiB (design §4.1 item 4). Age pruning stays off.
+const CONFIG: &[u8] = b"{\"max_logs_mb\": 10}\n";
 
 /// Creates `.memex/` with its two files and `collections/` with its `.gitkeep`, and never overwrites a file that exists
 /// (design §3.5b item 1). Each file is recorded as created or kept.

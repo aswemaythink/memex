@@ -12,6 +12,6 @@ stdout
 stderr (empty)
 == snapshot repo/sub/.memex/config.json
 -- config.json
-| {"keep_logs": "3d"}
+| {"max_logs_mb": 10}
 == snapshot repo/.memex
 (missing)

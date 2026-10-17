@@ -19,7 +19,7 @@ stderr
 -- .memex/collections/.gitkeep
 (empty)
 -- .memex/config.json
-| {"keep_logs": "3d"}
+| {"max_logs_mb": 10}
 -- AGENTS.md
 | <!-- memex:begin -->
 | ## memex: read intent before code

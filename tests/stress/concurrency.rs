@@ -19,7 +19,7 @@ const SAME_STEM: &str = "20261014-120000-same-second";
 /// The anchor is current, so no prune takes it, and the readers show it.
 const ANCHOR: &str = "impl:20261014-120000-anchor";
 const ANCHOR_BODY: &str = "# Anchor\n\nThe anchor stays.\n";
-/// Three months before MEMEX_NOW, so the default keep_logs of 3d prunes these entries.
+/// Three months before MEMEX_NOW, so the keep_logs of 3d that `write_expired` sets prunes these entries.
 const EXPIRED_STAMP: &str = "20260701-120000";
 /// How many children may hold their stdio files open in this process at once: 3 descriptors each, well under 256.
 const SLOTS: usize = 32;
@@ -219,8 +219,12 @@ fn reader_job(sandbox: &Sandbox, n: usize) -> Job {
     Job(command, None)
 }
 
-/// Writes `count` expired entries spread over the streams. The next write prunes each one.
+/// Writes `count` expired entries spread over the streams, and sets keep_logs to 3d, since the default has no age limit. The next
+/// write prunes each one.
 fn write_expired(root: &Path, count: usize) {
+    let config = root.join(".memex").join("config.json");
+    fs::write(&config, "{\"keep_logs\": \"3d\"}\n")
+        .unwrap_or_else(|e| panic!("{}: {e}", config.display()));
     for n in 0..count {
         let dir = store(root).join(STREAMS[n % STREAMS.len()]);
         fs::create_dir_all(&dir).unwrap_or_else(|e| panic!("{}: {e}", dir.display()));

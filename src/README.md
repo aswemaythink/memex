@@ -11,7 +11,7 @@
 - `root.rs`: where `log` writes (design §4.1): the nearest `.memex/` (bounded by the toplevel), the main checkout, and the store path, asked of git subprocesses.
 - `layout.rs`: the repository layout read as plain files (design §4.1 item 1, §4.4 git): the toplevel as the nearest folder listing a `.git` entry, found without git, and, when git gives no answer, the store's place and the branch from the `.git` entry, its `gitdir:` line, `commondir` and `HEAD` (never refs or objects).
 - `atomic.rs`: the temp file that every atomic write goes through, dot-prefixed and with an ordinary file's mode (design §4.4).
-- `config.rs`: `.memex/config.json` (design §4.1 item 4): the `keep_logs` value and its warning.
+- `config.rs`: `.memex/config.json` (design §4.1 item 4): the `keep_logs` and `max_logs_mb` values and their warnings.
 - `logs/`: the log store: writing an entry, pruning old ones and reading them as docs (design §3.4, §4.3).
 - `walk.rs`: the ignore walker over the root, run on several threads, with the skip list and `/` labels (design §4.1 item 2).
 - `par.rs`: maps a function over a list on several threads and keeps the results in the list's order; the walk, the file reads and the citation scan use it.

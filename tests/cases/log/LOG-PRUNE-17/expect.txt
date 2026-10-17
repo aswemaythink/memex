@@ -4,6 +4,8 @@ stdout
 | impl:20261013-120000-fresh-entry
 stderr (empty)
 == snapshot repo/.memex
+-- config.json
+| {"keep_logs": "3d"}
 -- logs
 (symlink)
 == snapshot repo/elsewhere

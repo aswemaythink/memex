@@ -43,9 +43,9 @@ pub fn run(request: &Request, now: Timestamp) -> Result<String, Error> {
     let (place, head) = root::locate_for_write(&cwd)?;
     stream::check_collections(&request.stream, &cwd, &place.owner)?;
     let config = config::load(&place.owner);
-    if let Some(line) = &config.warning {
-        error::warn(std::slice::from_ref(line));
-    }
+    error::warn(&config.warnings);
+    // The size cap is loaded but not enforced yet: pruning by size is wired by a later slice (design §4.3 Size cap).
+    let _cap = config.cap;
     let entry = Entry {
         stream: request.stream.clone(),
         time: now,

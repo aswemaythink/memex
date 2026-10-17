@@ -4,6 +4,9 @@ stdout
 | impl:20261013-120000-fresh-entry
 stderr (empty)
 == snapshot repo/.memex/logs
+-- impl/20261009-120000-four-days-old.md
+| # Four days old
+| old body
 -- impl/20261013-120000-fresh-entry.md
 | ---
 | stream: impl

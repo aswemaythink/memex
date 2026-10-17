@@ -17,7 +17,7 @@ stderr (empty)
 | A note in a subfolder of the repo.
 == snapshot repo/.memex/config.json
 -- config.json
-| {"keep_logs": "3d"}
+| {"max_logs_mb": 10}
 == snapshot .memex/config.json
 -- config.json
 | {"keep_logs": "7d"}
