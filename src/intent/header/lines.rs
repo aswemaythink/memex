@@ -1,7 +1,7 @@
-//! Counts a file's lines for `check` (design §3.5d): its whole text, and its header and license blocks.
-//! The corpus records a `Head` for each file with a comment family as it reads the file's head, only when `check` asks for it; `check`
+//! Counts a file's lines for `audit` (design §3.5d): its whole text, and its header and license blocks.
+//! The corpus records a `Head` for each file with a comment family as it reads the file's head, only when `audit` asks for it; `audit`
 //! then reads past the head only for a file that is longer than it.
-//! Cases: CHK-LENGTH-03, CHK-LENGTH-06, CHK-REFINE-03, CHK-REFINE-04
+//! Cases: AUD-LENGTH-03, AUD-LENGTH-06, AUD-REFINE-03, AUD-REFINE-04
 
 use std::fs::File;
 use std::io::{self, Seek, SeekFrom};
@@ -33,7 +33,7 @@ impl Counts {
     }
 }
 
-/// What `check` needs of a file with a comment family, taken from the head that the header reader already read (design §3.5d Lines):
+/// What `audit` needs of a file with a comment family, taken from the head that the header reader already read (design §3.5d Lines):
 /// the head's size and line tally, and the lines of its header and license blocks.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Head {
@@ -96,7 +96,7 @@ mod tests {
     /// The size of the head that header detection reads from a file (design §2.1).
     const HEAD: usize = 8 * 1024;
 
-    /// The counts of the file at `path`, whose head is `head`, as `check` reads them; None with no comment family.
+    /// The counts of the file at `path`, whose head is `head`, as `audit` reads them; None with no comment family.
     fn counts(path: &Path, head: &[u8]) -> io::Result<Option<Counts>> {
         with_lines(path, head)
             .1
@@ -104,7 +104,7 @@ mod tests {
             .transpose()
     }
 
-    /// The counts of `text` as a file named `name`, with its first 8 KiB as the head, as `check` reads it.
+    /// The counts of `text` as a file named `name`, with its first 8 KiB as the head, as `audit` reads it.
     fn counts_of(name: &str, text: &[u8]) -> Counts {
         let dir = tempfile::tempdir().expect("a temp folder");
         let path = dir.path().join(name);

@@ -1,8 +1,0 @@
-$ memex check
-exit 0
-stdout
-| check       . · 3 files · 2 folders · 0 findings
-| nothing to fix
-| thin        (showing 1 of 1; files of 80 lines or more, lowest header share first)
-|   src/edge.rs  1/501 header lines
-stderr (empty)

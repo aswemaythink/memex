@@ -41,9 +41,9 @@ pub fn header(path: &Path, bytes: &[u8]) -> Option<String> {
     Some(finish(path, bytes, found))
 }
 
-/// The header as `header` reads it and, for `check`, the line facts of the head (design §3.5d Lines), from one scan of `bytes`,
+/// The header as `header` reads it and, for `audit`, the line facts of the head (design §3.5d Lines), from one scan of `bytes`,
 /// which are the file's head as `read_head` gives it. Both are None for a file with no comment family, and for a binary file (a NUL
-/// byte in the head), which is skipped (design §2.1), so check never judges it.
+/// byte in the head), which is skipped (design §2.1), so audit never judges it.
 pub fn with_lines(path: &Path, bytes: &[u8]) -> (Option<String>, Option<lines::Head>) {
     let Some(family) = families::family_of(path).filter(|_| !bytes.contains(&0)) else {
         return (None, None);

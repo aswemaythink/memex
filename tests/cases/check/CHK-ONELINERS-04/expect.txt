@@ -1,8 +1,0 @@
-$ memex check
-exit 0
-stdout
-| check       . · 3 files · 2 folders · 1 finding
-| one-liners  (showing 1 of 1; over 100 characters)
-|   src/long.rs  105 characters
-| (one-liners): shorten the first sentence to 100 characters or fewer
-stderr (empty)

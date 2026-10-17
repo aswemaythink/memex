@@ -1,4 +1,4 @@
-//! Counts a file's lines for `check` (design §3.5d Lines).
+//! Counts a file's lines for `audit` (design §3.5d Lines).
 //! The head is tallied as the corpus reads it; a longer file's rest carries the tally on, read in chunks.
 
 use std::io::{self, Read};

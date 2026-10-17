@@ -86,7 +86,7 @@ pub struct Corpus {
     titles: BTreeMap<String, String>,
     /// The folders that the walk could not list, by root-relative path, with the kind of the failure (design §3.3).
     unlistable: BTreeMap<String, io::ErrorKind>,
-    /// The line facts of each read file with a comment family, by root-relative path; filled only when `check` loads (§3.5d Lines).
+    /// The line facts of each read file with a comment family, by root-relative path; filled only when `audit` loads (§3.5d Lines).
     pub heads: BTreeMap<String, crate::intent::header::lines::Head>,
     /// The streams of the log store, which `logs:` reads across (design §3.1).
     streams: BTreeSet<String>,

@@ -11,7 +11,7 @@ joins that collection, such as CASES.md (`memex: cases`): test ids with their cl
 - Tests for X: `memex search <words> --in cases` (or the collection `memex info` names); `memex show <ID>` gives claim and evidence; `rg <ID>` finds the test.
 - Findings: `memex log <stream> [--to <agent>] <<'EOF' … EOF` prints a ref. Hand back the ref, not the report.
 - Messages to you: `memex search to:<your-id>`.
-- When you change code, update its header/README in the same change, then run `memex check <paths>` and fix what it lists. Cite ids and paths; don't copy.
+- When you change code, update its header/README in the same change, then run `memex audit <paths>` and fix what it lists. Cite ids and paths; don't copy.
 <!-- memex:end -->
 
 Tail.

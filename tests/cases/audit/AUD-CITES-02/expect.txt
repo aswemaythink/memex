@@ -1,0 +1,8 @@
+$ memex audit
+exit 0
+stdout
+| audit       . · 3 files · 2 folders · 1 finding
+| cites       (showing 1 of 1; unresolved)
+|   src/a.rs  → docs/spec.md
+| (cites): fix the reference or remove it
+stderr (empty)

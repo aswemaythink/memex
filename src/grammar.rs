@@ -1,6 +1,6 @@
 //! The tables of design §3's grammar.
 //! Which flags each verb takes, what each flag takes after it, and how many words each verb takes.
-//! Cases: CLI-*, CLI-HINTB-01, CHK-EXIT-02, CHK-EXIT-03
+//! Cases: CLI-*, CLI-HINTB-01, AUD-EXIT-02, AUD-EXIT-03
 
 use crate::cli::Verb;
 

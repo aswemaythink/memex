@@ -18,12 +18,12 @@ pub struct Found {
     pub warnings: Vec<String>,
     /// The title of a Markdown file's text, which its folder's child line shows; None for any other file.
     pub title: Option<String>,
-    /// The line facts of a file with a comment family, when the read asked for them (`check`, design §3.5d Lines); else None.
+    /// The line facts of a file with a comment family, when the read asked for them (`audit`, design §3.5d Lines); else None.
     pub head: Option<lines::Head>,
 }
 
 /// The docs of one walked entry: none for a folder, and those of its file otherwise (design §2 and §4.2). With `lines`, a file with
-/// a comment family also gives the line facts of its head, for `check`.
+/// a comment family also gives the line facts of its head, for `audit`.
 pub fn read_entry(entry: &Entry, lines: bool) -> Result<Found, Error> {
     if entry.is_dir {
         return Ok(Found::default());

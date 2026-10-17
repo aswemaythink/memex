@@ -1,1 +1,0 @@
-{"steps": [{"args": ["check", "."], "cwd": "repo/src/deep"}, {"args": ["check", ".."], "cwd": "repo/src/deep"}]}

@@ -1,5 +1,5 @@
 //! Loads what a reading verb works on: the canonical cwd, its log store, and the corpus of its root.
-//! `load_in` takes a folder in place of the cwd, for init; `load_with_lines` keeps the line facts that `check` reads.
+//! `load_in` takes a folder in place of the cwd, for init; `load_with_lines` keeps the line facts that `audit` reads.
 //! The store is found from the cwd, and the root is the one that `root_of` names (design §4.1 item 1).
 //! The corpus is never freed: `Here` holds it in a `ManuallyDrop`, since the process exits after the verb.
 //! Cases: none (shared loading; show and search cite their own cases)
@@ -27,7 +27,7 @@ pub fn load() -> Result<Here, Error> {
     load_in(current_dir()?)
 }
 
-/// Loads as `load` does, with the line facts that `check` reads kept in the corpus's `heads` (design §3.5d Lines).
+/// Loads as `load` does, with the line facts that `audit` reads kept in the corpus's `heads` (design §3.5d Lines).
 pub fn load_with_lines() -> Result<Here, Error> {
     load_from(current_dir()?, true)
 }

@@ -1,0 +1,9 @@
+$ memex audit
+exit 0
+stdout
+| audit       . · 2 files · 3 folders · 2 findings
+| readmes     (showing 2 of 2; folders with no README)
+|   fixtures
+|   fixtures/sample
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+stderr (empty)

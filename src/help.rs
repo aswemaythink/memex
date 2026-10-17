@@ -1,5 +1,5 @@
 //! The help texts and the grammar block of design §3, plus the usage lines that usage errors print.
-//! Cases: CLI-*, CLI-HELP-01, CLI-HELP-02, CLI-HELP-03, CLI-HELP-04, CLI-HELP-05, CLI-HELP-06, CLI-HINTB-01, CHK-EXIT-04
+//! Cases: CLI-*, CLI-HELP-01, CLI-HELP-02, CLI-HELP-03, CLI-HELP-04, CLI-HELP-05, CLI-HELP-06, CLI-HINTB-01, AUD-EXIT-04
 
 use crate::cli::Verb;
 
@@ -10,7 +10,7 @@ const GRAMMAR: [&str; 7] = [
     "memex show   <path|ref>... [--up N] [--comments] [--limit N] [--json]",
     "memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF",
     "memex info   [--agent <id>] [--json]",
-    "memex check  [<path|glob>...] [--limit N] [--json]",
+    "memex audit  [<path|glob>...] [--limit N] [--json]",
     "memex init",
     "memex --help | --version",
 ];
@@ -30,7 +30,7 @@ const TOP: [&str; 16] = [
     "show    print the header, citations and chain of each ref",
     "log     append an entry from stdin and print its ref",
     "info    print where things are, never their contents",
-    "check   report where intent is missing or broken, for the root or some of it",
+    "audit   report where intent is missing or broken, for the root or some of it",
     "init    set up .memex/ and the AGENTS.md snippet",
 ];
 
@@ -67,10 +67,10 @@ const INFO: [&str; 4] = [
     "  --json        print one JSON document instead of text",
 ];
 
-const CHECK: [&str; 5] = [
+const AUDIT: [&str; 5] = [
     GRAMMAR[4],
     "Report where the intent layer is missing, thin or broken: headers, readmes, length, one-liners, thin, cites and ids.",
-    "A path names a file or folder, and a glob (with *, ? or [) matches walked paths; with none, the root is checked.",
+    "A path names a file or folder, and a glob (with *, ? or [) matches walked paths; with none, the root is audited.",
     "  --limit N   findings listed per kind (default 20)",
     "  --json      print one JSON document instead of text",
 ];
@@ -100,7 +100,7 @@ pub fn text(verb: Option<Verb>) -> String {
         Some(Verb::Show) => &SHOW,
         Some(Verb::Log) => &LOG,
         Some(Verb::Info) => &INFO,
-        Some(Verb::Check) => &CHECK,
+        Some(Verb::Audit) => &AUDIT,
         Some(Verb::Init) => &INIT,
     };
     let mut text = lines.join("\n");

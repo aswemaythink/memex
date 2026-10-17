@@ -13,7 +13,7 @@ joins that collection, such as CASES.md (`memex: cases`): test ids with their cl
 - Tests for X: `memex search <words> --in cases` (or the collection `memex info` names); `memex show <ID>` gives claim and evidence; `rg <ID>` finds the test.
 - Findings: `memex log <stream> [--to <agent>] <<'EOF' … EOF` prints a ref. Hand back the ref, not the report.
 - Messages to you: `memex search to:<your-id>`.
-- When you change code, update its header/README in the same change, then run `memex check <paths>` and fix what it lists. Cite ids and paths; don't copy.
+- When you change code, update its header/README in the same change, then run `memex audit <paths>` and fix what it lists. Cite ids and paths; don't copy.
 
 ## Your memex id
 
@@ -52,10 +52,10 @@ EOF
 **Check intent against code.**
 1. Run `memex show <dir>`, then read the code it describes.
 2. For each claim, does the code do it? Is there a cited case that proves it?
-3. Run `memex show <dir>` and read its `cites`: an `unresolved` entry is a broken citation, or run `memex check <dir>`, which lists them with missing headers and READMEs. Run `memex search --in <collection>`: a roster line showing `<-0` is a doc nobody cites.
+3. Run `memex show <dir>` and read its `cites`: an `unresolved` entry is a broken citation, or run `memex audit <dir>`, which lists them with missing headers and READMEs. Run `memex search --in <collection>`: a roster line showing `<-0` is a doc nobody cites.
 4. Fix the README, header or collection doc in the same change, or log the mismatch to `drift` if it's out of scope.
 
-**Change code.** In the same commit, update the header or README you invalidated, add or adjust case lines, and put the id in each new test (its name, or a comment on it). Then run `memex check <paths>` and fix what it lists.
+**Change code.** In the same commit, update the header or README you invalidated, add or adjust case lines, and put the id in each new test (its name, or a comment on it). Then run `memex audit <paths>` and fix what it lists.
 
 **Distill a log; never promote it.** Collections are authored, so never copy log files into the repo or give them `memex:` frontmatter: that turns a run's record into permanent noise. When a log holds something still true, write it once, in your own words, into the README, header or collection doc where the next reader will look, cite the ids, and let the log expire.
 

@@ -72,11 +72,11 @@ fn no_doc_under_src_has_an_unresolved_citation() {
     );
 }
 
-/// `memex check` finds nothing to fix in this repo (design §3.5d). `thin` is a pointer, not a finding, so it is the one kind
+/// `memex audit` finds nothing to fix in this repo (design §3.5d). `thin` is a pointer, not a finding, so it is the one kind
 /// skipped. No case claim is exempt: a claim names a fixture doc by its bare id, or writes a label as a placeholder.
 #[test]
-fn memex_check_finds_nothing_to_fix() {
-    let checked = memex_json(&["check", "--limit", "100000"]);
+fn memex_audit_finds_nothing_to_fix() {
+    let checked = memex_json(&["audit", "--limit", "100000"]);
     let mut found = Vec::new();
     for kind in checked["kinds"].as_array().into_iter().flatten() {
         let name = kind["kind"].as_str().unwrap_or("?");
@@ -91,7 +91,7 @@ fn memex_check_finds_nothing_to_fix() {
             ));
         }
     }
-    report(&found, "run memex check and fix what it lists");
+    report(&found, "run memex audit and fix what it lists");
 }
 
 /// AGENTS.md's marked block is assets/agents-snippet.md byte for byte: the one source that `init` writes (design §6, PLAN §4).

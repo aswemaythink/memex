@@ -1,0 +1,6 @@
+$ memex audit
+exit 0
+stdout
+| audit       . · 6 files · 3 folders · 0 findings
+| nothing to fix
+stderr (empty)

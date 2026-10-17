@@ -1,9 +1,0 @@
-$ memex check
-exit 0
-stdout
-| check       . · 2 files · 1 folder · 2 findings
-| cites       (showing 2 of 2; unresolved)
-|   notes:notes  → notes:missing
-|   notes:notes  → plan/MISSING.md
-| (cites): fix the reference or remove it
-stderr (empty)

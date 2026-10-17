@@ -1,0 +1,7 @@
+$ memex audit ../outside.rs
+exit 1
+stdout
+| audit       0 files · 0 folders · 0 findings
+| nothing to fix
+stderr
+| memex: not found: ../outside.rs (find refs with memex search <words>)

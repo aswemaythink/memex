@@ -1,8 +1,0 @@
-$ memex check --limit 1
-exit 0
-stdout
-| check       . · 5 files · 2 folders · 0 findings
-| nothing to fix
-| thin        (showing 1 of 3; --limit 3 for all; files of 80 lines or more, lowest header share first)
-|   src/y.rs  1/100 header lines
-stderr (empty)

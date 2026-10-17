@@ -7,7 +7,7 @@ stdout
 | memex show   <path|ref>... [--up N] [--comments] [--limit N] [--json]
 | memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
 | memex info   [--agent <id>] [--json]
-| memex check  [<path|glob>...] [--limit N] [--json]
+| memex audit  [<path|glob>...] [--limit N] [--json]
 | memex init
 | memex --help | --version
 | 
@@ -15,6 +15,6 @@ stdout
 | show    print the header, citations and chain of each ref
 | log     append an entry from stdin and print its ref
 | info    print where things are, never their contents
-| check   report where intent is missing or broken, for the root or some of it
+| audit   report where intent is missing or broken, for the root or some of it
 | init    set up .memex/ and the AGENTS.md snippet
 stderr (empty)

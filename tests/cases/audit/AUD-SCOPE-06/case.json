@@ -1,0 +1,1 @@
+{"steps": [{"args": ["audit", "."], "cwd": "repo/src/deep"}, {"args": ["audit", ".."], "cwd": "repo/src/deep"}]}

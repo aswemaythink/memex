@@ -1,0 +1,6 @@
+$ memex audit 'docs/*.txt'
+exit 0
+stdout
+| audit       docs/*.txt · 0 files · 0 folders · 0 findings
+| nothing to fix
+stderr (empty)

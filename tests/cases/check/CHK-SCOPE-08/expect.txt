@@ -1,9 +1,0 @@
-$ memex check src  [cwd repo/src]
-exit 1
-stdout
-| check       0 files · 0 folders · 0 findings
-| nothing to fix
-stderr
-| memex: ambiguous: src
-|   src
-|   src/src

@@ -1,6 +1,6 @@
 //! memex library: the module map for the intent-layer CLI, and the run function that main.rs calls.
 //! src/README.md says what each module does.
-//! Cases: CLI-*, LOG-WRITE-*, SHOW-*, SRCH-*, INFO-NOW-01, SRCH-NOW-01, SHOW-NOW-01, CHK-EXIT-01
+//! Cases: CLI-*, LOG-WRITE-*, SHOW-*, SRCH-*, INFO-NOW-01, SRCH-NOW-01, SHOW-NOW-01, AUD-EXIT-01
 
 mod atomic;
 mod cite;
@@ -93,9 +93,9 @@ fn dispatch(command: Command) -> i32 {
             let request = verbs::info::Request { agent, json };
             finish(started(|now| verbs::info::run(&request, now)), json)
         }
-        Command::Check { paths, limit, json } => {
-            let request = verbs::check::Request { paths, limit, json };
-            finish_check(started(|_| verbs::check::run(&request)), json)
+        Command::Audit { paths, limit, json } => {
+            let request = verbs::audit::Request { paths, limit, json };
+            finish_audit(started(|_| verbs::audit::run(&request)), json)
         }
         Command::Init => match clock::now() {
             Ok(now) => finish_init(now),
@@ -153,9 +153,9 @@ fn finish_show(result: Result<verbs::show::Report, Error>, json: bool) -> i32 {
     }
 }
 
-/// Prints a `check` report: its stdout, then its stderr. A path that names nothing makes the exit status 1, since a finding is
+/// Prints an `audit` report: its stdout, then its stderr. A path that names nothing makes the exit status 1, since a finding is
 /// not an error (design §3.5d); a fatal error is reported the usual way.
-fn finish_check(result: Result<verbs::check::Report, Error>, json: bool) -> i32 {
+fn finish_audit(result: Result<verbs::audit::Report, Error>, json: bool) -> i32 {
     match result {
         Ok(report) => {
             let code = print_out(&report.stdout);

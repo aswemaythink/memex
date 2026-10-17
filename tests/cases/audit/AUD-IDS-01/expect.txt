@@ -1,0 +1,8 @@
+$ memex audit
+exit 0
+stdout
+| audit       . · 8 files · 5 folders · 1 finding
+| ids         (showing 1 of 1; duplicate)
+|   cases:NAME-003  tests/a/CASES.md · tests/b/CASES.md
+| (ids): give each doc its own id
+stderr (empty)

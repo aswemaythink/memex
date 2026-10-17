@@ -1,7 +1,7 @@
 //! Builds the citation index (design §2.3): each doc's cites and the backlinks they give.
 //! `build` is the full index that search's roster reads. `for_show` is what `show` reads: the backlinks of its targets and the cites
 //! of its docs, found by one scan that resolves only the tokens that can name a target (`paths::Wanted`).
-//! Cases: CITE-BARE-01, CITE-BARE-02, CITE-BARE-03, CITE-PREFIX-01, CITE-PREFIX-02, CITE-COLL-01, CITE-COLL-02, CITE-COLL-03, CITE-COLL-04, CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-04, CITE-PATH-05, CITE-PATH-06, CITE-LINK-01, CITE-LINK-02, CITE-LINK-03, CITE-LINK-05, CITE-MAN-01, CITE-UNRES-01, CITE-FOLDER-01, CITE-FOLDER-02, CITE-FENCE-01, CITE-SELF-01, CITE-BACK-01, CITE-BACK-02, CITE-BACK-03, CITE-BACK-04, CITE-BACK-05, SRCH-ORPHAN-01, SRCH-ORPHAN-02, CHK-CITES-01, CHK-REFINE-01, CHK-REFINE-02
+//! Cases: CITE-BARE-01, CITE-BARE-02, CITE-BARE-03, CITE-PREFIX-01, CITE-PREFIX-02, CITE-COLL-01, CITE-COLL-02, CITE-COLL-03, CITE-COLL-04, CITE-PATH-01, CITE-PATH-02, CITE-PATH-03, CITE-PATH-04, CITE-PATH-05, CITE-PATH-06, CITE-LINK-01, CITE-LINK-02, CITE-LINK-03, CITE-LINK-05, CITE-MAN-01, CITE-UNRES-01, CITE-FOLDER-01, CITE-FOLDER-02, CITE-FENCE-01, CITE-SELF-01, CITE-BACK-01, CITE-BACK-02, CITE-BACK-03, CITE-BACK-04, CITE-BACK-05, SRCH-ORPHAN-01, SRCH-ORPHAN-02, AUD-CITES-01, AUD-REFINE-01, AUD-REFINE-02
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -78,7 +78,7 @@ impl Index {
         index
     }
 
-    /// The unresolved explicit refs of each doc in `docs`, each once in first-appearance order: what `check` lists under `cites`
+    /// The unresolved explicit refs of each doc in `docs`, each once in first-appearance order: what `audit` lists under `cites`
     /// (design §3.5d kind 6). The docs are scanned on several threads, and no target's title is looked up.
     pub fn unresolved(corpus: &Corpus, docs: &[&Doc]) -> Vec<Vec<String>> {
         let all: Vec<&Doc> = corpus.all_docs().collect();

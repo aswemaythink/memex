@@ -1,1 +1,0 @@
-{"steps": [{"args": ["check", "cases:NAME-001"]}, {"args": ["check", "NAME-001"]}, {"args": ["check", "cases:NAME-001", "src/b.rs"]}]}

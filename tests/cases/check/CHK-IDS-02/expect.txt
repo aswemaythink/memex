@@ -1,6 +1,0 @@
-$ memex check
-exit 0
-stdout
-| check       . · 6 files · 3 folders · 0 findings
-| nothing to fix
-stderr (empty)

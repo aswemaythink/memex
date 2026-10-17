@@ -1,6 +1,6 @@
 //! Parses the argv grammar of design §3 into a typed Command.
 //! Or into the usage error the grammar calls for.
-//! Cases: CLI-*, CLI-BARE-01, CLI-VERB-01, CLI-VERB-02, CLI-VERB-03, CLI-FLAG-06, CLI-HELP-01, CLI-JSON-03, CLI-JSON-04, CLI-HINT-10, CLI-HINT-11, CHK-EXIT-02, CHK-EXIT-03
+//! Cases: CLI-*, CLI-BARE-01, CLI-VERB-01, CLI-VERB-02, CLI-VERB-03, CLI-FLAG-06, CLI-HELP-01, CLI-JSON-03, CLI-JSON-04, CLI-HINT-10, CLI-HINT-11, AUD-EXIT-02, AUD-EXIT-03
 
 use std::ffi::OsString;
 
@@ -20,8 +20,8 @@ pub enum Verb {
     Log,
     /// `memex info`.
     Info,
-    /// `memex check`.
-    Check,
+    /// `memex audit`.
+    Audit,
     /// `memex init`.
     Init,
 }
@@ -33,7 +33,7 @@ impl Verb {
         Verb::Show,
         Verb::Log,
         Verb::Info,
-        Verb::Check,
+        Verb::Audit,
         Verb::Init,
     ];
 
@@ -44,7 +44,7 @@ impl Verb {
             Verb::Show => "show",
             Verb::Log => "log",
             Verb::Info => "info",
-            Verb::Check => "check",
+            Verb::Audit => "audit",
             Verb::Init => "init",
         }
     }
@@ -102,9 +102,9 @@ pub enum Command {
         /// True when `--json` was given.
         json: bool,
     },
-    /// `memex check`, with its paths and flags.
-    Check {
-        /// The paths and globs to check, in order; none checks the root.
+    /// `memex audit`, with its paths and flags.
+    Audit {
+        /// The paths and globs to audit, in order; none audits the root.
         paths: Vec<String>,
         /// The value of `--limit`, if the flag was given.
         limit: Option<usize>,

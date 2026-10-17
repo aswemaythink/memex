@@ -1,0 +1,5 @@
+$ memex audit --limit 1 --json
+exit 0
+stdout
+| {"scope":["."],"files":4,"folders":4,"findings":3,"kinds":[{"kind":"readmes","total":3,"items":[{"ref":"a","detail":null}]}],"errors":[]}
+stderr (empty)

@@ -1,0 +1,11 @@
+$ memex audit
+exit 0
+stdout
+| audit       . · 3 files · 2 folders · 2 findings
+| headers     (showing 1 of 1; files with no header)
+|   src/a.rs
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+| cites       (showing 1 of 1; unresolved)
+|   README.md  → docs/gone.md
+| (cites): fix the reference or remove it
+stderr (empty)

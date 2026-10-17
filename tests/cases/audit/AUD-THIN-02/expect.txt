@@ -1,0 +1,9 @@
+$ memex audit
+exit 0
+stdout
+| audit       . · 4 files · 2 folders · 0 findings
+| nothing to fix
+| thin        (showing 2 of 2; files of 80 lines or more, lowest header share first)
+|   src/a.rs  4/200 header lines
+|   src/b.rs  2/100 header lines
+stderr (empty)

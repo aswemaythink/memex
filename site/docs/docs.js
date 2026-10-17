@@ -23,7 +23,7 @@
       ['info', 'reference/info.html', 'mono'],
       ['show', 'reference/show.html', 'mono'],
       ['search', 'reference/search.html', 'mono'],
-      ['check', 'reference/check.html', 'mono'],
+      ['audit', 'reference/audit.html', 'mono'],
       ['log', 'reference/log.html', 'mono'],
       ['Configuration', 'reference/configuration.html'],
     ] },
