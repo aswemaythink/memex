@@ -201,7 +201,7 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
     </figure>
     <p class="mt-8">In a large codebase it is hard to see what the whole thing does without reading every file of code. With an intent layer, the agent zigzags through the READMEs and headers that matter and opens only the file it needs.</p>
     <figure class="mt-8">
-      <img src="scale.svg" alt="A grid of sixty files, each a dim block of code under a thin orange strip of intent. An agent starts at the top left and zigzags down the grid, reading one strip per row, and opens only the last file; the other strips stay dim and the other files stay closed." width="362" height="199" class="mx-auto block h-auto w-full max-w-[26rem]">
+      <img src="scale.svg" alt="A grid of sixty files, each a dim block of code under a faint orange header strip. An agent starts at the top left and zigzags down the gaps between the blocks; each strip it reads lights up, one per row, and it opens only the last file. The other strips stay faint and the other files stay closed." width="720" height="348" class="block h-auto w-full">
       <figcaption class="mt-4 text-center font-serif text-[1.1rem] italic leading-snug">A few headers lead to the one file it needs.</figcaption>
     </figure>
 
