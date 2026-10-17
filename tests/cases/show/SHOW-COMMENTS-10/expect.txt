@@ -1,0 +1,31 @@
+$ memex show src/run.sh --comments
+exit 0
+stdout
+| === src/run.sh ===
+| run.sh: runs the demo task.
+| It has two lines of header, then code.
+| 
+| comments  (showing 1 of 1)
+|   L7
+|     Later block: a note about the next line.
+|     It runs over two lines.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/run.sh --comments --json
+exit 0
+stdout
+| {"docs":[{"ref":"src/run.sh","collection":"headers","id":"src/run.sh","path":"src/run.sh","title":"run.sh: runs the demo task.","fields":{},"text":"run.sh: runs the demo task.\nIt has two lines of header, then code.","cites":[],"cited_by":{"total":0,"refs":[]},"comments":{"total":1,"cut":false,"items":[{"line":7,"text":"Later block: a note about the next line.\nIt runs over two lines."}]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}]}],"errors":[]}
+stderr (empty)

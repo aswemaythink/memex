@@ -1,0 +1,51 @@
+$ memex show src/tool.ml --comments
+exit 0
+stdout
+| === src/tool.ml ===
+| tool.ml: the demo module.
+| It has a two-line header, then code.
+| 
+| comments  (showing 1 of 1)
+|   L6
+|     A later block: it names the next value.
+|     It runs over two lines.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/tool.lua --comments
+exit 0
+stdout
+| === src/tool.lua ===
+| tool.lua: the demo module.
+| It has a two-line header, then code.
+| 
+| comments  (showing 1 of 1)
+|   L8
+|     A later block: it names the next value.
+|     It runs over two lines.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)

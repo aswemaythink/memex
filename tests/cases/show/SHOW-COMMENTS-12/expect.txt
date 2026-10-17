@@ -1,0 +1,31 @@
+$ memex show src/page.html --comments
+exit 0
+stdout
+| === src/page.html ===
+| page.html: the demo page.
+| It has a two-line header, then markup.
+| 
+| comments  (showing 1 of 1)
+|   L9
+|     Later block: a note about the paragraph.
+|     It runs over two lines.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/page.html --comments --json
+exit 0
+stdout
+| {"docs":[{"ref":"src/page.html","collection":"headers","id":"src/page.html","path":"src/page.html","title":"page.html: the demo page.","fields":{},"text":"page.html: the demo page.\nIt has a two-line header, then markup.","cites":[],"cited_by":{"total":0,"refs":[]},"comments":{"total":1,"cut":false,"items":[{"line":9,"text":"Later block: a note about the paragraph.\nIt runs over two lines."}]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}]}],"errors":[]}
+stderr (empty)

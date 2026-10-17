@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "src/schema.sql", "--comments"]}, {"args": ["show", "src/schema.sql", "--comments", "--json"]}, {"args": ["show", "src/Main.hs", "--comments"]}, {"args": ["show", "src/Main.hs", "--comments", "--json"]}]}

@@ -1,0 +1,53 @@
+$ memex show src/tool.py --comments
+exit 0
+stdout
+| === src/tool.py ===
+| tool.py: the demo module.
+| It has a two-line header, then code.
+| 
+| comments  (showing 1 of 1)
+|   L11
+|     A real block after the string.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/main.go --comments
+exit 0
+stdout
+| === src/main.go ===
+| Package main is the demo.
+| It has a two-line header, then code.
+| 
+| comments  (showing 2 of 2)
+|   L6
+|     go:build linux
+|     Linux only: a note on the build tag.
+|   L11
+|     A run that starts with a bare marker.
+|     It lists at the bare marker's line.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)

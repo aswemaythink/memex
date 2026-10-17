@@ -1,0 +1,37 @@
+$ memex show src/agree.rs --comments
+exit 0
+stdout
+| === src/agree.rs ===
+| agree.rs: three comment blocks, one with a blank line.
+| It has a two-line header, then code.
+| 
+| comments  (showing 3 of 3)
+|   L8
+|     Block one: a single line.
+|   L13
+|     Block two: a run with a blank line inside it.
+| 
+|     It continues after the blank line.
+|   L20
+|     Block three: a block comment
+|     over two lines.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/agree.rs --comments --json
+exit 0
+stdout
+| {"docs":[{"ref":"src/agree.rs","collection":"headers","id":"src/agree.rs","path":"src/agree.rs","title":"agree.rs: three comment blocks, one with a blank line.","fields":{},"text":"agree.rs: three comment blocks, one with a blank line.\nIt has a two-line header, then code.","cites":[],"cited_by":{"total":0,"refs":[]},"comments":{"total":3,"cut":false,"items":[{"line":8,"text":"Block one: a single line."},{"line":13,"text":"Block two: a run with a blank line inside it.\n\nIt continues after the blank line."},{"line":20,"text":"Block three: a block comment\nover two lines."}]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}]}],"errors":[]}
+stderr (empty)

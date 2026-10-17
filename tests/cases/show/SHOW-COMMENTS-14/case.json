@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "src/tool.py", "--comments"]}, {"args": ["show", "src/tool.py", "--comments", "--json"]}, {"args": ["show", "src/lib.rs", "--comments"]}]}

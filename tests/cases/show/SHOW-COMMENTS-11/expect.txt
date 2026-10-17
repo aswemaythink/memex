@@ -1,0 +1,63 @@
+$ memex show src/schema.sql --comments
+exit 0
+stdout
+| === src/schema.sql ===
+| schema.sql: tables for the demo.
+| It has a two-line header, then the statements.
+| 
+| comments  (showing 1 of 1)
+|   L9
+|     Later run: an index note.
+|     It runs over two lines.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/schema.sql --comments --json
+exit 0
+stdout
+| {"docs":[{"ref":"src/schema.sql","collection":"headers","id":"src/schema.sql","path":"src/schema.sql","title":"schema.sql: tables for the demo.","fields":{},"text":"schema.sql: tables for the demo.\nIt has a two-line header, then the statements.","cites":[],"cited_by":{"total":0,"refs":[]},"comments":{"total":1,"cut":false,"items":[{"line":9,"text":"Later run: an index note.\nIt runs over two lines."}]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}]}],"errors":[]}
+stderr (empty)
+
+$ memex show src/Main.hs --comments
+exit 0
+stdout
+| === src/Main.hs ===
+| Main prints the greeting for the demo.
+| It has a two-line header, then code.
+| 
+| comments  (showing 1 of 1)
+|   L10
+|     A block comment after the code.
+|     It runs over two lines and closes here.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/Main.hs --comments --json
+exit 0
+stdout
+| {"docs":[{"ref":"src/Main.hs","collection":"headers","id":"src/Main.hs","path":"src/Main.hs","title":"Main prints the greeting for the demo.","fields":{},"text":"Main prints the greeting for the demo.\nIt has a two-line header, then code.","cites":[],"cited_by":{"total":0,"refs":[]},"comments":{"total":1,"cut":false,"items":[{"line":10,"text":"A block comment after the code.\nIt runs over two lines and closes here."}]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}]}],"errors":[]}
+stderr (empty)

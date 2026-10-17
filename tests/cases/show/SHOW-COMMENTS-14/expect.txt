@@ -1,0 +1,58 @@
+$ memex show src/tool.py --comments
+exit 0
+stdout
+| === src/tool.py ===
+| tool.py: the demo module.
+| It has a two-line header, then the docstring.
+| 
+| comments  (showing 1 of 1)
+|   L4
+|     Module docstring for the demo.
+|     It runs over two lines.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/tool.py --comments --json
+exit 0
+stdout
+| {"docs":[{"ref":"src/tool.py","collection":"headers","id":"src/tool.py","path":"src/tool.py","title":"tool.py: the demo module.","fields":{},"text":"tool.py: the demo module.\nIt has a two-line header, then the docstring.","cites":[],"cited_by":{"total":0,"refs":[]},"comments":{"total":1,"cut":false,"items":[{"line":4,"text":"Module docstring for the demo.\nIt runs over two lines."}]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}]}],"errors":[]}
+stderr (empty)
+
+$ memex show src/lib.rs --comments
+exit 0
+stdout
+| === src/lib.rs ===
+| lib.rs: the demo library.
+| It has a two-line header, then code.
+| 
+| comments  (showing 1 of 1)
+|   L8
+|     First run: a note with a blank line inside it.
+| 
+|     It continues after the blank line.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)

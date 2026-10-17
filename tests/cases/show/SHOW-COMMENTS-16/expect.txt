@@ -1,0 +1,65 @@
+$ memex show src/lf.rs --comments
+exit 0
+stdout
+| === src/lf.rs ===
+| twin.rs: the same file with LF or CRLF line ends.
+| It has a two-line header, then code.
+| 
+| comments  (showing 2 of 2)
+|   L8
+|     First block: a run with a blank line inside it.
+| 
+|     It continues here.
+|   L15
+|     Third block: a block comment
+|     over two lines.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/crlf.rs --comments
+exit 0
+stdout
+| === src/crlf.rs ===
+| twin.rs: the same file with LF or CRLF line ends.
+| It has a two-line header, then code.
+| 
+| comments  (showing 2 of 2)
+|   L8
+|     First block: a run with a blank line inside it.
+| 
+|     It continues here.
+|   L15
+|     Third block: a block comment
+|     over two lines.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo repo for show.
+stderr (empty)
+
+$ memex show src/crlf.rs --comments --json
+exit 0
+stdout
+| {"docs":[{"ref":"src/crlf.rs","collection":"headers","id":"src/crlf.rs","path":"src/crlf.rs","title":"twin.rs: the same file with LF or CRLF line ends.","fields":{},"text":"twin.rs: the same file with LF or CRLF line ends.\nIt has a two-line header, then code.","cites":[],"cited_by":{"total":0,"refs":[]},"comments":{"total":2,"cut":false,"items":[{"line":8,"text":"First block: a run with a blank line inside it.\n\nIt continues here."},{"line":15,"text":"Third block: a block comment\nover two lines."}]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo repo for show.\n"}]}],"errors":[]}
+stderr (empty)
