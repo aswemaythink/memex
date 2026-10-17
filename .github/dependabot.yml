@@ -8,6 +8,9 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "deps"
+    # dtolnay/rust-toolchain@1.88 pins the MSRV job to the crate's rust-version; it moves only with Cargo.toml.
+    ignore:
+      - dependency-name: "dtolnay/rust-toolchain"
     groups:
       github-actions:
         patterns:
