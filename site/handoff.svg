@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 282" width="352" height="282" role="img">
+<!-- The hand-off by reference diagram of the memex site: a sub-agent logs its report and returns one ref line. It follows light and dark through its own prefers-color-scheme block. -->
+<style>
+svg { --bg: #faf7f0; --bg-soft: #f1ece0; --fg: #1c1a17; --muted: #5c574d; --accent: #9a3d17; --rule: #d8d1c0; --trail: #948462; color: var(--fg); }
+@media (prefers-color-scheme: dark) { svg { --bg: #141310; --bg-soft: #1b1915; --fg: #ebe7dd; --muted: #a8a295; --accent: #eca071; --rule: #35322a; --trail: #7a7058; } }
+text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; fill: currentColor; }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+.mut { fill: var(--muted); }
+.acc { fill: var(--accent); }
+.box { fill: var(--bg-soft); stroke: var(--rule); }
+.plain { fill: var(--bg); stroke: var(--rule); }
+.edge { fill: var(--accent); }
+.dim { fill: var(--rule); }
+.line { fill: none; stroke: var(--muted); stroke-width: 1.5; }
+.aline { fill: none; stroke: var(--accent); stroke-width: 1.75; }
+.dash { stroke-dasharray: 4 4; }
+.ahead { fill: var(--muted); }
+.aheada { fill: var(--accent); }
+</style>
+        <title id="ho-t">Hand-off by reference</title>
+        <desc id="ho-d">A sub-agent logs its full report to the log store and returns one line, report: impl:20261013-214107-show-chain, to the orchestrator. The orchestrator runs memex show on the ref only when it needs the detail.</desc>
+        <defs>
+          <marker id="ah4" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="aheada" d="M0 0L10 5L0 10z"/></marker>
+          <marker id="ah5" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahead" d="M0 0L10 5L0 10z"/></marker>
+        </defs>
+        <rect class="box" x="4" y="4" width="344" height="46" rx="6"/><rect class="edge" x="4" y="4" width="4" height="46" rx="1"/>
+        <text x="18" y="32" font-size="13" font-weight="600">sub-agent <tspan class="mono mut" font-weight="400" font-size="12">cook-2</tspan></text>
+
+        <path class="aline" d="M70 54V96" marker-end="url(#ah4)"/>
+        <rect x="4" y="100" width="282" height="30" rx="15" class="plain" style="stroke: var(--accent)"/>
+        <text x="16" y="120" font-size="11" class="mono">report: <tspan class="acc">impl:20261013-214107-show-chain</tspan></text>
+        <path class="aline" d="M70 134V180" marker-end="url(#ah4)"/>
+        <text x="80" y="160" font-size="12" class="mut">returns one line</text>
+
+        <path class="line" d="M324 54V180" marker-end="url(#ah5)"/>
+        <text x="316" y="156" font-size="12" class="mut" text-anchor="end">full report</text>
+        <text x="316" y="172" font-size="11" class="mono mut" text-anchor="end">memex log impl</text>
+
+        <rect class="box" x="4" y="186" width="150" height="46" rx="6"/><rect class="edge" x="4" y="186" width="4" height="46" rx="1"/>
+        <text x="18" y="214" font-size="13" font-weight="600">orchestrator</text>
+        <rect class="plain" x="214" y="186" width="134" height="46" rx="6" style="stroke-dasharray: 4 3; stroke: var(--trail)"/>
+        <text x="226" y="214" font-size="12" class="mono">.memex/logs/</text>
+
+        <path class="line dash" d="M158 209H208" marker-end="url(#ah5)"/>
+        <text x="4" y="258" font-size="12" class="mono mut">memex show &lt;ref&gt;</text>
+        <text x="4" y="276" font-size="12" class="mut">only when it needs the detail</text>
+      </svg>

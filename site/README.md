@@ -12,6 +12,12 @@
 6. The verbs agents use: init, info, show, search, check and log, each a short description followed by its terminal sample (design.md §3, README.md).
 7. Story: STORY.md retold in full, on a dashed trail rail with orange markers, the desk sketch and the pull quote.
 
+The other files:
+
+- `site.css`: the styles Tailwind utilities cannot express: colour tokens for light and dark, links, inline code, terminals, the details marker and the logo mark.
+- `site.js`: the Tailwind Play CDN config, which maps colour names to the tokens in `site.css` and sets the fonts and the page width.
+- `cite.svg`, `handoff.svg`, `desk.svg`: the two-way citation diagram, the hand-off-by-ref diagram and the story's desk sketch. Each carries its own light and dark palette in a `prefers-color-scheme` style block, since an `<img>` cannot read the page's custom properties.
+
 Colours are CSS custom properties on `:root`, switched by `prefers-color-scheme`, and the Tailwind config maps its colour names to them. Everything (header, prose, terminals, table, diagrams, footer) shares one 48rem column, so every edge lines up; on phones it is full width with a 16px gutter, and terminal blocks scroll inside themselves.
 
 ## Preview

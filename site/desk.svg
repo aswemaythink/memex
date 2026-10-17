@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 340" width="640" height="340" role="img">
+<!-- The memex desk sketch of the memex site: two screens side by side, tied together by a dotted trail. It follows light and dark through its own prefers-color-scheme block. -->
+<style>
+svg { --bg: #faf7f0; --bg-soft: #f1ece0; --fg: #1c1a17; --muted: #5c574d; --accent: #9a3d17; --rule: #d8d1c0; --trail: #948462; color: var(--fg); }
+@media (prefers-color-scheme: dark) { svg { --bg: #141310; --bg-soft: #1b1915; --fg: #ebe7dd; --muted: #a8a295; --accent: #eca071; --rule: #35322a; --trail: #7a7058; } }
+</style>
+        <title id="desk-title">A memex desk, sketched</title>
+        <desc id="desk-desc">A desk with two slanted translucent screens side by side. A dotted trail joins a highlighted line on the left screen to a highlighted line on the right screen.</desc>
+        <g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M96 222h448l44 40H52z" style="fill: var(--bg)"/>
+          <rect x="52" y="262" width="536" height="14" rx="2" style="fill: var(--bg)"/>
+          <rect x="80" y="276" width="112" height="58" style="fill: var(--bg)"/>
+          <rect x="448" y="276" width="112" height="58" style="fill: var(--bg)"/>
+          <path d="M80 305h112M448 305h112M122 290h28M122 320h28M490 290h28M490 320h28"/>
+          <path d="M130 66h164l12 150H118z" style="fill: var(--bg-soft)"/>
+          <path d="M346 66h164l12 150H334z" style="fill: var(--bg-soft)"/>
+          <path d="M232 236h176M228 248h184" stroke-width="8" stroke-dasharray="10 3.5" stroke-linecap="butt" style="stroke: var(--muted)"/>
+          <circle cx="468" cy="238" r="5"/><circle cx="488" cy="238" r="5"/><circle cx="508" cy="238" r="5"/>
+          <path d="M538 252l9-22"/>
+          <circle cx="547" cy="229" r="4" fill="currentColor"/>
+        </g>
+        <g fill="none" stroke-width="3" stroke-linecap="round" opacity=".75" style="stroke: var(--muted)">
+          <path d="M146 90h116M146 108h94M146 144h112M146 162h78M146 180h104M146 198h60"/>
+          <path d="M362 90h108M362 108h84M362 126h116M362 162h78M362 180h106M362 198h50"/>
+        </g>
+        <path d="M146 126h86M362 144h90" fill="none" stroke-width="4.5" stroke-linecap="round" style="stroke: var(--accent)"/>
+        <path d="M240 126C278 124 322 146 356 144" fill="none" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="0.1 8" style="stroke: var(--accent)"/>
+        <circle cx="240" cy="126" r="4.5" style="fill: var(--accent)"/>
+        <circle cx="356" cy="144" r="4.5" style="fill: var(--accent)"/>
+      </svg>

@@ -1,0 +1,47 @@
+/* The memex site's own styles: what Tailwind utilities cannot do.
+   Colour tokens for light and dark, links, inline code, terminals, the details marker and the logo mark. Loaded by index.html. */
+:root {
+  color-scheme: light dark;
+  --bg: #faf7f0; --bg-soft: #f1ece0; --fg: #1c1a17; --muted: #5c574d;
+  --accent: #9a3d17; --accent-soft: #f1ddd0; --rule: #d8d1c0; --trail: #948462;
+  --code-bg: rgba(70, 55, 30, 0.09);
+  --term-bg: #1b1a17; --term-bar: #25231f; --term-line: #3a362f; --term-fg: #ebe7dd;
+  --term-cmd: #ffffff; --term-dim: #a09a8c; --term-path: #e8c991; --term-key: #9fd3ca; --term-accent: #f2a077;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141310; --bg-soft: #1b1915; --fg: #ebe7dd; --muted: #a8a295;
+    --accent: #eca071; --accent-soft: #3a2519; --rule: #35322a; --trail: #7a7058;
+    --code-bg: rgba(255, 240, 210, 0.1);
+    --term-bg: #0c0b09; --term-bar: #1a1814; --term-line: #2e2b25; --term-cmd: #ebe7dd; --term-dim: #9d978a;
+  }
+}
+html { scroll-padding-top: 4.5rem; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+body { background: var(--bg); color: var(--fg); overflow-wrap: break-word; -webkit-font-smoothing: antialiased; }
+::selection { background: var(--accent-soft); color: var(--fg); }
+body a { color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+body a:hover { text-decoration-thickness: 2px; }
+a:focus-visible, pre:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+:not(pre) > code { font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.86em; background: var(--code-bg); padding: 0.08em 0.32em; border-radius: 4px; }
+p, li { text-wrap: pretty; }
+h1, h2, h3 { text-wrap: balance; }
+/* Terminals: always dark, with the old site's highlight colours. */
+pre { margin: 0; padding: 0.95rem 1.1rem 1.05rem; overflow-x: auto; font: 0.8125rem/1.65 ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace; tab-size: 2; color: var(--term-fg); }
+pre code { white-space: pre; }
+pre .p { color: var(--term-dim); user-select: none; }
+pre .c { color: var(--term-cmd); font-weight: 600; }
+pre .g { font-weight: 700; }
+pre .k { color: var(--term-key); }
+pre .l { color: var(--term-path); }
+pre .d { color: var(--term-dim); }
+pre .m { color: var(--term-accent); }
+pre.ex { padding: 0.6rem 0.8rem 0.7rem; font-size: 0.72rem; line-height: 1.55; }
+pre:focus-visible { outline-color: var(--term-accent); outline-offset: -3px; }
+summary { list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; font: 600 1.1rem/1.2 ui-monospace, Menlo, monospace; color: var(--accent); }
+details[open] summary::after { content: "\2212"; }
+.nav::-webkit-scrollbar { display: none; }
+.mark .bar { fill: currentColor; }
+.mark .dot { fill: var(--accent); }
