@@ -66,8 +66,8 @@ both ways.
 
 Developers and agents are the trail blazers. An agent that finishes a job
 compresses what it learned and cites what it touched; the next agent walks
-that trail instead of starting from zero. Logs are the camera's film: kept a
-couple of days, then thrown away. What's still true gets authored into the
+that trail instead of starting from zero. Logs are the camera's film: kept while
+the work is live, then thrown away. What's still true gets authored into the
 layer.
 
 No server, no database, no model in the loop. Markdown files and a CLI.
