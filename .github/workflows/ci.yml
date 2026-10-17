@@ -68,7 +68,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install Rust 1.88
-        uses: dtolnay/rust-toolchain@1.88
+        uses: dtolnay/rust-toolchain@1.120
 
       - name: Build on MSRV
         run: cargo test --locked --no-run
