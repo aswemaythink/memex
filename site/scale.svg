@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 348" width="720" height="348" role="img">
-<!-- The scale diagram of the memex site: sixty files, each a dim block of code under a thin orange header strip; an agent zigzags down the gutters, lights the few strips it reads and opens one file. It follows light and dark through its own prefers-color-scheme block. -->
+<!-- The scale diagram of the memex site: sixty files, each a dim block of code under a thin orange header strip; an agent zigzags down the gutters, lights the few strips it reads, then reads the code of three files those headers pointed to. It follows light and dark through its own prefers-color-scheme block. -->
 <title>A short path through the intent layer</title>
-<desc>A grid of sixty dim blocks of code, each topped by a faint orange strip: its README or header. An agent starts at the top left and zigzags down the gaps between the blocks, never over them. Each strip it reads on the way lights up and stays lit, one per row, and it opens only the last file. The other strips stay faint and the other blocks stay closed.</desc>
+<desc>A grid of sixty dim blocks of code, each topped by a faint orange strip: its README or header. An agent starts at the top left and zigzags down the gaps between the blocks, never over them. Each strip it reads on the way lights up and stays lit, one per row. Then the code of three of those files lights up, one after another: the files the headers pointed to. The other strips and blocks stay faint.</desc>
 <style>
 svg { --bg: #faf7f0; --accent: #9a3d17; --rule: #d8d1c0; --code: #ebe5d7; --code-line: #d3cab6; }
 @media (prefers-color-scheme: dark) { svg { --bg: #141310; --accent: #eca071; --rule: #35322a; --code: #0c0b09; --code-line: #2a2722; } }
@@ -12,17 +12,21 @@ svg { --bg: #faf7f0; --accent: #9a3d17; --rule: #d8d1c0; --code: #ebe5d7; --code
 .trail { fill: none; stroke: var(--accent); stroke-width: 1.25; stroke-dasharray: 1.5 4; stroke-linecap: round; opacity: .3; }
 .run { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; opacity: .4; stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: run 10s linear infinite; }
 .agent { fill: var(--accent); stroke: var(--bg); stroke-width: 2; offset-path: path('M5 13L212.00 13.00Q218 13 218.00 19.00L218.00 63.00Q218 69 212.00 69.00L11.00 69.00Q5 69 5.00 75.00L5.00 119.00Q5 125 11.00 125.00L425.00 125.00Q431 125 431.00 131.00L431.00 175.00Q431 181 425.00 181.00L224.00 181.00Q218 181 218.00 187.00L218.00 231.00Q218 237 224.00 237.00L567.00 237.00Q573 237 573.00 243.00L573.00 287.00Q573 293 567.00 293.00L466.5 293'); animation: agent 10s linear infinite; }
-.open { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4 3; animation: open 10s linear infinite; }
+.hl { opacity: 0; animation: 10s linear infinite; }
+.hl rect { fill: var(--accent); fill-opacity: .07; stroke: var(--accent); stroke-width: 1.25; }
+.hl path { stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; opacity: .6; }
 @keyframes run { 0% { stroke-dashoffset: 1000; } 70%, 92% { stroke-dashoffset: 0; opacity: .4; } 100% { stroke-dashoffset: 0; opacity: 0; } }
 @keyframes agent { 0% { offset-distance: 0%; opacity: 1; } 70%, 92% { offset-distance: 100%; opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
-@keyframes open { 0%, 69% { opacity: 0; } 73%, 92% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes hl0 { 0%, 71% { opacity: 0; } 73%, 92% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes hl1 { 0%, 75% { opacity: 0; } 77%, 92% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes hl2 { 0%, 79% { opacity: 0; } 81%, 92% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes lit0 { 0%, 6.8% { opacity: .28; } 8.3%, 92% { opacity: 1; } 100% { opacity: .28; } }
 @keyframes lit1 { 0%, 17.2% { opacity: .28; } 18.7%, 92% { opacity: 1; } 100% { opacity: .28; } }
 @keyframes lit2 { 0%, 35.9% { opacity: .28; } 37.4%, 92% { opacity: 1; } 100% { opacity: .28; } }
 @keyframes lit3 { 0%, 46.3% { opacity: .28; } 47.8%, 92% { opacity: 1; } 100% { opacity: .28; } }
 @keyframes lit4 { 0%, 62.2% { opacity: .28; } 63.7%, 92% { opacity: 1; } 100% { opacity: .28; } }
 @keyframes lit5 { 0%, 68.5% { opacity: .28; } 70.0%, 92% { opacity: 1; } 100% { opacity: .28; } }
-@media (prefers-reduced-motion: reduce) { .run, .agent, .open, .read { animation: none; } .run { stroke-dashoffset: 0; } .agent { offset-distance: 100%; } }
+@media (prefers-reduced-motion: reduce) { .run, .agent, .hl, .read { animation: none; } .hl { opacity: 1; } .run { stroke-dashoffset: 0; } .agent { offset-distance: 100%; } }
 </style>
 <rect class="code" x="15" y="30" width="51" height="28" rx="3"/>
 <rect class="code" x="86" y="30" width="51" height="28" rx="3"/>
@@ -92,7 +96,9 @@ svg { --bg: #faf7f0; --accent: #9a3d17; --rule: #d8d1c0; --code: #ebe5d7; --code
 <rect class="read" x="228" y="192" width="51" height="4" style="animation: lit3 10s linear infinite"/>
 <rect class="read" x="512" y="248" width="51" height="4" style="animation: lit4 10s linear infinite"/>
 <rect class="read" x="441" y="304" width="51" height="4" style="animation: lit5 10s linear infinite"/>
-<rect class="open" x="437" y="300" width="59" height="42" rx="5"/>
+<g class="hl" style="animation-name: hl0"><rect x="15" y="86" width="51" height="28" rx="3"/><path d="M21 93h20M31 98.5h24M21 104h16M31 109.5h28"/></g>
+<g class="hl" style="animation-name: hl1"><rect x="228" y="198" width="51" height="28" rx="3"/><path d="M239 205h34M234 210.5h12M239 216h34M234 221.5h15"/></g>
+<g class="hl" style="animation-name: hl2"><rect x="441" y="310" width="51" height="28" rx="3"/><path d="M452 317h27M452 322.5h14M447 328h20M447 333.5h16"/></g>
 <path class="trail" d="M5 13L212.00 13.00Q218 13 218.00 19.00L218.00 63.00Q218 69 212.00 69.00L11.00 69.00Q5 69 5.00 75.00L5.00 119.00Q5 125 11.00 125.00L425.00 125.00Q431 125 431.00 131.00L431.00 175.00Q431 181 425.00 181.00L224.00 181.00Q218 181 218.00 187.00L218.00 231.00Q218 237 224.00 237.00L567.00 237.00Q573 237 573.00 243.00L573.00 287.00Q573 293 567.00 293.00L466.5 293"/>
 <path class="run" pathLength="1000" d="M5 13L212.00 13.00Q218 13 218.00 19.00L218.00 63.00Q218 69 212.00 69.00L11.00 69.00Q5 69 5.00 75.00L5.00 119.00Q5 125 11.00 125.00L425.00 125.00Q431 125 431.00 131.00L431.00 175.00Q431 181 425.00 181.00L224.00 181.00Q218 181 218.00 187.00L218.00 231.00Q218 237 224.00 237.00L567.00 237.00Q573 237 573.00 243.00L573.00 287.00Q573 293 567.00 293.00L466.5 293"/>
 <circle class="agent" r="4"/>
