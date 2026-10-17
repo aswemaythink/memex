@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<!--
+The drift page: how the layer falls behind the code, and what audit finds and leaves alone.
+Layout and chrome are shared by every page under docs/: the header, footer, site.css and site.js match the intro; docs.js renders the sidebar, the "On this page" table of contents and the mobile drawer.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drift · memex docs</title>
+<meta name="description" content="How the layer falls behind the code, what to do about it, and what memex audit does and does not find.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#faf7f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141310" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="memex">
+<meta property="og:title" content="Drift · memex docs">
+<meta property="og:description" content="How the layer falls behind the code, what to do about it, and what memex audit does and does not find.">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23faf7f0'/%3E%3Crect x='5.5' y='5.5' width='5.5' height='21' rx='2.75' fill='%231c1a17'/%3E%3Crect x='13.25' y='14' width='5.5' height='12.5' rx='2.75' fill='%239a3d17'/%3E%3Crect x='21' y='5.5' width='5.5' height='21' rx='2.75' fill='%231c1a17'/%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="../../site.js"></script>
+<link rel="stylesheet" href="../../site.css">
+<noscript><style>#docs-menu { display: none; }</style></noscript>
+</head>
+<body class="font-sans text-[1.0625rem] leading-[1.7]">
+<a href="#main" class="absolute left-4 -top-16 z-50 rounded-md bg-fg px-3 py-2 text-sm font-semibold !text-bg !no-underline focus:top-3">Skip to content</a>
+
+<header class="sticky top-0 z-40 border-b border-rule backdrop-blur" style="background-color: color-mix(in srgb, var(--bg) 88%, transparent)">
+  <div class="mx-auto flex h-14 max-w-[84rem] items-center gap-3 px-4 sm:px-6">
+    <button id="docs-menu" type="button" class="-ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-muted hover:text-fg lg:hidden" aria-controls="docs-sidebar" aria-expanded="false" aria-label="Open docs menu">
+      <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>
+    </button>
+    <a href="../../index.html" class="flex shrink-0 items-center gap-2 !no-underline !text-fg font-serif text-xl font-semibold tracking-tight">
+      <svg class="mark h-7 w-7" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect class="bar" x="4" y="4" width="6" height="24" rx="3"/><rect class="dot" x="13" y="14" width="6" height="14" rx="3"/><rect class="bar" x="22" y="4" width="6" height="24" rx="3"/></svg>
+      memex
+    </a>
+    <nav class="ml-auto flex shrink-0 gap-4 text-[0.875rem]" aria-label="Site">
+      <a class="hidden !text-muted !no-underline hover:!text-fg sm:inline" href="../../index.html">Introduction</a>
+      <a class="!text-fg !no-underline" href="../get-started.html" aria-current="true">Docs</a>
+      <a class="!text-muted !no-underline hover:!text-fg" href="https://github.com/aswemaythink/memex">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="mx-auto max-w-[84rem] px-4 sm:px-6 lg:grid lg:grid-cols-[13.5rem_minmax(0,46rem)] lg:gap-14 xl:grid-cols-[13.5rem_minmax(0,46rem)_12rem] xl:justify-between">
+  <aside id="docs-sidebar" class="max-lg:invisible max-lg:-translate-x-full fixed bottom-0 left-0 top-14 z-40 w-[17rem] max-w-[85vw] overflow-y-auto border-r border-rule bg-bg px-5 py-8 transition-transform duration-200 lg:sticky lg:z-auto lg:h-[calc(100vh-3.5rem)] lg:w-auto lg:max-w-none lg:border-r-0 lg:bg-transparent lg:px-0 lg:py-10 [scrollbar-width:thin] [scrollbar-color:var(--rule)_transparent]" aria-label="Docs navigation">
+    <noscript><p class="text-[0.92rem]"><a href="../get-started.html">Docs: Getting started</a></p></noscript>
+  </aside>
+
+  <main id="main" class="min-w-0 pb-6 pt-10 sm:pt-14">
+    <p class="mb-3 font-mono text-[0.78rem] font-semibold uppercase tracking-[0.06em] text-accent">Concepts</p>
+    <h1 class="font-serif text-[2rem] leading-[1.15] font-medium sm:text-[2.4rem]">Drift</h1>
+    <p class="mt-4 font-serif text-[1.2rem] leading-[1.5] sm:text-[1.3rem]">When the code changes and the layer describing it does not, the two drift apart.</p>
+    <section class="mt-16" aria-labelledby="arises">
+      <h2 id="arises" class="font-serif text-[1.5rem] leading-tight font-medium">How drift arises</h2>
+      <p class="mt-3">Drift starts when the code changes and the prose does not. A README still names a function that has moved, or a header still describes a file that has since been split.</p>
+      <p class="mt-3">Nothing looks broken when it happens. The README still reads well and its one-liner still turns up in search, so the gap is easy to miss.</p>
+      <p class="mt-3">memex does not read code bodies, so it cannot tell that a claim is false. Checking the layer against the code is a reader’s job: for each claim, does the code do it, and is there a cited case that proves it?</p>
+    </section>
+    <section class="mt-16" aria-labelledby="fix">
+      <h2 id="fix" class="font-serif text-[1.5rem] leading-tight font-medium">Fix it, or log it</h2>
+      <p class="mt-3">The stance is simple. Fix the README, header or collection doc in the same change that moved the code, so the layer and the code land together.</p>
+      <p class="mt-3">If the mismatch is out of scope for that change, log it to the <code>drift</code> stream so that someone can pick it up. A log is a note for the next reader, not a fix. It expires like any other log, so the note goes once it is pruned, while the mismatch stays.</p>
+      <p class="mt-4 text-[0.95rem] text-muted">The steps and a sample log call are in the guide, <a href="../guides/drift.html">Checking drift</a>.</p>
+    </section>
+    <section class="mt-16" aria-labelledby="audit">
+      <h2 id="audit" class="font-serif text-[1.5rem] leading-tight font-medium">What audit finds, and what it leaves alone</h2>
+      <p class="mt-3"><code>memex audit</code> reports the gaps it can see without reading code: files with no header, folders with no README, files over 500 code lines, one-liners over 100 characters, unresolved references and duplicate ids. Each finding names its fix.</p>
+      <p class="mt-3">It is a report, not a gate: it exits 0 whatever it finds. Docs that nothing cites are not findings. Neither are prefix citations or anything about code bodies.</p>
+      <p class="mt-3">It also lists where intent is thin, the header share of each file. That list has no threshold to fix to, so it is never a finding.</p>
+      <p class="mt-4 text-[0.95rem] text-muted">See the <a href="../reference/audit.html">audit reference</a> for the flags.</p>
+    </section>
+    <p class="mt-16 border-t border-rule pt-5 text-[0.95rem]">Next: <a href="../get-started.html">Get started</a></p>
+  </main>
+
+  <aside id="docs-toc" class="hidden xl:sticky xl:top-14 xl:block xl:h-[calc(100vh-3.5rem)] xl:overflow-y-auto xl:py-14 [scrollbar-width:thin] [scrollbar-color:var(--rule)_transparent]" aria-label="On this page"></aside>
+</div>
+
+<footer class="mx-auto mt-16 max-w-[84rem] px-4 sm:px-6">
+  <div class="border-t border-rule pt-6 pb-12 text-[0.88rem] text-muted">
+  <p class="flex flex-wrap gap-x-5 gap-y-1">
+    <a href="https://github.com/aswemaythink/memex">GitHub</a>
+    <a href="../get-started.html">Docs</a>
+  </p>
+  </div>
+</footer>
+
+<script src="../docs.js"></script>
+</body>
+</html>

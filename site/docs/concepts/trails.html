@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<!--
+The trails page: citations link the layer both ways, and logs and collections pass work along.
+Layout and chrome are shared by every page under docs/: the header, footer, site.css and site.js match the intro; docs.js renders the sidebar, the "On this page" table of contents and the mobile drawer.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trails · memex docs</title>
+<meta name="description" content="Citations read both ways, logs for work in progress that expire, and collections for what stays true.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#faf7f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141310" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="memex">
+<meta property="og:title" content="Trails · memex docs">
+<meta property="og:description" content="Citations read both ways, logs for work in progress that expire, and collections for what stays true.">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23faf7f0'/%3E%3Crect x='5.5' y='5.5' width='5.5' height='21' rx='2.75' fill='%231c1a17'/%3E%3Crect x='13.25' y='14' width='5.5' height='12.5' rx='2.75' fill='%239a3d17'/%3E%3Crect x='21' y='5.5' width='5.5' height='21' rx='2.75' fill='%231c1a17'/%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="../../site.js"></script>
+<link rel="stylesheet" href="../../site.css">
+<noscript><style>#docs-menu { display: none; }</style></noscript>
+</head>
+<body class="font-sans text-[1.0625rem] leading-[1.7]">
+<a href="#main" class="absolute left-4 -top-16 z-50 rounded-md bg-fg px-3 py-2 text-sm font-semibold !text-bg !no-underline focus:top-3">Skip to content</a>
+
+<header class="sticky top-0 z-40 border-b border-rule backdrop-blur" style="background-color: color-mix(in srgb, var(--bg) 88%, transparent)">
+  <div class="mx-auto flex h-14 max-w-[84rem] items-center gap-3 px-4 sm:px-6">
+    <button id="docs-menu" type="button" class="-ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-muted hover:text-fg lg:hidden" aria-controls="docs-sidebar" aria-expanded="false" aria-label="Open docs menu">
+      <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>
+    </button>
+    <a href="../../index.html" class="flex shrink-0 items-center gap-2 !no-underline !text-fg font-serif text-xl font-semibold tracking-tight">
+      <svg class="mark h-7 w-7" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect class="bar" x="4" y="4" width="6" height="24" rx="3"/><rect class="dot" x="13" y="14" width="6" height="14" rx="3"/><rect class="bar" x="22" y="4" width="6" height="24" rx="3"/></svg>
+      memex
+    </a>
+    <nav class="ml-auto flex shrink-0 gap-4 text-[0.875rem]" aria-label="Site">
+      <a class="hidden !text-muted !no-underline hover:!text-fg sm:inline" href="../../index.html">Introduction</a>
+      <a class="!text-fg !no-underline" href="../get-started.html" aria-current="true">Docs</a>
+      <a class="!text-muted !no-underline hover:!text-fg" href="https://github.com/aswemaythink/memex">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="mx-auto max-w-[84rem] px-4 sm:px-6 lg:grid lg:grid-cols-[13.5rem_minmax(0,46rem)] lg:gap-14 xl:grid-cols-[13.5rem_minmax(0,46rem)_12rem] xl:justify-between">
+  <aside id="docs-sidebar" class="max-lg:invisible max-lg:-translate-x-full fixed bottom-0 left-0 top-14 z-40 w-[17rem] max-w-[85vw] overflow-y-auto border-r border-rule bg-bg px-5 py-8 transition-transform duration-200 lg:sticky lg:z-auto lg:h-[calc(100vh-3.5rem)] lg:w-auto lg:max-w-none lg:border-r-0 lg:bg-transparent lg:px-0 lg:py-10 [scrollbar-width:thin] [scrollbar-color:var(--rule)_transparent]" aria-label="Docs navigation">
+    <noscript><p class="text-[0.92rem]"><a href="../get-started.html">Docs: Getting started</a></p></noscript>
+  </aside>
+
+  <main id="main" class="min-w-0 pb-6 pt-10 sm:pt-14">
+    <p class="mb-3 font-mono text-[0.78rem] font-semibold uppercase tracking-[0.06em] text-accent">Concepts</p>
+    <h1 class="font-serif text-[2rem] leading-[1.15] font-medium sm:text-[2.4rem]">Trails</h1>
+    <p class="mt-4 font-serif text-[1.2rem] leading-[1.5] sm:text-[1.3rem]">A trail is a path the next agent can follow, so it starts where the last one stopped.</p>
+    <section class="mt-16" aria-labelledby="citations">
+      <h2 id="citations" class="font-serif text-[1.5rem] leading-tight font-medium">Citations go both ways</h2>
+      <p class="mt-3">An id, a path or a ref written into a doc links the two. <code>NAME-001</code> in a README links that README to the case with that id. A path such as <code>crates/namer/src/hash.rs</code> links a README to the file it names.</p>
+      <p class="mt-3">memex reads every link both ways. <code>memex show</code> lists what a doc cites, each with its one-liner, and what cites it, so a reader can follow a trail back as easily as forward.</p>
+      <p class="mt-3">Logs are immutable: memex has no verb to edit one. A correction is a new entry that cites the old one, and the old entry then shows the correction under <em>cited by</em>.</p>
+    </section>
+    <section class="mt-16" aria-labelledby="logs">
+      <h2 id="logs" class="font-serif text-[1.5rem] leading-tight font-medium">Logs are work in progress</h2>
+      <p class="mt-3">A log records one run: what an agent tried, and what it learned that the code does not say, such as a verdict, a dead end or a gotcha.</p>
+      <p class="mt-3">A worker logs its full report and hands back one line, the log’s ref. The orchestrator opens the full log only when it needs the detail.</p>
+      <p class="mt-3">Logs are like chats: useful in the moment, stale soon after. memex prunes the oldest as new ones arrive, within the limits set in <a href="../reference/configuration.html">configuration</a>.</p>
+    </section>
+    <section class="mt-16" aria-labelledby="collections">
+      <h2 id="collections" class="font-serif text-[1.5rem] leading-tight font-medium">Collections keep what stays true</h2>
+      <p class="mt-3">A collection is a set of records on one topic that agents keep and search. Any Markdown file joins one with a <code>memex:</code> line in its frontmatter.</p>
+      <p class="mt-3">The usual first one is a <code>CASES.md</code> with <code>memex: cases</code>, where each entry is a test id and the claim it proves. Collections are authored, not pruned: they stay until someone changes them.</p>
+    </section>
+    <section class="mt-16" aria-labelledby="promote">
+      <h2 id="promote" class="font-serif text-[1.5rem] leading-tight font-medium">Promoting a finding</h2>
+      <p class="mt-3">When a log holds something still true, write it down once, in your own words, where the next reader will look: a README, a header or a doc in a collection. Cite the ids, and let the log expire.</p>
+      <p class="mt-3">Never copy the log into the repo, or give it a <code>memex:</code> line. That turns one run’s record into permanent noise.</p>
+      <p class="mt-4 text-[0.95rem] text-muted">The steps are on the <a href="../patterns/promote-findings.html">promote findings</a> pattern page. See <a href="../../index.html#trails">Trailblazing</a> on the intro page, and <a href="../../index.html#story">the story</a> for where the word comes from.</p>
+    </section>
+    <p class="mt-16 border-t border-rule pt-5 text-[0.95rem]">Next: <a href="drift.html">Drift</a></p>
+  </main>
+
+  <aside id="docs-toc" class="hidden xl:sticky xl:top-14 xl:block xl:h-[calc(100vh-3.5rem)] xl:overflow-y-auto xl:py-14 [scrollbar-width:thin] [scrollbar-color:var(--rule)_transparent]" aria-label="On this page"></aside>
+</div>
+
+<footer class="mx-auto mt-16 max-w-[84rem] px-4 sm:px-6">
+  <div class="border-t border-rule pt-6 pb-12 text-[0.88rem] text-muted">
+  <p class="flex flex-wrap gap-x-5 gap-y-1">
+    <a href="https://github.com/aswemaythink/memex">GitHub</a>
+    <a href="../get-started.html">Docs</a>
+  </p>
+  </div>
+</footer>
+
+<script src="../docs.js"></script>
+</body>
+</html>
