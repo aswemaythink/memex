@@ -1,5 +1,5 @@
 //! Prints `search`'s groups as text (design §3.2) and as the `--json` document (design §3.6).
-//! Cases: SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-FUZZY-01, SRCH-LINE-01, SRCH-JSON-01, SRCH-JSON-02, SRCH-JSON-03, SRCH-FILTER-06, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01, SRCH-NOHITS-01, SRCH-NOHITS-02, SRCH-NOHITS-03, SRCH-NOHITS-04, SRCH-LEGEND-01, SRCH-LEGEND-02
+//! Cases: SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-FUZZY-01, SRCH-LINE-01, SRCH-JSON-01, SRCH-JSON-02, SRCH-JSON-03, SRCH-FILTER-06, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01, SRCH-NOHITS-01, SRCH-NOHITS-02, SRCH-NOHITS-03, SRCH-NOHITS-04, SRCH-LEGEND-01, SRCH-LEGEND-02, SRCH-EXCLUDE-04, SRCH-EXCLUDE-05
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -79,12 +79,12 @@ pub fn age(seconds: i64) -> String {
 }
 
 /// The `--json` document: the query, the filters, and the groups (design §3.6), with one line break at the end. Each filter's name
-/// holds the list of its values, in the order given.
-pub fn document(query: &str, filters: &[(&str, &str)], groups: &[Group]) -> String {
+/// holds the list of its values, in the order given; a `!` filter keeps its `!` in the name.
+pub fn document(query: &str, filters: &[(String, &str)], groups: &[Group]) -> String {
     let groups: Vec<Json> = groups.iter().map(group_json).collect();
     let mut by_name: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
-    for &(name, value) in filters {
-        by_name.entry(name).or_default().push(value);
+    for (name, value) in filters {
+        by_name.entry(name.as_str()).or_default().push(*value);
     }
     format!(
         "{}\n",

@@ -7,6 +7,7 @@
 pub mod bm25;
 pub mod filter;
 pub mod fuzzy;
+mod hold;
 pub mod tokenize;
 mod vocab;
 

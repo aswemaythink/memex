@@ -1,5 +1,5 @@
 //! Reads and matches a search's filters, and checks its `--in` names (design §3.2).
-//! Cases: SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-07, SRCH-FILTER-08, SRCH-IN-03, SRCH-IN-04, SRCH-IN-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-JSON-03, CLI-HINT-03, CLI-HINT-04, SRCH-FOLD-01, COLL-SHARED-01, COLL-SHARED-02, COLL-SHARED-03
+//! Cases: SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-07, SRCH-FILTER-08, SRCH-IN-03, SRCH-IN-04, SRCH-IN-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-JSON-03, CLI-HINT-03, CLI-HINT-04, SRCH-FOLD-01, COLL-SHARED-01, COLL-SHARED-02, COLL-SHARED-03, SRCH-REQUIRE-04, SRCH-EXCLUDE-04
 
 use std::collections::BTreeSet;
 
@@ -21,6 +21,8 @@ const TAG_FIELD: &str = "tags";
 pub enum Filter {
     /// `name:value`: a doc whose field holds the value, as its text or as one item of its list.
     Field {
+        /// True for `!name:value`, which keeps the docs that the filter drops (design §3.2 Operators).
+        negated: bool,
         /// The name as the query spells it, such as `tag`.
         name: String,
         /// The frontmatter field that it reads, such as `tags`.
@@ -32,6 +34,8 @@ pub enum Filter {
     },
     /// `since:value`: a doc whose `time` is at or after the bound.
     Since {
+        /// True for `!since:value`, which keeps the docs that have no time or a time before the bound.
+        negated: bool,
         /// The value as the query spells it, such as `2d`.
         raw: String,
         /// What the value means.
@@ -49,17 +53,21 @@ pub enum Bound {
 }
 
 impl Filter {
-    /// The name and the value as the query spells them, for the JSON `filters` object. A `since:` filter is named `since`.
-    pub fn spelled(&self) -> (&str, &str) {
-        match self {
+    /// The name and the value as the query spells them, for the JSON `filters` object. A `since:` filter is named `since`, and a
+    /// `!` filter keeps its `!` in the name, as `!tag`.
+    pub fn spelled(&self) -> (String, &str) {
+        let (name, value) = match self {
             Filter::Field { name, value, .. } => (name.as_str(), value.as_str()),
             Filter::Since { raw, .. } => ("since", raw.as_str()),
-        }
+        };
+        let bang = if self.negated() { "!" } else { "" };
+        (format!("{bang}{name}"), value)
     }
 
-    /// True when the doc passes this filter, with `now` as the instant that `since:` is measured from.
+    /// True when the doc passes this filter, with `now` as the instant that `since:` is measured from. A `!` filter passes the docs
+    /// that its test drops, docs without the field or the time among them (design §3.2 Operators).
     pub fn matches(&self, doc: &Doc, now: Timestamp) -> bool {
-        match self {
+        let holding = match self {
             Filter::Field {
                 name,
                 field,
@@ -67,6 +75,14 @@ impl Filter {
                 ..
             } => holds(doc, name, field, folded),
             Filter::Since { bound, .. } => time_of(doc).is_some_and(|at| bound.keeps(at, now)),
+        };
+        holding != self.negated()
+    }
+
+    /// True for a `!` filter, which passes the docs that its test without the `!` drops.
+    fn negated(&self) -> bool {
+        match self {
+            Filter::Field { negated, .. } | Filter::Since { negated, .. } => *negated,
         }
     }
 }
@@ -81,26 +97,21 @@ impl Bound {
     }
 }
 
-/// Splits the query terms into filters and literal terms (design §3.2). A term is a filter when it reads `name:value`, with a
-/// non-empty value, and `name` is reserved or some doc in scope holds that field. A reserved name with no value, such as `tag:`,
-/// is a usage error, and every other term is returned as written, for its words. A `since:` value that is none of its forms is
-/// a usage error too.
-pub fn read(
-    terms: &[String],
+/// The filter that a term reads as, or None when the term is words (design §3.2). A term is a filter when it reads `name:value`, with
+/// a non-empty value, and `name` is reserved or some doc in scope holds that field; `negated` makes it the `!` filter. A reserved
+/// name with no value, such as `tag:`, is a usage error, and so is a `since:` value that is none of its forms.
+pub fn classify(
+    term: &str,
     scope: &BTreeSet<String>,
-) -> Result<(Vec<Filter>, Vec<String>), Error> {
-    let mut filters = Vec::new();
-    let mut literals = Vec::new();
-    for term in terms {
-        match split(term) {
-            Some((name, "")) if is_reserved(name) => return Err(empty_value(name)),
-            Some((name, value)) if !value.is_empty() && is_filter(name, scope) => {
-                filters.push(filter_of(name, value)?);
-            }
-            _ => literals.push(term.clone()),
+    negated: bool,
+) -> Result<Option<Filter>, Error> {
+    match split(term) {
+        Some((name, "")) if is_reserved(name) => Err(empty_value(name)),
+        Some((name, value)) if !value.is_empty() && is_filter(name, scope) => {
+            filter_of(name, value, negated).map(Some)
         }
+        _ => Ok(None),
     }
-    Ok((filters, literals))
 }
 
 /// The names of the fields that the docs hold, which decide what `name:value` means in a search over those docs.
@@ -194,11 +205,12 @@ fn empty_value(name: &str) -> Error {
 }
 
 /// The filter that `name:value` names. `since:` reads its bound, `tag:` reads the `tags` field, and any other name reads the field
-/// of its own name.
-fn filter_of(name: &str, value: &str) -> Result<Filter, Error> {
+/// of its own name. `negated` is carried into the filter as written.
+fn filter_of(name: &str, value: &str, negated: bool) -> Result<Filter, Error> {
     if name.eq_ignore_ascii_case("since") {
         let bound = bound_of(value)?;
         return Ok(Filter::Since {
+            negated,
             raw: value.to_string(),
             bound,
         });
@@ -209,6 +221,7 @@ fn filter_of(name: &str, value: &str) -> Result<Filter, Error> {
         name
     };
     Ok(Filter::Field {
+        negated,
         name: name.to_string(),
         field: field.to_string(),
         value: value.to_string(),
@@ -297,10 +310,20 @@ mod tests {
 
     #[test]
     fn a_reserved_name_with_no_value_is_a_usage_error() {
-        let error = read(&["since:".to_string()], &BTreeSet::new()).unwrap_err();
+        let error = classify("since:", &BTreeSet::new(), false).unwrap_err();
         assert_eq!(error.message, "empty filter value 'since:'");
-        let error = read(&["TAG:".to_string()], &BTreeSet::new()).unwrap_err();
+        let error = classify("TAG:", &BTreeSet::new(), true).unwrap_err();
         assert_eq!(error.message, "empty filter value 'TAG:'");
+    }
+
+    #[test]
+    fn a_negated_filter_spells_its_name_with_a_bang() {
+        let scope = BTreeSet::new();
+        let filter = classify("tag:show", &scope, true).unwrap().unwrap();
+        assert_eq!(filter.spelled(), ("!tag".to_string(), "show"));
+        let filter = classify("since:2d", &scope, false).unwrap().unwrap();
+        assert_eq!(filter.spelled(), ("since".to_string(), "2d"));
+        assert!(classify("widget", &scope, false).unwrap().is_none());
     }
 
     #[test]

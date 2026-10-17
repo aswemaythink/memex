@@ -1,0 +1,1 @@
+{"steps": [{"args": ["search", "widget", "-gizmo"]}, {"args": ["search", "widget", "-gizmo", "--json"]}]}

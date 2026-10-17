@@ -1,0 +1,18 @@
+$ memex search +tag:show --json
+exit 0
+stdout
+| {"query":"+tag:show","filters":{"tag":["show"]},"groups":[{"collection":"logs","total":1,"hits":[{"ref":"impl:20261013-115000-widget-plan","collection":"impl","id":"20261013-115000-widget-plan","path":null,"title":"Widget plan","fields":{"stream":"impl","time":"2026-10-13T11:50:00Z","agent":"cook-2","tags":["show"],"branch":"feat/show"},"score":null,"snippet":"Widget plan","fuzzy":[]}]}]}
+stderr (empty)
+
+$ memex search tag:show --json
+exit 0
+stdout
+| {"query":"tag:show","filters":{"tag":["show"]},"groups":[{"collection":"logs","total":1,"hits":[{"ref":"impl:20261013-115000-widget-plan","collection":"impl","id":"20261013-115000-widget-plan","path":null,"title":"Widget plan","fields":{"stream":"impl","time":"2026-10-13T11:50:00Z","agent":"cook-2","tags":["show"],"branch":"feat/show"},"score":null,"snippet":"Widget plan","fuzzy":[]}]}]}
+stderr (empty)
+
+$ memex search +std::io
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   alpha/README.md  Uses std and io together.
+stderr (empty)

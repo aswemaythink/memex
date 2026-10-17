@@ -34,9 +34,10 @@ const TOP: [&str; 16] = [
     "init    set up .memex/ and the AGENTS.md snippet",
 ];
 
-const SEARCH: [&str; 5] = [
+const SEARCH: [&str; 6] = [
     GRAMMAR[0],
     "Find docs by words and field:value filters, grouped by collection.",
+    "  +word / !word            must hold / must not hold the word (exact or stem); !field:value leaves those docs out",
     "  --in <coll>[,<coll>...]  search only these collections; with no words, list their roster",
     "  --limit N                hits per group (default 5; 20 with --in)",
     "  --json                   print one JSON document instead of text",

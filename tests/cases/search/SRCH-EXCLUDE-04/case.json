@@ -1,0 +1,1 @@
+{"steps": [{"args": ["search", "--in", "logs", "!tag:show"]}, {"args": ["search", "!since:2d"]}, {"args": ["search", "--in", "logs", "!tag:show", "--json"]}]}

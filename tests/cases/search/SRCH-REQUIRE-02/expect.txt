@@ -1,0 +1,15 @@
+$ memex search grammar
+exit 0
+stdout
+| readmes  (showing 3 of 3; [~grammer] fuzzy match on grammer)
+|   one/README.md  The grammars of the tool.
+|   three/README.md  A grammarian writes the notes.
+|   two/README.md  A grammer with a typo.  [~grammer]
+stderr (empty)
+
+$ memex search +grammar
+exit 0
+stdout
+| readmes  (showing 1 of 1)
+|   one/README.md  The grammars of the tool.
+stderr (empty)

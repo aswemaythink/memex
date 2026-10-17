@@ -1,12 +1,14 @@
 //! Carries out `memex search` (design §3.2 and §3.6): filters, then ranks, lists or rosters docs.
 //! Each doc is grouped by where it came from: the graph's READMEs, its headers, a collection, or the logs (design §3.2 and §4.2 Names).
-//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-IN-01, SRCH-IN-02, SRCH-RANK-03, SRCH-TOKEN-03, SRCH-JSON-01, SRCH-JSON-02, SRCH-LINE-01, SRCH-JSON-03, SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01, SRCH-ORPHAN-02, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-IN-03, SRCH-IN-04, SRCH-IN-05, SRCH-IN-06, SRCH-TOKEN-04, HDR-CAP-03, MAN-LOAD-13, SRCH-NOHITS-01, SRCH-NOHITS-02, SRCH-NOHITS-03, SRCH-NOHITS-04, COLL-SHARED-01, COLL-SHARED-02, COLL-SHARED-03
+//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-GROUP-01, SRCH-GROUP-02, SRCH-LIMIT-01, SRCH-IN-01, SRCH-IN-02, SRCH-RANK-03, SRCH-TOKEN-03, SRCH-JSON-01, SRCH-JSON-02, SRCH-LINE-01, SRCH-JSON-03, SRCH-FILTER-01, SRCH-FILTER-02, SRCH-FILTER-03, SRCH-FILTER-04, SRCH-FILTER-05, SRCH-FILTER-06, SRCH-LITERAL-01, SRCH-LITERAL-02, SRCH-LITERAL-03, SRCH-RESERVED-01, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-03, SRCH-ROSTER-04, SRCH-ORPHAN-01, SRCH-ORPHAN-02, SRCH-SINCE-01, SRCH-SINCE-02, SRCH-SINCE-03, SRCH-SINCE-04, SRCH-IN-03, SRCH-IN-04, SRCH-IN-05, SRCH-IN-06, SRCH-TOKEN-04, HDR-CAP-03, MAN-LOAD-13, SRCH-NOHITS-01, SRCH-NOHITS-02, SRCH-NOHITS-03, SRCH-NOHITS-04, COLL-SHARED-01, COLL-SHARED-02, COLL-SHARED-03, SRCH-REQUIRE-01, SRCH-REQUIRE-02, SRCH-REQUIRE-03, SRCH-REQUIRE-04, SRCH-EXCLUDE-01, SRCH-EXCLUDE-02, SRCH-EXCLUDE-03, SRCH-EXCLUDE-04, SRCH-EXCLUDE-05, SRCH-EXCLUDE-06
 
 mod listing;
+mod query;
 
 use std::collections::BTreeMap;
 
 use self::listing::{age_of, list_group};
+use self::query::{Literal, Words};
 use crate::cli::Verb;
 use crate::clock::Timestamp;
 use crate::collections::frontmatter::after_frontmatter;
@@ -14,7 +16,6 @@ use crate::corpus::{Corpus, Doc, HEADERS, LOGS, READMES};
 use crate::error::{warn, Error};
 use crate::index::bm25;
 use crate::index::filter::{self, Filter};
-use crate::index::tokenize::query_tokens;
 use crate::index::{Index, Source};
 use crate::intent::header;
 use crate::render::search::{self as render, Group, Hit};
@@ -48,21 +49,21 @@ pub struct Request {
 /// What a query asks for (design §3.2).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Mode {
-    /// Words are given: the docs that the filters keep are ranked by the words.
+    /// Words that rank the docs are given: the docs that the filters keep are ranked by them, and the `+` and `!` words cut the hits.
     Words,
-    /// Filters are given with no words: the docs that they keep are listed.
+    /// Filters or `!` words are given with no ranking word: the docs that they keep are listed.
     Listing,
-    /// `--in` is given with no words: each group's docs are listed, with the count of docs that cite each one.
+    /// `--in` is given with no ranking word: each group's docs are listed, with the count of docs that cite each one.
     Roster,
     /// No words, filters or `--in` are given: nothing is listed.
     Nothing,
 }
 
-/// What a search asks of the index: its mode, its words and filters, the limit of each group, and the instant that log ages and
-/// `since:` are measured from.
+/// What a search asks of the index: its mode, its words with their operators, its filters, the limit of each group, and the instant
+/// that log ages and `since:` are measured from.
 struct Plan {
     mode: Mode,
-    words: Vec<String>,
+    words: Words,
     filters: Vec<Filter>,
     limit: usize,
     now: Timestamp,
@@ -77,37 +78,45 @@ pub fn run(request: &Request, now: Timestamp) -> Result<String, Error> {
     }
     let scope = scope_of(&corpus, request.in_.as_deref());
     let fields = filter::fields_of(scope.iter().flat_map(|(_, docs)| docs.iter().copied()));
-    let (filters, literals) = filter::read(&request.terms, &fields)?;
+    let (filters, literals) = query::read(&request.terms, &fields)?;
     let plan = Plan::new(request, &literals, filters, now)?;
     let groups = rank_groups(&corpus, &plan, scope);
     if groups.is_empty() {
-        warn(&render::no_hits(&request.terms, &literals));
+        warn(&render::no_hits(&request.terms, &typed(&literals)));
     }
     Ok(if request.json {
-        let spelled: Vec<(&str, &str)> = plan.filters.iter().map(Filter::spelled).collect();
+        let spelled: Vec<(String, &str)> = plan.filters.iter().map(Filter::spelled).collect();
         render::document(&request.terms.join(" "), &spelled, &groups)
     } else {
         render::text(&groups)
     })
 }
 
+/// The literal terms as typed, which the zero-hit hint names (design §3.2 Zero hits).
+fn typed(literals: &[Literal]) -> Vec<String> {
+    literals
+        .iter()
+        .map(|literal| literal.typed.clone())
+        .collect()
+}
+
 impl Plan {
-    /// The plan of a request: its words are the tokens of its literal terms, its mode follows from what is given, and its limit is
-    /// the `--limit`, else the default of the mode. Literal terms that hold no token are a usage error, not an empty search.
+    /// The plan of a request: its words are read from its literal terms, its mode follows from what is given, and its limit is the
+    /// `--limit`, else the default of the mode. Literal terms that hold no token are a usage error, not an empty search.
     fn new(
         request: &Request,
-        literals: &[String],
+        literals: &[Literal],
         filters: Vec<Filter>,
         now: Timestamp,
     ) -> Result<Plan, Error> {
-        let words = words_of(literals);
+        let words = Words::of(literals);
         if words.is_empty() && !literals.is_empty() {
             return Err(fail(Verb::Search, "no searchable words".to_string()));
         }
         let mode = mode_of(
-            !words.is_empty(),
+            !words.ranked.is_empty(),
             request.in_.is_some(),
-            !filters.is_empty(),
+            !filters.is_empty() || !words.excluded.is_empty(),
         );
         let default = match mode {
             Mode::Words if request.in_.is_some() => IN_LIMIT,
@@ -131,9 +140,10 @@ impl Plan {
     }
 }
 
-/// The mode of a query: words rank the docs; otherwise `--in` makes a roster; otherwise filters list the docs they keep.
-fn mode_of(has_words: bool, in_given: bool, has_filters: bool) -> Mode {
-    match (has_words, in_given, has_filters) {
+/// The mode of a query: words that rank the docs make a search; otherwise `--in` makes a roster; otherwise filters or `!` words
+/// make a listing of the docs they keep.
+fn mode_of(ranked: bool, in_given: bool, listed: bool) -> Mode {
+    match (ranked, in_given, listed) {
         (true, _, _) => Mode::Words,
         (false, true, _) => Mode::Roster,
         (false, false, true) => Mode::Listing,
@@ -211,7 +221,7 @@ fn names_doc(corpus: &Corpus, name: &str, doc: &Doc) -> bool {
 }
 
 /// The groups that hold hits or listed docs, in the order of design §3.2. Each group's docs are first narrowed by the filters, then
-/// ranked by the words, or listed. A query that asks for nothing has no groups.
+/// ranked by the words, or listed with the `!` words left out. A query that asks for nothing has no groups.
 fn rank_groups<'a>(
     corpus: &Corpus,
     plan: &Plan,
@@ -227,16 +237,35 @@ fn rank_groups<'a>(
             let kept: Vec<&'a Doc> = docs.into_iter().filter(|doc| plan.keeps(doc)).collect();
             match plan.mode {
                 Mode::Words => search_group(corpus, &key, &kept, plan),
-                _ => list_group(
-                    corpus,
-                    key.name().to_string(),
-                    kept,
-                    plan.limit,
-                    plan.now,
-                    roster,
-                ),
+                _ => {
+                    let listed = leave_out(kept, &plan.words.excluded);
+                    list_group(
+                        corpus,
+                        key.name().to_string(),
+                        listed,
+                        plan.limit,
+                        plan.now,
+                        roster,
+                    )
+                }
             }
         })
+        .collect()
+}
+
+/// The docs of a listing that its `!` words leave in: those that hold none of them at tier 0 (design §3.2 Operators). A listing with
+/// no `!` word keeps every doc and builds no index.
+fn leave_out<'a>(docs: Vec<&'a Doc>, excluded: &[String]) -> Vec<&'a Doc> {
+    if excluded.is_empty() {
+        return docs;
+    }
+    let pass = {
+        let sources: Vec<Source> = docs.iter().map(|doc| source_of(doc)).collect();
+        Index::build(&sources, bm25::WEIGHTS).passing(&[], excluded)
+    };
+    docs.into_iter()
+        .zip(pass)
+        .filter_map(|(doc, pass)| pass.then_some(doc))
         .collect()
 }
 
@@ -255,16 +284,22 @@ fn weights_of(corpus: &Corpus, key: &GroupKey) -> [f64; 3] {
         })
 }
 
-/// The group of docs that the words rank: its total, and its hits within the limit. None when no doc matches.
+/// The group of docs that the words rank: its total, and its hits within the limit. The `+` and `!` words cut the hits down to those
+/// that pass them, and the total counts those. None when no doc passes.
 fn search_group<'a>(
     corpus: &Corpus,
     key: &GroupKey,
     docs: &[&'a Doc],
     plan: &Plan,
 ) -> Option<Group<'a>> {
-    let weights = weights_of(corpus, key);
     let sources: Vec<Source> = docs.iter().map(|doc| source_of(doc)).collect();
-    let hits = Index::build(&sources, weights).search(&plan.words);
+    let index = Index::build(&sources, weights_of(corpus, key));
+    let pass = index.passing(&plan.words.required, &plan.words.excluded);
+    let hits: Vec<_> = index
+        .search(&plan.words.ranked)
+        .into_iter()
+        .filter(|hit| pass[hit.doc])
+        .collect();
     let total = hits.len();
     if total == 0 {
         return None;
@@ -318,15 +353,4 @@ fn first_lines(text: &str, count: usize) -> &str {
         .nth(count - 1)
         .map_or(text.len(), |(at, _)| at);
     &text[..end]
-}
-
-/// The words of a query: every token of every literal term in order, with no repeats. A term that holds no token adds none.
-fn words_of(terms: &[String]) -> Vec<String> {
-    let mut words: Vec<String> = Vec::new();
-    for token in terms.iter().flat_map(|term| query_tokens(term)) {
-        if !words.contains(&token) {
-            words.push(token);
-        }
-    }
-    words
 }

@@ -1,6 +1,6 @@
 //! Lists the docs of a `memex search` listing or roster group, newest logs first, cut to the limit.
 //! A roster line carries its doc's cited-by count, and a log shows its age when its name has a stamp (design §3.2).
-//! Cases: SRCH-AGE-01, SRCH-FILTER-01, SRCH-FILTER-06, SRCH-LIMIT-01, SRCH-ORPHAN-01, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-04, SRCH-ROSTER-05
+//! Cases: SRCH-AGE-01, SRCH-FILTER-01, SRCH-FILTER-06, SRCH-LIMIT-01, SRCH-ORPHAN-01, SRCH-ROSTER-01, SRCH-ROSTER-02, SRCH-ROSTER-04, SRCH-ROSTER-05, SRCH-EXCLUDE-03
 
 use std::cmp::Ordering;
 

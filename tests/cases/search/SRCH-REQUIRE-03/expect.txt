@@ -1,0 +1,11 @@
+$ memex search widget +gizmo --json
+exit 0
+stdout
+| {"query":"widget +gizmo","filters":{},"groups":[{"collection":"readmes","total":2,"hits":[{"ref":"alpha/README.md","collection":"readmes","id":"alpha/README.md","path":"alpha/README.md","title":"A widget that needs a gizmo.","fields":{},"score":0.468,"snippet":"A widget that needs a gizmo.","fuzzy":[]},{"ref":"beta/README.md","collection":"readmes","id":"beta/README.md","path":"beta/README.md","title":"A widget with a gizmo of its own.","fields":{},"score":0.445,"snippet":"A widget with a gizmo of its own.","fuzzy":[]}]}]}
+stderr (empty)
+
+$ memex search widget gizmo --json
+exit 0
+stdout
+| {"query":"widget gizmo","filters":{},"groups":[{"collection":"readmes","total":3,"hits":[{"ref":"alpha/README.md","collection":"readmes","id":"alpha/README.md","path":"alpha/README.md","title":"A widget that needs a gizmo.","fields":{},"score":0.468,"snippet":"A widget that needs a gizmo.","fuzzy":[]},{"ref":"beta/README.md","collection":"readmes","id":"beta/README.md","path":"beta/README.md","title":"A widget with a gizmo of its own.","fields":{},"score":0.445,"snippet":"A widget with a gizmo of its own.","fuzzy":[]},{"ref":"gamma/README.md","collection":"readmes","id":"gamma/README.md","path":"gamma/README.md","title":"Widget only, no second word.","fields":{},"score":0.106,"snippet":"Widget only, no second word.","fuzzy":[]}]}]}
+stderr (empty)
