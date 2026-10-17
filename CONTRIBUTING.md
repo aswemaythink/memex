@@ -1,10 +1,10 @@
 # Contributing to memex
 
-memex is a small Rust CLI. Its working rules are in [AGENTS.md](AGENTS.md), and the behaviour it must have is in [design.md](design.md). This file covers how to build, test and land a change.
+memex is a small Rust CLI. Its working rules are in [AGENTS.md](AGENTS.md), and the behaviour it must have is in [DESIGN.md](DESIGN.md). This file covers how to build, test and land a change.
 
 ## Order of change
 
-1. **design.md.** A change in behaviour starts as an edit to [design.md](design.md), approved by a maintainer. If design.md is silent or contradicts itself, open an issue rather than guessing.
+1. **DESIGN.md.** A change in behaviour starts as an edit to [DESIGN.md](DESIGN.md), approved by a maintainer. If DESIGN.md is silent or contradicts itself, open an issue rather than guessing.
 2. **Conformance case.** Pin the behaviour with a case in [tests/cases](tests/cases/README.md): an entry in the family's `CASES.md`, and a case folder with its `case.json`. Unit tests are welcome, but they do not count as pinning.
 3. **Code.** Change the code, and update its header and its folder's README in the same change.
 

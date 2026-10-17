@@ -2,6 +2,10 @@
 
 The release notes of memex. Each GitHub release takes its notes from the matching section here.
 
+## Unreleased
+
+- memex is MIT-licensed, in one LICENSE.md (it was MIT OR Apache-2.0).
+
 ## 0.1.1 - 2026-10-17
 
 - The docs site, https://aswemaythink.github.io/memex/, is linked from the README (and so from npm and crates.io) and set as the crate's documentation.

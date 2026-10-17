@@ -6,7 +6,7 @@ name = "agent-memex"
 version = "0.1.1"
 edition = "2021"
 rust-version = "1.88"
-license = "MIT OR Apache-2.0"
+license = "MIT"
 description = "A CLI that indexes a repo's authored intent layer so agents read intent before code."
 repository = "https://github.com/aswemaythink/memex"
 homepage = "https://aswemaythink.github.io/memex"
@@ -14,8 +14,8 @@ documentation = "https://aswemaythink.github.io/memex/docs/get-started.html"
 readme = "README.md"
 keywords = ["cli", "agents", "markdown", "documentation", "search"]
 categories = ["command-line-utilities", "development-tools"]
-# The crate ships what builds it and documents it. Tests, the site, plugins, CI, the repo's own
-# intent store and the build plan stay in the repository.
+# The crate ships what builds it and documents it. Tests, the site, plugins, CI and the repo's own
+# intent store stay in the repository.
 exclude = [
     "tests/",
     "site/",
@@ -23,7 +23,6 @@ exclude = [
     ".github/",
     ".memex/",
     ".claude-plugin/",
-    "PLAN.md",
     "AGENTS.md",
     "CLAUDE.md",
     "clippy.toml",

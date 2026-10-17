@@ -16,7 +16,7 @@ memex: cases
 - `COLL-FRONT-05` A `memex:` key past the first 8 KiB of the file is not seen, so the file is no doc and `show decisions:0005-late` is not found, exit 1.
   design §2.2 (the key counts within the first 8 KiB). Run: memex show decisions:0005-late. A `pad:` line of 9,000 bytes comes before the key.
 - `COLL-FRONT-06` A `memex:` line that the 8 KiB limit cuts is not seen, so `show decisions:0006-cut` is not found, exit 1.
-  design §2.2 (the key counts within the first 8 KiB; the whole line must lie inside it, PLAN §13 R11). Run: memex show decisions:0006-cut. The key starts at byte 8186, so the limit falls inside `memex: decisions`.
+  design §2.2 (the key counts within the first 8 KiB; the whole line must lie inside it). Run: memex show decisions:0006-cut. The key starts at byte 8186, so the limit falls inside `memex: decisions`.
 - `COLL-FRONT-07` A `memex:` key within the first 8 KiB makes a doc even when the file is longer than 8 KiB, and its text is the whole body, exit 0.
   design §2.2 and §2.1 (files read). Run: memex show decisions:0007-long. The key is at byte 4 and the closing fence comes after one 8,200-byte blank line, so the file is 8,266 bytes.
 - `COLL-FRONT-08` A Markdown file with no frontmatter is no doc, even when its body has a `memex:` line, so `show decisions:0008-body` is not found, exit 1.
@@ -89,7 +89,7 @@ memex: cases
 - `COLL-SHARED-01` A frontmatter collection named `readmes` loads with the graph's warning, which names its first file in byte order, so `--in readmes` keeps the graph's READMEs, global search gives the collection its own `readmes` group after the graph's, and `show readmes:<id>` prints its doc `alpha`, exit 0.
   design §4.2 Names and §3.2 (`--in` names, groups). Run: memex search widget --in readmes; memex search widget; memex show readmes:<id> for the id alpha. The root README and notes/a.md both hold the word widget.
 - `COLL-SHARED-02` A frontmatter collection named `logs` loads with the stream form of the warning, so `--in logs` keeps the log entries, global search gives the collection its own `logs` group ahead of the log group, and `show logs:<id>` prints its doc `alpha`, exit 0.
-  design §4.2 Names; PLAN §13 R10 takes the stream form, since `--in logs` means every stream. Run: memex search widget --in logs; memex search widget; memex show logs:<id> for the id alpha. The fixture has one log entry in stream impl.
+  design §4.2 Names; the stream form is taken, since `--in logs` means every stream. Run: memex search widget --in logs; memex search widget; memex show logs:<id> for the id alpha. The fixture has one log entry in stream impl.
 - `COLL-SHARED-03` A frontmatter collection named like an existing log stream, `impl`, loads with the stream form of the warning, so `--in impl` keeps the stream's entries and not the collection's doc, global search gives the collection its own `impl` group, and `show impl:<id>` prints its doc `alpha`, exit 0.
   design §4.2 Names and §3.2 (`--in` names: a stream's name means the stream). Run: memex search widget --in impl; memex search widget; memex show impl:<id> for the id alpha.
 - `COLL-SHARED-04` `info --json` lists the shared-name warning in `warnings`, and lists the collection in `collections` with kind `markdown` and `builtin` false, exit 0.
@@ -100,7 +100,7 @@ memex: cases
 - `COLL-DUP-01` Two frontmatter files that declare the same id in `decisions` make `info` warn once, naming both files, and make `show decisions:ADR-001` ambiguous, exit 1.
   design §2.2 (duplicate ids: each path once) and §4.2 (duplicate ids, ambiguous in show). Run: memex info; memex show decisions:ADR-001.
 - `COLL-DUP-02` Two docs of a json manifest that share an id make `info` warn once, naming the manifest's file, since a json doc has no path, exit 0.
-  design §2.2 (duplicate ids) and §4.2 (kind json). The naming of a doc with no path by its manifest's file is a ruling for PLAN §13. Run: memex info.
+  design §2.2 (duplicate ids) and §4.2 (kind json). The naming of a doc with no path by its manifest's file is a ruling. Run: memex info.
 - `COLL-DUP-03` Two entries with the same id in one entry index make `info` warn once, naming that file once, exit 0.
   design §2.2 (duplicate ids: each path once). Run: memex info.
 
@@ -111,7 +111,7 @@ memex: cases
 - `COLL-REFINE-02` An empty `memex:` value is not a collection name: one warning, `'memex: ' is not a collection name`, skips its file, and the other file of `notes` still counts, exit 0.
   design §2.2 (Name: any other value is a warning and the file is skipped). Run: memex info.
 - `COLL-REFINE-03` A README whose closed frontmatter holds no `memex:` key (`title: Docs`) gets no warning and takes its one-liner from the first paragraph after its H1, so `show .` lists `docs` with it and `search guides` shows it; the frontmatter is not searched, so `search title` has no hits, exit 0.
-  design §2 One-liners (the first sentence of the first paragraph after the H1) and PLAN §13 R20 (orchestrator ruling, 2026-10-16: a closed frontmatter block at a README's top is not part of its one-liner or search text; `show` still prints the whole file). Run: memex show .; memex search guides; memex search title.
+  design §2 One-liners (the first sentence of the first paragraph after the H1) and a ruling (orchestrator, 2026-10-16: a closed frontmatter block at a README's top is not part of its one-liner or search text; `show` still prints the whole file). Run: memex show .; memex search guides; memex search title.
 
 ## FIELDS
 

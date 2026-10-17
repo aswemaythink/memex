@@ -49,7 +49,7 @@ memex: cases
 ## INSTALL
 
 - `INIT-INSTALL-01` With no memex on PATH, unix init copies the running binary to `$HOME/.local/bin/memex`, reports it `created`, and prints the PATH hint, exit 0.
-  Scenario: `memex_on_path` is false; the snapshot of `home/.local/bin` shows the binary. design §3.5b item 3 and PLAN §1 fix 16.
+  Scenario: `memex_on_path` is false; the snapshot of `home/.local/bin` shows the binary. design §3.5b item 3.
 - `INIT-INSTALL-02` On Windows, init installs to `%LOCALAPPDATA%\Programs\memex\memex.exe`, read from the variable, and prints the PATH hint, exit 0.
   Scenario: the Windows twin of INIT-INSTALL-01, with LOCALAPPDATA under the sandbox home. design §3.5b item 3.
 - `INIT-INSTALL-03` An installed binary whose bytes differ from the running one is replaced and reported `updated`, exit 0.
@@ -82,17 +82,17 @@ memex: cases
 ## RERUN
 
 - `INIT-RERUN-01` A second init in the same folder reports every file `kept` and writes none of them, exit 0.
-  Scenario: two runs in a git repo that has a CLAUDE.md holding `@AGENTS.md`. design §3.5b (idempotent) and PLAN §3 (init on this repo reports everything unchanged).
+  Scenario: two runs in a git repo that has a CLAUDE.md holding `@AGENTS.md`. design §3.5b (idempotent); init on this repo reports everything unchanged.
 
 ## IO
 
 - `INIT-IO-01` When AGENTS.md is a folder, init prints the `.memex/` lines it made, then names the file and its io::ErrorKind on stderr, and exits 3 with no atlas, unix only.
-  Scenario: `repo/AGENTS.md` is a folder holding one file, so reading it fails with IsADirectory. design §3.5b (exit 3 on an I/O failure) and PLAN §1 fix 17 (memex's message, the kind and the path, never the OS text).
+  Scenario: `repo/AGENTS.md` is a folder holding one file, so reading it fails with IsADirectory. design §3.5b (exit 3 on an I/O failure); memex's message names the kind and the path, never the OS text.
 
 ## DAMAGE
 
 - `INIT-DAMAGE-01` A begin marker with no end marker changes nothing: AGENTS.md is reported `kept`, the warning goes to stderr, and exit is 0.
-  Scenario: AGENTS.md holds a begin marker and a block with no end. design §3.5b item 2 and PLAN §1 fix 16; the warning text is pinned here.
+  Scenario: AGENTS.md holds a begin marker and a block with no end. design §3.5b item 2; the warning text is pinned here.
 - `INIT-DAMAGE-02` An end marker before the begin marker changes nothing, and the warning goes to stderr, exit 0.
   Scenario: AGENTS.md has an end marker, a line, then a begin marker. design §3.5b item 2.
 - `INIT-DAMAGE-03` Two pairs of markers change nothing, and the warning goes to stderr, exit 0.

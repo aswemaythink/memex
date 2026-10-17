@@ -25,7 +25,7 @@ pub struct Sandbox {
 }
 
 impl Drop for Sandbox {
-    /// Gives the owner back the rights that chmod entries took away, so the temp folder can always be removed (PLAN §2).
+    /// Gives the owner back the rights that chmod entries took away, so the temp folder can always be removed.
     fn drop(&mut self) {
         for path in &self.touched {
             restore_owner(&self.root, path);
@@ -72,7 +72,7 @@ impl Sandbox {
             case_env: with_overrides(base, &spec.env),
             touched: Vec::new(),
         };
-        // The modes are set after setup and before the steps (PLAN §2). The sandbox exists before the first entry, so a
+        // The modes are set after setup and before the steps. The sandbox exists before the first entry, so a
         // failed entry still gives back what the earlier ones took, when the sandbox is dropped.
         for change in &spec.chmod {
             sandbox.chmod(change)?;

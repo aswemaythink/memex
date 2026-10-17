@@ -1,4 +1,4 @@
-//! Renders a case run as the golden transcript of PLAN.md §2.
+//! Renders a case run as the golden transcript.
 //! It redacts the sandbox path and the crate version.
 //! Cases: all (runner)
 

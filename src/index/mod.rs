@@ -18,14 +18,14 @@ use rust_stemmers::{Algorithm, Stemmer};
 use crate::par;
 use vocab::{Posting, Vocab};
 
-/// The shortest query word that may match by prefix (PLAN §4).
+/// The shortest query word that may match by prefix.
 const PREFIX_MIN: usize = 3;
 
-/// The shortest query word that may match by one edit (PLAN §4).
+/// The shortest query word that may match by one edit.
 const FUZZY_MIN: usize = 5;
 
 /// The tiers of a match are indexes, best first: 0 for an exact or stem match, 1 for a prefix match, and `FUZZY` (2) for a one-edit
-/// match (PLAN §4). `MULTIPLIER` gives each tier's multiplier, which scales a term's weighted frequency before it saturates.
+/// match. `MULTIPLIER` gives each tier's multiplier, which scales a term's weighted frequency before it saturates.
 const FUZZY: usize = 2;
 const MULTIPLIER: [f64; 3] = [1.0, 0.5, 0.3];
 
@@ -166,7 +166,7 @@ impl<'a> Index<'a> {
     }
 
     /// Adds one candidate's postings in one run to the matches of its tier. A doc that a better tier already matched keeps that
-    /// tier, so a prefix or a fuzzy match counts only where no exact or stem match exists (PLAN §4).
+    /// tier, so a prefix or a fuzzy match counts only where no exact or stem match exists.
     fn add_term(&self, candidate: &Candidate, postings: &[Posting], found: &mut [Match]) {
         for posting in postings {
             let known = &mut found[posting.doc];
@@ -204,7 +204,7 @@ impl<'a> Index<'a> {
 
     /// The candidates of every query word in one run. A whole id or path is looked up by its exact term, and each whole term is
     /// checked against the longer ids and paths that a word begins (design §3.2). A plain term is stemmed once, and only when some
-    /// query word is plain, and it is a candidate at each tier it reaches (PLAN §4).
+    /// query word is plain, and it is a candidate at each tier it reaches.
     fn scan_run(&self, run: usize, probes: &[Probe]) -> Vec<Candidate<'_>> {
         let vocab = &self.runs[run];
         let mut found = Vec::new();

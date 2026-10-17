@@ -1,4 +1,4 @@
-//! Sets, restores and probes the `chmod` modes of a case (PLAN §2).
+//! Sets, restores and probes the `chmod` modes of a case.
 //! It parses the octal modes, and tells whether the runner is root. Modes exist only on unix: the windows arms refuse a change or do nothing.
 //! Cases: all (runner)
 

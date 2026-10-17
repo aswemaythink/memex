@@ -29,7 +29,7 @@ memex: cases
 ## ROOT
 
 - `SHOW-ROOT-01` `show .` shows the root README as its body, then the root's children other than that README, and its chain is `(none)` because nothing lies above the root, exit 0.
-  design §3.3: show . is the map of the root; design §3.1 and PLAN §6 S2.0: `.` is the root. Run: memex show . in the root.
+  design §3.3: show . is the map of the root; design §3.1: `.` is the root. Run: memex show . in the root.
 - `SHOW-ROOT-02` Without a `.memex/` folder, show still reads the intent layer from the cwd and prints the same root section, exit 0.
   design §4.1 item 1 and §3.5b: reads work without init. Run: memex show . in a repo with no .memex/.
 - `SHOW-ROOT-03` `show .` run from the subfolder `repo/sub` prints the root map under its `=== . ===` line, not the subfolder's, exit 0.
@@ -61,7 +61,7 @@ memex: cases
 ## SEP
 
 - `SHOW-SEP-01` Two refs print two sections, each under its own `===` line, with one blank line between them, exit 0.
-  design §3.3 (a section per ref, separated by `===` lines) and PLAN §6 S2.0 layout. Run: memex show src/cli.rs notes.txt.
+  design §3.3 (a section per ref, separated by `===` lines). Run: memex show src/cli.rs notes.txt.
 
 ## ERR
 
@@ -82,7 +82,7 @@ memex: cases
 ## DUP
 
 - `SHOW-DUP-01` A ref given twice prints its section once, at the position of its first use, so `show src/cli.rs notes.txt src/cli.rs` prints two sections in that order, exit 0.
-  design §3.3 gives a section for each ref in the order given; that a repeat prints once is the S5.2 ruling, which §3.3 should state. Run: memex show src/cli.rs notes.txt src/cli.rs.
+  design §3.3 gives a section for each ref in the order given; that a repeat prints once is a ruling, which §3.3 should state. Run: memex show src/cli.rs notes.txt src/cli.rs.
 - `SHOW-DUP-02` A ref that is not found and is given twice is reported once on stderr, while the other refs still print, exit 1.
   design §3.3 Exit code: the others still print and the exit code is 1; the repeat rule is as SHOW-DUP-01. Run: memex show nope.rs src/cli.rs nope.rs.
 

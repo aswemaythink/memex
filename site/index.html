@@ -2,10 +2,10 @@
 <!--
 The memex site's introduction: what memex is, how to install it and how it works. docs/ holds the reference pages.
 Order: introduction, principles, get started, context compression (the intent layer), trailblazing (logs and collections), API at a glance, story.
-Behaviour comes from design.md (§1, §2, §3, §5, §6.1) and README.md; the story is STORY.md retold.
+Behaviour comes from DESIGN.md (§1, §2, §3, §5, §6.1) and README.md; the story section is authored here.
 Tailwind comes from its pinned Play CDN, configured by site.js; site.css holds the rest of the styles and the light and dark tokens.
 The walk diagram is walk.svg, the scale diagram scale.svg, the trail diagrams logs.svg and collections.svg, and the story sketch desk.svg; each is an <img> that site.js redraws inline so it follows the page's theme on iOS Safari. There is no build step.
-When a verb's behaviour or the story changes, change design.md or STORY.md first, then this page.
+When a verb's behaviour changes, change DESIGN.md first, then this page.
 -->
 <html lang="en">
 <head>
@@ -113,7 +113,7 @@ git clone https://github.com/aswemaythink/memex && cd memex && cargo install --p
           <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">READMEs</span>
           <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">What a module is.</span>
           <span class="text-[0.875rem] leading-normal text-muted">One <code>README.md</code> per folder, saying what that module is and what it does.</span>
-          <div id="ex-readme" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 hidden overflow-hidden rounded-lg border border-term-line bg-term shadow-xl shadow-black/30 [@media(hover:hover)]:group-hover:block group-focus:block sm:left-[8.5rem] sm:right-3">
+          <div id="ex-readme" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 invisible overflow-hidden rounded-lg border border-term-line bg-term opacity-0 shadow-xl shadow-black/30 transition-[opacity,visibility] duration-150 ease-out [@media(hover:hover)]:group-hover:visible [@media(hover:hover)]:group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100 [@media(hover:none)]:group-focus:visible [@media(hover:none)]:group-focus:opacity-100 sm:left-[8.5rem] sm:right-3">
             <div class="border-b border-term-line bg-term-bar px-3 py-1 font-mono text-[0.7rem] text-term-dim [overflow-wrap:anywhere]">crates/namer/README.md</div>
 <pre class="ex"><code><span class="g"># namer</span>
 
@@ -128,7 +128,7 @@ name on every run and every platform.
           <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Headers</span>
           <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">What a file does.</span>
           <span class="text-[0.875rem] leading-normal text-muted">A comment at the top of the file that describes what it does.</span>
-          <div id="ex-header" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 hidden overflow-hidden rounded-lg border border-term-line bg-term shadow-xl shadow-black/30 [@media(hover:hover)]:group-hover:block group-focus:block sm:left-[8.5rem] sm:right-3">
+          <div id="ex-header" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 invisible overflow-hidden rounded-lg border border-term-line bg-term opacity-0 shadow-xl shadow-black/30 transition-[opacity,visibility] duration-150 ease-out [@media(hover:hover)]:group-hover:visible [@media(hover:hover)]:group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100 [@media(hover:none)]:group-focus:visible [@media(hover:none)]:group-focus:opacity-100 sm:left-[8.5rem] sm:right-3">
             <div class="border-b border-term-line bg-term-bar px-3 py-1 font-mono text-[0.7rem] text-term-dim [overflow-wrap:anywhere]">crates/namer/src/hash.rs</div>
 <pre class="ex"><code><span class="m">//! FNV-1a over canonical atom strings.</span>
 //! Hash input is the canonical atom
@@ -141,7 +141,7 @@ name on every run and every platform.
           <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Collections</span>
           <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">Additional knowledge worth keeping, found by what it is.</span>
           <span class="text-[0.875rem] leading-normal text-muted">Any Markdown file joins a collection with one <code>memex:</code> line in its frontmatter. See <a href="docs/patterns/index.html">Patterns</a> for ways to use them.</span>
-          <div id="ex-coll" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 hidden overflow-hidden rounded-lg border border-term-line bg-term shadow-xl shadow-black/30 [@media(hover:hover)]:group-hover:block group-focus:block sm:left-[8.5rem] sm:right-3">
+          <div id="ex-coll" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 invisible overflow-hidden rounded-lg border border-term-line bg-term opacity-0 shadow-xl shadow-black/30 transition-[opacity,visibility] duration-150 ease-out [@media(hover:hover)]:group-hover:visible [@media(hover:hover)]:group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100 [@media(hover:none)]:group-focus:visible [@media(hover:none)]:group-focus:opacity-100 sm:left-[8.5rem] sm:right-3">
             <div class="border-b border-term-line bg-term-bar px-3 py-1 font-mono text-[0.7rem] text-term-dim [overflow-wrap:anywhere]">tests/cases/NAME-001/CASE.md</div>
 <pre class="ex"><code><span class="d">---</span>
 <span class="k">memex:</span> cases
@@ -154,7 +154,7 @@ Evidence: <span class="l">`tests/namer.test.ts`</span></code></pre></div>
           <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Logs</span>
           <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">Notes agents leave for each other.</span>
           <span class="text-[0.875rem] leading-normal text-muted">Findings, hand-offs and messages, in <code>.memex/logs/</code>, out of git. Pruned as new ones arrive.</span>
-          <div id="ex-log" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 hidden overflow-hidden rounded-lg border border-term-line bg-term shadow-xl shadow-black/30 [@media(hover:hover)]:group-hover:block group-focus:block sm:left-[8.5rem] sm:right-3">
+          <div id="ex-log" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 invisible overflow-hidden rounded-lg border border-term-line bg-term opacity-0 shadow-xl shadow-black/30 transition-[opacity,visibility] duration-150 ease-out [@media(hover:hover)]:group-hover:visible [@media(hover:hover)]:group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100 [@media(hover:none)]:group-focus:visible [@media(hover:none)]:group-focus:opacity-100 sm:left-[8.5rem] sm:right-3">
             <div class="border-b border-term-line bg-term-bar px-3 py-1 font-mono text-[0.7rem] text-term-dim [overflow-wrap:anywhere]">.memex/logs/impl/20261013-214107-show-chain.md</div>
 <pre class="ex"><code><span class="d">---</span>
 <span class="k">stream:</span> impl
@@ -173,7 +173,7 @@ Evidence: <span class="l">`tests/namer.test.ts`</span></code></pre></div>
           <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Code</span>
           <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">The source itself.</span>
           <span class="text-[0.875rem] leading-normal ">Agents usually scan it wholesale, with <code>grep</code>, <code>rg</code> and the like. memex reads only the comment at the top of each file.</span>
-          <div id="ex-code" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 hidden overflow-hidden rounded-lg border border-term-line bg-term shadow-xl shadow-black/30 [@media(hover:hover)]:group-hover:block group-focus:block sm:left-[8.5rem] sm:right-3">
+          <div id="ex-code" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 invisible overflow-hidden rounded-lg border border-term-line bg-term opacity-0 shadow-xl shadow-black/30 transition-[opacity,visibility] duration-150 ease-out [@media(hover:hover)]:group-hover:visible [@media(hover:hover)]:group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100 [@media(hover:none)]:group-focus:visible [@media(hover:none)]:group-focus:opacity-100 sm:left-[8.5rem] sm:right-3">
             <div class="border-b border-term-line bg-term-bar px-3 py-1 font-mono text-[0.7rem] text-term-dim [overflow-wrap:anywhere]">crates/namer/src/hash.rs</div>
 <pre class="ex"><code><span class="m">//! FNV-1a over canonical atom strings.</span>
 
@@ -234,7 +234,7 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
     <p class="mt-6 font-semibold"><a href="docs/get-started.html">Read the full docs →</a></p>
   </section>
 
-  <!-- 7. Story: STORY.md retold in full, laid along a trail. -->
+  <!-- 7. Story: Bush, the memex and its trails, laid along a trail. -->
   <section id="story" class="mt-16 border-t border-rule pt-16 font-serif text-[1.125rem] leading-[1.65]" aria-labelledby="h-story">
     <p class="font-mono text-[0.78rem] font-semibold uppercase tracking-[0.06em] text-accent">The story</p>
     <h2 id="h-story" class="mt-3 text-[1.9rem] leading-[1.15] font-medium tracking-[-0.02em] sm:text-[2.5rem]">Good work was being lost, not because it was wrong, but because nobody could get back to it.</h2>
@@ -260,13 +260,15 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
 
       <section class="pb-14" aria-labelledby="h-camera">
         <h3 id="h-camera" class="relative mb-4 text-[1.75rem] leading-[1.12] font-medium tracking-[-0.015em] sm:text-[2.2rem]"><span aria-hidden="true" class="absolute -left-5 top-[0.6em] h-[11px] w-[11px] -translate-x-[6.75px] -translate-y-1/2 rounded-full border-2 border-accent bg-bg sm:-left-7"></span>The camera and the trail</h3>
-        <p>The same essay also imagines a walnut-sized camera strapped to a scientist’s forehead, photographing everything he sees. Capture everything and sort it out later.</p>
-        <p class="mt-4">Two ideas, one essay. The camera is the one we keep rebuilding. The trail is the one that changed the world: associations made <strong>on purpose</strong>, by someone who understood the material.</p>
+        <p>The same essay has a second machine in it. Bush pictures a scientist with a camera the size of a walnut strapped to his forehead, taking a picture of everything he sees. Nothing is chosen at the moment of capture. You record it all, and sort it out later.</p>
+        <p class="mt-4">So the essay holds two answers to the same flood. The camera says: keep everything, and hope to find it again. The trail says: when you understand something, tie it to what it belongs with, so the next reader can follow. Those links are made <strong>on purpose</strong>, by someone who understood the material, at the moment they understood it.</p>
+        <p class="mt-4">The trail is the idea that changed the world. It became hypertext, then the web. The camera is the one we keep coming back to.</p>
       </section>
 
       <section class="pb-14" aria-labelledby="h-now">
         <h3 id="h-now" class="relative mb-4 text-[1.75rem] leading-[1.12] font-medium tracking-[-0.015em] sm:text-[2.2rem]"><span aria-hidden="true" class="absolute -left-5 top-[0.6em] h-[11px] w-[11px] -translate-x-[6.75px] -translate-y-1/2 rounded-full border-2 border-accent bg-bg sm:-left-7"></span>Now</h3>
-        <p>Eighty years later, the flood is back, and this time agents produce it. Every run writes logs, reports, notes and handoffs into folders nobody will open again. The answer the industry reached for is the camera: hooks that record everything, servers, vector stores, LLMs summarising the pile after the fact.</p>
+        <p>Eighty years later, the flood is back, and this time agents produce it. Every run writes logs, reports, notes and hand-offs into folders nobody will open again.</p>
+        <p class="mt-4">And we are still building cameras. Hooks that record every step, servers that store it, vector databases that index it, models that summarise the pile after the fact. Smaller cameras, more film, the same hope: capture everything now, and something will make sense of it later. But a recording knows what happened, not what it meant. Whoever understood the work was there at the time, and nobody asked them to write it down.</p>
         <p class="mt-8 text-[1.45rem] italic leading-[1.3] text-accent">memex takes Bush’s other idea.</p>
       </section>
 
@@ -286,7 +288,6 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
 
       <span aria-hidden="true" class="absolute -bottom-1.5 left-0 h-[11px] w-[11px] -translate-x-[6.25px] rounded-full bg-accent"></span>
     </div>
-    <p class="mt-8 font-sans text-[0.95rem] text-muted"><a href="https://github.com/aswemaythink/memex/blob/main/STORY.md">STORY.md</a> has the story as first written.</p>
   </section>
 
 </main>
@@ -295,10 +296,8 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
   <div class="border-t border-rule pt-6 pb-12 text-[0.88rem] text-muted">
   <p class="flex flex-wrap gap-x-5 gap-y-1">
     <a href="https://github.com/aswemaythink/memex">GitHub</a>
-    <a href="https://github.com/aswemaythink/memex/blob/main/design.md">design.md, the spec</a>
-    <a href="https://github.com/aswemaythink/memex/blob/main/STORY.md">STORY.md</a>
+    <a href="docs/get-started.html">Docs</a>
   </p>
-  <p class="mt-3">memex is dual-licensed under MIT or Apache-2.0.</p>
   </div>
 </footer>
 

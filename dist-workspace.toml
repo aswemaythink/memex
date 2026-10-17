@@ -20,7 +20,7 @@ install-path = "CARGO_HOME"
 hosting = "github"
 # Whether to install an updater program
 install-updater = false
-# Names come from the PLAN.md names table. The GitHub org, the npm scope and the tap are not checked against the live services.
+# Names were fixed during the build. The GitHub org, the npm scope and the tap are not checked against the live services.
 # Homebrew tap repo that the formula is pushed to
 tap = "aswemaythink/homebrew-tap"
 # Homebrew formula name, so the install is `brew install aswemaythink/tap/memex`

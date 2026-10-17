@@ -1,5 +1,5 @@
 #!/bin/sh
-# SessionStart and SubagentStart hook of the memex plugin (design §6, PLAN S6.1). Its input is the hook JSON on stdin.
+# SessionStart and SubagentStart hook of the memex plugin (design §6). Its input is the hook JSON on stdin.
 # SessionStart prints `memex info`. SubagentStart prints the sub-agent's memex id and `memex info --agent <id>` as
 # additionalContext. It never sets MEMEX_AGENT, and it always exits 0: a memex error only loses its context.
 LC_ALL=C
