@@ -16,7 +16,7 @@ pub fn for_each_token(text: &str, mut emit: impl FnMut(&str)) {
 }
 
 /// The tokens of a query term. A whole id or path stands alone, without its words, so that `NAME-001` matches that id and
-/// no other. Any other run gives its lowercase words, as `for_each_token` does.
+/// the longer ones it begins at `-`, `/` or `.`, never `NAME-0010`. Any other run gives its lowercase words, as `for_each_token` does.
 pub fn query_tokens(text: &str) -> Vec<String> {
     let mut found = Vec::new();
     visit(text, false, &mut |token: &str| {
