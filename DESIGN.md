@@ -494,6 +494,8 @@ npx @aswemaythink/memex init
 
 That installs the binary (if needed), creates `.memex/`, wires `AGENTS.md`/`CLAUDE.md`, and prints the atlas. Uninstall: delete `.memex/` and the marked block.
 
+**Agent install prompt.** `INSTALL.md` at the repo root is a prompt a user pastes into their agent: it installs by one route of this section, runs `init`, then offers only what this document defines (the plugin, READMEs and headers, a cases collection, logs for hand-offs) and runs `audit`.
+
 **Manual**, one command per toolchain, then `memex init`:
 
 ```sh

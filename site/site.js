@@ -1,7 +1,7 @@
 // The Tailwind Play CDN config for the memex site.
 // It maps colour names to the custom properties in site.css, and sets the fonts and the page width.
 // Every page (index.html and the pages in docs/) loads it right after the pinned CDN script, so the CDN picks it up before it styles the page.
-// It also draws each figure's diagram inline (see the end of this file), so the diagrams follow the page's theme on iOS Safari too.
+// It also draws each figure's diagram inline, so the diagrams follow the page's theme on iOS Safari too, and fills the intro page's install prompt from INSTALL.md.
 tailwind.config = {
   darkMode: 'media',
   theme: {
@@ -45,5 +45,45 @@ document.addEventListener('DOMContentLoaded', () => {
       host.attachShadow({ mode: 'open' }).append(document.importNode(svg, true));
       img.replaceWith(host);
     } catch (e) { /* keep the <img> */ }
+  });
+});
+
+// The install prompt (index.html #prompt): fetch INSTALL.md from its data-src and show it, headings in bold; Copy copies whatever the block shows.
+// If the fetch fails, the block keeps its one-line prompt pointing at INSTALL.md, and Copy copies that.
+document.addEventListener('DOMContentLoaded', () => {
+  const pre = document.getElementById('prompt');
+  const copy = document.getElementById('prompt-copy');
+  if (!pre || !copy) return;
+  const code = pre.querySelector('code');
+  if (window.fetch && pre.dataset.src) {
+    fetch(pre.dataset.src).then((res) => (res.ok ? res.text() : Promise.reject())).then((text) => {
+      const out = document.createDocumentFragment();
+      text.trimEnd().split('\n').forEach((line, i) => {
+        if (i) out.append('\n');
+        if (!/^#/.test(line)) { out.append(line); return; }
+        const b = document.createElement('span');
+        b.className = 'g';
+        b.textContent = line;
+        out.append(b);
+      });
+      code.replaceChildren(out);
+    }).catch(() => { /* keep the one-line prompt */ });
+  }
+  // Without clipboard access (an old browser, or a frame that denies it), select the text instead so the reader can copy it by hand.
+  const select = () => {
+    const range = document.createRange();
+    range.selectNodeContents(code);
+    getSelection().removeAllRanges();
+    getSelection().addRange(range);
+    const done = document.execCommand && document.execCommand('copy');
+    if (done) getSelection().removeAllRanges();
+    return done;
+  };
+  copy.hidden = false;
+  copy.addEventListener('click', async () => {
+    let done = false;
+    try { await navigator.clipboard.writeText(code.textContent); done = true; } catch (e) { done = select(); }
+    copy.textContent = done ? 'Copied' : 'Selected';
+    setTimeout(() => { copy.textContent = 'Copy'; }, 1800);
   });
 });

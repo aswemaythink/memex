@@ -8,7 +8,7 @@ There is no docs home: the docs open on `get-started.html`.
 - `guides/`: the guides, how to work with memex day to day, one page per task: `hand-off.html` and `drift.html`.
 - `patterns/`: the conventions that held up in practice. `index.html` introduces them; one page per pattern, each with when to use it, the steps and the samples: `cases.html`, `doom-hunts.html`, `perf-optimisation.html` and `promote-findings.html` (write down what a log found that is still true, once, where the next reader will look).
 - `reference/`: `index.html` lists the verbs, the conventions they share and the exit codes; one page per verb (`init`, `info`, `show`, `search`, `audit`, `log`), each with a short description, the flags that matter and a terminal sample; and `configuration.html`, the log store settings in `.memex/config.json` (DESIGN.md §4.1, §4.3), the one page that names those keys and numbers.
-- `concepts.html`: the intent layer, compression and trails in short form, linking back to the intro's sections.
+- `concepts/`: the ideas behind memex, one short page each: `intent-layer.html`, `compression.html`, `trails.html` and `drift.html`, linking back to the intro's sections where they apply.
 - `docs.js`: renders the sidebar nav (defined once, in `NAV`), the "On this page" table of contents and the mobile drawer on every page.
 
 Behaviour comes from DESIGN.md (§2, §3, §5, §6) and README.md. When a verb's behaviour changes, change DESIGN.md first, then these pages. Add a page by writing its HTML (copy a sibling's shell) and adding it to `NAV` in `docs.js`.
