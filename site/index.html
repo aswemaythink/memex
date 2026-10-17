@@ -106,8 +106,8 @@ powershell -c "irm https://github.com/rynwhite/memex/releases/latest/download/me
   <!-- 4. Context compression: the layer table (the compression order), then the walk. -->
   <section id="compression" class="pt-16" aria-labelledby="h-compression">
     <h2 id="h-compression" class="font-serif text-[1.75rem] leading-tight font-medium">Context compression</h2>
-    <p class="mt-4">memex is <strong>authored context compression</strong>. A README compresses a folder, a header compresses a file, a case compresses a test, a log compresses an agent’s run, and a ref compresses a hand-off. Whoever knew the most compresses it at the moment they knew it best, so nothing has to summarise it after the fact.</p>
-    <p class="mt-4">Together these are the <strong>intent layer</strong>, and this table is its compression order, from the most compressed at the top to the code at the bottom. READMEs and headers are found by <em>where</em> they are, collections by <em>what</em> they are, logs by <em>when</em>. memex reads it top-down, one level at a time (a one-liner with <code>search</code>, the document with <code>show</code>, then the chain of READMEs above it), so code comes last.</p>
+    <p class="mt-4">memex is <strong>authored context compression</strong>. A README compresses a folder, a header a file, a case a test, a log an agent’s run. Whoever knew the most writes it, when they knew it best, so nothing has to summarise it later.</p>
+    <p class="mt-4">Together they are the <strong>intent layer</strong>. The table runs from the most compressed at the top to the code at the bottom. READMEs and headers are found by <em>where</em> they are, collections by <em>what</em> they are, logs by <em>when</em>. An agent reads down it and opens code last.</p>
 
     <figure class="mt-6">
       <p class="mb-2 text-right text-[0.8rem] text-muted"><span class="hidden sm:inline">Hover or tab to a row</span><span class="sm:hidden">Tap a row</span> for an example.</p>
@@ -115,7 +115,7 @@ powershell -c "irm https://github.com/rynwhite/memex/releases/latest/download/me
         <li class="group relative grid cursor-help gap-x-5 gap-y-0.5 px-4 py-3 outline-none focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:grid-cols-[7.5rem_1fr] border-l-4 border-accent rounded-t-[9px]" tabindex="0" aria-describedby="ex-readme">
           <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">READMEs</span>
           <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">Why a folder exists.</span>
-          <span class="text-[0.875rem] leading-normal text-muted">One <code>README.md</code> per folder. Line 1 is <code># Name</code>; the first sentence of its first paragraph is the one-liner.</span>
+          <span class="text-[0.875rem] leading-normal text-muted">One <code>README.md</code> per folder. Where it sits says what it covers: its folder, the README above it, the folders below.</span>
           <div id="ex-readme" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 hidden overflow-hidden rounded-lg border border-term-line bg-term shadow-xl shadow-black/30 [@media(hover:hover)]:group-hover:block group-focus:block sm:left-[8.5rem] sm:right-3">
             <div class="border-b border-term-line bg-term-bar px-3 py-1 font-mono text-[0.7rem] text-term-dim [overflow-wrap:anywhere]">crates/namer/README.md</div>
 <pre class="ex"><code><span class="g"># namer</span>
@@ -193,8 +193,8 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
     </figure>
 
     <div class="mt-12 border-t border-dashed border-trail" aria-hidden="true"></div>
-    <h3 class="mt-10 font-serif text-[1.35rem] leading-tight font-medium">How an agent walks it</h3>
-    <p class="mt-3">Every folder has a <code>README.md</code>; the first sentence of its first paragraph is the folder’s one-liner. Every file opens with a header comment; its first sentence is the file’s purpose. An agent reads those one-liners top-down, from the root to the file it needs, and opens code last: one file, if any.</p>
+    <h3 class="mt-10 font-serif text-[1.35rem] leading-tight font-medium">How an agent explores your codebase</h3>
+    <p class="mt-3">Agents use the memex CLI to traverse your codebase as a tree of READMEs. At each folder they read its README; at each file, the header comment atop it. They go from the root to the file they need, and open code last: one file, if any.</p>
     <figure class="mt-8">
       <img src="walk.svg" alt="An agent walks a repo tree from the root through src and api to handler.ts, reading each folder's README one-liner and the file's header purpose line. Each file's code is a much larger dim block; the agent opens only handler.ts, at the end." width="362" height="494" class="mx-auto block h-auto w-full max-w-[26rem]">
       <figcaption class="mt-4 text-center font-serif text-[1.1rem] italic leading-snug">The agent walks the bright layer. The code is there when it needs it.</figcaption>
