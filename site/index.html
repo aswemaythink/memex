@@ -4,7 +4,7 @@ The memex docs site: one static page on what memex is, how to install it and how
 Order: introduction, principles, get started, context compression (the intent layer), patterns, the verbs, story.
 Behaviour comes from design.md (§1, §2, §3, §5, §6.1) and README.md; the story is STORY.md retold.
 Tailwind comes from its pinned Play CDN, configured by site.js; site.css holds the rest of the styles and the light and dark tokens.
-The diagrams are cite.svg, handoff.svg and desk.svg. There is no build step.
+The walk diagram is walk.svg and the story sketch desk.svg. There is no build step.
 When a verb's behaviour or the story changes, change design.md or STORY.md first, then this page.
 -->
 <html lang="en">
@@ -103,7 +103,7 @@ powershell -c "irm https://github.com/rynwhite/memex/releases/latest/download/me
     </details>
   </section>
 
-  <!-- 4. Context compression: the layer table (the compression order), citations, hand-off. -->
+  <!-- 4. Context compression: the layer table (the compression order), then the walk. -->
   <section id="compression" class="pt-16" aria-labelledby="h-compression">
     <h2 id="h-compression" class="font-serif text-[1.75rem] leading-tight font-medium">Context compression</h2>
     <p class="mt-4">memex is <strong>authored context compression</strong>. A README compresses a folder, a header compresses a file, a case line compresses a test, a log compresses an agent’s run, and a ref compresses a hand-off. Whoever knew the most compresses it at the moment they knew it best, so nothing has to summarise it after the fact.</p>
@@ -193,30 +193,14 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
 }</code></pre></div>
         </li>
       </ul>
-      <p class="mt-5 mb-3 flex flex-col items-center gap-1 font-mono text-[0.82rem] leading-snug text-muted sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-2.5">
-        <code class="!rounded !border !border-rule !bg-bg !px-2 !py-1 text-fg [overflow-wrap:anywhere]">impl:20261013-214107-show-chain</code>
-        <span aria-hidden="true" class="rotate-90 sm:rotate-0">⇄</span>
-        <code class="!rounded !border !border-rule !bg-bg !px-2 !py-1 text-fg">crates/namer/src/hash.rs</code>
-        <span aria-hidden="true" class="rotate-90 sm:rotate-0">⇄</span>
-        <code class="!rounded !border !border-rule !bg-bg !px-2 !py-1 text-fg">NAME-001</code>
-      </p>
-      <figcaption class="text-center text-[0.86rem] leading-normal text-muted">The intent layer sits on top of the code. Cite an id, a path or a ref, and memex derives the links in both directions.</figcaption>
     </figure>
 
-    <figure class="mt-12 grid items-center gap-6 sm:grid-cols-[22rem_1fr] sm:gap-8">
-      <img src="cite.svg" alt="A README cites the case id NAME-001; the case entry in CASES.md lists the README under cited by; the test carries the id in a comment, so rg NAME-001 finds it." width="352" height="270" class="h-auto w-full max-w-[22rem] mx-auto">
-      <figcaption>
-        <h3 class="font-serif text-[1.2rem] font-medium leading-snug">Citations are trails, walked both ways</h3>
-        <p class="mt-2 text-[0.95rem]">A README cites a case id; the case lists the README under <em>cited by</em>. Nobody maintains a link table. The id also sits in the test’s name or a comment on it, so <code>memex show NAME-001</code> gives the claim and evidence, and <code>rg NAME-001</code> finds the test.</p>
-      </figcaption>
-    </figure>
-
-    <figure class="mt-12 grid items-center gap-6 sm:grid-cols-[22rem_1fr] sm:gap-8">
-      <img src="handoff.svg" alt="A sub-agent logs its full report to the log store and returns one line, report: impl:20261013-214107-show-chain, to the orchestrator, which runs memex show on the ref only when it needs the detail." width="352" height="282" class="h-auto w-full max-w-[22rem] mx-auto">
-      <figcaption>
-        <h3 class="font-serif text-[1.2rem] font-medium leading-snug">Hand off by reference</h3>
-        <p class="mt-2 text-[0.95rem]">A sub-agent ends its run by logging the full report and returning one line, <code>report: &lt;ref&gt;</code>. The orchestrator keeps its context for deciding and runs <code>memex show &lt;ref&gt;</code> only when it needs the detail.</p>
-      </figcaption>
+    <div class="mt-12 border-t border-dashed border-trail" aria-hidden="true"></div>
+    <h3 class="mt-10 font-serif text-[1.35rem] leading-tight font-medium">How an agent walks it</h3>
+    <p class="mt-3">Every folder has a <code>README.md</code>; the first sentence of its first paragraph is the folder’s one-liner. Every file opens with a header comment; its first sentence is the file’s purpose. An agent reads those one-liners top-down, from the root to the file it needs, and opens code last: one file, if any.</p>
+    <figure class="mt-8">
+      <img src="walk.svg" alt="An agent walks a repo tree from the root through src and api to handler.ts, reading each folder's README one-liner and the file's header purpose line. Each file's code is a much larger dim block; the agent opens only handler.ts, at the end." width="362" height="494" class="mx-auto block h-auto w-full max-w-[26rem]">
+      <figcaption class="mt-4 text-center font-serif text-[1.1rem] italic leading-snug">The agent walks the bright layer. The code is there when it needs it.</figcaption>
     </figure>
 
     <h3 class="mt-10 font-serif text-[1.35rem] leading-tight font-medium">Cite, don’t copy</h3>
@@ -291,7 +275,7 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
 
       <article aria-labelledby="p-handoff">
         <h3 id="p-handoff" class="font-serif text-[1.25rem] font-medium leading-snug">Hand-off and messages <span class="ml-1 font-mono text-[0.8rem] font-normal text-muted">--to · to:</span></h3>
-        <p class="mt-2">A sub-agent logs its full report and returns one line, <code>report: &lt;ref&gt;</code>. Messages are logs with <code>--to</code>; recipients find them with <code>memex search to:&lt;id&gt;</code>, and <code>memex info --agent &lt;id&gt;</code> counts what is waiting. Live back-and-forth stays in the harness’s own messaging.</p>
+        <p class="mt-2">A sub-agent logs its full report and returns one line, <code>report: &lt;ref&gt;</code>; the orchestrator runs <code>memex show &lt;ref&gt;</code> only when it needs the detail. Messages are logs with <code>--to</code>; recipients find them with <code>memex search to:&lt;id&gt;</code>, and <code>memex info --agent &lt;id&gt;</code> counts what is waiting. Live back-and-forth stays in the harness’s own messaging.</p>
         <div class="mt-4 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="Hand-off by reference"><code><span class="p">$</span> <span class="c">memex log impl --agent cook-2 --to orchestrator &lt;&lt;'EOF'</span>
 <span class="c">show walks hub READMEs</span>
 <span class="c">`show &lt;file&gt;` now lists "cited by", through crates/README.md.</span>

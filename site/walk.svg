@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 362 494" width="362" height="494" role="img">
+<!-- The walk diagram of the memex site: an agent walks a repo's READMEs and headers top-down and opens code last. It follows light and dark through its own prefers-color-scheme block. -->
+<title>An agent walks the READMEs and headers</title>
+<desc>A repo tree: repo, src, api with handler.ts and store.ts, and a sibling folder db. Each folder carries a filled chip with its README one-liner; each file an outlined chip with its header's purpose line and a dim block of code. A path runs down through repo, src, api and handler.ts, and only at the end enters the much larger code of handler.ts.</desc>
+<style>
+svg { --bg: #faf7f0; --fg: #1c1a17; --muted: #5c574d; --accent: #9a3d17; --on-accent: #faf7f0; --rule: #d8d1c0; --code: #ebe5d7; --code-line: #d3cab6; color: var(--fg); }
+@media (prefers-color-scheme: dark) { svg { --bg: #141310; --fg: #ebe7dd; --muted: #a8a295; --accent: #eca071; --on-accent: #141310; --rule: #35322a; --code: #0c0b09; --code-line: #2a2722; } }
+text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 10px; fill: currentColor; }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+.node { font-size: 11px; }
+.mut { fill: var(--muted); }
+.tree { fill: none; stroke: var(--rule); stroke-width: 1.25; }
+.chip { fill: var(--accent); }
+.chip-t { fill: var(--on-accent); font-weight: 600; }
+.chip-o { fill: var(--bg); stroke: var(--accent); stroke-width: 1.5; }
+.chip-o-t { fill: var(--accent); font-weight: 600; }
+.lab, .lab-on { font-size: 7.5px; letter-spacing: .04em; }
+.lab { fill: var(--accent); opacity: .75; }
+.lab-on { fill: var(--on-accent); opacity: .8; }
+.code { fill: var(--code); stroke: var(--rule); stroke-width: 1; }
+.cl { stroke: var(--code-line); stroke-width: 3; stroke-linecap: round; }
+.open { fill: none; stroke: var(--accent); stroke-width: 1.25; stroke-dasharray: 4 3; }
+.trail { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 2 4; stroke-linecap: round; opacity: .5; }
+.run { fill: none; stroke: var(--accent); stroke-width: 2.25; stroke-linecap: round; stroke-dasharray: 600; stroke-dashoffset: 600; animation: walk 7s ease-in-out infinite; }
+.stop { fill: var(--bg); stroke: var(--accent); stroke-width: 2; }
+.agent { fill: var(--accent); }
+@keyframes walk { 0% { stroke-dashoffset: 600; } 70%, 88% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .run { animation: none; stroke-dashoffset: 0; } }
+</style>
+
+<path class="tree" d="M12 34V66H17M24 74V472M24 106H29M24 472H29M36 114V376M36 146H41M36 376H41"/>
+<text x="8" y="30" class="mono node">repo/</text>
+<rect class="chip" x="146" y="15" width="188" height="22" rx="11"/>
+<text x="157" y="29" class="mono lab-on">README</text><text x="191.6" y="29.5" class="chip-t">A small orders service.</text>
+<text x="20" y="70" class="mono node">src/</text>
+<rect class="chip" x="146" y="55" width="165" height="22" rx="11"/>
+<text x="157" y="69" class="mono lab-on">README</text><text x="191.6" y="69.5" class="chip-t">The service source.</text>
+<text x="32" y="110" class="mono node">api/</text>
+<rect class="chip" x="146" y="95" width="205" height="22" rx="11"/>
+<text x="157" y="109" class="mono lab-on">README</text><text x="191.6" y="109.5" class="chip-t">HTTP routes, one per file.</text>
+<text x="44" y="150" class="mono node">handler.ts</text>
+<rect class="chip-o" x="146.75" y="135.75" width="203.5" height="20.5" rx="10.25"/>
+<text x="157" y="149" class="mono lab">header</text><text x="191.6" y="149.5" class="chip-o-t">Handles one order request.</text>
+<rect class="code" x="146" y="168" width="212" height="174" rx="6"/>
+<path class="cl" d="M174 180h146M174 190h145M174 200h93M174 210h145M174 220h60M166 230h138M174 240h96M182 250h114M166 260h48M174 270h74M166 280h47M174 290h139M182 300h117M158 310h112M174 320h93M182 330h130"/>
+<rect class="open" x="141" y="163" width="216" height="184" rx="9"/>
+<text x="44" y="380" class="mono node mut">store.ts</text>
+<rect class="chip-o" x="146.75" y="365.75" width="186.5" height="20.5" rx="10.25"/>
+<text x="157" y="379" class="mono lab">header</text><text x="191.6" y="379.5" class="chip-o-t">Saves and loads orders.</text>
+<rect class="code" x="146" y="396" width="212" height="44" rx="6"/>
+<path class="cl" d="M174 408h119M166 418h115M158 428h142"/>
+<text x="32" y="476" class="mono node mut">db/</text>
+<rect class="chip" x="146" y="461" width="205" height="22" rx="11"/>
+<text x="157" y="475" class="mono lab-on">README</text><text x="191.6" y="475.5" class="chip-t">Migrations and the schema.</text>
+<path class="trail" d="M134 4V146C134 164 134 202 154 202"/>
+<path class="run" d="M134 4V146C134 164 134 202 154 202"/>
+<circle class="agent" cx="134" cy="4" r="4"/>
+<circle class="stop" cx="134" cy="26" r="3"/>
+<circle class="stop" cx="134" cy="66" r="3"/>
+<circle class="stop" cx="134" cy="106" r="3"/>
+<circle class="stop" cx="134" cy="146" r="3"/>
+</svg>
