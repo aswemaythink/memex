@@ -13,7 +13,7 @@ text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; fo
 .dim rect { fill: var(--bg); stroke: var(--rule); stroke-width: 1; }
 .dim text { fill: var(--muted); opacity: .8; font-weight: 600; }
 .dim .lab { font-weight: 400; }
-.lit { opacity: 0; animation: 16s linear infinite; }
+.lit { opacity: 0; animation: 12s linear infinite; }
 .readme rect { fill: var(--accent); }
 .readme text { fill: var(--on-accent); font-weight: 600; }
 .readme .lab { opacity: .8; font-weight: 400; }
@@ -23,10 +23,10 @@ text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; fo
 .code { fill: var(--code); stroke: var(--rule); stroke-width: 1; }
 .cl { stroke: var(--code-line); stroke-width: 3; stroke-linecap: round; }
 .open { fill: none; stroke: var(--accent); stroke-width: 1.25; stroke-dasharray: 4 3; }
-.run { fill: none; stroke: var(--accent); stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: 16s linear infinite; }
+.run { fill: none; stroke: var(--accent); stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: 12s linear infinite; }
 .agent { fill: var(--accent); }
 .rail { fill: none; stroke: var(--rule); stroke-width: 1.5; stroke-dasharray: 1.5 3.5; stroke-linecap: round; }
-.task { font-size: 12px; font-weight: 600; fill: var(--accent); opacity: 0; animation: 16s linear infinite; }
+.task { font-size: 12px; font-weight: 600; fill: var(--accent); opacity: 0; animation: 12s linear infinite; }
 .task .lab { fill: var(--muted); font-weight: 400; }
 @keyframes task0 { 0%, 46% { opacity: 1; } 49%, 99% { opacity: 0; } 100% { opacity: 1; } }
 @keyframes task1 { 0%, 49% { opacity: 0; } 51%, 96% { opacity: 1; } 99%, 100% { opacity: 0; } }

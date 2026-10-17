@@ -252,4 +252,4 @@ The optional Claude Code plugin lives in [plugins/memex](plugins/memex/README.md
 
 ## License
 
-Dual-licensed under MIT OR Apache-2.0, at your option: [LICENSE-MIT](LICENSE-MIT) and [LICENSE-APACHE](LICENSE-APACHE).
+MIT-licensed: see [LICENSE.md](LICENSE.md).

@@ -7,6 +7,6 @@
   },
   "homepage": "https://aswemaythink.github.io/memex",
   "repository": "https://github.com/aswemaythink/memex",
-  "license": "MIT OR Apache-2.0",
+  "license": "MIT",
   "keywords": ["memex", "intent-layer", "context", "sub-agents"]
 }

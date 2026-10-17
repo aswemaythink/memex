@@ -1,3 +1,5 @@
+MIT License
+
 Copyright (c) 2026 the memex authors
 
 Permission is hereby granted, free of charge, to any
