@@ -1,4 +1,4 @@
-# CI for memex: fmt, clippy and tests on ubuntu, macos and windows, plus an MSRV 1.85 build.
+# CI for memex: fmt, clippy and tests on ubuntu, macos and windows, plus an MSRV 1.88 build.
 # MEMEX_BLESS must never be set here (a guard step fails the job). No secrets, no deploy.
 name: CI
 
@@ -57,7 +57,7 @@ jobs:
         run: git diff --exit-code && test -z "$(git status --porcelain)"
 
   msrv:
-    name: MSRV 1.85
+    name: MSRV 1.88
     runs-on: ubuntu-latest
     steps:
       - name: Keep LF line endings
@@ -67,8 +67,8 @@ jobs:
       - name: Check out
         uses: actions/checkout@v4
 
-      - name: Install Rust 1.85
-        uses: dtolnay/rust-toolchain@1.85
+      - name: Install Rust 1.88
+        uses: dtolnay/rust-toolchain@1.88
 
       - name: Build on MSRV
         run: cargo test --locked --no-run
