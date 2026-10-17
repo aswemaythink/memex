@@ -1,6 +1,6 @@
 //! Reads the two limits of `.memex/config.json` (design §4.1 item 4): keep_logs and max_logs_mb.
 //! A missing file means no age limit and the default 10 MiB cap. A file that cannot be used prunes nothing at all, and one warning says why. A value outside its grammar disables only its own limit, and its warning names it (design §4.3 Bad config).
-//! Cases: DISC-CONFIG-01, DISC-CONFIG-02, DISC-CONFIG-03, DISC-CONFIG-04, LOG-PRUNE-01, LOG-PRUNE-02, LOG-PRUNE-06, LOG-PRUNE-07, LOG-PRUNE-08, LOG-PRUNE-09, LOG-PRUNE-16, LOG-PRUNE-18, LOG-PRUNE-21, PORT-NAME-04
+//! Cases: DISC-CONFIG-01, DISC-CONFIG-02, DISC-CONFIG-03, DISC-CONFIG-04, LOG-PRUNE-01, LOG-PRUNE-02, LOG-PRUNE-06, LOG-PRUNE-07, LOG-PRUNE-08, LOG-PRUNE-09, LOG-PRUNE-16, LOG-PRUNE-18, LOG-PRUNE-21, LOG-CAP-02, LOG-CAP-07, LOG-CAP-08, LOG-CAP-09, LOG-CAP-10, PORT-NAME-04
 
 use std::io;
 use std::path::Path;

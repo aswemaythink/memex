@@ -42,7 +42,7 @@ memex init
 
 It is idempotent, never overwrites existing files in `.memex/`, and reports each action. It writes:
 
-- `.memex/`: a `.gitignore` (it ignores `logs/` and `cache/`), a `config.json` (`{"keep_logs": "3d"}`) and `collections/` for manifests.
+- `.memex/`: a `.gitignore` (it ignores `logs/` and `cache/`), a `config.json` (`{"max_logs_mb": 10}`) and `collections/` for manifests.
 - The memex block in AGENTS.md, between `<!-- memex:begin -->` and `<!-- memex:end -->`. It creates AGENTS.md if missing. If CLAUDE.md exists without `@AGENTS.md`, it appends that line. It never creates CLAUDE.md.
 - If no `memex` is on PATH, a copy of the binary in `~/.local/bin` (`%LOCALAPPDATA%\Programs\memex` on Windows), with `add to PATH: <dir>` when needed.
 
@@ -164,7 +164,7 @@ Logs are scaffolding: what a run did, useful for a couple of working days. Each 
 
 - Logs live in `.memex/logs/`, which `.memex/.gitignore` keeps out of git by default. Every worktree shares the main checkout's store.
 - Entries are immutable. A correction is a new entry that cites the old ref.
-- Each `memex log` deletes entries older than `keep_logs` (default `3d`; also `Nm`, `Nh`, `Nd`, `Nw` or `forever`). Pruning happens only on write.
+- The store is a rolling window capped at `max_logs_mb` (default 10 MiB, all streams together): each `memex log` deletes the oldest entries until the store fits. An optional `keep_logs` (`Nm`, `Nh`, `Nd`, `Nw` or `forever`) also deletes entries older than that. Pruning happens only on write.
 - Anything worth keeping belongs in a collection. When a stream proves durable, copy its files into the repo and add a `memex:` line to their frontmatter.
 
 ## Checking the intent layer

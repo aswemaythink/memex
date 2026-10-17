@@ -119,4 +119,4 @@ Worktrees are removed when a slice lands, so their logs would go with them.
 
 Citations are never read from fenced code blocks. An explicit reference that resolves to nothing shows as `unresolved` in `memex show`. A `NAME-*` citation does not count toward `<-N`, so `<-0` still finds the orphans.
 
-**Logs are scaffolding.** A log is what happened in one run. memex prunes logs older than `keep_logs` (3d by default). Anything still true after that belongs in a README, a header or a collection.
+**Logs are scaffolding.** A log is what happened in one run. memex keeps the store under `max_logs_mb` (10 MiB by default), deleting the oldest entries on each write. Anything still true after that belongs in a README, a header or a collection.
