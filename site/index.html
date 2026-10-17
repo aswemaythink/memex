@@ -4,7 +4,7 @@ The memex docs site: one static page on what memex is, how to install it and how
 Order: introduction, principles, get started, context compression (the intent layer), patterns, the verbs, story.
 Behaviour comes from design.md (§1, §2, §3, §5, §6.1) and README.md; the story is STORY.md retold.
 Tailwind comes from its pinned Play CDN, configured by site.js; site.css holds the rest of the styles and the light and dark tokens.
-The walk diagram is walk.svg and the story sketch desk.svg. There is no build step.
+The walk diagram is walk.svg, the scale diagram scale.svg and the story sketch desk.svg. There is no build step.
 When a verb's behaviour or the story changes, change design.md or STORY.md first, then this page.
 -->
 <html lang="en">
@@ -198,6 +198,11 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
     <figure class="mt-8">
       <img src="walk.svg" alt="An agent walks a repo tree from the root through src and api to handler.ts, reading each folder's README one-liner and the file's header purpose line. Each file's code is a much larger dim block; the agent opens only handler.ts, at the end." width="362" height="494" class="mx-auto block h-auto w-full max-w-[26rem]">
       <figcaption class="mt-4 text-center font-serif text-[1.1rem] italic leading-snug">The agent walks the bright layer. The code is there when it needs it.</figcaption>
+    </figure>
+    <p class="mt-8">In a large codebase nobody reads every file, and the bigger it grows, the harder the whole is to see. An agent’s context window holds a few files of code, but it holds every README and header. So the agent walks that thin layer across the whole codebase and spends its context on the code it needs.</p>
+    <figure class="mt-8">
+      <img src="scale.svg" alt="A grid of sixty files, each a dim block of code under a thin orange strip of intent. An agent runs along the strips row by row and opens one file at the end. Below, two equal context windows: one holds three files of code, with a fourth spilling past its edge; the other holds all sixty strips." width="362" height="313" class="mx-auto block h-auto w-full max-w-[26rem]">
+      <figcaption class="mt-4 text-center font-serif text-[1.1rem] italic leading-snug">The same context holds three files of code, or the intent of all sixty.</figcaption>
     </figure>
 
     <h3 class="mt-10 font-serif text-[1.35rem] leading-tight font-medium">Cite, don’t copy</h3>
