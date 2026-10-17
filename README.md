@@ -10,6 +10,8 @@ Code records what a system does. The intent layer records what it is for: a READ
 
 ## Install
 
+With an agent: paste [INSTALL.md](INSTALL.md) into it, in the repo you want to index. It installs memex, looks at the repo, asks you a few questions and sets up what you choose.
+
 One step, for a human or an agent:
 
 ```sh

@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <!--
 The memex site's introduction: what memex is, how to install it and how it works. docs/ holds the reference pages.
-Order: introduction, principles, get started, context compression (the intent layer), trailblazing (logs and collections), API at a glance, story.
+Order: introduction, principles, get started (the agent install prompt, then manual install), context compression (the intent layer), trailblazing (logs and collections), audit, API at a glance, story.
+The install prompt is INSTALL.md at the repo root: site.js fetches it from GitHub into #prompt; without JavaScript, or if the fetch fails, a one-line prompt pointing at it stays.
 Behaviour comes from DESIGN.md (§1, §2, §3, §5, §6.1) and README.md; the story section is authored here.
 Tailwind comes from its pinned Play CDN, configured by site.js; site.css holds the rest of the styles and the light and dark tokens.
 The walk diagram is walk.svg, the scale diagram scale.svg, the trail diagrams logs.svg and collections.svg, and the story sketch desk.svg; each is an <img> that site.js redraws inline so it follows the page's theme on iOS Safari. There is no build step.
@@ -70,8 +71,15 @@ When a verb's behaviour changes, change DESIGN.md first, then this page.
   <!-- 3. Get started -->
   <section id="install" class="pt-16" aria-labelledby="h-install">
     <h2 id="h-install" class="font-serif text-[1.75rem] leading-tight font-medium">Get started</h2>
-    <p class="mt-4">One command in the repo you want to index, for a human or an agent. It installs the binary if needed, creates <code>.memex/</code>, and adds a block to <code>AGENTS.md</code> that tells any agent to read intent before code. It is safe to repeat.</p>
-    <div class="mt-4 flex items-baseline gap-3 overflow-x-auto rounded-[10px] border border-term-line bg-term px-5 py-4 font-mono text-[1.05rem] font-semibold sm:text-[1.2rem]">
+    <p class="mt-4">Paste this into your agent, in the repo you want to index. It installs memex, looks around, asks you a few questions, and sets up what you choose.</p>
+    <div class="relative mt-4 overflow-hidden rounded-[10px] border border-term-line bg-term">
+      <div class="flex items-center justify-between gap-3 border-b border-term-line bg-term-bar py-1 pl-4 pr-1.5 font-mono text-[0.74rem] text-term-dim"><span>INSTALL.md</span><button type="button" id="prompt-copy" hidden class="rounded-md px-2.5 py-1 font-sans text-[0.8rem] font-semibold text-term-fg hover:bg-term-line focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--term-accent)]" aria-controls="prompt" aria-live="polite">Copy</button></div>
+      <pre id="prompt" tabindex="0" aria-label="Agent install prompt" data-src="https://raw.githubusercontent.com/aswemaythink/memex/main/INSTALL.md" class="max-h-[19rem] overflow-y-auto !pb-8"><code class="!whitespace-pre-wrap">Install memex in this repo: follow https://github.com/aswemaythink/memex/blob/main/INSTALL.md</code></pre>
+      <div class="pointer-events-none absolute inset-x-0 bottom-0 mr-3 h-8 bg-gradient-to-t from-term" aria-hidden="true"></div>
+    </div>
+    <h3 class="mt-10 font-serif text-[1.35rem] leading-tight font-medium">Or install it yourself</h3>
+    <p class="mt-3">One command in the repo. It installs the binary if needed, creates <code>.memex/</code>, and adds a block to <code>AGENTS.md</code> that tells any agent to read intent before code. It is safe to repeat.</p>
+    <div class="mt-4 flex items-baseline gap-3 overflow-x-auto rounded-[10px] border border-term-line bg-term px-5 py-3.5 font-mono text-[0.95rem] font-semibold sm:text-[1.05rem]">
       <span class="select-none text-term-dim" aria-hidden="true">$</span><code class="whitespace-nowrap !bg-transparent !p-0 !text-[1em]" style="color: var(--term-cmd)">npx @aswemaythink/memex init</code>
     </div>
     <details class="group mt-6 rounded-[10px] border border-rule bg-soft">
@@ -219,7 +227,22 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
     </figure>
   </section>
 
-  <!-- 6. API at a glance: the six verbs, one line each; the full reference is in docs/. -->
+  <!-- 6. Audit: checking the intent layer against the code. -->
+  <section id="audit" class="pt-16" aria-labelledby="h-audit">
+    <h2 id="h-audit" class="font-serif text-[1.75rem] leading-tight font-medium">Audit</h2>
+    <p class="mt-4">Code moves on and the intent layer can fall behind it. <code>memex audit</code> checks for the drift: files with no header, folders with no README, files grown too long, one-liners that run long, references that resolve to nothing, duplicate ids. Agents run it on the paths they changed and fix what it lists in the same change, or log the rest to <code>drift</code>.</p>
+    <div class="mt-5 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="Terminal sample: memex audit src"><code><span class="p">$</span> <span class="c">memex audit src</span>
+<span class="g">audit</span>       src · 148 files · 12 folders · 2 findings
+<span class="g">headers</span>     <span class="d">(showing 1 of 1; files with no header)</span>
+  <span class="l">src/a.rs</span>
+<span class="d">(no header): add a comment block atop the file; its first sentence states the file's purpose</span>
+<span class="g">cites</span>       <span class="d">(showing 1 of 1; unresolved)</span>
+  <span class="l">src/z.rs</span>  → NAME-404
+<span class="d">(cites): fix the reference or remove it</span></code></pre></div>
+    <p class="mt-4 text-[0.95rem] text-muted">See <a href="docs/reference/audit.html">memex audit</a> and <a href="docs/concepts/drift.html">Drift</a>.</p>
+  </section>
+
+  <!-- 7. API at a glance: the six verbs, one line each; the full reference is in docs/. -->
   <section id="api" class="pt-16" aria-labelledby="h-api">
     <h2 id="h-api" class="font-serif text-[1.75rem] leading-tight font-medium">API at a glance</h2>
     <p class="mt-4">Six verbs, all read-only except <code>init</code> and <code>log</code>. Every list says <code>showing N of M</code> and takes <code class="whitespace-nowrap">--limit</code>; <code class="whitespace-nowrap">--json</code> gives one JSON document.</p>
@@ -234,7 +257,7 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
     <p class="mt-6 font-semibold"><a href="docs/get-started.html">Read the full docs →</a></p>
   </section>
 
-  <!-- 7. Story: Bush, the memex and its trails, laid along a trail. -->
+  <!-- 8. Story: Bush, the memex and its trails, laid along a trail. -->
   <section id="story" class="mt-16 border-t border-rule pt-16 font-serif text-[1.125rem] leading-[1.65]" aria-labelledby="h-story">
     <p class="font-mono text-[0.78rem] font-semibold uppercase tracking-[0.06em] text-accent">The story</p>
     <h2 id="h-story" class="mt-3 text-[1.9rem] leading-[1.15] font-medium tracking-[-0.02em] sm:text-[2.5rem]">Good work was being lost, not because it was wrong, but because nobody could get back to it.</h2>
