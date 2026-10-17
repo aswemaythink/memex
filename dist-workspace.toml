@@ -30,3 +30,5 @@ npm-scope = "@aswemaythink"
 npm-package = "memex"
 # Publish the formula and the npm package on stable tags. They need the HOMEBREW_TAP_TOKEN and NPM_TOKEN secrets.
 publish-jobs = ["homebrew", "npm"]
+# Accept action-version bumps (Dependabot) in the generated release.yml instead of failing `dist plan`.
+allow-dirty = ["ci"]

@@ -3,3 +3,6 @@
 /.claude/worktrees/
 /.claude/launch.json
 .DS_Store
+
+# Release tokens (see .env.example)
+.env

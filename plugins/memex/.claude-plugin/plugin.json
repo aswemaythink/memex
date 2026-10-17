@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "description": "memex for Claude Code: prints the repo's intent-layer overview at session start, and gives each sub-agent its memex id.",
   "author": {
-    "name": "rynwhite"
+    "name": "As We May Think"
   },
-  "homepage": "https://github.com/rynwhite/memex",
-  "repository": "https://github.com/rynwhite/memex",
+  "homepage": "https://aswemaythink.github.io/memex",
+  "repository": "https://github.com/aswemaythink/memex",
   "license": "MIT OR Apache-2.0",
   "keywords": ["memex", "intent-layer", "context", "sub-agents"]
 }

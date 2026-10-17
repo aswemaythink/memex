@@ -2,11 +2,11 @@
 
 `site/` is memex's documentation site: the introduction page and the docs pages. `index.html` is the introduction (what memex is, how to install it and how it works), and `docs/` holds short docs pages. They share one look, stylesheet and Tailwind config, so they read as one site. It is plain HTML styled with Tailwind from its pinned Play CDN (`cdn.tailwindcss.com/3.4.17`), with no build step, so opening a page in a browser is the whole dev loop. It supersedes the story-first page of PLAN.md §6 Phase 9, at the user's direction.
 
-`index.html` runs top to bottom, with a sticky nav (Start, which covers Principles and Get started, then Compression, Trails, API, Story, Docs at `docs/get-started.html`, and GitHub):
+`index.html` runs top to bottom, with a sticky nav of three links (Introduction, Docs at `docs/get-started.html`, and GitHub):
 
 1. Introduction: what memex is (README.md, design.md §1).
 2. Principles: Markdown first, agent-agnostic, intent not code, conventions, bounded output, logs expire (design.md §1).
-3. Get started: one command, `npx @rynwhite/memex init`, marked as coming with v0.1.0, with every other route (toolchains, Releases, a checkout, the plugin) in a native `<details>` (design.md §3.5b, §6.1).
+3. Get started: one command, `npx @aswemaythink/memex init`, with every other route (toolchains, Releases, a checkout, the plugin) in a native `<details>` (design.md §3.5b, §6.1).
 4. Context compression: a short lead on authored context compression; "How an agent explores your codebase" with its paragraph and the walk diagram (two agents in turn on one tree), centred; "The intent layer", a table in compression order (READMEs, headers, collections, logs, code), each row with a CSS-only example popover (hover, keyboard focus or tap); and "The bigger picture", one line and the scale diagram (design.md §1, §2, §4.3, §5).
 5. Trailblazing: trails let the next agent start where the last one stopped; "Logs" and "Collections", each opening with its definition in bold, then its paragraphs and diagram (design.md §1, §2.2, §3.4).
 6. API at a glance: the six verbs, each in mono accent with one line (each linked to its page in `docs/reference/`), the read-only, `showing N of M`, `--limit` and `--json` rules in the lead, and a "Read the full docs" link to `docs/get-started.html` (design.md §3).
@@ -45,6 +45,6 @@ Opening `site/index.html` from disk works too (it needs the network for the Tail
 
 ## Before it goes live
 
-- The planned install lines name the packages of design.md §6.1 (`@rynwhite/memex`, `rynwhite/tap/memex`, `agent-memex`). They work once the v0.1.0 release of PLAN.md Phase 8 exists; then drop the "Coming with v0.1.0" box and hold the first deploy until then.
+- The install lines name the published packages of design.md §6.1 (`@aswemaythink/memex`, `aswemaythink/tap/memex`, `agent-memex`).
 - The Play CDN prints a console warning that it is not meant for production. Swapping it for a prebuilt stylesheet would add a build step, so it is a ruling for the user.
 - When a verb's behaviour or the story changes, change design.md or STORY.md first, then these pages.

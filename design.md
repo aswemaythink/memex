@@ -18,7 +18,7 @@
 
 The name is Vannevar Bush's. In "As We May Think" (*The Atlantic*, July 1945) he described the memex: a desk of microfilm where a reader links documents side by side into **trails**, annotates them, and hands them to colleagues. He predicted a profession of **trail blazers** who build useful paths through the shared record. The same essay imagines a forehead camera that photographs everything. That's automatic capture, eighty years early. The memex is the other idea: associations made on purpose by someone who understands the material. That one led to Engelbart, Nelson's hypertext and the web.
 
-This memex takes Bush's side. Citations and backlinks are the trails; developers and agents are the trail blazers; logs are the camera's film, kept a couple of days and then thrown away. Org: `aswemaythink` (pending).
+This memex takes Bush's side. Citations and backlinks are the trails; developers and agents are the trail blazers; logs are the camera's film, kept a couple of days and then thrown away. Org: `aswemaythink`.
 
 ## 2. The intent layer: the graph and its dimensions
 
@@ -489,7 +489,7 @@ There is no MCP server, no other hooks, and no per-agent code beyond this.
 **One step**, for a human or an agent:
 
 ```sh
-npx @rynwhite/memex init
+npx @aswemaythink/memex init
 ```
 
 That installs the binary (if needed), creates `.memex/`, wires `AGENTS.md`/`CLAUDE.md`, and prints the atlas. Uninstall: delete `.memex/` and the marked block.
@@ -497,15 +497,15 @@ That installs the binary (if needed), creates `.memex/`, wires `AGENTS.md`/`CLAU
 **Manual**, one command per toolchain, then `memex init`:
 
 ```sh
-brew install rynwhite/tap/memex
+brew install aswemaythink/tap/memex
 cargo install agent-memex
-curl -LsSf https://github.com/rynwhite/memex/releases/latest/download/memex-installer.sh | sh
-powershell -c "irm https://github.com/rynwhite/memex/releases/latest/download/memex-installer.ps1 | iex"
+curl -LsSf https://github.com/aswemaythink/memex/releases/latest/download/agent-memex-installer.sh | sh
+powershell -c "irm https://github.com/aswemaythink/memex/releases/latest/download/agent-memex-installer.ps1 | iex"
 ```
 
 Or download a binary from GitHub Releases. All of these come from one cargo-dist release per tag.
 
-**Claude Code plugin (optional):** `/plugin marketplace add rynwhite/memex`, then `/plugin install memex@memex`.
+**Claude Code plugin (optional):** `/plugin marketplace add aswemaythink/memex`, then `/plugin install memex@memex`.
 
 ## 7. Non-goals
 

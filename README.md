@@ -2,35 +2,31 @@
 
 memex is a CLI that indexes a repo's authored intent layer so agents read intent before code. Markdown and a CLI only: no server, daemon, auth, MCP, LLM, vectors or database.
 
+**Documentation:** [aswemaythink.github.io/memex](https://aswemaythink.github.io/memex/) has getting started, concepts, patterns and every verb.
+
 ## Why
 
 Code records what a system does. The intent layer records what it is for: a README says why a folder exists, a header says what a file is for, and a case says what is claimed and how it is proven. Whoever knew the most compresses it at the moment they knew it best, and memex walks the citations between those pieces in both directions. The name is Vannevar Bush's: his 1945 essay describes a desk for linking documents into trails. This memex takes his side, and [STORY.md](STORY.md) tells the story.
 
 ## Install
 
-From a checkout of this repo:
-
-```sh
-cargo install --path . --locked
-```
-
-This installs the `memex` binary. It is one codebase for Linux, macOS and Windows.
-
-<!-- names pending: PLAN §11 S8.1 -->
 One step, for a human or an agent:
 
 ```sh
-npx @rynwhite/memex init
+npx @aswemaythink/memex init
 ```
 
 Manual, one command per toolchain, then `memex init` (or download a binary from GitHub Releases):
 
 ```sh
-brew install rynwhite/tap/memex
+brew install aswemaythink/tap/memex
 cargo install agent-memex
-curl -LsSf https://github.com/rynwhite/memex/releases/latest/download/memex-installer.sh | sh
-powershell -c "irm https://github.com/rynwhite/memex/releases/latest/download/memex-installer.ps1 | iex"
+curl -LsSf https://github.com/aswemaythink/memex/releases/latest/download/agent-memex-installer.sh | sh
+powershell -c "irm https://github.com/aswemaythink/memex/releases/latest/download/agent-memex-installer.ps1 | iex"
+git clone https://github.com/aswemaythink/memex && cd memex && cargo install --path . --locked
 ```
+
+The last line builds the `memex` binary from a checkout of this repo. It is one codebase for Linux, macOS and Windows.
 
 ## Quick start
 
@@ -223,9 +219,8 @@ joins that collection, such as CASES.md (`memex: cases`): test ids with their cl
 
 The optional Claude Code plugin lives in [plugins/memex](plugins/memex/README.md): one skill that carries the snippet, the usage recipes and the conventions, and one hook script. On SessionStart the hook prints `memex info`. On SubagentStart it adds `memex info --agent <agent_type>` and gives the sub-agent its memex id. It never sets `MEMEX_AGENT`, since a session-wide value would leak the parent's id into every sub-agent.
 
-<!-- names pending: PLAN §11 S8.1 -->
 ```
-/plugin marketplace add rynwhite/memex
+/plugin marketplace add aswemaythink/memex
 /plugin install memex@memex
 ```
 
@@ -249,6 +244,7 @@ The optional Claude Code plugin lives in [plugins/memex](plugins/memex/README.md
 
 ## Links
 
+- [Documentation](https://aswemaythink.github.io/memex/): the site, with getting started, patterns and the verb reference.
 - [design.md](design.md): the behaviour. It is authoritative.
 - [PLAN.md](PLAN.md): how memex gets built, slice by slice.
 - [tests/cases](tests/cases/README.md): the conformance suite that pins behaviour.
