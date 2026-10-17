@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-The perf verdicts pattern: when to use it, the steps, a json collection file and searching verdicts.
+The perf verdicts pattern: when to use it, the steps, a verdict as a Markdown file and searching verdicts.
 Layout and chrome are shared by every page under docs/: the header, footer, site.css and site.js match the intro; docs.js renders the sidebar, the "On this page" table of contents and the mobile drawer.
 -->
 <html lang="en">
@@ -60,12 +60,17 @@ Layout and chrome are shared by every page under docs/: the header, footer, site
       <h2 id="steps" class="font-serif text-[1.5rem] leading-tight font-medium">Steps</h2>
       <ol class="mt-3 list-decimal space-y-1.5 pl-6 marker:text-muted"><li>Before trying an optimisation, search the collection: was this tried?</li><li>Record every attempt: what it changed, what it measured, and the verdict, kept or cut.</li><li>Keep the dead ends. They are the reason the collection exists.</li></ol>
     </section>
-    <section class="mt-16" aria-labelledby="json">
-      <h2 id="json" class="font-serif text-[1.5rem] leading-tight font-medium">Verdicts in a JSON index</h2>
-      <p class="mt-3">When the verdicts already live in a JSON index, a <code>json</code> collection file makes each entry a doc where it is, with no conversion.</p><div class="mt-5 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="A json collection file for perf verdicts"><code><span class="d"># .memex/collections/perf.json</span>
-{ <span class="k">"name"</span>: "perf", <span class="k">"kind"</span>: "json", <span class="k">"owner"</span>: "agent-perf skill",
-  <span class="k">"roots"</span>: ["perf"], <span class="k">"include"</span>: ["*.json"], <span class="k">"at"</span>: "/entries",
-  <span class="k">"id"</span>: "id", <span class="k">"title"</span>: "topic" }</code></pre></div><p class="mt-4 text-[0.95rem] text-muted">Verdicts that are Markdown files need no file in <code>.memex/collections/</code>: <code>memex: perf</code> in their frontmatter is enough.</p>
+    <section class="mt-16" aria-labelledby="file">
+      <h2 id="file" class="font-serif text-[1.5rem] leading-tight font-medium">One verdict, one file</h2>
+      <p class="mt-3">A verdict is a Markdown file. <code>memex: perf</code> in its frontmatter puts it in the collection; the other keys become fields you can search.</p><div class="mt-5 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="A perf verdict as a Markdown file"><code><span class="d"># perf/hashers.md</span>
+---
+<span class="k">memex</span>: perf
+<span class="k">id</span>: PERF-W2-HASHERS
+<span class="k">verdict</span>: CUT
+---
+# Swap the hasher in the walk index
+Tried FxHash and ahash in place of SipHash. Search on reference-ui
+moved from 112 ms to 110 ms, inside the noise. Cut: not worth the dependency.</code></pre></div><p class="mt-4 text-[0.95rem] text-muted">No file in <code>.memex/collections/</code> is needed.</p>
     </section>
     <section class="mt-16" aria-labelledby="find">
       <h2 id="find" class="font-serif text-[1.5rem] leading-tight font-medium">Search verdicts</h2>
