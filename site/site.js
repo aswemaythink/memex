@@ -1,6 +1,7 @@
 // The Tailwind Play CDN config for the memex site.
 // It maps colour names to the custom properties in site.css, and sets the fonts and the page width.
 // Every page (index.html and the pages in docs/) loads it right after the pinned CDN script, so the CDN picks it up before it styles the page.
+// It also draws each figure's diagram inline (see the end of this file), so the diagrams follow the page's theme on iOS Safari too.
 tailwind.config = {
   darkMode: 'media',
   theme: {
@@ -19,3 +20,30 @@ tailwind.config = {
     }
   }
 }
+
+// Diagrams: each `figure img` of a site SVG is swapped for the same SVG drawn inline, in a shadow root so its class names and keyframes stay its own.
+// WebKit does not reliably pass the page's colour scheme into an SVG loaded as an <img>, so on iOS Safari the diagrams drew their light palette on a dark page.
+// Inline, the SVG's own prefers-color-scheme block is read in the page's context. Without fetch (file://) or JavaScript the <img> stays as it is.
+document.addEventListener('DOMContentLoaded', () => {
+  if (!window.fetch || !document.head.attachShadow) return;
+  document.querySelectorAll('figure img[src$=".svg"]').forEach(async (img) => {
+    try {
+      const res = await fetch(img.src);
+      if (!res.ok) return;
+      const svg = new DOMParser().parseFromString(await res.text(), 'image/svg+xml').documentElement;
+      if (svg.localName !== 'svg') return;
+      svg.querySelectorAll('title, desc').forEach((n) => n.remove());
+      svg.removeAttribute('role');
+      svg.setAttribute('aria-hidden', 'true');
+      svg.setAttribute('focusable', 'false');
+      svg.style.cssText = 'display: block; width: 100%; height: 100%;';
+      const host = document.createElement('div');
+      host.className = img.className;
+      host.style.aspectRatio = img.getAttribute('width') + ' / ' + img.getAttribute('height');
+      host.setAttribute('role', 'img');
+      host.setAttribute('aria-label', img.alt);
+      host.attachShadow({ mode: 'open' }).append(document.importNode(svg, true));
+      img.replaceWith(host);
+    } catch (e) { /* keep the <img> */ }
+  });
+});
