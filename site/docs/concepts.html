@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<!--
+The explanation page: the intent layer, compression and trails in short form, linking back to the intro page sections rather than repeating them.
+Layout and chrome are shared by every page under docs/: the header, footer, site.css and site.js match the intro; docs.js renders the sidebar, the "On this page" table of contents and the mobile drawer.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Concepts · memex docs</title>
+<meta name="description" content="The intent layer, authored context compression and trails, in short, with links to the intro.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#faf7f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141310" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="memex">
+<meta property="og:title" content="Concepts · memex docs">
+<meta property="og:description" content="The intent layer, authored context compression and trails, in short, with links to the intro.">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23faf7f0'/%3E%3Crect x='5.5' y='5.5' width='5.5' height='21' rx='2.75' fill='%231c1a17'/%3E%3Crect x='13.25' y='14' width='5.5' height='12.5' rx='2.75' fill='%239a3d17'/%3E%3Crect x='21' y='5.5' width='5.5' height='21' rx='2.75' fill='%231c1a17'/%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="../site.js"></script>
+<link rel="stylesheet" href="../site.css">
+<noscript><style>#docs-menu { display: none; }</style></noscript>
+</head>
+<body class="font-sans text-[1.0625rem] leading-[1.7]">
+<a href="#main" class="absolute left-4 -top-16 z-50 rounded-md bg-fg px-3 py-2 text-sm font-semibold !text-bg !no-underline focus:top-3">Skip to content</a>
+
+<header class="sticky top-0 z-40 border-b border-rule backdrop-blur" style="background-color: color-mix(in srgb, var(--bg) 88%, transparent)">
+  <div class="mx-auto flex h-14 max-w-[84rem] items-center gap-3 px-4 sm:px-6">
+    <button id="docs-menu" type="button" class="-ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-muted hover:text-fg lg:hidden" aria-controls="docs-sidebar" aria-expanded="false" aria-label="Open docs menu">
+      <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>
+    </button>
+    <a href="../index.html" class="flex shrink-0 items-center gap-2 !no-underline !text-fg font-serif text-xl font-semibold tracking-tight">
+      <svg class="mark h-7 w-7" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect class="bar" x="4" y="4" width="6" height="24" rx="3"/><rect class="dot" x="13" y="14" width="6" height="14" rx="3"/><rect class="bar" x="22" y="4" width="6" height="24" rx="3"/></svg>
+      memex
+    </a>
+    <nav class="ml-auto flex shrink-0 gap-4 text-[0.875rem]" aria-label="Site">
+      <a class="hidden !text-muted !no-underline hover:!text-fg sm:inline" href="../index.html">Introduction</a>
+      <a class="!text-fg !no-underline" href="get-started.html" aria-current="true">Docs</a>
+      <a class="!text-muted !no-underline hover:!text-fg" href="https://github.com/rynwhite/memex">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="mx-auto max-w-[84rem] px-4 sm:px-6 lg:grid lg:grid-cols-[13.5rem_minmax(0,46rem)] lg:gap-14 xl:grid-cols-[13.5rem_minmax(0,46rem)_12rem] xl:justify-between">
+  <aside id="docs-sidebar" class="max-lg:invisible max-lg:-translate-x-full fixed bottom-0 left-0 top-14 z-40 w-[17rem] max-w-[85vw] overflow-y-auto border-r border-rule bg-bg px-5 py-8 transition-transform duration-200 lg:sticky lg:z-auto lg:h-[calc(100vh-3.5rem)] lg:w-auto lg:max-w-none lg:border-r-0 lg:bg-transparent lg:px-0 lg:py-10 [scrollbar-width:thin] [scrollbar-color:var(--rule)_transparent]" aria-label="Docs navigation">
+    <noscript><p class="text-[0.92rem]"><a href="get-started.html">Docs: Getting started</a></p></noscript>
+  </aside>
+
+  <main id="main" class="min-w-0 pb-6 pt-10 sm:pt-14">
+    <p class="mb-3 font-mono text-[0.78rem] font-semibold uppercase tracking-[0.06em] text-accent">Concepts</p>
+    <h1 class="font-serif text-[2rem] leading-[1.15] font-medium sm:text-[2.4rem]">Concepts</h1>
+    <p class="mt-4 font-serif text-[1.2rem] leading-[1.5] sm:text-[1.3rem]">Three ideas carry memex. Each is short here; the intro page draws them.</p>
+    <section class="mt-16" aria-labelledby="intent-layer">
+      <h2 id="intent-layer" class="font-serif text-[1.5rem] leading-tight font-medium">The intent layer</h2>
+      <p class="mt-3">Code records what a system does. The intent layer records what it is <em>for</em>: a README says why a folder exists, a header says what a file is for, a case says what is claimed and how it is proven, and a log says what an agent was trying and what it found.</p><p class="mt-3">memex reads intent, never code bodies. For symbols, <code>rg</code> is already the right tool.</p><p class="mt-4 text-[0.95rem] text-muted">See <a href="../index.html#compression">the intent layer</a> on the intro page.</p>
+    </section>
+    <section class="mt-16" aria-labelledby="compression">
+      <h2 id="compression" class="font-serif text-[1.5rem] leading-tight font-medium">Authored compression</h2>
+      <p class="mt-3">A README compresses a folder, a header a file, a case a test, a log an agent’s run. Whoever knew the most writes it, when they knew it best, so nothing has to summarise it later.</p><p class="mt-3">That is why memex needs no server, database or model: the compression was already done.</p><p class="mt-4 text-[0.95rem] text-muted">See <a href="../index.html#compression">Context compression</a> on the intro page.</p>
+    </section>
+    <section class="mt-16" aria-labelledby="trails">
+      <h2 id="trails" class="font-serif text-[1.5rem] leading-tight font-medium">Trails</h2>
+      <p class="mt-3">Citations are trails. An id, a path or a ref written in prose links two things, and memex reads every link both ways: what a doc cites, and what cites it.</p><p class="mt-3">Logs and collections let the next agent start where the last one stopped. Logs are work in progress and expire; whatever is still true gets written into the layer by someone who understands it.</p><p class="mt-4 text-[0.95rem] text-muted">See <a href="../index.html#trails">Trailblazing</a> on the intro page, and <a href="../index.html#story">the story</a> for where the word comes from.</p>
+    </section><p class="mt-16 border-t border-rule pt-5 text-[0.95rem]">Next: <a href="get-started.html">Get started</a> <span class="text-muted">·</span> <a href="patterns/index.html">Patterns</a></p>
+  </main>
+
+  <aside id="docs-toc" class="hidden xl:sticky xl:top-14 xl:block xl:h-[calc(100vh-3.5rem)] xl:overflow-y-auto xl:py-14 [scrollbar-width:thin] [scrollbar-color:var(--rule)_transparent]" aria-label="On this page"></aside>
+</div>
+
+<footer class="mx-auto mt-16 max-w-[84rem] px-4 sm:px-6">
+  <div class="border-t border-rule pt-6 pb-12 text-[0.88rem] text-muted">
+  <p class="flex flex-wrap gap-x-5 gap-y-1">
+    <a href="https://github.com/rynwhite/memex">GitHub</a>
+    <a href="https://github.com/rynwhite/memex/blob/main/design.md">design.md, the spec</a>
+    <a href="https://github.com/rynwhite/memex/blob/main/STORY.md">STORY.md</a>
+  </p>
+  <p class="mt-3">memex is dual-licensed under MIT or Apache-2.0.</p>
+  </div>
+</footer>
+
+<script src="docs.js"></script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<!--
+Getting started: set memex up for agents. Install and memex init, what init wires up, what agents do from then on, the orchestrator case, and what the human still does.
+Layout and chrome are shared by every page under docs/: the header, footer, site.css and site.js match the intro; docs.js renders the sidebar, the "On this page" table of contents and the mobile drawer.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Getting started · memex docs</title>
+<meta name="description" content="Set memex up in a repo for your agents: install, memex init, what it wires up, and what agents do from then on.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#faf7f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141310" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="memex">
+<meta property="og:title" content="Getting started · memex docs">
+<meta property="og:description" content="Set memex up in a repo for your agents: install, memex init, what it wires up, and what agents do from then on.">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23faf7f0'/%3E%3Crect x='5.5' y='5.5' width='5.5' height='21' rx='2.75' fill='%231c1a17'/%3E%3Crect x='13.25' y='14' width='5.5' height='12.5' rx='2.75' fill='%239a3d17'/%3E%3Crect x='21' y='5.5' width='5.5' height='21' rx='2.75' fill='%231c1a17'/%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="../site.js"></script>
+<link rel="stylesheet" href="../site.css">
+<noscript><style>#docs-menu { display: none; }</style></noscript>
+</head>
+<body class="font-sans text-[1.0625rem] leading-[1.7]">
+<a href="#main" class="absolute left-4 -top-16 z-50 rounded-md bg-fg px-3 py-2 text-sm font-semibold !text-bg !no-underline focus:top-3">Skip to content</a>
+
+<header class="sticky top-0 z-40 border-b border-rule backdrop-blur" style="background-color: color-mix(in srgb, var(--bg) 88%, transparent)">
+  <div class="mx-auto flex h-14 max-w-[84rem] items-center gap-3 px-4 sm:px-6">
+    <button id="docs-menu" type="button" class="-ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-muted hover:text-fg lg:hidden" aria-controls="docs-sidebar" aria-expanded="false" aria-label="Open docs menu">
+      <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg>
+    </button>
+    <a href="../index.html" class="flex shrink-0 items-center gap-2 !no-underline !text-fg font-serif text-xl font-semibold tracking-tight">
+      <svg class="mark h-7 w-7" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect class="bar" x="4" y="4" width="6" height="24" rx="3"/><rect class="dot" x="13" y="14" width="6" height="14" rx="3"/><rect class="bar" x="22" y="4" width="6" height="24" rx="3"/></svg>
+      memex
+    </a>
+    <nav class="ml-auto flex shrink-0 gap-4 text-[0.875rem]" aria-label="Site">
+      <a class="hidden !text-muted !no-underline hover:!text-fg sm:inline" href="../index.html">Introduction</a>
+      <a class="!text-fg !no-underline" href="get-started.html" aria-current="true">Docs</a>
+      <a class="!text-muted !no-underline hover:!text-fg" href="https://github.com/rynwhite/memex">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="mx-auto max-w-[84rem] px-4 sm:px-6 lg:grid lg:grid-cols-[13.5rem_minmax(0,46rem)] lg:gap-14 xl:grid-cols-[13.5rem_minmax(0,46rem)_12rem] xl:justify-between">
+  <aside id="docs-sidebar" class="max-lg:invisible max-lg:-translate-x-full fixed bottom-0 left-0 top-14 z-40 w-[17rem] max-w-[85vw] overflow-y-auto border-r border-rule bg-bg px-5 py-8 transition-transform duration-200 lg:sticky lg:z-auto lg:h-[calc(100vh-3.5rem)] lg:w-auto lg:max-w-none lg:border-r-0 lg:bg-transparent lg:px-0 lg:py-10 [scrollbar-width:thin] [scrollbar-color:var(--rule)_transparent]" aria-label="Docs navigation">
+    <noscript><p class="text-[0.92rem]"><a href="get-started.html">Docs: Getting started</a></p></noscript>
+  </aside>
+
+  <main id="main" class="min-w-0 pb-6 pt-10 sm:pt-14">
+    <p class="mb-3 font-mono text-[0.78rem] font-semibold uppercase tracking-[0.06em] text-accent">Guides</p>
+    <h1 class="font-serif text-[2rem] leading-[1.15] font-medium sm:text-[2.4rem]">Getting started</h1>
+    <p class="mt-4 font-serif text-[1.2rem] leading-[1.5] sm:text-[1.3rem]">memex is used mostly by agents. Set it up once in the repo, and every agent that reads <code>AGENTS.md</code> reads intent before code. You can just read the repo.</p>
+    <section class="mt-16" aria-labelledby="install">
+      <h2 id="install" class="font-serif text-[1.5rem] leading-tight font-medium">Install and init</h2>
+      <p class="mt-3">One command in the repo you want to index. It installs the binary if needed, then runs <code>memex init</code>.</p><div class="mt-5 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="Install with npx"><code><span class="p">$</span> <span class="c">npx @rynwhite/memex init</span></code></pre></div><p class="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[0.92rem] text-muted"><span class="rounded-full bg-accent-soft px-2.5 py-0.5 font-mono text-[0.72rem] font-semibold uppercase tracking-[0.06em] text-accent">Coming with v0.1.0</span><span>Until then, install from a checkout and run <code>memex init</code>:</span></p><div class="mt-5 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="Install from a checkout"><code><span class="p">$</span> <span class="c">git clone https://github.com/rynwhite/memex && cd memex</span>
+<span class="p">$</span> <span class="c">cargo install --path . --locked</span></code></pre></div><p class="mt-5"><code>memex init</code> is safe to repeat: it never overwrites files in <code>.memex/</code>, and it reports each action.</p><div class="mt-5 overflow-hidden rounded-[10px] border border-term-line bg-term"><div class="border-b border-term-line bg-term-bar px-4 py-1.5 font-mono text-[0.74rem] text-term-dim">project</div><pre tabindex="0" aria-label="Terminal sample: memex init"><code><span class="p">$</span> <span class="c">memex init</span>
+created <span class="l">.memex/.gitignore</span>
+created <span class="l">.memex/config.json</span>
+created <span class="l">.memex/collections/.gitkeep</span>
+created <span class="l">AGENTS.md</span>
+updated <span class="l">CLAUDE.md</span>
+<span class="d">… then the atlas, as memex info prints it</span></code></pre></div>
+    </section>
+    <section class="mt-16" aria-labelledby="wires">
+      <h2 id="wires" class="font-serif text-[1.5rem] leading-tight font-medium">What init wires up</h2>
+      <ul class="mt-3 space-y-2.5"><li class="border-l-2 border-rule pl-4"><strong>A block in <code>AGENTS.md</code></strong>, between markers, that tells any agent to read intent before code and names the verbs to do it with.</li><li class="border-l-2 border-rule pl-4"><strong>An existing <code>CLAUDE.md</code></strong> gets an <code>@AGENTS.md</code> line, so Claude Code reads the same block.</li><li class="border-l-2 border-rule pl-4"><strong><code>.memex/</code></strong>, the log store and the place for collection files.</li></ul><p class="mt-5">On Claude Code, the optional plugin adds the memex skill and a start hook that prints <code>memex info</code> at the top of every session.</p><div class="mt-5 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="Claude Code plugin commands"><code><span class="c">/plugin marketplace add rynwhite/memex</span>
+<span class="c">/plugin install memex@memex</span></code></pre></div>
+    </section>
+    <section class="mt-16" aria-labelledby="agents">
+      <h2 id="agents" class="font-serif text-[1.5rem] leading-tight font-medium">What agents do from then on</h2>
+      <ul class="mt-3 space-y-2.5"><li class="border-l-2 border-rule pl-4"><strong>Read intent before code.</strong> <code>memex info</code> for where things are, then <code>memex search</code> and <code>memex show</code> to find the few files worth opening.</li><li class="border-l-2 border-rule pl-4"><strong>Log what they find.</strong> <code>memex log &lt;stream&gt;</code> records a finding and hands back a one-line ref.</li><li class="border-l-2 border-rule pl-4"><strong>Check after changing code.</strong> Update the header or README the change invalidated, then run <code>memex check &lt;paths&gt;</code> and fix what it lists.</li></ul><p class="mt-4 text-[0.95rem] text-muted">Each verb has a page in the <a href="reference/index.html">reference</a>.</p>
+    </section>
+    <section class="mt-16" aria-labelledby="orchestrator">
+      <h2 id="orchestrator" class="font-serif text-[1.5rem] leading-tight font-medium">With an orchestrator</h2>
+      <p class="mt-3">Workers log their full report with <code>--agent</code> and return one line, <code>report: &lt;ref&gt;</code>. The orchestrator reads a ref only when it needs the detail, and finds messages addressed to it with <code>memex search to:&lt;id&gt;</code>.</p><div class="mt-5 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="Hand-off between a worker and an orchestrator"><code><span class="d"># a worker ends its run</span>
+<span class="p">$</span> <span class="c">memex log impl --agent worker-2 --to orchestrator &lt;&lt;'EOF' … EOF</span>
+<span class="l">impl:20261013-214107-show-walks-hub-readmes</span>
+<span class="d"># and returns one line:  report: impl:20261013-214107-show-walks-hub-readmes</span>
+
+<span class="d"># the orchestrator</span>
+<span class="p">$</span> <span class="c">memex search to:orchestrator</span>
+<span class="p">$</span> <span class="c">memex show impl:20261013-214107-show-walks-hub-readmes</span></code></pre></div><p class="mt-4 text-[0.95rem] text-muted">More in <a href="patterns/hand-off.html">Hand-off and messages</a>.</p>
+    </section>
+    <section class="mt-16" aria-labelledby="you">
+      <h2 id="you" class="font-serif text-[1.5rem] leading-tight font-medium">What you still do</h2>
+      <p class="mt-3">Write and keep the READMEs and headers: they are the intent agents read. Review what agents distill into them, since a log is only a record of one run.</p><p class="mt-4 text-[0.95rem] text-muted">Why this works: <a href="concepts.html">Concepts</a>.</p>
+    </section><p class="mt-16 border-t border-rule pt-5 text-[0.95rem]">Next: <a href="patterns/index.html">Patterns</a> <span class="text-muted">·</span> <a href="reference/index.html">Reference</a> <span class="text-muted">·</span> <a href="concepts.html">Concepts</a></p>
+  </main>
+
+  <aside id="docs-toc" class="hidden xl:sticky xl:top-14 xl:block xl:h-[calc(100vh-3.5rem)] xl:overflow-y-auto xl:py-14 [scrollbar-width:thin] [scrollbar-color:var(--rule)_transparent]" aria-label="On this page"></aside>
+</div>
+
+<footer class="mx-auto mt-16 max-w-[84rem] px-4 sm:px-6">
+  <div class="border-t border-rule pt-6 pb-12 text-[0.88rem] text-muted">
+  <p class="flex flex-wrap gap-x-5 gap-y-1">
+    <a href="https://github.com/rynwhite/memex">GitHub</a>
+    <a href="https://github.com/rynwhite/memex/blob/main/design.md">design.md, the spec</a>
+    <a href="https://github.com/rynwhite/memex/blob/main/STORY.md">STORY.md</a>
+  </p>
+  <p class="mt-3">memex is dual-licensed under MIT or Apache-2.0.</p>
+  </div>
+</footer>
+
+<script src="docs.js"></script>
+</body>
+</html>
