@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 526" width="400" height="526" role="img">
-<!-- The walk diagram of the memex site: two agents in turn move down a rail beside a still repo tree, lighting each README, header and collection chip they read; one stops at the READMEs and the API contract, the other opens one migration. It follows light and dark through its own prefers-color-scheme block. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 546" width="400" height="546" role="img">
+<!-- The walk diagram of the memex site: two agents in turn move down a rail beside a still repo tree, lighting each README and header chip they read; one understands the API from READMEs and headers alone, the other opens the model and the migration it must change. It follows light and dark through its own prefers-color-scheme block. -->
 <title>Two agents walk the intent layer</title>
-<desc>A repo tree: repo; src with api, which holds API.md, handler.ts and store.ts; and db with 001_orders.sql. Every chip starts dim. The first agent, out to understand the API, reads the READMEs of repo, src and api and the collection doc API.md, and stops there without opening a file. The second agent reads the repo README, skips src, reads the db README and the header of 001_orders.sql, and opens that migration.</desc>
+<desc>A repo tree: repo; src with api, which holds model.ts, handler.ts and store.ts; and db with 001_orders.sql. Every chip starts dim. The first agent, out to understand the API, reads the READMEs of repo, src and api and the headers of the three api files, and opens no code. The second, changing the schema, reads the same READMEs and the header of model.ts and opens it, then reads the db README and the header of 001_orders.sql and opens that migration; handler.ts and store.ts stay dim.</desc>
 <style>
 svg { --bg: #faf7f0; --fg: #1c1a17; --muted: #5c574d; --accent: #9a3d17; --on-accent: #faf7f0; --rule: #d8d1c0; --code: #ebe5d7; --code-line: #d3cab6; color: var(--fg); }
 @media (prefers-color-scheme: dark) { svg { --bg: #141310; --fg: #ebe7dd; --muted: #a8a295; --accent: #eca071; --on-accent: #141310; --rule: #35322a; --code: #0c0b09; --code-line: #2a2722; } }
@@ -11,15 +11,15 @@ text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; fo
 .lab { font-size: 7.5px; letter-spacing: .04em; }
 .tree { fill: none; stroke: var(--rule); stroke-width: 1.25; }
 .dim rect { fill: var(--bg); stroke: var(--rule); stroke-width: 1; }
-.dim text { fill: var(--muted); opacity: .8; }
+.dim text { fill: var(--muted); opacity: .8; font-weight: 600; }
+.dim .lab { font-weight: 400; }
 .lit { opacity: 0; animation: 16s linear infinite; }
 .readme rect { fill: var(--accent); }
 .readme text { fill: var(--on-accent); font-weight: 600; }
 .readme .lab { opacity: .8; font-weight: 400; }
 .header rect { fill: var(--bg); stroke: var(--accent); stroke-width: 1.5; }
-.header text, .coll text { fill: var(--accent); font-weight: 600; }
-.header .lab, .coll .lab { opacity: .75; font-weight: 400; }
-.coll rect { fill: var(--bg); stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 3 2; }
+.header text { fill: var(--accent); font-weight: 600; }
+.header .lab { opacity: .75; font-weight: 400; }
 .code { fill: var(--code); stroke: var(--rule); stroke-width: 1; }
 .cl { stroke: var(--code-line); stroke-width: 3; stroke-linecap: round; }
 .open { fill: none; stroke: var(--accent); stroke-width: 1.25; stroke-dasharray: 4 3; }
@@ -34,23 +34,25 @@ text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; fo
 .stop { fill: var(--bg); stroke: var(--rule); stroke-width: 1.5; }
 .on .tie { stroke: var(--accent); opacity: .8; }
 .on .stop { stroke: var(--accent); stroke-width: 2; }
-.dim text.lab, .lit .on text { }
 @keyframes run0 { 0%, 0.0% { stroke-dashoffset: 1000; opacity: 1; } 27.5%, 45.0% { stroke-dashoffset: 0; opacity: 1; } 49.0%, 100% { stroke-dashoffset: 0; opacity: 0; } }
 @keyframes run1 { 0%, 50.0% { stroke-dashoffset: 1000; opacity: 1; } 77.5%, 95.0% { stroke-dashoffset: 0; opacity: 1; } 99.0%, 100% { stroke-dashoffset: 0; opacity: 0; } }
-@keyframes l-repo { 0% { opacity: 0; } 3.0% { opacity: 0; } 3.6%, 45.0% { opacity: 1; } 48.0% { opacity: 0; } 50.5% { opacity: 0; } 51.1%, 95.0% { opacity: 1; } 98.0% { opacity: 0; } 100% { opacity: 0; } }
-@keyframes l-src { 0% { opacity: 0; } 11.0% { opacity: 0; } 11.6%, 45.0% { opacity: 1; } 48.0% { opacity: 0; } 100% { opacity: 0; } }
-@keyframes l-api { 0% { opacity: 0; } 18.9% { opacity: 0; } 19.5%, 45.0% { opacity: 1; } 48.0% { opacity: 0; } 100% { opacity: 0; } }
-@keyframes l-apimd { 0% { opacity: 0; } 26.9% { opacity: 0; } 27.5%, 45.0% { opacity: 1; } 48.0% { opacity: 0; } 100% { opacity: 0; } }
-@keyframes l-db { 0% { opacity: 0; } 71.4% { opacity: 0; } 72.0%, 95.0% { opacity: 1; } 98.0% { opacity: 0; } 100% { opacity: 0; } }
-@keyframes l-sql { 0% { opacity: 0; } 73.8% { opacity: 0; } 74.4%, 95.0% { opacity: 1; } 98.0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes l-repo { 0% { opacity: 0; } 0.9% { opacity: 0; } 1.5%, 45.0% { opacity: 1; } 48.0% { opacity: 0; } 50.4% { opacity: 0; } 51.0%, 95.0% { opacity: 1; } 98.0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes l-src { 0% { opacity: 0; } 4.4% { opacity: 0; } 5.0%, 45.0% { opacity: 1; } 48.0% { opacity: 0; } 52.7% { opacity: 0; } 53.3%, 95.0% { opacity: 1; } 98.0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes l-api { 0% { opacity: 0; } 7.8% { opacity: 0; } 8.4%, 45.0% { opacity: 1; } 48.0% { opacity: 0; } 54.9% { opacity: 0; } 55.5%, 95.0% { opacity: 1; } 98.0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes l-model { 0% { opacity: 0; } 11.3% { opacity: 0; } 11.9%, 45.0% { opacity: 1; } 48.0% { opacity: 0; } 57.1% { opacity: 0; } 57.7%, 95.0% { opacity: 1; } 98.0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes l-hand { 0% { opacity: 0; } 18.6% { opacity: 0; } 19.2%, 45.0% { opacity: 1; } 48.0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes l-store { 0% { opacity: 0; } 26.9% { opacity: 0; } 27.5%, 45.0% { opacity: 1; } 48.0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes l-db { 0% { opacity: 0; } 71.7% { opacity: 0; } 72.3%, 95.0% { opacity: 1; } 98.0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes l-sql { 0% { opacity: 0; } 74.0% { opacity: 0; } 74.6%, 95.0% { opacity: 1; } 98.0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes l-open-model { 0% { opacity: 0; } 58.6% { opacity: 0; } 59.2%, 95.0% { opacity: 1; } 98.0% { opacity: 0; } 100% { opacity: 0; } }
 @keyframes l-open-sql { 0% { opacity: 0; } 77.9% { opacity: 0; } 78.5%, 95.0% { opacity: 1; } 98.0% { opacity: 0; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   .run, .agent, .lit, .task { animation: none !important; }
   .run0 { stroke-dashoffset: 0; } .r0, .task0 { opacity: 1; } .run1 { opacity: 0; }
 }
 </style>
-<path class="tree" d="M12 64V96H17M24 104V136H29M36 144V176H41M36 144V216H41M36 144V332H41M12 64V410H17M24 418V450H29"/>
-<path class="rail" d="M150 38V450"/>
+<path class="tree" d="M12 64V96H17M24 104V136H29M36 144V176H41M36 144V262H41M36 144V358H41M12 64V436H17M24 444V476H29"/>
+<path class="rail" d="M150 38V476"/>
 <text x="8" y="16" class="task task0" style="animation-name: task0"><tspan class="mono lab">TASK</tspan><tspan dx="8">understand the API</tspan></text>
 <text x="8" y="16" class="task task1" style="animation-name: task1"><tspan class="mono lab">TASK</tspan><tspan dx="8">change the schema</tspan></text>
 <text x="8" y="60" class="mono node">repo/</text>
@@ -62,29 +64,32 @@ text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; fo
 <text x="32" y="140" class="mono node">api/</text>
 <g class="dim"><rect x="174" y="125" width="205.0" height="22" rx="11"/><text x="185" y="139" class="mono lab">README</text><text x="219.6" y="139.5">HTTP routes, one per file.</text><path class="tie" d="M154 136H173"/><circle class="stop" cx="150" cy="136" r="3"/></g>
 <g class="lit readme r0" style="animation-name: l-api"><rect x="174" y="125" width="205.0" height="22" rx="11"/><text x="185" y="139" class="mono lab">README</text><text x="219.6" y="139.5">HTTP routes, one per file.</text><g class="on"><path class="tie" d="M154 136H173"/><circle class="stop" cx="150" cy="136" r="3"/></g></g>
-<text x="44" y="180" class="mono node">API.md</text>
-<g class="dim"><rect x="174" y="165" width="207.4" height="22" rx="3"/><text x="185" y="179" class="mono lab">memex: api</text><text x="237" y="179.5">The route contract.</text><path class="tie" d="M154 176H173"/><circle class="stop" cx="150" cy="176" r="3"/></g>
-<g class="lit coll r0" style="animation-name: l-apimd"><rect x="174" y="165" width="207.4" height="22" rx="3"/><text x="185" y="179" class="mono lab">memex: api</text><text x="237" y="179.5">The route contract.</text><g class="on"><path class="tie" d="M154 176H173"/><circle class="stop" cx="150" cy="176" r="3"/></g></g>
-<text x="44" y="220" class="mono node">handler.ts</text>
-<g class="dim"><rect x="174" y="205" width="204.0" height="22" rx="11"/><text x="185" y="219" class="mono lab">header</text><text x="219.6" y="219.5">Handles one order request.</text><path class="tie" d="M154 216H173"/><circle class="stop" cx="150" cy="216" r="3"/></g>
-<g class="lit header" style="animation-name: l-hand"><rect x="174" y="205" width="204.0" height="22" rx="11"/><text x="185" y="219" class="mono lab">header</text><text x="219.6" y="219.5">Handles one order request.</text><g class="on"><path class="tie" d="M154 216H173"/><circle class="stop" cx="150" cy="216" r="3"/></g></g>
-<rect class="code" x="174" y="234" width="214" height="64" rx="6"/>
-<path class="cl" d="M186 244h60M193 253h113M200 262h76M207 271h129M190 280h92M197 289h145"/>
-<text x="44" y="336" class="mono node">store.ts</text>
-<g class="dim"><rect x="174" y="321" width="187.0" height="22" rx="11"/><text x="185" y="335" class="mono lab">header</text><text x="219.6" y="335.5">Saves and loads orders.</text><path class="tie" d="M154 332H173"/><circle class="stop" cx="150" cy="332" r="3"/></g>
-<g class="lit header" style="animation-name: l-store"><rect x="174" y="321" width="187.0" height="22" rx="11"/><text x="185" y="335" class="mono lab">header</text><text x="219.6" y="335.5">Saves and loads orders.</text><g class="on"><path class="tie" d="M154 332H173"/><circle class="stop" cx="150" cy="332" r="3"/></g></g>
-<rect class="code" x="174" y="350" width="214" height="26" rx="6"/>
-<path class="cl" d="M186 360h60M193 369h113"/>
-<text x="20" y="414" class="mono node">db/</text>
-<g class="dim"><rect x="174" y="399" width="205.0" height="22" rx="11"/><text x="185" y="413" class="mono lab">README</text><text x="219.6" y="413.5">Migrations and the schema.</text><path class="tie" d="M154 410H173"/><circle class="stop" cx="150" cy="410" r="3"/></g>
-<g class="lit readme" style="animation-name: l-db"><rect x="174" y="399" width="205.0" height="22" rx="11"/><text x="185" y="413" class="mono lab">README</text><text x="219.6" y="413.5">Migrations and the schema.</text><g class="on"><path class="tie" d="M154 410H173"/><circle class="stop" cx="150" cy="410" r="3"/></g></g>
-<text x="32" y="454" class="mono node">001_orders.sql</text>
-<g class="dim"><rect x="174" y="439" width="198.0" height="22" rx="11"/><text x="185" y="453" class="mono lab">header</text><text x="219.6" y="453.5">Creates the orders table.</text><path class="tie" d="M154 450H173"/><circle class="stop" cx="150" cy="450" r="3"/></g>
-<g class="lit header" style="animation-name: l-sql"><rect x="174" y="439" width="198.0" height="22" rx="11"/><text x="185" y="453" class="mono lab">header</text><text x="219.6" y="453.5">Creates the orders table.</text><g class="on"><path class="tie" d="M154 450H173"/><circle class="stop" cx="150" cy="450" r="3"/></g></g>
-<rect class="code" x="174" y="468" width="214" height="46" rx="6"/>
-<path class="cl" d="M186 478h60M193 487h113M200 496h76M207 505h129"/>
-<rect class="open lit" style="animation-name: l-open-sql" x="169" y="463" width="224" height="56" rx="9"/>
-<path class="run run0" pathLength="1000" style="animation-name: run0" d="M150 38V176"/>
-<path class="run run1" pathLength="1000" style="animation-name: run1" d="M150 38V462C150 478 150 490 182 490"/>
+<text x="44" y="180" class="mono node">model.ts</text>
+<g class="dim"><rect x="174" y="165" width="200.0" height="22" rx="11"/><text x="185" y="179" class="mono lab">header</text><text x="219.6" y="179.5">Defines the order schema.</text><path class="tie" d="M154 176H173"/><circle class="stop" cx="150" cy="176" r="3"/></g>
+<g class="lit header r0" style="animation-name: l-model"><rect x="174" y="165" width="200.0" height="22" rx="11"/><text x="185" y="179" class="mono lab">header</text><text x="219.6" y="179.5">Defines the order schema.</text><g class="on"><path class="tie" d="M154 176H173"/><circle class="stop" cx="150" cy="176" r="3"/></g></g>
+<rect class="code" x="174" y="194" width="214" height="34" rx="6"/>
+<path class="cl" d="M186 204h60M193 213h113"/>
+<rect class="open lit" style="animation-name: l-open-model" x="169" y="189" width="224" height="44" rx="9"/>
+<text x="44" y="266" class="mono node">handler.ts</text>
+<g class="dim"><rect x="174" y="251" width="204.0" height="22" rx="11"/><text x="185" y="265" class="mono lab">header</text><text x="219.6" y="265.5">Handles one order request.</text><path class="tie" d="M154 262H173"/><circle class="stop" cx="150" cy="262" r="3"/></g>
+<g class="lit header r0" style="animation-name: l-hand"><rect x="174" y="251" width="204.0" height="22" rx="11"/><text x="185" y="265" class="mono lab">header</text><text x="219.6" y="265.5">Handles one order request.</text><g class="on"><path class="tie" d="M154 262H173"/><circle class="stop" cx="150" cy="262" r="3"/></g></g>
+<rect class="code" x="174" y="280" width="214" height="44" rx="6"/>
+<path class="cl" d="M186 290h60M193 299h113M200 308h76M207 317h129"/>
+<text x="44" y="362" class="mono node">store.ts</text>
+<g class="dim"><rect x="174" y="347" width="187.0" height="22" rx="11"/><text x="185" y="361" class="mono lab">header</text><text x="219.6" y="361.5">Saves and loads orders.</text><path class="tie" d="M154 358H173"/><circle class="stop" cx="150" cy="358" r="3"/></g>
+<g class="lit header r0" style="animation-name: l-store"><rect x="174" y="347" width="187.0" height="22" rx="11"/><text x="185" y="361" class="mono lab">header</text><text x="219.6" y="361.5">Saves and loads orders.</text><g class="on"><path class="tie" d="M154 358H173"/><circle class="stop" cx="150" cy="358" r="3"/></g></g>
+<rect class="code" x="174" y="376" width="214" height="26" rx="6"/>
+<path class="cl" d="M186 386h60M193 395h113"/>
+<text x="20" y="440" class="mono node">db/</text>
+<g class="dim"><rect x="174" y="425" width="205.0" height="22" rx="11"/><text x="185" y="439" class="mono lab">README</text><text x="219.6" y="439.5">Migrations and the schema.</text><path class="tie" d="M154 436H173"/><circle class="stop" cx="150" cy="436" r="3"/></g>
+<g class="lit readme" style="animation-name: l-db"><rect x="174" y="425" width="205.0" height="22" rx="11"/><text x="185" y="439" class="mono lab">README</text><text x="219.6" y="439.5">Migrations and the schema.</text><g class="on"><path class="tie" d="M154 436H173"/><circle class="stop" cx="150" cy="436" r="3"/></g></g>
+<text x="32" y="480" class="mono node">001_orders.sql</text>
+<g class="dim"><rect x="174" y="465" width="198.0" height="22" rx="11"/><text x="185" y="479" class="mono lab">header</text><text x="219.6" y="479.5">Creates the orders table.</text><path class="tie" d="M154 476H173"/><circle class="stop" cx="150" cy="476" r="3"/></g>
+<g class="lit header" style="animation-name: l-sql"><rect x="174" y="465" width="198.0" height="22" rx="11"/><text x="185" y="479" class="mono lab">header</text><text x="219.6" y="479.5">Creates the orders table.</text><g class="on"><path class="tie" d="M154 476H173"/><circle class="stop" cx="150" cy="476" r="3"/></g></g>
+<rect class="code" x="174" y="494" width="214" height="40" rx="6"/>
+<path class="cl" d="M186 504h60M193 513h113M200 522h76"/>
+<rect class="open lit" style="animation-name: l-open-sql" x="169" y="489" width="224" height="50" rx="9"/>
+<path class="run run0" pathLength="1000" style="animation-name: run0" d="M150 38V358"/>
+<path class="run run1" pathLength="1000" style="animation-name: run1" d="M150 38V488C150 504 150 516 182 516"/>
 <circle class="agent" cx="150" cy="38" r="4"/>
 </svg>
