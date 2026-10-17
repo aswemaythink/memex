@@ -106,7 +106,7 @@ powershell -c "irm https://github.com/rynwhite/memex/releases/latest/download/me
   <!-- 4. Context compression: the layer table (the compression order), then the walk. -->
   <section id="compression" class="pt-16" aria-labelledby="h-compression">
     <h2 id="h-compression" class="font-serif text-[1.75rem] leading-tight font-medium">Context compression</h2>
-    <p class="mt-4">memex is <strong>authored context compression</strong>. A README compresses a folder, a header compresses a file, a case line compresses a test, a log compresses an agent’s run, and a ref compresses a hand-off. Whoever knew the most compresses it at the moment they knew it best, so nothing has to summarise it after the fact.</p>
+    <p class="mt-4">memex is <strong>authored context compression</strong>. A README compresses a folder, a header compresses a file, a case compresses a test, a log compresses an agent’s run, and a ref compresses a hand-off. Whoever knew the most compresses it at the moment they knew it best, so nothing has to summarise it after the fact.</p>
     <p class="mt-4">Together these are the <strong>intent layer</strong>, and this table is its compression order, from the most compressed at the top to the code at the bottom. READMEs and headers are found by <em>where</em> they are, collections by <em>what</em> they are, logs by <em>when</em>. memex reads it top-down, one level at a time (a one-liner with <code>search</code>, the document with <code>show</code>, then the chain of READMEs above it), so code comes last.</p>
 
     <figure class="mt-6">
@@ -143,18 +143,15 @@ name on every run and every platform.
         <li class="group relative grid cursor-help gap-x-5 gap-y-0.5 px-4 py-3 outline-none focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:grid-cols-[7.5rem_1fr] border-l-4 border-t border-accent border-t-rule" tabindex="0" aria-describedby="ex-coll">
           <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Collections</span>
           <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">Cases, decisions and perf notes, found by what they are.</span>
-          <span class="text-[0.875rem] leading-normal text-muted">A Markdown file joins with a <code>memex:</code> line in its frontmatter, such as <code>CASES.md</code> with <code>memex: cases</code>. Case folders and JSON lists join, where they already are, through a file in <code>.memex/collections/</code>.</span>
+          <span class="text-[0.875rem] leading-normal text-muted">A Markdown file joins with a <code>memex:</code> line in its frontmatter, such as a <code>CASE.md</code> per test case, with <code>memex: cases</code>. Case folders and JSON lists join, where they already are, through a file in <code>.memex/collections/</code>.</span>
           <div id="ex-coll" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 hidden overflow-hidden rounded-lg border border-term-line bg-term shadow-xl shadow-black/30 [@media(hover:hover)]:group-hover:block group-focus:block sm:left-[8.5rem] sm:right-3">
-            <div class="border-b border-term-line bg-term-bar px-3 py-1 font-mono text-[0.7rem] text-term-dim [overflow-wrap:anywhere]">tests/CASES.md</div>
+            <div class="border-b border-term-line bg-term-bar px-3 py-1 font-mono text-[0.7rem] text-term-dim [overflow-wrap:anywhere]">tests/cases/NAME-001/CASE.md</div>
 <pre class="ex"><code><span class="d">---</span>
 <span class="k">memex:</span> cases
+<span class="k">id:</span> NAME-001
 <span class="d">---</span>
-<span class="g"># Namer cases</span>
-
-<span class="g">## Stability</span>
-- <span class="l">`NAME-001`</span> <span class="m">Class names are stable.</span>
-  Hash input is the canonical atom string.
-  Evidence: <span class="l">`tests/namer_stable.rs`</span></code></pre></div>
+<span class="m">Class names are stable across runs.</span>
+Evidence: <span class="l">`tests/namer.test.ts`</span></code></pre></div>
         </li>
         <li class="group relative grid cursor-help gap-x-5 gap-y-0.5 px-4 py-3 outline-none focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:grid-cols-[7.5rem_1fr] border-l-4 border-t border-l-trail border-t-rule [border-left-style:dashed]" tabindex="0" aria-describedby="ex-log">
           <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Logs</span>
@@ -227,21 +224,18 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
     <div class="mt-8 space-y-12">
       <article aria-labelledby="p-cases">
         <h3 id="p-cases" class="font-serif text-[1.25rem] font-medium leading-snug">Test cases <span class="ml-1 font-mono text-[0.8rem] font-normal text-muted">memex: cases</span></h3>
-        <p class="mt-2">A <code>CASES.md</code> with <code>memex: cases</code> lists test ids with their claims. Each column-0 list item that opens with a backticked id is one entry; the id is kept forever. Put the id where <code>rg</code> finds the test: in its name where the language allows (<code>it("NAME-001 …")</code>), else in a comment on it.</p>
-        <div class="mt-4 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="A CASES.md file"><code><span class="d">---</span>
-<span class="k">memex:</span> cases
+        <p class="mt-2">One folder per case, with one <code>CASE.md</code> in it. Its frontmatter says <code>memex: cases</code> and gives the case its <code>id</code>, which is kept forever; the body’s first line is the claim. The id goes in the test’s name, so <code>rg</code> finds it: <code>it("NAME-001 class names are stable", …)</code>.</p>
+        <div class="mt-4 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="A case file"><code><span class="d"># tests/cases/NAME-001/CASE.md</span>
 <span class="d">---</span>
-<span class="g"># Namer cases</span>
-
-<span class="g">## Stability</span>
-- <span class="l">`NAME-001`</span> Class names are stable across runs and platforms.
-  Hash input is the canonical atom string, never object identity.
-  Evidence: <span class="l">`tests/namer_stable.rs`</span>
-- <span class="l">`NAME-002`</span> Two atoms with equal declarations share one class.</code></pre></div>
+<span class="k">memex:</span> cases
+<span class="k">id:</span> NAME-001
+<span class="d">---</span>
+Class names are stable across runs and platforms.
+Evidence: <span class="l">`tests/namer.test.ts`</span></code></pre></div>
         <div class="mt-4 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="Find the tests for X"><code><span class="c">memex search stable class names --in cases</span>    <span class="d"># the claims</span>
-<span class="c">memex show NAME-001</span>                           <span class="d"># claim, evidence, who cites it</span>
+<span class="c">memex show NAME-001</span>                           <span class="d"># the claim and who cites it</span>
 <span class="c">rg NAME-001</span>                                   <span class="d"># the test itself</span></code></pre></div>
-        <p class="mt-3 text-[0.95rem] text-muted">Write an entry before its test exists and say so in the claim, “(planned)”. <code>memex search --in cases</code> with no words prints the roster, and <code>&lt;-0</code> marks entries nothing cites.</p>
+        <p class="mt-3 text-[0.95rem] text-muted">The <code>id</code> field is required: without it every <code>CASE.md</code> would take the id <code>CASE</code> from its file stem. Write a case before its test exists and say so in the claim, “(planned)”. <code>memex search --in cases</code> with no words prints the roster, and <code>&lt;-0</code> marks cases nothing cites.</p>
       </article>
 
       <article aria-labelledby="p-doom">
