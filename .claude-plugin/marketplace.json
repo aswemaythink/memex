@@ -2,7 +2,7 @@
   "name": "memex",
   "description": "Marketplace for memex: the intent layer, for Claude Code sessions and sub-agents.",
   "owner": {
-    "name": "rynwhite"
+    "name": "As We May Think"
   },
   "plugins": [
     {

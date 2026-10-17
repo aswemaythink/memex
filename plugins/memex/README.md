@@ -13,13 +13,13 @@ The memex plugin is an optional Claude Code plugin for memex: one skill and one 
 Inside Claude Code:
 
 ```
-/plugin marketplace add rynwhite/memex
+/plugin marketplace add aswemaythink/memex
 /plugin install memex
 ```
 
 If `/plugin install memex` does not find the plugin, use its full id: `/plugin install memex@memex`.
 
-The plugin needs `memex` on PATH. Install it with `npx @rynwhite/memex init`, or with `cargo install agent-memex` and then `memex init`. The hook is a POSIX `sh` script, so it also needs `sh` on PATH. On Windows that is Git Bash.
+The plugin needs `memex` on PATH. Install it with `npx @aswemaythink/memex init`, or with `cargo install agent-memex` and then `memex init`. The hook is a POSIX `sh` script, so it also needs `sh` on PATH. On Windows that is Git Bash.
 
 ## What the hook does
 

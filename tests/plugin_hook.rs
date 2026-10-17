@@ -29,7 +29,7 @@ const NOW: &str = "2026-10-14T12:00:00Z";
 const CAP: usize = 9000;
 
 /// The install hint, as the hook prints it without memex on PATH. SessionStart prints it with a newline after.
-const HINT: &str = "memex not found: npx @rynwhite/memex init\nalternative: cargo install agent-memex, then memex init";
+const HINT: &str = "memex not found: npx @aswemaythink/memex init\nalternative: cargo install agent-memex, then memex init";
 
 /// Serialises the spawns of this file. A fake memex written while another test forks can be refused with "text file busy".
 static SPAWN: Mutex<()> = Mutex::new(());

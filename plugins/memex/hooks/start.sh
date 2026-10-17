@@ -31,9 +31,9 @@ json_escape() {
 # hint prints the install hint in the form the event takes: JSON context for SubagentStart, plain stdout otherwise.
 hint() {
   if [ "$event" = SubagentStart ]; then
-    printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"SubagentStart","additionalContext":"memex not found: npx @rynwhite/memex init\nalternative: cargo install agent-memex, then memex init"}}'
+    printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"SubagentStart","additionalContext":"memex not found: npx @aswemaythink/memex init\nalternative: cargo install agent-memex, then memex init"}}'
   else
-    printf '%s\n' 'memex not found: npx @rynwhite/memex init' 'alternative: cargo install agent-memex, then memex init'
+    printf '%s\n' 'memex not found: npx @aswemaythink/memex init' 'alternative: cargo install agent-memex, then memex init'
   fi
 }
 
