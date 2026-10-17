@@ -2,6 +2,8 @@
 
 memex is a CLI that indexes a repo's authored intent layer so agents read intent before code. Markdown and a CLI only: no server, daemon, auth, MCP, LLM, vectors or database.
 
+**Documentation:** [aswemaythink.github.io/memex](https://aswemaythink.github.io/memex/) has getting started, concepts, patterns and every verb.
+
 ## Why
 
 Code records what a system does. The intent layer records what it is for: a README says why a folder exists, a header says what a file is for, and a case says what is claimed and how it is proven. Whoever knew the most compresses it at the moment they knew it best, and memex walks the citations between those pieces in both directions. The name is Vannevar Bush's: his 1945 essay describes a desk for linking documents into trails. This memex takes his side, and [STORY.md](STORY.md) tells the story.
@@ -242,6 +244,7 @@ The optional Claude Code plugin lives in [plugins/memex](plugins/memex/README.md
 
 ## Links
 
+- [Documentation](https://aswemaythink.github.io/memex/): the site, with getting started, patterns and the verb reference.
 - [design.md](design.md): the behaviour. It is authoritative.
 - [PLAN.md](PLAN.md): how memex gets built, slice by slice.
 - [tests/cases](tests/cases/README.md): the conformance suite that pins behaviour.
