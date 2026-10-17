@@ -114,8 +114,8 @@ powershell -c "irm https://github.com/rynwhite/memex/releases/latest/download/me
       <ul class="rounded-[10px] border border-rule bg-soft">
         <li class="group relative grid cursor-help gap-x-5 gap-y-0.5 px-4 py-3 outline-none focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:grid-cols-[7.5rem_1fr] border-l-4 border-accent rounded-t-[9px]" tabindex="0" aria-describedby="ex-readme">
           <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">READMEs</span>
-          <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">Why a folder exists.</span>
-          <span class="text-[0.875rem] leading-normal text-muted">One <code>README.md</code> per folder. Where it sits says what it covers: its folder, the README above it, the folders below.</span>
+          <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">What a module is.</span>
+          <span class="text-[0.875rem] leading-normal text-muted">One <code>README.md</code> per folder, saying what that module is and what it does.</span>
           <div id="ex-readme" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 hidden overflow-hidden rounded-lg border border-term-line bg-term shadow-xl shadow-black/30 [@media(hover:hover)]:group-hover:block group-focus:block sm:left-[8.5rem] sm:right-3">
             <div class="border-b border-term-line bg-term-bar px-3 py-1 font-mono text-[0.7rem] text-term-dim [overflow-wrap:anywhere]">crates/namer/README.md</div>
 <pre class="ex"><code><span class="g"># namer</span>
@@ -129,8 +129,8 @@ name on every run and every platform.
         </li>
         <li class="group relative grid cursor-help gap-x-5 gap-y-0.5 px-4 py-3 outline-none focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:grid-cols-[7.5rem_1fr] border-l-4 border-t border-accent border-t-rule" tabindex="0" aria-describedby="ex-header">
           <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Headers</span>
-          <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">What a file is for.</span>
-          <span class="text-[0.875rem] leading-normal text-muted">The first comment block atop a file. Its first sentence is the file’s purpose.</span>
+          <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">What a file does.</span>
+          <span class="text-[0.875rem] leading-normal text-muted">A comment at the top of the file that describes what it does.</span>
           <div id="ex-header" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 hidden overflow-hidden rounded-lg border border-term-line bg-term shadow-xl shadow-black/30 [@media(hover:hover)]:group-hover:block group-focus:block sm:left-[8.5rem] sm:right-3">
             <div class="border-b border-term-line bg-term-bar px-3 py-1 font-mono text-[0.7rem] text-term-dim [overflow-wrap:anywhere]">crates/namer/src/hash.rs</div>
 <pre class="ex"><code><span class="m">//! FNV-1a over canonical atom strings.</span>
@@ -142,8 +142,8 @@ name on every run and every platform.
         </li>
         <li class="group relative grid cursor-help gap-x-5 gap-y-0.5 px-4 py-3 outline-none focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:grid-cols-[7.5rem_1fr] border-l-4 border-t border-accent border-t-rule" tabindex="0" aria-describedby="ex-coll">
           <span class="font-mono text-[0.78rem] font-semibold uppercase leading-[1.6] tracking-[0.05em] sm:row-span-2 sm:pt-0.5">Collections</span>
-          <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">Cases, decisions and perf notes, found by what they are.</span>
-          <span class="text-[0.875rem] leading-normal text-muted">A Markdown file joins with a <code>memex:</code> line in its frontmatter, such as a <code>CASE.md</code> per test case, with <code>memex: cases</code>. Case folders and JSON lists join, where they already are, through a file in <code>.memex/collections/</code>.</span>
+          <span class="font-serif text-[1.05rem] font-medium leading-[1.45]">Any other knowledge worth keeping, found by what it is.</span>
+          <span class="text-[0.875rem] leading-normal text-muted">Any Markdown file joins a collection with one <code>memex:</code> line in its frontmatter. See <a href="#patterns">Patterns</a> for ways to use them.</span>
           <div id="ex-coll" role="tooltip" class="pointer-events-none absolute inset-x-2 top-[calc(100%-0.4rem)] z-30 hidden overflow-hidden rounded-lg border border-term-line bg-term shadow-xl shadow-black/30 [@media(hover:hover)]:group-hover:block group-focus:block sm:left-[8.5rem] sm:right-3">
             <div class="border-b border-term-line bg-term-bar px-3 py-1 font-mono text-[0.7rem] text-term-dim [overflow-wrap:anywhere]">tests/cases/NAME-001/CASE.md</div>
 <pre class="ex"><code><span class="d">---</span>
