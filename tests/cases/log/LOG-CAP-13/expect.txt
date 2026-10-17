@@ -1,0 +1,24 @@
+$ memex log impl
+exit 0
+stdout
+| impl:20261013-120000-fresh-entry
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20261001-120000-alias.md
+(symlink)
+-- impl/20261011-120000-recent.md
+| # Recent entry in impl
+| recent body
+-- impl/20261013-120000-fresh-entry.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| branch: main
+| ---
+| # Fresh entry
+| body
+-- linked
+(symlink)
+== snapshot repo/outside
+-- 20261001-120000-behind.md
+(binary)

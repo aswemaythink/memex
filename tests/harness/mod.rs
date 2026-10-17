@@ -6,6 +6,7 @@ pub mod bless;
 pub mod conform;
 pub mod discover;
 pub mod env;
+pub mod fill;
 pub mod perms;
 pub mod sandbox;
 pub mod transcript;
@@ -37,6 +38,9 @@ pub struct CaseSpec {
     /// Permission changes made after setup and before the steps. Unix only (PLAN §2).
     #[serde(default)]
     pub chmod: Vec<ChmodStep>,
+    /// Files made at test time at their real lengths, instead of committed (see fill.rs).
+    #[serde(default)]
+    pub fill: Vec<FillStep>,
 }
 
 /// One `chmod` entry: an octal mode for a sandbox path, such as `{"path": "repo/x", "mode": "000"}`.
@@ -47,6 +51,17 @@ pub struct ChmodStep {
     pub path: String,
     /// Octal digits, such as `000` or `555`.
     pub mode: String,
+}
+
+/// One `fill` entry: a file of NUL bytes that the runner makes in the sandbox, such as
+/// `{"path": "repo/.memex/logs/impl/20261012-120000-big.md", "bytes": 10485000}`.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FillStep {
+    /// Relative to the sandbox, with real names (`.memex`, not `dot_memex`), as chmod paths are.
+    pub path: String,
+    /// The file's length in bytes.
+    pub bytes: u64,
 }
 
 /// How the fixture becomes repo/.

@@ -1,4 +1,4 @@
-//! Builds a case's sandbox (fixture, git setup, chmod, environment) and runs its steps in it.
+//! Builds a case's sandbox (fixture, git setup, fill, chmod, environment) and runs its steps in it.
 //! Cases: all (runner)
 
 use std::ffi::OsStr;
@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 use super::env::{base_env, set, with_git_identity, Env};
+use super::fill;
 use super::perms::{parse_mode, restore_owner, set_mode};
 use super::transcript::StepRecord;
 use super::{CaseSpec, ChmodStep, GitMode, SetupStep, Step};
@@ -33,7 +34,8 @@ impl Drop for Sandbox {
 }
 
 impl Sandbox {
-    /// Creates the sandbox, copies the fixture, makes repo/ a git repo if the case says so, and runs the setup steps.
+    /// Creates the sandbox, copies the fixture, makes repo/ a git repo if the case says so, makes the fill files, and runs
+    /// the setup steps.
     pub fn create(case_dir: &Path, spec: &CaseSpec, bin: &Path) -> Result<Sandbox, String> {
         let dir = tempfile::Builder::new()
             .prefix("memex-case-")
@@ -56,6 +58,8 @@ impl Sandbox {
         if let Some(mode) = spec.git {
             git_fixture(&repo, &base, mode == GitMode::Commit)?;
         }
+        // After the git step, so a fill file is never committed: in a git case it stays untracked.
+        fill::create_files(&root, &spec.fill)?;
         // Setup runs also get the fixed git identity and dates, so a setup commit has a stable hash.
         let setup_env = with_overrides(with_git_identity(&base), &spec.env);
         for (index, setup) in spec.setup.iter().enumerate() {

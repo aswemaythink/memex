@@ -1,27 +1,34 @@
-//! Prunes the log store after every write (design §4.3).
-//! It deletes each entry older than keep_logs by its filename stamp, and removes the stream folders that its deletions empty. The store itself may be a symlink, which is followed; no symlink below it is, and hidden names, names with no label (`is_label_name`, design §4.4) and anything that is not a log entry are never touched. A path that is already gone (NotFound), and a stream folder a writer has landed in since the check (DirectoryNotEmpty), are skipped without a warning (design §4.3 Vanished entries).
-//! Cases: LOG-PRUNE-01, LOG-PRUNE-02, LOG-PRUNE-03, LOG-PRUNE-04, LOG-PRUNE-05, LOG-PRUNE-06, LOG-PRUNE-07, LOG-PRUNE-08, LOG-PRUNE-09, LOG-PRUNE-10, LOG-PRUNE-11, LOG-PRUNE-12, LOG-PRUNE-13, LOG-PRUNE-14, LOG-PRUNE-15, LOG-PRUNE-17
+//! Prunes the log store after every write (design §4.3): by age, then to the size cap.
+//! The age pass deletes each entry older than keep_logs by its filename stamp, and removes the stream folders that its deletions empty. The size pass (cap.rs) takes the entries that are left and deletes the oldest until they total at or under max_logs_mb. The store itself may be a symlink, which is followed; no symlink below it is, and hidden names, names with no label (`is_label_name`, design §4.4) and anything that is not a log entry are never touched. A path that is already gone (NotFound), and a stream folder a writer has landed in since the check (DirectoryNotEmpty), are skipped without a warning (design §4.3 Vanished entries).
+//! Cases: LOG-PRUNE-01, LOG-PRUNE-02, LOG-PRUNE-03, LOG-PRUNE-04, LOG-PRUNE-05, LOG-PRUNE-06, LOG-PRUNE-07, LOG-PRUNE-08, LOG-PRUNE-09, LOG-PRUNE-10, LOG-PRUNE-11, LOG-PRUNE-12, LOG-PRUNE-13, LOG-PRUNE-14, LOG-PRUNE-15, LOG-PRUNE-17, LOG-CAP-06
 
 use std::ffi::OsStr;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
+use super::cap;
 use crate::clock::{self, Timestamp};
 use crate::error;
 use crate::root::slash;
 use crate::walk::is_label_name;
 
-/// Deletes the entries of `store` whose stamps are more than `keep` seconds before `now`. A failure is a warning on stderr, never an error, so the entry that was just written stays and `log` still succeeds.
-pub fn run(store: &Path, keep: i64, now: Timestamp) {
+/// Prunes the store (design §4.3): the entries whose stamps are more than `keep` seconds before `now`, when `keep` is set, and then
+/// the oldest entries until the rest total at or under `cap` bytes, when it is set. `written` is the entry just written, which is never
+/// deleted. A failure is a warning on stderr, never an error, so the entry that was just written stays and `log` still succeeds.
+pub fn run(store: &Path, keep: Option<i64>, cap: Option<u64>, now: Timestamp, written: &Path) {
     // The store is followed, as a user may point `.memex/logs` elsewhere; its streams are described, never followed.
     if !is_folder(store, fs::metadata(store)) {
         return;
     }
+    let mut left = Vec::new();
     for stream in names(store) {
         if is_folder(&stream, fs::symlink_metadata(&stream)) {
-            prune_stream(&stream, keep, now);
+            left.extend(prune_stream(&stream, keep, now));
         }
+    }
+    if let Some(bytes) = cap {
+        cap::prune_to(left, bytes, written);
     }
 }
 
@@ -37,17 +44,22 @@ fn is_folder(path: &Path, meta: io::Result<fs::Metadata>) -> bool {
     }
 }
 
-/// Deletes the expired entries of one stream folder, then removes the folder if those deletions emptied it.
-fn prune_stream(dir: &Path, keep: i64, now: Timestamp) {
+/// Deletes the expired entries of one stream folder when `keep` is set, then removes the folder if those deletions emptied it. It
+/// returns the paths of the entries that are left, for the size pass: a refused delete leaves its entry, which still counts.
+fn prune_stream(dir: &Path, keep: Option<i64>, now: Timestamp) -> Vec<PathBuf> {
     let mut deleted = 0;
+    let mut left = Vec::new();
     for path in names(dir) {
-        if expired(&path, keep, now) && delete(&path) {
+        if keep.is_some_and(|keep| expired(&path, keep, now)) && delete(&path) {
             deleted += 1;
+        } else if stamp_of(&path).is_some() {
+            left.push(path);
         }
     }
     if deleted > 0 {
         remove_if_empty(dir);
     }
+    left
 }
 
 /// The paths of the entries of `dir` that pass `is_visible`, sorted. Only names are read here, so a hidden name or one with no
@@ -80,11 +92,14 @@ fn is_visible(name: &OsStr) -> bool {
 
 /// True when the name of `path` is a log entry name whose stamp is more than `keep` seconds before `now`. Only the name is read.
 fn expired(path: &Path, keep: i64, now: Timestamp) -> bool {
-    let stamp = path
-        .file_name()
+    stamp_of(path).is_some_and(|stamp| now.seconds_since(stamp) > keep)
+}
+
+/// The stamp of the name that `path` ends with, when that name is a log entry name. Only the name is read.
+fn stamp_of(path: &Path) -> Option<Timestamp> {
+    path.file_name()
         .and_then(|name| name.to_str())
-        .and_then(log_stamp);
-    stamp.is_some_and(|stamp| now.seconds_since(stamp) > keep)
+        .and_then(log_stamp)
 }
 
 /// The stamp of a log entry name, `YYYYMMDD-HHMMSS-<slug>.md` (design §4.3). The name needs a slug of at least one character, and the stamp must be a real UTC date-time. Otherwise None.
@@ -122,7 +137,7 @@ fn delete(path: &Path) -> bool {
 }
 
 /// Removes a stream folder that holds nothing now. A folder with anything left in it is kept as it is.
-fn remove_if_empty(dir: &Path) {
+pub(super) fn remove_if_empty(dir: &Path) {
     let mut rest = match fs::read_dir(dir) {
         Ok(rest) => rest,
         Err(failure) => {
@@ -149,7 +164,7 @@ fn settle_removal(dir: &Path, outcome: io::Result<()>) {
 /// Prints one warning line on stderr: `memex: warning: prune: <message> (<ErrorKind>) <path>`. A NotFound is never printed: the
 /// path is already gone, as a concurrent prune leaves it (design §4.3 Vanished entries). A failed write is ignored, as there is
 /// nowhere left to report it.
-fn warn(message: &str, path: &Path, failure: &io::Error) {
+pub(super) fn warn(message: &str, path: &Path, failure: &io::Error) {
     if failure.kind() == io::ErrorKind::NotFound {
         return;
     }
@@ -173,8 +188,8 @@ fn emit(line: String) {
 
 #[cfg(test)]
 thread_local! {
-    /// The warning lines that `emit` kept on this thread, so a test can check which paths warn.
-    static PRINTED: std::cell::RefCell<Vec<String>> = const { std::cell::RefCell::new(Vec::new()) };
+    /// The warning lines that `emit` kept on this thread, so a test can check which paths warn (cap.rs's tests read it too).
+    pub(super) static PRINTED: std::cell::RefCell<Vec<String>> = const { std::cell::RefCell::new(Vec::new()) };
 }
 
 #[cfg(test)]
@@ -227,7 +242,7 @@ mod tests {
             fs::set_permissions(&stream, restore).expect("restored");
             return;
         }
-        prune_stream(&stream, 3 * 86_400, now);
+        prune_stream(&stream, Some(3 * 86_400), now);
         fs::set_permissions(&stream, restore).expect("restored");
         assert!(
             entry.is_file(),
@@ -246,8 +261,8 @@ mod tests {
         assert!(names(&stream).is_empty());
         assert!(!delete(&entry));
         remove_if_empty(&stream);
-        prune_stream(&stream, keep, now);
-        run(&root.path().join("no-store"), keep, now);
+        prune_stream(&stream, Some(keep), now);
+        run(&root.path().join("no-store"), Some(keep), None, now, &entry);
         // The NotFound that a remove of a path another prune took would give.
         let gone = io::Error::from(io::ErrorKind::NotFound);
         warn("cannot delete the entry", &entry, &gone);
@@ -316,7 +331,7 @@ mod tests {
         let locked = fs::Permissions::from_mode(0o000);
         fs::set_permissions(&escaped_stream, locked).expect("a mode");
         let now = clock::parse_stamp("20261013-120000").expect("a stamp");
-        run(root.path(), 3 * 86_400, now);
+        run(root.path(), Some(3 * 86_400), None, now, root.path());
         fs::set_permissions(&escaped_stream, fs::Permissions::from_mode(0o755)).expect("restored");
         assert!(!plain.is_file(), "a plain expired entry is pruned");
         assert!(escaped.is_file(), "an entry with a control character stays");

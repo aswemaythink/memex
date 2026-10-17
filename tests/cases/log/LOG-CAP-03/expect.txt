@@ -1,0 +1,19 @@
+$ memex log impl
+exit 0
+stdout
+| impl:20261013-120000-fresh-entry
+stderr (empty)
+== snapshot repo/.memex/logs
+-- a/20261005-120000-zz.md
+(binary)
+-- b/20261005-120000-same.md
+(binary)
+-- impl/20261012-120000-newer-large.md
+(binary)
+-- impl/20261013-120000-fresh-entry.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| ---
+| # Fresh entry
+| body

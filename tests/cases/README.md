@@ -53,6 +53,7 @@ Unknown keys are an error. Every field is optional except `steps`, which needs a
 - `memex_on_path` prepends the built binary's folder to PATH.
 - `platforms` is a list of `unix` and/or `windows`. A case that excludes this OS is an ignored trial.
 - `chmod` is a list of `{"path": "repo/x", "mode": "000"}`: an octal mode of one to four digits for a path inside the sandbox. The modes are set after `setup` and before the steps. Modes exist only on unix, so a case with `chmod` must say `"platforms": ["unix"]`. After the case the runner gives the owner back rwx on each folder that a change touched, and rw on each file, so the sandbox is always removed. Root reads any file whatever its mode, so when the runner is root every case with `chmod` is an ignored trial. Root is detected by making a mode-000 probe file and reading it.
+- `fill` is a list of `{"path": "repo/.memex/logs/impl/20261012-120000-big.md", "bytes": 10485000}`: the runner makes each file with that many NUL bytes, as a sparse file where the filesystem allows it, so a case need not commit a large file. The path is relative to the sandbox and uses real names (`.memex`, not `dot_memex`), as `chmod` paths do. The runner makes the parent folders. The files are made after the fixture copy and the git step, and before `setup`, `chmod` and the steps. A path that leaves the sandbox, or a file that already exists, fails the case when it runs.
 
 ## Sandbox
 
@@ -127,3 +128,4 @@ When any rule fails, the case trials are not created, and only the failing rules
 - A snapshot file renders under its base name. An empty file renders `(empty)`, a symlink `(symlink)`, and another non-file `(not a file)`.
 - `MEMEX_BLESS` counts only when it is `1`. `CI` counts when it is set at all.
 - A failing conformity rule clears the name filter, so a filter cannot hide a failure and leave nothing to run.
+- `fill` files are made after the git step, so they are never committed: in a `git: commit` case they are untracked. The runner never replaces a file that the fixture or an earlier fill entry holds. Conformity rule 4 does not check `fill` paths, so a bad one fails its case when the case runs.

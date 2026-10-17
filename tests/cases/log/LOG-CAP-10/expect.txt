@@ -1,0 +1,18 @@
+$ memex log impl
+exit 0
+stdout
+| impl:20261013-120000-fresh-entry
+stderr
+| memex: warning: $SANDBOX/repo/.memex/config.json: unknown field `extra`, expected `keep_logs` or `max_logs_mb` at line 1 column 26
+== snapshot repo/.memex/logs
+-- impl/20261010-120000-old.md
+(binary)
+-- impl/20261013-120000-fresh-entry.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| ---
+| # Fresh entry
+| body
+-- other/20261011-120000-newer.md
+(binary)

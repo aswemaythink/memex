@@ -1,0 +1,1 @@
+{"git": "init", "setup": [{"run": ["git", "apply", "../link.patch"]}], "platforms": ["unix"], "steps": [{"args": ["log", "impl"], "stdin": "# Fresh entry\nbody\n"}], "snapshot": ["repo/.memex/logs", "repo/outside"], "fill": [{"path": "repo/outside/20261001-120000-behind.md", "bytes": 1100000}]}

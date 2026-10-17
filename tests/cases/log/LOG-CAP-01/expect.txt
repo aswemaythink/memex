@@ -1,0 +1,28 @@
+$ memex log impl
+exit 0
+stdout
+| impl:20261013-120000-fresh-entry
+stderr (empty)
+== snapshot repo/.memex/logs
+-- impl/20261010-120000-next-oldest.md
+(binary)
+-- impl/20261013-120000-fresh-entry.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| ---
+| # Fresh entry
+| Padding line 01: the cap margin is measured in bytes, so this line is long.
+| Padding line 02: the cap margin is measured in bytes, so this line is long.
+| Padding line 03: the cap margin is measured in bytes, so this line is long.
+| Padding line 04: the cap margin is measured in bytes, so this line is long.
+| Padding line 05: the cap margin is measured in bytes, so this line is long.
+| Padding line 06: the cap margin is measured in bytes, so this line is long.
+| Padding line 07: the cap margin is measured in bytes, so this line is long.
+| Padding line 08: the cap margin is measured in bytes, so this line is long.
+| Padding line 09: the cap margin is measured in bytes, so this line is long.
+| Padding line 10: the cap margin is measured in bytes, so this line is long.
+| Padding line 11: the cap margin is measured in bytes, so this line is long.
+| Padding line 12: the cap margin is measured in bytes, so this line is long.
+== snapshot repo/.memex/logs/other
+(missing)

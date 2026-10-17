@@ -1,0 +1,18 @@
+$ memex log impl
+exit 0
+stdout
+| impl:20261013-120000-fresh-entry
+stderr
+| memex: warning: prune: cannot delete the entry (PermissionDenied) $SANDBOX/repo/.memex/logs/old/20261008-120000-refused.md
+== snapshot repo/.memex/logs
+-- impl/20261013-120000-fresh-entry.md
+| ---
+| stream: impl
+| time: 2026-10-13T12:00:00Z
+| ---
+| # Fresh entry
+| body
+-- old/20261008-120000-refused.md
+(binary)
+== snapshot repo/.memex/logs/other
+(missing)

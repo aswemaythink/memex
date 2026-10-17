@@ -1,0 +1,1 @@
+{"chmod": [{"path": "repo/.memex/logs/old", "mode": "555"}], "platforms": ["unix"], "steps": [{"args": ["log", "impl"], "stdin": "# Fresh entry\nbody\n"}], "snapshot": ["repo/.memex/logs", "repo/.memex/logs/other"], "fill": [{"path": "repo/.memex/logs/old/20261008-120000-refused.md", "bytes": 600000}, {"path": "repo/.memex/logs/other/20261010-120000-next.md", "bytes": 600000}]}

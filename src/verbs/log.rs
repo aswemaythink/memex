@@ -44,8 +44,6 @@ pub fn run(request: &Request, now: Timestamp) -> Result<String, Error> {
     stream::check_collections(&request.stream, &cwd, &place.owner)?;
     let config = config::load(&place.owner);
     error::warn(&config.warnings);
-    // The size cap is loaded but not enforced yet: pruning by size is wired by a later slice (design §4.3 Size cap).
-    let _cap = config.cap;
     let entry = Entry {
         stream: request.stream.clone(),
         time: now,
@@ -59,8 +57,9 @@ pub fn run(request: &Request, now: Timestamp) -> Result<String, Error> {
         body: split.rest,
     };
     let path = write::write_entry(&place, &entry)?;
-    if let Some(keep) = config.keep {
-        prune::run(&place.store, keep, now);
+    // Pruning follows the write, so the entry just written is counted and never deleted (design §4.3 Cleanup).
+    if config.keep.is_some() || config.cap.is_some() {
+        prune::run(&place.store, config.keep, config.cap, now, &path);
     }
     Ok(output(&request.stream, &path, request.json))
 }

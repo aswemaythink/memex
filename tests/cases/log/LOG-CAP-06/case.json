@@ -1,0 +1,1 @@
+{"steps": [{"args": ["log", "impl"], "stdin": "# Fresh entry\nbody\n"}], "snapshot": ["repo/.memex/logs"], "fill": [{"path": "repo/.memex/logs/impl/20261012-130000-recent-a.md", "bytes": 600000}, {"path": "repo/.memex/logs/other/20261012-140000-recent-b.md", "bytes": 500000}]}

@@ -1,15 +1,17 @@
-//! Self-tests for the conformity rules.
+//! Self-tests for the conformity rules and the runner's `fill` key.
 //! Each broken tree under tests/runner-selftest trips exactly one rule, and each message is asserted in full.
 //! Cases: all (runner)
 
 #[allow(dead_code)]
-// this binary uses only conform::check and the chmod parser; conformance.rs uses the rest
+// this binary uses only conform::check, the chmod parser and the fill maker; conformance.rs uses the rest
 mod harness;
 
 use std::path::{Path, PathBuf};
 
 use harness::conform::check;
+use harness::fill::create_files;
 use harness::perms::parse_mode;
+use harness::FillStep;
 
 fn tree(name: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -168,4 +170,69 @@ fn rule6_empty() {
         check(&tree("rule6-empty")),
         ["rule6: no case exists at .: add a family folder with at least one case folder; see tests/cases/README.md"]
     );
+}
+
+#[test]
+fn fill_paths_must_stay_inside_the_sandbox() {
+    let root = tempfile::tempdir().expect("a temp folder");
+    let fill_at = |path: &str| {
+        [FillStep {
+            path: path.to_string(),
+            bytes: 1,
+        }]
+    };
+    assert_eq!(
+        create_files(root.path(), &fill_at("../x.md")),
+        Err("fill path \"../x.md\" is not a path inside the sandbox: write it relative to the sandbox, such as repo/.memex/logs/impl/x.md, with / between names, no .., no leading / and no drive".to_string())
+    );
+    for path in [
+        "/etc/x.md",
+        "repo/../../x.md",
+        "C:/x.md",
+        "repo\\x.md",
+        "repo/x/",
+        "",
+    ] {
+        let message = create_files(root.path(), &fill_at(path))
+            .expect_err("a path outside the sandbox is refused");
+        assert!(
+            message.contains("is not a path inside the sandbox"),
+            "{path:?} gives {message}"
+        );
+    }
+}
+
+#[test]
+fn fill_makes_nul_bytes_at_the_real_length_in_new_folders() {
+    let root = tempfile::tempdir().expect("a temp folder");
+    let fills = [FillStep {
+        path: "repo/.memex/logs/impl/big.md".to_string(),
+        bytes: 1_048_576,
+    }];
+    create_files(root.path(), &fills).expect("the fill file is made");
+    let made = std::fs::read(root.path().join("repo/.memex/logs/impl/big.md"))
+        .expect("the fill file can be read");
+    assert_eq!(made.len(), 1_048_576);
+    assert!(
+        made.iter().all(|&byte| byte == 0),
+        "a fill file holds only NUL bytes"
+    );
+}
+
+#[test]
+fn fill_never_replaces_an_existing_file() {
+    let root = tempfile::tempdir().expect("a temp folder");
+    std::fs::create_dir_all(root.path().join("repo")).expect("repo/ is made");
+    std::fs::write(root.path().join("repo/x.md"), b"fixture").expect("the fixture file is written");
+    let fills = [FillStep {
+        path: "repo/x.md".to_string(),
+        bytes: 4,
+    }];
+    assert_eq!(
+        create_files(root.path(), &fills),
+        Err("fill path \"repo/x.md\" already exists in the sandbox: the fixture or an earlier fill entry holds it; delete one of them".to_string())
+    );
+    let kept =
+        std::fs::read(root.path().join("repo/x.md")).expect("the fixture file is still there");
+    assert_eq!(kept, b"fixture");
 }
