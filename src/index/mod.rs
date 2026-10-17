@@ -2,7 +2,7 @@
 //! A query builds only what it needs: one scan over each run's distinct terms finds the candidates of every query word, and only
 //! those terms' postings are read, run by run in doc order. The full join of the runs into one vocabulary, and the stem map of
 //! every term, are gone (perf P-IDX); the matches, weights and ranking are the same.
-//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, MAN-LOAD-13, SRCH-UNICODE-01, SRCH-UNICODE-02, SRCH-UNICODE-03
+//! Cases: SRCH-RANK-01, SRCH-RANK-02, SRCH-WEIGHT-01, SRCH-WEIGHT-02, SRCH-STEM-01, SRCH-PREFIX-01, SRCH-PREFIX-02, SRCH-FUZZY-01, SRCH-FUZZY-02, SRCH-TIE-01, SRCH-TOKEN-01, SRCH-TOKEN-02, SRCH-BOUNDARY-01, SRCH-BOUNDARY-02, MAN-LOAD-13, SRCH-UNICODE-01, SRCH-UNICODE-02, SRCH-UNICODE-03
 
 pub mod bm25;
 pub mod filter;
@@ -90,8 +90,8 @@ struct Candidate<'a> {
     id: usize,
 }
 
-/// A query word as the scan reads it: its stem, which only a plain word has (a whole id or path matches only itself), and whether it
-/// may match by prefix or by one edit.
+/// A query word as the scan reads it: its stem, which only a plain word has (a whole id or path matches itself and the longer
+/// ids and paths it begins), and whether it may match by prefix or by one edit.
 struct Probe<'w> {
     word: &'w str,
     stem: Option<String>,
@@ -201,8 +201,9 @@ impl<'a> Index<'a> {
         per_word
     }
 
-    /// The candidates of every query word in one run. A whole id or path is looked up by its exact term; a plain term is stemmed
-    /// once and checked against every plain word, and it is a candidate at each tier it reaches (PLAN §4).
+    /// The candidates of every query word in one run. A whole id or path is looked up by its exact term, and each whole term is
+    /// checked against the longer ids and paths that a word begins (design §3.2). A plain term is stemmed once, and only when some
+    /// query word is plain, and it is a candidate at each tier it reaches (PLAN §4).
     fn scan_run(&self, run: usize, probes: &[Probe]) -> Vec<Candidate<'_>> {
         let vocab = &self.runs[run];
         let mut found = Vec::new();
@@ -219,11 +220,21 @@ impl<'a> Index<'a> {
                 }
             }
         }
-        if probes.iter().any(|probe| probe.stem.is_some()) {
-            for (term, id) in vocab.terms() {
-                if tokenize::is_whole(term) {
-                    continue;
+        let plain = probes.iter().any(|probe| probe.stem.is_some());
+        for (term, id) in vocab.terms() {
+            if tokenize::is_whole(term) {
+                for (word, probe) in probes.iter().enumerate() {
+                    if probe.matches_longer(term) {
+                        found.push(Candidate {
+                            word,
+                            tier: 0,
+                            term,
+                            run,
+                            id,
+                        });
+                    }
                 }
+            } else if plain {
                 let stem = self.stemmer.stem(term);
                 for (word, probe) in probes.iter().enumerate() {
                     for tier in probe.tiers(term, &stem).into_iter().flatten() {
@@ -261,8 +272,8 @@ impl<'a> Index<'a> {
 }
 
 impl<'w> Probe<'w> {
-    /// The probe of a query word: a whole id or path has no stem and matches only itself; a plain word may match by prefix from
-    /// `PREFIX_MIN` characters and by one edit from `FUZZY_MIN`.
+    /// The probe of a query word: a whole id or path has no stem, so it matches whole terms only, its exact term by lookup and the
+    /// longer ones by `matches_longer`; a plain word may match by prefix from `PREFIX_MIN` characters and by one edit from `FUZZY_MIN`.
     fn new(word: &'w str, stemmer: &Stemmer) -> Probe<'w> {
         let whole = tokenize::is_whole(word);
         Probe {
@@ -271,6 +282,16 @@ impl<'w> Probe<'w> {
             prefix: !whole && !shorter_than(word, PREFIX_MIN),
             fuzzy: !whole && !shorter_than(word, FUZZY_MIN),
         }
+    }
+
+    /// True when a whole term is a longer whole id or path that this whole word begins, with the next character `-`, `/` or `.`
+    /// (design §3.2). The exact term is not one: `scan_run` finds it by lookup, so it is not counted twice.
+    fn matches_longer(&self, term: &str) -> bool {
+        self.stem.is_none()
+            && term
+                .strip_prefix(self.word)
+                .and_then(|rest| rest.chars().next())
+                .is_some_and(|next| matches!(next, '-' | '/' | '.'))
     }
 
     /// The tiers at which a plain term matches this word, each `Some` in tier order: a stem-mate, a prefix, or a one-edit variant.

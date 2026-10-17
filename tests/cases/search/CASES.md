@@ -204,3 +204,8 @@ memex: cases
   design §3.2 Markers (a roster group reads `cases  (showing 50 of 214; <-N cited by N)`, and the heading names the markers its lines use). Fixture: the widget cases of SRCH-ORPHAN-01. Run: memex search --in cases --limit 2, then memex search widget --in cases --limit 2, then memex search --in cases --limit 0.
 - `SRCH-LEGEND-02` A group heading names each fuzzy variant its lines use, once each in alphabetical order as `[~w] fuzzy match on w`, and a group whose hits are all exact has no legend, so `readmes` names `grammer` and `grammir` while `cases` names nothing.
   design §3.2 Markers (a group with a fuzzy hit adds `; [~w] fuzzy match on w`). Fixture: three READMEs holding `grammir`, `grammar` and `grammer`, and a CASES.md entry that says `grammar`. Run: memex search grammar.
+
+## BOUNDARY
+
+- `SRCH-BOUNDARY-01` An id matches the longer ids it begins at a dash, so `ATM-NAME` and `'ATM-NAME-*'` find the entries `ATM-NAME-01` and `ATM-NAME-02`, while `NAME-1` finds `NAME-1` and not `NAME-10`.
+- `SRCH-BOUNDARY-02` A path matches the longer paths it begins at a slash or a dot, so `src/verbs/search` finds the headers of `src/verbs/search.rs` and `src/verbs/search/listing.rs` and not `src/verbs/searcher.rs`.

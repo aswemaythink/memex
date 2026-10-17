@@ -1,0 +1,22 @@
+$ memex search ATM-NAME
+exit 0
+stdout
+| cases  (showing 2 of 2)
+|   cases:ATM-NAME-01  Atm names are stable across runs.
+|   cases:ATM-NAME-02  Atm names are sorted by length.
+stderr (empty)
+
+$ memex search 'ATM-NAME-*'
+exit 0
+stdout
+| cases  (showing 2 of 2)
+|   cases:ATM-NAME-01  Atm names are stable across runs.
+|   cases:ATM-NAME-02  Atm names are sorted by length.
+stderr (empty)
+
+$ memex search NAME-1
+exit 0
+stdout
+| cases  (showing 1 of 1)
+|   cases:NAME-1  Short names are numbered from one.
+stderr (empty)
