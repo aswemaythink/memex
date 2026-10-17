@@ -1,6 +1,6 @@
 # cases
 
-This folder is memex's conformance case hub. Every behaviour the CLI must have is pinned by a case here (PLAN.md §0, §2). Each family is a folder, such as `cli/`, that holds its own README.md, a CASES.md claim index, and one folder per case, named by the case id.
+This folder is memex's conformance case hub. Every behaviour the CLI must have is pinned by a case here. Each family is a folder, such as `cli/`, that holds its own README.md, a CASES.md claim index, and one folder per case, named by the case id.
 
 ## Layout
 
@@ -112,7 +112,7 @@ When any rule fails, the case trials are not created, and only the failing rules
 - [init](init/README.md): `INIT-*`, design §3.5b and §6.1 (setup).
 - [port](port/README.md): `PORT-*`, design §4.4 (portability).
 
-## Choices where PLAN §2 is silent
+## Choices where the rules are silent
 
 - The conformity messages name the rule as `rule1` to `rule6`, and paths use `/` on every OS.
 - Rule 1 also requires the hub README.md, and each family's README.md and CASES.md.
@@ -123,7 +123,7 @@ When any rule fails, the case trials are not created, and only the failing rules
 - The runner's `chmod` restore adds rwx to a folder and rw to a file, rather than setting exact modes, and it never follows a symlink.
 - `git: commit` passes `--allow-empty`, so an empty fixture still commits. Runner git runs, including `git` setup runs, use the sandbox environment plus the fixed identity and dates, so setup commits have stable hashes too. A case's `env` overrides them.
 - Setup runs use the case environment, not a step's.
-- `XDG_CONFIG_HOME` is `home/.config`, where PLAN §2 says "under `home`".
+- `XDG_CONFIG_HOME` is `home/.config`, a folder under `home`.
 - Process output renders a signal end as `exit signal`. A stream that is empty renders `(empty)`, and a stream with a NUL byte or non-UTF-8 bytes renders `(binary)`.
 - A snapshot file renders under its base name. An empty file renders `(empty)`, a symlink `(symlink)`, and another non-file `(not a file)`.
 - `MEMEX_BLESS` counts only when it is `1`. `CI` counts when it is set at all.

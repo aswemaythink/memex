@@ -43,7 +43,7 @@ fn main() {
     if violations.is_empty() {
         let as_root = harness::perms::running_as_root();
         for case in discover::cases(&root) {
-            // Root reads any mode, so a chmod case cannot hold its modes there: it is ignored (PLAN §2).
+            // Root reads any mode, so a chmod case cannot hold its modes there: it is ignored.
             let ignored = harness::load_spec(&case.dir.join("case.json"))
                 .map(|spec| !spec.runs_on_this_os() || (spec.uses_chmod() && as_root))
                 .unwrap_or(false);

@@ -14,8 +14,8 @@ documentation = "https://aswemaythink.github.io/memex/docs/get-started.html"
 readme = "README.md"
 keywords = ["cli", "agents", "markdown", "documentation", "search"]
 categories = ["command-line-utilities", "development-tools"]
-# The crate ships what builds it and documents it. Tests, the site, plugins, CI, the repo's own
-# intent store and the build plan stay in the repository.
+# The crate ships what builds it and documents it. Tests, the site, plugins, CI and the repo's own
+# intent store stay in the repository.
 exclude = [
     "tests/",
     "site/",
@@ -23,7 +23,6 @@ exclude = [
     ".github/",
     ".memex/",
     ".claude-plugin/",
-    "PLAN.md",
     "AGENTS.md",
     "CLAUDE.md",
     "clippy.toml",

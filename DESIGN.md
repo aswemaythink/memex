@@ -1,6 +1,6 @@
 # memex — design
 
-> Status: the authoritative behaviour spec for memex 0.1. Rulings made during the build are listed in PLAN.md §13; §8 records overrides of the original plan.
+> Status: the authoritative behaviour spec for memex 0.1. Rulings made during the build are committed here and listed in the PR description; §8 records overrides of the original plan.
 
 ## 1. Thesis and principles
 
@@ -515,11 +515,11 @@ Or download a binary from GitHub Releases. All of these come from one cargo-dist
 - **Bespoke adapters.** No per-repo collection code: generic kinds only, and building a collection is the owning skill's job.
 - **Log management.** No editing, inboxes, read state or delivery for logs. Retention is a size cap (`max_logs_mb`) plus an optional age limit (`keep_logs`), applied on write.
 
-## 8. Overrides of plan.md
+## 8. Overrides of the original plan
 
-1. **`init` verb.** Creates `.memex/` with its own `.gitignore` (logs and cache ignored) and `config.json`. Logs stay in the main checkout's `.memex/logs/`, as plan.md had it, with the git common dir only as the bare-repo fallback.
-2. **Built-ins renamed.** The `graph` label (opaque) becomes `readmes`, `headers` and `cases` (new), plus `logs` for all streams. reference-ui's `cases` manifest is renamed `neo-cases`. (PLAN §15, 2026-10-15: `cases` became an ordinary collection declared by frontmatter, §2.2.)
-3. **Global search covers the intent layer.** This settles the plan's open question. Grouped output solves the drowning problem that made the prototype keep the graph targeted-only.
+1. **`init` verb.** Creates `.memex/` with its own `.gitignore` (logs and cache ignored) and `config.json`. Logs stay in the main checkout's `.memex/logs/`, as the original plan had it, with the git common dir only as the bare-repo fallback.
+2. **Built-ins renamed.** The `graph` label (opaque) becomes `readmes`, `headers` and `cases` (new), plus `logs` for all streams. reference-ui's `cases` manifest is renamed `neo-cases`. (2026-10-15: `cases` became an ordinary collection declared by frontmatter, §2.2.)
+3. **Global search covers the intent layer.** This settles an open question. Grouped output solves the drowning problem that made the prototype keep the graph targeted-only.
 4. **New verb `info`: the atlas.** Where things are, never contents. It replaces bare `search` as the one overview, and it's the start hook's single, size-capped call.
 5. **Log body limits.** 16 KiB cap; bodies may carry their own frontmatter; logs are immutable.
 
@@ -528,7 +528,7 @@ Or download a binary from GitHub Releases. All of these come from one cargo-dist
 1. **Spike 1: can an agent in a sandboxed worktree write to the main checkout's `.memex/logs/`?** Recommended fallback if not: write to the worktree's local `.memex/logs/`, and have reads merge across `git worktree list`.
 2. **Spike 2: agent ids.** If the harness exposes no id, keep `--agent`/`$MEMEX_AGENT` and have the skill tell agents to pass their role name. Never invent ids.
 3. **A `check` verb for drift?** Settled (user, 2026-10-16): `check` ships in 0.1 (§3.5d); renamed `audit` 2026-10-17. Uncited docs are not a finding; roster `<-N` covers orphans.
-4. **Cache.** Settled for now (oracle, 2026-10-15): none. Opening every walked `.md` for frontmatter costs reference-ui +1-2% (info 54 → 55 ms, search 67 → 68, show 60 → 61; budgets 90/115/95) and the 100k tree +2-4% with 3% Markdown, +7-8% with 10%. Revisit when cold start exceeds 200 ms on the largest proving ground; then the stat-keyed cache of PLAN §15, with no CLI change.
+4. **Cache.** Settled for now (oracle, 2026-10-15): none. Opening every walked `.md` for frontmatter costs reference-ui +1-2% (info 54 → 55 ms, search 67 → 68, show 60 → 61; budgets 90/115/95) and the 100k tree +2-4% with 3% Markdown, +7-8% with 10%. Revisit when cold start exceeds 200 ms on the largest proving ground; then a stat-keyed cache, with no CLI change.
 5. **Other Markdown (`docs/`, `SPEC.md`) as intent?** Settled: a `memex:` frontmatter line puts any of it in a collection (§2.2). READMEs stay the graph.
 6. **Log retention.** Settled (user, 2026-10-17): a size-capped rolling window, pruned on write; `max_logs_mb` default 10 MiB per repository, since disk space is the practical limit. `keep_logs` stays as an optional age limit, off by default.
 7. **Stemming.** English only. Ids and paths are never stemmed.

@@ -1,15 +1,15 @@
-//! The BM25F arithmetic of PLAN §4: field weights, length normalisation, idf and saturation.
+//! The BM25F arithmetic: field weights, length normalisation, idf and saturation.
 //! Cases: SRCH-RANK-01, SRCH-WEIGHT-01, MAN-LOAD-13
 
 use std::collections::BTreeMap;
 
-/// The saturation constant k1 (PLAN §4).
+/// The saturation constant k1.
 const K1: f64 = 1.2;
 
-/// The length normalisation constant b (PLAN §4).
+/// The length normalisation constant b.
 const B: f64 = 0.75;
 
-/// The weight of each field in the order id, title, body (PLAN §4): the defaults, which a manifest's `weights` replace.
+/// The weight of each field in the order id, title, body: the defaults, which a manifest's `weights` replace.
 pub const WEIGHTS: [f64; 3] = [4.0, 3.0, 1.0];
 
 /// The names of the weighted fields, in the order of `WEIGHTS`: the keys that a manifest's `weights` may give (design §4.2).

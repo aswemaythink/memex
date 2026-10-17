@@ -114,7 +114,7 @@ The caseindex family pins design §2.2, how a CASES.md becomes case docs, and th
 ## BARE
 
 - `CASE-BARE-01` A bare case id, as in memex show NAME-001, shows the same section as the label `cases:<id>` for that id.
-  Scenario: memex show NAME-001 with the item for NAME-001 in the fixture. design §3.1 step 4, built with REF in S3.2.
+  Scenario: memex show NAME-001 with the item for NAME-001 in the fixture. design §3.1 step 4, built with REF.
 
 ## READ
 

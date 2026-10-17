@@ -1,4 +1,4 @@
-//! The environment every sandboxed run gets, with the sandbox defaults of PLAN.md §2.
+//! The environment every sandboxed run gets, with the sandbox defaults.
 //! The inherited environment, scrubbed of memex, git and agent variables and of PATH entries holding a memex.
 //! Cases: all (runner)
 

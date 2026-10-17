@@ -1,4 +1,4 @@
-//! Runs the plugin's hook script on sample hook input and checks its output (design §6, PLAN S6.1).
+//! Runs the plugin's hook script on sample hook input and checks its output (design §6).
 //! Cases: none (the plugin hook is pinned here, not by a conformance case)
 //!
 //! These tests run on Unix only. On Windows this file compiles to no tests: they drive the POSIX sh hook with `sh`, Unix

@@ -60,7 +60,7 @@ fn is_shared(corpus: &Corpus, name: &str) -> bool {
 }
 
 /// The warning for a collection named like the graph or a log stream, which names its file (design §4.2 Names). None for any other
-/// name. `logs` takes the stream form, since `--in logs` means every stream (PLAN §13 R15).
+/// name. `logs` takes the stream form, since `--in logs` means every stream.
 fn shared_line(corpus: &Corpus, name: &str, file: &str) -> Option<String> {
     if name == READMES || name == HEADERS {
         Some(error::warning(&format!(

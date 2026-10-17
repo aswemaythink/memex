@@ -6,7 +6,7 @@ memex: cases
 ## WRITE
 
 - `LOG-WRITE-01` A basic entry gets the frontmatter `stream`, `time`, `branch` and `commit`, a file named from the title's slug, and its ref on stdout.
-  design §3.4 Output and §4.3; PLAN §1 fixes 7 and 8. Run: memex log impl in a repo on main, with a `# Heading` title.
+  design §3.4 Output and §4.3. Run: memex log impl in a repo on main, with a `# Heading` title.
 - `LOG-WRITE-02` `--agent` sets the `agent` field.
   design §3.4 Agent id. Run: memex log impl --agent cook-2.
 - `LOG-WRITE-03` With no `--agent`, `$MEMEX_AGENT` sets the `agent` field.
@@ -26,13 +26,13 @@ memex: cases
 - `LOG-WRITE-10` Outside git, the entry has no `branch` and no `commit`, even when logged from a subfolder.
   design §3.4 Output and §4.3: each field only when known. Run: memex log impl from a subfolder of a plain folder.
 - `LOG-WRITE-11` An invalid MEMEX_NOW exits 3 with `invalid MEMEX_NOW:` and the value on stderr, and writes nothing.
-  design §3.6 Determinism; PLAN §1 fix 8. Run: memex log impl with MEMEX_NOW set to a non-UTC form, then to a non-date.
+  design §3.6 Determinism. Run: memex log impl with MEMEX_NOW set to a non-UTC form, then to a non-date.
 - `LOG-WRITE-12` An empty body exits 2 with `log body is empty` on stderr, and writes nothing.
   design §3.4 Body. Run: memex log impl with no stdin.
 - `LOG-WRITE-13` A stream name outside `[a-z0-9][a-z0-9-]{0,39}`, such as `Impl` or `../x`, exits 2 and writes nothing.
   design §3.4 Stream name. Run: memex log Impl, then memex log ../x.
 - `LOG-WRITE-14` A stream folder that is a symlink is refused: exit 3 naming the folder, and nothing is written behind the link.
-  design §4.3 is silent on symlinks; the S1.3 review ruling: the store may be a symlink, but no symlink below it is followed, by write or by prune (LOG-PRUNE-15, LOG-PRUNE-17). Run: memex log alias where .memex/logs/alias links to a sibling folder.
+  design §4.3 is silent on symlinks; the review ruling: the store may be a symlink, but no symlink below it is followed, by write or by prune (LOG-PRUNE-15, LOG-PRUNE-17). Run: memex log alias where .memex/logs/alias links to a sibling folder.
 - `LOG-WRITE-15` A folder already at an entry's target name counts as taken: the entry is written with the `-2` suffix, and the folder and its contents are left as they were.
   design §4.4 Atomic writes: a name that exists in any form is taken, since Windows reports a folder there differently. Run: memex log impl over a stream whose folder holds a folder named like the entry's file.
 - `LOG-WRITE-16` A stream name of 40 characters is accepted, and one of 41 exits 2 with `invalid stream name` and writes nothing.
@@ -43,15 +43,15 @@ memex: cases
 ## FLAG
 
 - `LOG-FLAG-01` An item of `--to` that does not match `[A-Za-z0-9._@/+-]{1,64}` exits 2 with `invalid --to value 'cook 2'` and writes nothing.
-  design §3.4 Extra fields. Design.md is silent on the value grammar, so this is S1.2's ruling. Run: memex log impl --to orchestrator,cook 2.
+  design §3.4 Extra fields. DESIGN.md is silent on the value grammar, so this is a ruling. Run: memex log impl --to orchestrator,cook 2.
 - `LOG-FLAG-02` An item of `--tag` that does not match that grammar exits 2 with `invalid --tag value 'a#b'` and writes nothing.
-  design §3.4 Extra fields; the grammar is S1.2's ruling. Run: memex log impl --tag show,a#b.
+  design §3.4 Extra fields; the grammar is a ruling. Run: memex log impl --tag show,a#b.
 - `LOG-FLAG-03` An `--agent` value that does not match that grammar exits 2 with `invalid --agent value 'cook:2'` and writes nothing.
-  design §3.4 Agent id; the grammar is S1.2's ruling. Run: memex log impl --agent cook:2.
+  design §3.4 Agent id; the grammar is a ruling. Run: memex log impl --agent cook:2.
 - `LOG-FLAG-04` An invalid `$MEMEX_AGENT` exits 2 with `invalid MEMEX_AGENT value 'scout:1'`, but is not checked when `--agent` is given, because the variable is then unused.
   design §3.4 Agent id: `--agent`, then `$MEMEX_AGENT`. Run: memex log impl with MEMEX_AGENT=scout:1, then the same with --agent cook-2.
 - `LOG-FLAG-05` A `--to` item of 64 characters is accepted, and one of 65 characters exits 2 with `invalid --to value`.
-  design §3.4 Extra fields; the 64-character limit is S1.2's ruling. Run: memex log impl --to with a 64-character id, then with a 65-character id.
+  design §3.4 Extra fields; the 64-character limit is a ruling. Run: memex log impl --to with a 64-character id, then with a 65-character id.
 - `LOG-FLAG-06` A repeated item in `--to` or `--tag` is written once, in the order it first appears.
   design §3.4 Extra fields and the §4.3 example. Run: memex log impl --to Orch.1@wt/a+b-c,cook-2,Orch.1@wt/a+b-c --tag show,namer,show.
 
@@ -60,7 +60,7 @@ memex: cases
 - `LOG-BODY-01` A body of 16385 stored bytes, one over 16 KiB, exits 2 with `log body is over 16 KiB: logs are findings: cite artifacts by path` and writes nothing.
   design §3.4 Body (measured as stored) and §8 item 5. Run: memex log impl with a stdin_file of 16385 LF bytes, which store as read.
 - `LOG-BODY-02` A body whose title is empty, such as one line of only `#` marks, exits 2 with `log body has no title line` and writes nothing.
-  design §3.4 Body; PLAN §1 fix 7. Run: memex log impl with stdin `#`.
+  design §3.4 Body. Run: memex log impl with stdin `#`.
 - `LOG-BODY-03` A body of exactly 16384 stored bytes is accepted, and its ref is printed with exit 0.
   design §3.4 Body: the maximum is 16 KiB, measured as stored. Run: memex log impl with a stdin_file of 16384 LF bytes; the golden holds the ref only, since the file is too big to dump.
 - `LOG-BODY-04` A body of only spaces, tabs and newlines exits 2 with `log body is empty` and writes nothing.
@@ -106,12 +106,12 @@ memex: cases
 - `LOG-FRONT-11` Two agent keys that differ only in case, `foo:` and then `Foo:`, exit 2 with `frontmatter key 'Foo' is repeated` and write nothing.
   design §3.4 Extra fields: a repeated key compares case-insensitively. Run: memex log impl with `foo: 1` then `Foo: 2` in the body's frontmatter.
 - `LOG-FRONT-12` A lone carriage return inside an agent frontmatter value exits 2 with `frontmatter value has a carriage return` and writes nothing.
-  design §4.4 Text accepts CRLF only, and design §3.4 does not yet state this refusal; it is the S5.2 ruling. Run: memex log impl with a block line `status: ok`, then a lone CR, then `To: [victim]` on that line.
+  design §4.4 Text accepts CRLF only, and design §3.4 does not yet state this refusal; it is a ruling. Run: memex log impl with a block line `status: ok`, then a lone CR, then `To: [victim]` on that line.
 
 ## STREAM
 
 - `LOG-STREAM-01` A reserved stream name, `readmes`, `headers` or `logs`, exits 2 with `stream name '<name>' is reserved` and writes nothing, while `cases` is an ordinary stream name, so `memex log cases` writes its entry, exit 0.
-  design §3.4 Stream name and §3.1 built-in collections; PLAN §13 R14. Run: memex log logs, then readmes, headers and cases.
+  design §3.4 Stream name and §3.1 built-in collections. Run: memex log logs, then readmes, headers and cases.
 - `LOG-STREAM-02` A stream name whose `.memex/collections/<name>.json` manifest exists exits 2 with `stream name '<name>' is a collection` and writes nothing.
   design §3.4 Stream name; §4.2 manifests. Run: memex log rs-notes with that manifest present, then memex log rs, which is accepted because only the exact file name counts.
 - `LOG-STREAM-03` From a linked worktree, a manifest that exists only in the main checkout's `.memex/collections` also makes its name a collection.
@@ -147,27 +147,27 @@ memex: cases
 - `LOG-PRUNE-06` keep_logs `forever` deletes nothing, however old the entry.
   design §4.3 ("forever" disables pruning). Run: memex log impl with keep_logs forever over an entry stamped 2020-01-01.
 - `LOG-PRUNE-07` An invalid keep_logs, such as `soon`, prints one warning on stderr that names the config file and the value and ends `not pruning by age`, and deletes nothing by age.
-  design §4.3 Bad config (the value disables its own limit); PLAN §1 fix 6. Run: memex log impl with keep_logs soon over a 4-day-old entry.
+  design §4.3 Bad config (the value disables its own limit). Run: memex log impl with keep_logs soon over a 4-day-old entry.
 - `LOG-PRUNE-08` A config.json that is not valid JSON prints its warning and deletes nothing.
-  design §4.1 item 4 and §4.3 Bad config (never delete on config it can't read); PLAN §1 fix 6. Run: memex log impl with config.json `{not json` over a 4-day-old entry.
+  design §4.1 item 4 and §4.3 Bad config (never delete on config it can't read). Run: memex log impl with config.json `{not json` over a 4-day-old entry.
 - `LOG-PRUNE-09` A config.json with an unknown key prints its warning, which names both known keys, and deletes nothing.
-  design §4.1 item 4 and §4.3 Bad config; PLAN §1 fix 6. Run: memex log impl with config.json `{"keep_log": "3d"}` over a 4-day-old entry.
+  design §4.1 item 4 and §4.3 Bad config. Run: memex log impl with config.json `{"keep_log": "3d"}` over a 4-day-old entry.
 - `LOG-PRUNE-10` Only regular files named `YYYYMMDD-HHMMSS-*.md` directly inside a stream folder are deleted: other names, dotfiles, files in subfolders and dot-named stream folders survive.
-  design §4.3 ("only files matching"); PLAN §1 fix 6. Run: memex log impl with keep_logs 3d over old entries of each kind, beside one old entry that is deleted.
+  design §4.3 ("only files matching"). Run: memex log impl with keep_logs 3d over old entries of each kind, beside one old entry that is deleted.
 - `LOG-PRUNE-11` A name whose stamp is not a real UTC date-time, such as month 13, February 30 or hour 25, survives, while a real leap day is deleted like any old entry.
-  design §4.3 and §3.6 (UTC); PLAN §1 fix 6. Run: memex log impl with keep_logs 3d over old names with those stamps, and over 20240229-120000.
+  design §4.3 and §3.6 (UTC). Run: memex log impl with keep_logs 3d over old names with those stamps, and over 20240229-120000.
 - `LOG-PRUNE-12` A stream folder that prune empties is removed, and prune reaches streams other than the one written.
-  design §4.3 (stream folders emptied by a prune are removed); PLAN §1 fix 6. Run: memex log impl with keep_logs 3d over an old entry alone in stream gone, and an old entry in stream other beside a recent one.
+  design §4.3 (stream folders emptied by a prune are removed). Run: memex log impl with keep_logs 3d over an old entry alone in stream gone, and an old entry in stream other beside a recent one.
 - `LOG-PRUNE-13` A stream folder that was already empty, and that prune did not empty, is left alone.
   design §4.3 (only folders a prune emptied are removed). Run: memex log impl with keep_logs 3d beside an empty folder idle, which setup makes with git clean.
 - `LOG-PRUNE-14` A symlink named like a log entry is never deleted, and the file it points to is untouched.
-  design §4.3 is silent on symlinks; PLAN §1 fix 6 deletes only log entries, and the S1.3 ruling is regular files only. Run: memex log impl with keep_logs 3d over an old symlink into a sibling folder.
+  design §4.3 is silent on symlinks; the prune deletes only log entries, and the ruling is regular files only. Run: memex log impl with keep_logs 3d over an old symlink into a sibling folder.
 - `LOG-PRUNE-15` A symlinked stream folder is never followed, so the old entries behind it survive.
-  design §4.3 is silent on symlinks; PLAN §1 fix 6 and the S1.3 ruling as in LOG-PRUNE-14. Run: memex log impl with keep_logs 3d beside a stream folder symlink into a sibling folder that holds an old entry.
+  design §4.3 is silent on symlinks; the prune deletes only log entries, and the ruling is as in LOG-PRUNE-14. Run: memex log impl with keep_logs 3d beside a stream folder symlink into a sibling folder that holds an old entry.
 - `LOG-PRUNE-16` A config.json that is a dangling symlink prints a warning that it cannot be read and deletes nothing.
-  design §4.1 item 4 and §4.3 (never delete on config it can't read); PLAN §1 fix 6. Run: memex log impl with .memex/config.json a symlink to a missing file, over a 4-day-old entry.
+  design §4.1 item 4 and §4.3 (never delete on config it can't read). Run: memex log impl with .memex/config.json a symlink to a missing file, over a 4-day-old entry.
 - `LOG-PRUNE-17` A store that is itself a symlink is followed: the entry is written behind it, and the old entries there are pruned.
-  design §4.3 is silent on symlinks; the S1.3 review ruling as in LOG-WRITE-14. Run: memex log impl with keep_logs 3d with .memex/logs a symlink to a sibling folder that holds a 4-day-old and a 2-day-old entry.
+  design §4.3 is silent on symlinks; the review ruling is as in LOG-WRITE-14. Run: memex log impl with keep_logs 3d with .memex/logs a symlink to a sibling folder that holds a 4-day-old and a 2-day-old entry.
 - `LOG-PRUNE-18` A config.json that is a JSON array, `["1h"]`, prints one warning that it is not a JSON object and deletes nothing, so the array is not read by position.
   design §4.1 item 4 and §4.3 (never delete on config it can't read). Run: memex log impl with config.json `["1h"]` over a 4-day-old entry.
 - `LOG-PRUNE-20` A prune delete that the OS refuses, an expired entry in a stream folder at mode 555 while `log` writes to another stream, prints one warning that names the entry, leaves it in place, and the `log` exits 0.

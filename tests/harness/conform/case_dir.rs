@@ -1,4 +1,4 @@
-//! Rules 4 and 5 of PLAN.md §2 for one case folder.
+//! Rules 4 and 5 for one case folder.
 //! Only the allowed files, a case.json valid against the schema, and a golden with no stray placeholder.
 //! Cases: all (runner)
 

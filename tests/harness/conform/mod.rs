@@ -1,4 +1,4 @@
-//! Checks the six conformity rules of PLAN.md §2 over a cases tree.
+//! Checks the six conformity rules over a cases tree.
 //! It prints one line per violation; this file walks the tree and owns rules 1 and 6.
 //! Cases: all (runner)
 

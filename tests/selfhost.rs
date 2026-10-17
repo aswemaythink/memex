@@ -1,4 +1,4 @@
-//! Runs the built memex on this repo and checks its intent layer (PLAN §3).
+//! Runs the built memex on this repo and checks its intent layer.
 //! It checks the headers, the READMEs and the links.
 //! Cases: none (a self-check of this repo, not a conformance case)
 
@@ -94,7 +94,7 @@ fn memex_audit_finds_nothing_to_fix() {
     report(&found, "run memex audit and fix what it lists");
 }
 
-/// AGENTS.md's marked block is assets/agents-snippet.md byte for byte: the one source that `init` writes (design §6, PLAN §4).
+/// AGENTS.md's marked block is assets/agents-snippet.md byte for byte: the one source that `init` writes (design §6).
 #[test]
 fn agents_block_is_the_snippet_byte_for_byte() {
     let agents = read_repo("AGENTS.md");

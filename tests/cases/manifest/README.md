@@ -4,4 +4,4 @@ The manifest family covers design §4.2: how the manifests in `.memex/collection
 
 Where design §4.2 is silent, these cases pin the choice: a `weights` key that is not `id`, `title` or `body` is accepted, as MAN-LOAD-07 shows with `status`. Only the three fields are weighed, since the index has no other field to weigh; no case ranks with such a key yet.
 
-Retired: MAN-MD-01..15 (PLAN §15): the markdown kind is gone; frontmatter collections are pinned by COLL-*.
+Retired: MAN-MD-01..15: the markdown kind is gone; frontmatter collections are pinned by COLL-*.

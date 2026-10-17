@@ -6,13 +6,13 @@ memex: cases
 ## LINE
 
 - `INT-LINE-01` A README's one-liner is the first sentence of the first paragraph after its H1, so the child line of its folder shows that sentence and not the next one, exit 0.
-  design §2 One-liners and PLAN §1 fix 9. Run: memex show .
+  design §2 One-liners. Run: memex show .
 - `INT-LINE-02` When no paragraph follows a README's H1, the H1 text is its one-liner, so an H2 with nothing under it leaves the H1 text, exit 0.
   design §2 One-liners: the H1 text if there is no paragraph. Run: memex show .
 - `INT-LINE-03` A heading is not a paragraph, so the first prose after the H1 gives the one-liner whether or not a blank line separates a heading from it, exit 0.
-  design §2 One-liners (paragraphs after the H1) and PLAN §1 fix 9. Run: memex show .
+  design §2 One-liners (paragraphs after the H1). Run: memex show .
 - `INT-LINE-04` A sentence ends at `!`, `.` or `?` followed by whitespace, so `4.1` and `v1.2` do not end one, and a line break inside a paragraph reads as a single space, exit 0.
-  design §2 One-liners (the sentence rule) and PLAN §1 fix 9. Run: memex show .
+  design §2 One-liners (the sentence rule). Run: memex show .
 - `INT-LINE-05` A one-liner longer than 120 characters is cut to 119 characters and an ellipsis in text output, while `--json` keeps the whole one-liner, exit 0.
   design §2 One-liners (text truncates at 120, JSON keeps the full text) and design §3.6. Run: memex show . and memex show . --json.
 
@@ -44,9 +44,9 @@ memex: cases
 ## NAME
 
 - `INT-NAME-01` A file named `readme.md` in lowercase is not a folder's README, so the folder shows `(no README)` and lists the file as a child, exit 0.
-  design §4.4 Name matching: a README is matched by its listed name, `README.md`, exactly, and PLAN §1 fix 15. Run: memex show . and memex show lower --json.
+  design §4.4 Name matching: a README is matched by its listed name, `README.md`, exactly. Run: memex show . and memex show lower --json.
 - `INT-NAME-02` A file named `README.MD` in capitals is not a folder's README, so the folder shows `(no README)` and lists the file as a child, exit 0.
-  design §4.4 Name matching and PLAN §1 fix 15: the match is exact on every OS. Run: memex show . and memex show upper.
+  design §4.4 Name matching: the match is exact on every OS. Run: memex show . and memex show upper.
 - `INT-NAME-03` A folder named `README.md` is a folder, not a README: `show docs` lists it as `README.md/` with `(no README)`, and `show docs/README.md` gives that folder with `(no README)`, exit 0.
   design §4.2 and §4.4: a README is a file matched by its listed name, so a folder of that name is no README. Run: memex show docs and memex show docs/README.md.
 
