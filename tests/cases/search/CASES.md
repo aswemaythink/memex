@@ -225,3 +225,4 @@ memex: cases
 - `SRCH-EXCLUDE-04` `!field:value` keeps exactly the docs the filter drops: `--in logs !tag:show` lists the logs without the tag, `!since:2d` keeps a README, which has no time, and `--json` echoes `"!tag":["show"]`.
 - `SRCH-EXCLUDE-05` A zero-hit query names its operator words as typed: `widget !widget` prints nothing, exits 0, and stderr reads `memex: no hits for widget !widget; try fewer or other words, or memex info`.
 - `SRCH-EXCLUDE-06` `-word` is not an operator: `memex search widget -gizmo` exits 2 with `unknown flag '-gizmo'; to leave out a word, write '!gizmo'`, and with `--json` that message in the usage envelope.
+- `SRCH-EXCLUDE-07` An operator holds an id through the longer ids it begins at a dash: `names !ATM-NAME` leaves out `ATM-NAME-01` and `ATM-NAME-02`, and `names +NAME-1` keeps `NAME-1` and not `NAME-10`.
