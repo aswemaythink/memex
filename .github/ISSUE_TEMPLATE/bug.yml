@@ -1,0 +1,50 @@
+# Bug report form: the memex version, OS, exact command, what happened and what was expected.
+# GitHub shows this form as the bug option in the New issue chooser; config.yml sets the chooser.
+name: Bug report
+description: Something memex does wrong. Include the exact command that shows it.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. Do not report security problems here: use the security link in the chooser.
+  - type: input
+    id: version
+    attributes:
+      label: memex version
+      description: The output of `memex --version`.
+      placeholder: "memex 0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Linux
+        - Windows
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command run
+      description: The exact command with its arguments, and the folder you ran it from.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened
+      description: The output, the exit code and any error text.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true

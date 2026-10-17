@@ -1,5 +1,5 @@
-# Deploys the project site (site/) to GitHub Pages on pushes to main that touch site/**.
-# One-time setup: Settings > Pages > Build and deployment > Source: GitHub Actions. No build step, no secrets.
+# Deploys the project site (site/) to GitHub Pages on pushes to main that change it, or on demand.
+# A manual run starts from the Actions tab (workflow_dispatch). No build step, no secrets.
 name: Pages
 
 on:
@@ -7,6 +7,7 @@ on:
     branches: [main]
     paths:
       - "site/**"
+  workflow_dispatch:
 
 # The build job only reads the repo. The deploy job replaces this with the two scopes
 # that actions/deploy-pages needs: pages: write and id-token: write.
@@ -24,10 +25,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Upload site/ as the Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
@@ -44,4 +45,4 @@ jobs:
     steps:
       - name: Deploy
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

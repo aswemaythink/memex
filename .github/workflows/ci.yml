@@ -27,7 +27,7 @@ jobs:
         run: git config --global core.autocrlf false
 
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install stable Rust with clippy and rustfmt
         uses: dtolnay/rust-toolchain@stable
@@ -65,7 +65,7 @@ jobs:
         run: git config --global core.autocrlf false
 
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install Rust 1.88
         uses: dtolnay/rust-toolchain@1.88

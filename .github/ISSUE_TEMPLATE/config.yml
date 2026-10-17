@@ -1,0 +1,12 @@
+# Issue chooser settings: blank issues are off, and questions and security reports link elsewhere.
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and ideas
+    url: https://github.com/aswemaythink/memex/discussions
+    about: Ask how to use memex, or float an idea, before you open an issue.
+  - name: Documentation
+    url: https://aswemaythink.github.io/memex/
+    about: Read the guides and the reference first.
+  - name: Report a security vulnerability
+    url: https://github.com/aswemaythink/memex/security/advisories/new
+    about: Report privately. Do not open a public issue for a vulnerability.
