@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 300" width="520" height="300" role="img">
+<!-- The logs diagram of the memex site: two cooks each add an entry to the top of an impl log stream and send the orchestrator one line, its ref; the orchestrator opens one ref, the oldest entries are pruned as new ones push the stack down, and one true line from the opened entry is written into a README. It follows light and dark through its own prefers-color-scheme block. -->
+<title>Logs hand back a ref, not a report</title>
+<desc>Two agents, cook-1 and cook-2, on the left; an orchestrator on the right; between them, below, an impl log stream drawn as a stack of entry cards with the newest on top, each labelled with its ref. cook-1 adds impl:…-parallel-walk to the top of the stack and sends the orchestrator one line, report: impl:…-parallel-walk. cook-2 does the same with impl:…-show-cites. Each new entry pushes the stack down and the oldest entry at the bottom fades out. The orchestrator opens one ref, parallel-walk, and that entry lights up. One line from it moves into a README chip, which lights: what is still true is written down.</desc>
+<style>
+svg { --bg: #faf7f0; --fg: #1c1a17; --muted: #5c574d; --accent: #9a3d17; --on-accent: #faf7f0; --rule: #d8d1c0; --code: #ebe5d7; --code-line: #d3cab6; color: var(--fg); }
+@media (prefers-color-scheme: dark) { svg { --bg: #141310; --fg: #ebe7dd; --muted: #a8a295; --accent: #eca071; --on-accent: #141310; --rule: #35322a; --code: #0c0b09; --code-line: #2a2722; } }
+text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 10px; fill: var(--muted); }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+.node { font-size: 11px; fill: var(--fg); }
+.lab { font-size: 7.5px; letter-spacing: .04em; }
+.ref { font-size: 9.5px; }
+.rail { fill: none; stroke: var(--rule); stroke-width: 1.5; stroke-dasharray: 1.5 3.5; stroke-linecap: round; }
+.agent { fill: var(--accent); }
+.card rect { fill: var(--bg); stroke: var(--rule); stroke-width: 1; }
+.card .ref { fill: var(--muted); }
+.cl { stroke: var(--code-line); stroke-width: 3; stroke-linecap: round; }
+.card, .stack, .lit, .run, .pill, .carry { animation: 16s linear infinite; }
+.lit, .pill, .carry { opacity: 0; }
+.header rect { fill: var(--bg); stroke: var(--accent); stroke-width: 1.5; }
+.header .ref { fill: var(--accent); font-weight: 600; }
+.header .cl { stroke: var(--accent); opacity: .45; }
+.dim rect { fill: var(--bg); stroke: var(--rule); stroke-width: 1; }
+.dim text { fill: var(--muted); opacity: .8; }
+.readme rect { fill: var(--accent); }
+.readme text { fill: var(--on-accent); font-weight: 600; }
+.readme .lab { opacity: .8; font-weight: 400; }
+.pill rect { fill: var(--bg); stroke: var(--accent); stroke-width: 1.5; }
+.pill text { fill: var(--accent); font-size: 9px; font-weight: 600; }
+.carry { stroke: var(--accent); stroke-width: 3; stroke-linecap: round; }
+.run { fill: none; stroke: var(--accent); stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1000; stroke-dashoffset: 1000; }
+@keyframes stack { 0% { opacity: 0; } 2%, 94% { opacity: 1; } 97%, 100% { opacity: 0; } }
+@keyframes old { 0%, 8% { transform: translateY(-72px); } 11%, 33% { transform: translateY(-36px); } 36%, 100% { transform: translateY(0); } }
+@keyframes c1 { 0%, 8% { transform: translateY(-72px); } 11%, 33% { transform: translateY(-36px); } 34% { opacity: 1; } 36%, 100% { transform: translateY(0); } 38%, 100% { opacity: 0; } }
+@keyframes c0 { 0%, 8% { transform: translateY(-36px); opacity: 1; } 9% { opacity: 1; } 11%, 100% { transform: translateY(0); } 13%, 100% { opacity: 0; } }
+@keyframes n1 { 0%, 11% { transform: translateY(-36px); opacity: 0; } 13% { opacity: 1; } 33% { transform: translateY(-36px); } 36%, 100% { transform: translateY(0); opacity: 1; } }
+@keyframes n2 { 0%, 36% { opacity: 0; } 38%, 100% { opacity: 1; } }
+@keyframes w1 { 0%, 4% { stroke-dashoffset: 1000; opacity: 1; } 8%, 13% { stroke-dashoffset: 0; opacity: 1; } 15%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes w2 { 0%, 29% { stroke-dashoffset: 1000; opacity: 1; } 33%, 38% { stroke-dashoffset: 0; opacity: 1; } 40%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes p1 { 0%, 15% { opacity: 0; transform: translateX(0); } 17% { opacity: 1; transform: translateX(0); } 26% { opacity: 1; transform: translateX(190px); } 28%, 100% { opacity: 0; transform: translateX(190px); } }
+@keyframes p2 { 0%, 40% { opacity: 0; transform: translateX(0); } 42% { opacity: 1; transform: translateX(0); } 51% { opacity: 1; transform: translateX(208px); } 53%, 100% { opacity: 0; transform: translateX(208px); } }
+@keyframes open { 0%, 56% { stroke-dashoffset: 1000; opacity: 1; } 61%, 94% { stroke-dashoffset: 0; opacity: 1; } 97%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes lit-n1 { 0%, 60.5% { opacity: 0; } 62%, 94% { opacity: 1; } 97%, 100% { opacity: 0; } }
+@keyframes carry { 0%, 67% { opacity: 0; transform: translate(0, 0); } 68% { opacity: 1; transform: translate(0, 0); } 76% { opacity: 1; transform: translate(98px, 75px); } 77.5%, 100% { opacity: 0; transform: translate(98px, 75px); } }
+@keyframes lit-readme { 0%, 76% { opacity: 0; } 77.5%, 94% { opacity: 1; } 97%, 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .card, .stack, .lit, .run, .pill, .carry { animation: none !important; }
+  .gone { opacity: 0; } .end { opacity: 1; } .run.end { stroke-dashoffset: 0; }
+}
+</style>
+<!-- agents, lanes and the orchestrator -->
+<path class="rail" d="M68 52C92 52 92 72 116 72H490M68 92C92 92 92 72 116 72"/>
+<path class="rail" d="M64 56V132H128"/>
+<text x="54" y="56" class="mono node" text-anchor="end">cook-1</text>
+<text x="54" y="96" class="mono node" text-anchor="end">cook-2</text>
+<text x="500" y="56" class="mono node" text-anchor="end">orchestrator</text>
+<!-- the impl stream: every entry is drawn where it ends, and moves there -->
+<text x="130" y="108" class="mono"><tspan class="lab">LOG</tspan><tspan dx="6" class="node">impl</tspan></text>
+<g class="stack" style="animation-name: stack">
+<g class="card gone" style="animation-name: c0"><rect x="130" y="262" width="190" height="28" rx="6"/><text x="142" y="279.5" class="mono ref">impl:…-bless-goldens</text><path class="cl" d="M282 276h24"/></g>
+<g class="card gone" style="animation-name: c1"><rect x="130" y="262" width="190" height="28" rx="6"/><text x="142" y="279.5" class="mono ref">impl:…-limit-flag</text><path class="cl" d="M282 276h24"/></g>
+<g class="card" style="animation-name: old"><rect x="130" y="226" width="190" height="28" rx="6"/><text x="142" y="243.5" class="mono ref">impl:…-search-rank</text><path class="cl" d="M282 240h24"/></g>
+<g class="card" style="animation-name: old"><rect x="130" y="190" width="190" height="28" rx="6"/><text x="142" y="207.5" class="mono ref">impl:…-cite-index</text><path class="cl" d="M282 204h24"/></g>
+<g class="card" style="animation-name: n1"><rect x="130" y="154" width="190" height="28" rx="6"/><text x="142" y="171.5" class="mono ref">impl:…-parallel-walk</text><path class="cl" d="M282 168h24"/></g>
+<g class="card" style="animation-name: n2"><rect x="130" y="118" width="190" height="28" rx="6"/><text x="142" y="135.5" class="mono ref">impl:…-show-cites</text><path class="cl" d="M282 132h24"/></g>
+<g class="lit header end" style="animation-name: lit-n1"><rect x="130" y="154" width="190" height="28" rx="6"/><text x="142" y="171.5" class="mono ref">impl:…-parallel-walk</text><path class="cl" d="M282 168h24"/></g>
+</g>
+<!-- the README the true line goes to -->
+<g class="dim"><rect x="338" y="232" width="164" height="22" rx="11"/><text x="349" y="246" class="mono lab">README</text><path class="cl" d="M386 243h52"/></g>
+<g class="lit readme end" style="animation-name: lit-readme"><rect x="338" y="232" width="164" height="22" rx="11"/><text x="349" y="246" class="mono lab">README</text><text x="383.6" y="246.5">Walks run in parallel.</text></g>
+<!-- motion -->
+<path class="run" pathLength="1000" style="animation-name: w1" d="M64 52V132H128"/>
+<path class="run" pathLength="1000" style="animation-name: w2" d="M64 92V132H128"/>
+<path class="run end" pathLength="1000" style="animation-name: open" d="M496 76V168H322"/>
+<g class="pill" style="animation-name: p1"><rect x="118" y="61" width="176" height="22" rx="11"/><text x="129" y="75" class="mono">report: impl:…-parallel-walk</text></g>
+<g class="pill" style="animation-name: p2"><rect x="118" y="61" width="158" height="22" rx="11"/><text x="129" y="75" class="mono">report: impl:…-show-cites</text></g>
+<path class="carry" style="animation-name: carry" d="M288 168h24"/>
+<circle class="agent" cx="64" cy="52" r="4"/>
+<circle class="agent" cx="64" cy="92" r="4"/>
+<circle class="agent" cx="496" cy="72" r="4"/>
+</svg>

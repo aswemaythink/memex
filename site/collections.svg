@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 300" width="420" height="300" role="img">
+<!-- The collections diagram of the memex site: an agent out to make checkout faster searches the perf collection; each record lights as it is read, the cut ones settle into dead ends, the kept ones stay lit, and the agent's own next attempt joins the column as a dashed record. It follows light and dark through its own prefers-color-scheme block. -->
+<title>A collection keeps what stays true</title>
+<desc>A perf collection drawn as a column of four records, each with an id, a short title and a verdict: PERF-01 virtualise the product list, kept; PERF-02 memoise cart totals, cut; PERF-03 serve images as WebP, kept; PERF-04 sort on the server, cut. An agent with the task make checkout faster runs memex search --in perf and moves down a rail beside the column. Each record lights as it is read; the cut ones then dim and are struck through as dead ends, and the kept ones stay lit. Then a fifth record appears with a dashed outline: PERF-05 split the checkout bundle, trying. The agent's next step joins the trail.</desc>
+<style>
+svg { --bg: #faf7f0; --fg: #1c1a17; --muted: #5c574d; --accent: #9a3d17; --on-accent: #faf7f0; --rule: #d8d1c0; color: var(--fg); }
+@media (prefers-color-scheme: dark) { svg { --bg: #141310; --fg: #ebe7dd; --muted: #a8a295; --accent: #eca071; --on-accent: #141310; --rule: #35322a; } }
+text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 10px; fill: var(--muted); }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+.lab { font-size: 7.5px; letter-spacing: .04em; }
+.id { font-size: 9px; font-weight: 600; }
+.title { font-size: 11px; }
+.task { font-size: 12px; font-weight: 600; fill: var(--accent); }
+.task .lab { fill: var(--muted); font-weight: 400; }
+.cmd { font-size: 10px; fill: var(--fg); }
+.box { fill: var(--bg); stroke: var(--rule); stroke-width: 1; }
+.tag { fill: var(--bg); stroke: var(--rule); stroke-width: 1; }
+.dim text { fill: var(--muted); opacity: .8; }
+.lit { opacity: 0; animation: 14s linear infinite; }
+.kept .box, .read .box { stroke: var(--accent); stroke-width: 1.5; }
+.kept .id, .read .id { fill: var(--accent); }
+.kept .title, .read .title, .new .title { fill: var(--fg); }
+.kept .tag { fill: var(--accent); stroke: var(--accent); }
+.kept .tagt { fill: var(--on-accent); font-weight: 600; }
+.read .tag { stroke: var(--accent); }
+.read .tagt { fill: var(--accent); font-weight: 600; }
+.dead text { fill: var(--muted); opacity: .55; }
+.strike { stroke: var(--muted); stroke-width: 1; opacity: .7; }
+.new .box { stroke: var(--accent); stroke-width: 1.25; stroke-dasharray: 4 3; }
+.new .id { fill: var(--accent); }
+.new .tag { stroke: var(--accent); stroke-dasharray: 3 2.5; }
+.new .tagt { fill: var(--accent); font-weight: 600; }
+.rail { fill: none; stroke: var(--rule); stroke-width: 1.5; stroke-dasharray: 1.5 3.5; stroke-linecap: round; }
+.tie { fill: none; stroke: var(--rule); stroke-width: 1.25; stroke-dasharray: 1.5 3; stroke-linecap: round; }
+.stop { fill: var(--bg); stroke: var(--rule); stroke-width: 1.5; }
+.on .tie, .on-tie { stroke: var(--accent); opacity: .8; }
+.on .stop, .on-stop { stroke: var(--accent); stroke-width: 2; }
+.run { fill: none; stroke: var(--accent); stroke-width: 2.25; stroke-linecap: round; stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: 14s linear infinite; }
+.agent { fill: var(--accent); }
+@keyframes run1 { 0%, 5% { stroke-dashoffset: 1000; opacity: 1; } 45%, 92% { stroke-dashoffset: 0; opacity: 1; } 96%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes run2 { 0%, 54% { stroke-dashoffset: 1000; opacity: 1; } 58%, 92% { stroke-dashoffset: 0; opacity: 1; } 96%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes new { 0%, 57% { opacity: 0; transform: translateY(6px); } 60%, 92% { opacity: 1; transform: translateY(0); } 96%, 100% { opacity: 0; transform: translateY(0); } }
+@keyframes l0 { 0%, 14.0% { opacity: 0; } 15.1%, 92% { opacity: 1; } 96%, 100% { opacity: 0; } }
+@keyframes t0 { 0%, 14.0% { opacity: 0; } 15.1%, 92% { opacity: 1; } 96%, 100% { opacity: 0; } }
+@keyframes l1 { 0%, 24.2% { opacity: 0; } 25.3%, 29.7% { opacity: 1; } 31.2%, 100% { opacity: 0; } }
+@keyframes d1 { 0%, 29.7% { opacity: 0; } 31.2%, 92% { opacity: 1; } 96%, 100% { opacity: 0; } }
+@keyframes t1 { 0%, 24.2% { opacity: 0; } 25.3%, 29.7% { opacity: 1; } 31.2%, 100% { opacity: 0; } }
+@keyframes l2 { 0%, 34.3% { opacity: 0; } 35.4%, 92% { opacity: 1; } 96%, 100% { opacity: 0; } }
+@keyframes t2 { 0%, 34.3% { opacity: 0; } 35.4%, 92% { opacity: 1; } 96%, 100% { opacity: 0; } }
+@keyframes l3 { 0%, 44.5% { opacity: 0; } 45.6%, 50.0% { opacity: 1; } 51.5%, 100% { opacity: 0; } }
+@keyframes d3 { 0%, 50.0% { opacity: 0; } 51.5%, 92% { opacity: 1; } 96%, 100% { opacity: 0; } }
+@keyframes t3 { 0%, 44.5% { opacity: 0; } 45.6%, 50.0% { opacity: 1; } 51.5%, 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .lit, .run { animation: none !important; }
+  .end { opacity: 1; } .run { stroke-dashoffset: 0; }
+}
+</style>
+<text x="8" y="16" class="task"><tspan class="mono lab">TASK</tspan><tspan dx="8">make checkout faster</tspan></text>
+<text x="44" y="51" class="mono cmd">memex search --in perf</text>
+<path class="rail" d="M20 47V274"/>
+<path class="tie" d="M24 90H43"/><circle class="stop" cx="20" cy="90" r="3"/>
+<g class="dim"><rect class="box" x="44" y="72" width="364" height="36" rx="8"/><text x="58" y="93.2" class="mono id">PERF-01</text><text x="118" y="93.8" class="title">virtualise the product list</text><rect class="tag" x="348" y="81" width="46" height="18" rx="9"/><text x="371.0" y="92.8" class="mono lab tagt" text-anchor="middle">KEPT</text></g>
+<g class="lit kept end" style="animation-name: l0"><rect class="box" x="44" y="72" width="364" height="36" rx="8"/><text x="58" y="93.2" class="mono id">PERF-01</text><text x="118" y="93.8" class="title">virtualise the product list</text><rect class="tag" x="348" y="81" width="46" height="18" rx="9"/><text x="371.0" y="92.8" class="mono lab tagt" text-anchor="middle">KEPT</text></g>
+<g class="on lit end" style="animation-name: t0"><path class="tie" d="M24 90H43"/><circle class="stop" cx="20" cy="90" r="3"/></g>
+<path class="tie" d="M24 136H43"/><circle class="stop" cx="20" cy="136" r="3"/>
+<g class="dim"><rect class="box" x="44" y="118" width="364" height="36" rx="8"/><text x="58" y="139.2" class="mono id">PERF-02</text><text x="118" y="139.8" class="title">memoise cart totals</text><rect class="tag" x="348" y="127" width="46" height="18" rx="9"/><text x="371.0" y="138.8" class="mono lab tagt" text-anchor="middle">CUT</text></g>
+<g class="lit read" style="animation-name: l1"><rect class="box" x="44" y="118" width="364" height="36" rx="8"/><text x="58" y="139.2" class="mono id">PERF-02</text><text x="118" y="139.8" class="title">memoise cart totals</text><rect class="tag" x="348" y="127" width="46" height="18" rx="9"/><text x="371.0" y="138.8" class="mono lab tagt" text-anchor="middle">CUT</text></g>
+<g class="lit dead end" style="animation-name: d1"><rect class="box" x="44" y="118" width="364" height="36" rx="8"/><text x="58" y="139.2" class="mono id">PERF-02</text><text x="118" y="139.8" class="title">memoise cart totals</text><path class="strike" d="M115 136h109"/><rect class="tag" x="348" y="127" width="46" height="18" rx="9"/><text x="371.0" y="138.8" class="mono lab tagt" text-anchor="middle">CUT</text></g>
+<g class="on lit" style="animation-name: t1"><path class="tie" d="M24 136H43"/><circle class="stop" cx="20" cy="136" r="3"/></g>
+<path class="tie" d="M24 182H43"/><circle class="stop" cx="20" cy="182" r="3"/>
+<g class="dim"><rect class="box" x="44" y="164" width="364" height="36" rx="8"/><text x="58" y="185.2" class="mono id">PERF-03</text><text x="118" y="185.8" class="title">serve images as WebP</text><rect class="tag" x="348" y="173" width="46" height="18" rx="9"/><text x="371.0" y="184.8" class="mono lab tagt" text-anchor="middle">KEPT</text></g>
+<g class="lit kept end" style="animation-name: l2"><rect class="box" x="44" y="164" width="364" height="36" rx="8"/><text x="58" y="185.2" class="mono id">PERF-03</text><text x="118" y="185.8" class="title">serve images as WebP</text><rect class="tag" x="348" y="173" width="46" height="18" rx="9"/><text x="371.0" y="184.8" class="mono lab tagt" text-anchor="middle">KEPT</text></g>
+<g class="on lit end" style="animation-name: t2"><path class="tie" d="M24 182H43"/><circle class="stop" cx="20" cy="182" r="3"/></g>
+<path class="tie" d="M24 228H43"/><circle class="stop" cx="20" cy="228" r="3"/>
+<g class="dim"><rect class="box" x="44" y="210" width="364" height="36" rx="8"/><text x="58" y="231.2" class="mono id">PERF-04</text><text x="118" y="231.8" class="title">sort on the server</text><rect class="tag" x="348" y="219" width="46" height="18" rx="9"/><text x="371.0" y="230.8" class="mono lab tagt" text-anchor="middle">CUT</text></g>
+<g class="lit read" style="animation-name: l3"><rect class="box" x="44" y="210" width="364" height="36" rx="8"/><text x="58" y="231.2" class="mono id">PERF-04</text><text x="118" y="231.8" class="title">sort on the server</text><rect class="tag" x="348" y="219" width="46" height="18" rx="9"/><text x="371.0" y="230.8" class="mono lab tagt" text-anchor="middle">CUT</text></g>
+<g class="lit dead end" style="animation-name: d3"><rect class="box" x="44" y="210" width="364" height="36" rx="8"/><text x="58" y="231.2" class="mono id">PERF-04</text><text x="118" y="231.8" class="title">sort on the server</text><path class="strike" d="M115 228h98"/><rect class="tag" x="348" y="219" width="46" height="18" rx="9"/><text x="371.0" y="230.8" class="mono lab tagt" text-anchor="middle">CUT</text></g>
+<g class="on lit" style="animation-name: t3"><path class="tie" d="M24 228H43"/><circle class="stop" cx="20" cy="228" r="3"/></g>
+<g class="lit new end" style="animation-name: new"><path class="tie on-tie" d="M24 274H43"/><circle class="stop on-stop" cx="20" cy="274" r="3"/><rect class="box" x="44" y="256" width="364" height="36" rx="8"/><text x="58" y="277.2" class="mono id">PERF-05</text><text x="118" y="277.8" class="title">split the checkout bundle</text><rect class="tag" x="348" y="265" width="46" height="18" rx="9"/><text x="371.0" y="276.8" class="mono lab tagt" text-anchor="middle">TRYING</text></g>
+<path class="run" pathLength="1000" style="animation-name: run1" d="M20 47V228"/>
+<path class="run" pathLength="1000" style="animation-name: run2" d="M20 228V274"/>
+<circle class="agent" cx="20" cy="47" r="4"/>
+</svg>

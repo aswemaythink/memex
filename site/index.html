@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <!--
 The memex docs site: one static page on what memex is, how to install it and how to use it.
-Order: introduction, principles, get started, context compression (the intent layer), patterns, the verbs, story.
+Order: introduction, principles, get started, context compression (the intent layer), trailblazing (logs and collections), patterns, the verbs, story.
 Behaviour comes from design.md (§1, §2, §3, §5, §6.1) and README.md; the story is STORY.md retold.
 Tailwind comes from its pinned Play CDN, configured by site.js; site.css holds the rest of the styles and the light and dark tokens.
-The walk diagram is walk.svg, the scale diagram scale.svg and the story sketch desk.svg. There is no build step.
+The walk diagram is walk.svg, the scale diagram scale.svg, the trail diagrams logs.svg and collections.svg, and the story sketch desk.svg. There is no build step.
 When a verb's behaviour or the story changes, change design.md or STORY.md first, then this page.
 -->
 <html lang="en">
@@ -39,6 +39,7 @@ When a verb's behaviour or the story changes, change design.md or STORY.md first
       <a class="ml-auto shrink-0 !text-muted !no-underline hover:!text-fg" href="#principles">Principles</a>
       <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#install">Get started</a>
       <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#compression">Compression</a>
+      <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#trails">Trails</a>
       <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#patterns">Patterns</a>
       <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#verbs">Verbs</a>
       <a class="shrink-0 !text-muted !no-underline hover:!text-fg" href="#story">Story</a>
@@ -66,7 +67,7 @@ When a verb's behaviour or the story changes, change design.md or STORY.md first
       <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">memex reads intent, tools read code</h3><p class="mt-1 text-[0.95rem] text-muted">memex indexes READMEs, headers and collections, never code bodies. For symbols, <code>rg</code> is already the right tool.</p></li>
       <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Conventions over configuration</h3><p class="mt-1 text-[0.95rem] text-muted">READMEs and headers are found by where they are; one frontmatter line joins a collection. Nothing to set up.</p></li>
       <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Never floods the context</h3><p class="mt-1 text-[0.95rem] text-muted">Every list says <code>showing N of M</code> and takes <code>--limit</code>, so an agent knows what it has not seen. Nothing is cut silently.</p></li>
-      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Logs expire; knowledge is written down</h3><p class="mt-1 text-[0.95rem] text-muted">A run’s log is kept a few days, then pruned. Whatever is still true gets written into a README, a header or a case by someone who understands it.</p></li>
+      <li class="border-t border-rule pt-3"><h3 class="font-semibold leading-snug">Logs expire; knowledge is written down</h3><p class="mt-1 text-[0.95rem] text-muted">Logs are work in progress: memex prunes old ones as new ones arrive. Whatever is still true gets written into a README, a header or a case by someone who understands it.</p></li>
     </ul>
     <p class="mt-8 font-serif italic text-muted">A feature earns its place by removing friction an agent actually hit in a playtest.</p>
   </section>
@@ -208,7 +209,27 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
     </figure>
   </section>
 
-  <!-- 5. Patterns -->
+  <!-- 5. Trailblazing: logs for work in progress, collections for what stays true. -->
+  <section id="trails" class="pt-16" aria-labelledby="h-trails">
+    <h2 id="h-trails" class="font-serif text-[1.75rem] leading-tight font-medium">Trailblazing</h2>
+    <p class="mt-4">Compression gets an agent to the right code. Trails let the next agent start where the last one stopped. Bush’s memex was built around them: a reader linked what they found into a path someone else could follow later. memex gives agents two kinds: logs for work in progress, and collections for what stays true.</p>
+
+    <h3 class="mt-14 font-serif text-[1.35rem] leading-tight font-medium">Logs: work in progress</h3>
+    <p class="mt-3">An agent logs what it did and what it found, and hands back a single line: the log’s ref. The orchestrator, or the next agent, opens the full log only when it needs the detail. Logs are like chats: useful in the moment, stale soon after. memex prunes old ones as new ones arrive. Whatever is still true gets written into a README, a header or a collection; the rest can go.</p>
+    <figure class="mt-8">
+      <img src="logs.svg" alt="Two agents, cook-1 and cook-2, on the left and an orchestrator on the right, with an impl log stream between them drawn as a stack of entries, newest on top, each labelled with its ref. Each cook adds an entry to the top of the stack and sends the orchestrator one line, report: and the ref, not the whole log. Each new entry pushes the stack down and the oldest entry fades out. The orchestrator opens one ref, parallel-walk, and that entry lights up; one line from it moves into a README." width="520" height="300" class="mx-auto block h-auto w-full max-w-[35rem]">
+    </figure>
+
+    <div class="mt-12 border-t border-dashed border-trail" aria-hidden="true"></div>
+    <h3 class="mt-14 font-serif text-[1.35rem] leading-tight font-medium">Collections: what stays true</h3>
+    <p class="mt-3">A collection is a set of records on one topic that agents keep and search. Each record is small and does one job: one attempt, one decision, one test. Any Markdown file joins a collection with one frontmatter line, so records live next to the work they describe.</p>
+    <p class="mt-3">Take performance work on an app. Every optimisation an agent tries gets a record: what it changed, what it measured, kept or cut. The next agent searches the collection before it starts. It sees what was tried, skips what failed, and goes straight to what is still worth trying.</p>
+    <figure class="mt-8">
+      <img src="collections.svg" alt="A perf collection drawn as a column of four records: PERF-01 virtualise the product list, kept; PERF-02 memoise cart totals, cut; PERF-03 serve images as WebP, kept; PERF-04 sort on the server, cut. An agent with the task make checkout faster runs memex search --in perf and reads down the column; each record lights as it is read, the cut ones dim and are struck through as dead ends, and the kept ones stay lit. Then a fifth record appears with a dashed outline: PERF-05 split the checkout bundle, trying." width="420" height="300" class="mx-auto block h-auto w-full max-w-[28rem]">
+    </figure>
+  </section>
+
+  <!-- 6. Patterns -->
   <section id="patterns" class="pt-16" aria-labelledby="h-patterns">
     <h2 id="h-patterns" class="font-serif text-[1.75rem] leading-tight font-medium">Patterns</h2>
     <p class="mt-4">Collections and log streams need no declaration, so the conventions are what matter. These are the ones that held up in practice. <strong>Write it where the next reader will look:</strong> true of the code, it goes in a header or README; true of this run, a log; a claim a test proves, a case.</p>
@@ -303,7 +324,7 @@ Hashes are stable across runs; see NAME-001.</code></pre></div>
     </div>
   </section>
 
-  <!-- 6. The verbs -->
+  <!-- 7. The verbs -->
   <section id="verbs" class="pt-16" aria-labelledby="h-verbs">
     <h2 id="h-verbs" class="font-serif text-[1.75rem] leading-tight font-medium">The verbs agents use</h2>
     <p class="mt-4">For reference: six verbs, the ones the memex block in <code>AGENTS.md</code> points agents at. memex reads the layer back one level at a time: a one-liner with <code>search</code>, then the document with <code>show</code>, then the chain of READMEs above it.</p>
@@ -366,7 +387,7 @@ Namer: turns atoms into stable class names. See `src/hash.rs` and NAME-001.</cod
   <span class="l">src/z.rs</span>  → NAME-404
 <span class="d">(cites): fix the reference or remove it</span></code></pre></div>
     <h3 id="v-log" class="mt-12 flex flex-wrap items-baseline gap-x-3 gap-y-1 font-serif text-[1.35rem] font-medium leading-tight"><code class="!bg-transparent !p-0 font-mono !text-[0.9rem] font-semibold text-accent">memex log</code><span>Hand back a ref, not a report</span></h3>
-    <p class="mt-2">Reads a finding from stdin and prints its ref, exactly, on one line. An agent ends its run by logging the full report and returning one line, <code>report: &lt;ref&gt;</code>; the next reader runs <code>memex show</code> on it only when it needs the detail. Logs are immutable and expire after three days by default. What is still true belongs in a README, a header, a case or a collection.</p>
+    <p class="mt-2">Reads a finding from stdin and prints its ref, exactly, on one line. An agent ends its run by logging the full report and returning one line, <code>report: &lt;ref&gt;</code>; the next reader runs <code>memex show</code> on it only when it needs the detail. Logs are immutable, and memex prunes old ones as new ones arrive. What is still true belongs in a README, a header, a case or a collection.</p>
     <div class="mt-4 overflow-hidden rounded-[10px] border border-term-line bg-term"><div class="border-b border-term-line bg-term-bar px-4 py-1.5 font-mono text-[0.74rem] text-term-dim">repo</div><pre tabindex="0" aria-label="Terminal sample: memex log"><code><span class="p">$</span> <span class="c">memex log impl --agent cook-2 --tag namer,show &lt;&lt;'EOF'</span>
 <span class="c">show walks hub READMEs</span>
 <span class="c">`show &lt;file&gt;` now lists "cited by", through crates/README.md.</span>
@@ -375,7 +396,7 @@ Namer: turns atoms into stable class names. See `src/hash.rs` and NAME-001.</cod
     <p class="mt-6 text-[0.95rem] text-muted">Every list prints <code>showing N of M</code> and takes <code>--limit</code>. <code>--json</code> makes stdout one JSON document, errors included. Exit codes: 0 ok (zero hits included), 1 not found or ambiguous, 2 usage error, 3 environment error.</p>
   </section>
 
-  <!-- 7. Story: STORY.md retold in full, laid along a trail. -->
+  <!-- 8. Story: STORY.md retold in full, laid along a trail. -->
   <section id="story" class="mt-16 border-t border-rule pt-16 font-serif text-[1.125rem] leading-[1.65]" aria-labelledby="h-story">
     <p class="font-mono text-[0.78rem] font-semibold uppercase tracking-[0.06em] text-accent">The story</p>
     <h2 id="h-story" class="mt-3 text-[1.9rem] leading-[1.15] font-medium tracking-[-0.02em] sm:text-[2.5rem]">Good work was being lost, not because it was wrong, but because nobody could get back to it.</h2>
