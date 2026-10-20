@@ -517,7 +517,7 @@ curl -LsSf https://github.com/aswemaythink/memex/releases/latest/download/agent-
 powershell -c "irm https://github.com/aswemaythink/memex/releases/latest/download/agent-memex-installer.ps1 | iex"
 ```
 
-Or download a binary from GitHub Releases. All of these come from one cargo-dist release per tag.
+Or download a binary from GitHub Releases. All of these, and the plugin manifest's version, come from one cargo-dist release per tag, which fails when any channel or version file disagrees with the tag.
 
 **Claude Code plugin (optional):** `/plugin marketplace add aswemaythink/memex`, then `/plugin install memex@memex`.
 

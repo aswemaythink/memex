@@ -1,0 +1,25 @@
+# Version guard for memex, run by release.yml's plan phase on every pull request and tag push (a dist plan-job).
+# Fails when Cargo.toml, Cargo.lock, the plugin manifest, the CHANGELOG heading or the pushed tag disagree,
+# and packages the crate (`cargo publish --dry-run`) so a crates.io packaging error shows before the tag.
+name: Check versions
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Versions agree
+        env:
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: scripts/check-versions.sh
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Crate packages for crates.io
+        run: cargo publish --dry-run --locked

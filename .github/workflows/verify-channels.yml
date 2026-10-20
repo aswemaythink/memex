@@ -1,0 +1,33 @@
+# Post-release drift check for memex: after every tag's Release run, whatever its outcome, each install channel
+# (crates.io, npm, Homebrew, GitHub Releases) must show the tag's version, or this workflow fails.
+# Run it by hand with a tag to re-check after catching a channel up. Read-only; no secrets beyond GITHUB_TOKEN.
+name: Verify channels
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to verify, for example v0.2.1"
+        required: true
+        type: string
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Every channel shows the tag's version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag || github.event.workflow_run.head_branch }}
+          ATTEMPTS: "20"
+        run: scripts/check-channels.sh "$TAG"
