@@ -9,9 +9,8 @@ on:
         required: true
         type: string
 
-permissions:
-  contents: read
-
+# No permissions block: release.yml's caller job grants only id-token and packages, so asking for contents fails at
+# startup. The repository is public, so checkout needs no token.
 jobs:
   publish:
     runs-on: ubuntu-22.04
