@@ -17,9 +17,6 @@ stdout
 |   (none)
 | 
 | === decisions/0001-cache.md ===
-| ---
-| memex: decisions
-| ---
 | # Cache in memory
 | 
 | Keep the index in memory.

@@ -2,6 +2,10 @@
 
 The release notes of memex. Each GitHub release takes its notes from the matching section here.
 
+## 0.2.1 - 2026-10-20
+
+- `show` no longer prints a README's or Markdown file's frontmatter block as part of its body: a folder's README, a `.md` file shown by path, and each README in the chain now print from after the block, so a README that marks a collection root (`memex: <name>`) reads from its heading. `--json` is unchanged: `text` keeps the whole file.
+
 ## 0.2.0 - 2026-10-20
 
 - Collection roots are found, not listed. A README.md with `memex: <name>` in its frontmatter makes its folder a root of the manifest `<name>`, so a manifest in `.memex/collections/` no longer needs `roots`. An explicit `roots` list still works and is read together with the marked folders, each once. Marked folders honour the same ignores as the rest of the walk (`.gitignore`, `.ignore`, hidden entries, `node_modules`, `target`).

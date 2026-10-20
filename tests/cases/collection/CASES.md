@@ -58,7 +58,7 @@ memex: cases
 
 ## README
 
-- `COLL-README-01` A README whose frontmatter holds `memex:` naming no manifest keeps its graph's doc, marks no root and gives the README warning that names the missing manifest, and `show docs/README.md` prints it, exit 0.
+- `COLL-README-01` A README whose frontmatter holds `memex:` naming no manifest keeps its graph's doc, marks no root and gives the README warning that names the missing manifest, and `show docs/README.md` prints it from its heading, without the frontmatter block (design §3.3 Frontmatter), exit 0.
   design §2.2 (a README is the graph's; its key marks a root of the manifest it names) and §4.2 Roots. Run: memex show docs/README.md.
 
 ## UNREAD
