@@ -28,8 +28,10 @@ formula = "memex"
 # npm scope and package name, so the package is `@aswemaythink/memex`
 npm-scope = "@aswemaythink"
 npm-package = "memex"
-# Publish the formula, the npm package and the crate on stable tags, so one tag ships every channel. They need the
-# HOMEBREW_TAP_TOKEN, NPM_TOKEN and CARGO_REGISTRY_TOKEN secrets; the crate job is .github/workflows/publish-crates.yml.
+# Publish the formula, the npm package and the crate on stable tags. They need the HOMEBREW_TAP_TOKEN, NPM_TOKEN and
+# CARGO_REGISTRY_TOKEN secrets; ./publish-crates is .github/workflows/publish-crates.yml.
 publish-jobs = ["homebrew", "npm", "./publish-crates"]
-# Accept action-version bumps (Dependabot) in the generated release.yml instead of failing `dist plan`.
-allow-dirty = ["ci"]
+# Fail the release (and every PR) before any build when the version files or the tag disagree: check-versions.yml.
+plan-jobs = ["./check-versions"]
+# No allow-dirty: `dist plan` on every PR fails if release.yml differs from what dist generates, so a hand edit, or a
+# lost publish job, cannot ship. Regenerate with `dist generate --mode ci` after editing this file.
