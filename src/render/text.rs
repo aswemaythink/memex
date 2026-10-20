@@ -2,11 +2,12 @@
 //! Each section sits under its `===` line, then its blocks in order, with a limits line after the children and cited-by lists,
 //! a comments list after a file's body (design §3.3 Comments), and a gap legend after its children (a file: after its body) when it
 //! prints a placeholder (design §3.3 Gaps).
-//! Cases: SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-MD-01, SHOW-MD-02, SHOW-LOG-01, SHOW-UP-01, SHOW-ROOT-01, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, INT-NOHEAD-03, CASE-SECT-01, CITE-PREFIX-01, CITE-UNRES-01, CITE-BACK-01, CITE-BACK-04, CITE-LINK-03, SHOW-OTHER-01, SHOW-GAP-01, SHOW-GAP-02, SHOW-GAP-03, SHOW-MDCHILD-01, SHOW-MDCHILD-02, SHOW-MDCHILD-03, SHOW-MDCHILD-04, SHOW-COMMENTS-01, SHOW-COMMENTS-03, SHOW-COMMENTS-04, SHOW-COMMENTS-05, SHOW-COMMENTS-06, SHOW-COMMENTS-08, SHOW-COMMENTS-09
+//! A README or Markdown body prints from after its frontmatter block, which JSON keeps (design §3.3 Frontmatter).
+//! Cases: SHOW-FRONT-01, SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-MD-01, SHOW-MD-02, SHOW-LOG-01, SHOW-UP-01, SHOW-ROOT-01, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, INT-NOHEAD-03, CASE-SECT-01, CITE-PREFIX-01, CITE-UNRES-01, CITE-BACK-01, CITE-BACK-04, CITE-LINK-03, SHOW-OTHER-01, SHOW-GAP-01, SHOW-GAP-02, SHOW-GAP-03, SHOW-MDCHILD-01, SHOW-MDCHILD-02, SHOW-MDCHILD-03, SHOW-MDCHILD-04, SHOW-COMMENTS-01, SHOW-COMMENTS-03, SHOW-COMMENTS-04, SHOW-COMMENTS-05, SHOW-COMMENTS-06, SHOW-COMMENTS-08, SHOW-COMMENTS-09
 
 use super::{CaseParts, Citations, Comments, Fields, Link, Listing, Miss, Ref, Section};
 use crate::cite::Cite;
-use crate::collections::frontmatter::Value;
+use crate::collections::frontmatter::{after_frontmatter, Value};
 use crate::corpus::{is_markdown, Child, Kind};
 
 /// A one-liner is cut to this many characters, the ellipsis included (design §2).
@@ -137,12 +138,30 @@ fn placeholders(section: &Section) -> Vec<&'static str> {
     body.into_iter().chain(children).collect()
 }
 
-/// The body: the text in full, or the placeholder when there is no text.
+/// The body: the text in full, or the placeholder when there is no text. A README or Markdown file prints without its frontmatter
+/// block, which JSON keeps (design §3.3).
 fn body(out: &mut String, section: &Section) {
     match &section.text {
+        Some(text) if is_markdown_body(section) => out.push_str(&with_newline(unfronted(text))),
         Some(text) => out.push_str(&with_newline(text)),
         None => out.push_str(&format!("{}\n", section.missing)),
     }
+}
+
+/// True when a section's body is a whole Markdown file: a folder's README, or a `.md` file shown by path. A doc's text is
+/// already its body after the frontmatter, and a code file's is its header.
+fn is_markdown_body(section: &Section) -> bool {
+    section.fields.is_none()
+        && (section.children.is_some() || section.path.as_deref().is_some_and(is_markdown))
+}
+
+/// A Markdown text without its closed frontmatter block and the blank lines after it; a text with no block is whole (design §3.3).
+fn unfronted(text: &str) -> &str {
+    let body = after_frontmatter(text);
+    if body.len() == text.len() {
+        return text;
+    }
+    body.trim_start_matches(['\n', '\r'])
 }
 
 /// The fields block: `key: value` lines, with lists written `[a, b]`.
@@ -253,7 +272,7 @@ fn chain_block(out: &mut String, chain: &[Link]) {
     }
     for link in chain {
         out.push_str(&format!("--- {}\n", link.path));
-        out.push_str(&with_newline(&link.text));
+        out.push_str(&with_newline(unfronted(&link.text)));
     }
 }
 

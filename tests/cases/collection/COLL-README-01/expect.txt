@@ -2,9 +2,6 @@ $ memex show docs/README.md
 exit 0
 stdout
 | === docs/README.md ===
-| ---
-| memex: decisions
-| ---
 | # Docs
 | 
 | The docs folder.

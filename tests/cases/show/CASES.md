@@ -139,6 +139,11 @@ memex: cases
 - `SHOW-MDCHILD-04` An empty Markdown child lists its name alone with an empty JSON title, and a folder whose only child lacking a one-liner is that file prints no `(no header)` legend line, exit 0.
   design §3.3 Folder: an empty Markdown file shows its name alone; no placeholder, so no legend line. Run: memex show scraps, then memex show scraps --json.
 
+## FRONT
+
+- `SHOW-FRONT-01` A README with a `memex: lib` frontmatter block and a blank line after it prints from its `# Slider cases` heading, with no `---` or `memex:` line: as a folder's body (`show lib`), in a chain (`show lib/deep`) and as a file (`show lib/README.md`); a `.md` collection doc shown by path (`notes.md`) prints from its heading too; `show lib --json` keeps the whole file, frontmatter included, in `text`, exit 0.
+  design §3.3 File, Folder and Chain: text prints a Markdown body after its frontmatter block; §3.6: JSON `text` is the whole file. Run: memex show lib; memex show lib/deep; memex show lib/README.md notes.md --up 0; memex show lib --json.
+
 ## COMMENTS
 
 - `SHOW-COMMENTS-01` `show src/a.rs --comments` on a file with a `//!` header prints the header, then `comments  (showing 3 of 3)` before `cites`, listing `  L8` (a `//` run with one blank line inside it is one block), `  L15` (the indented `// inner`) and `  L19` (a three-line `/* */` block), each text indented four spaces, and not the comment after code on L12, exit 0; with `--json` it gives `comments` with total 3, cut false and lines 8, 15 and 19.

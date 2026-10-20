@@ -51,7 +51,7 @@ pub fn split(text: &str) -> Document {
 
 /// The text after a closed frontmatter block at the top of `text`, which `text::decode` has read, by the rule `split` uses: a first
 /// line `---` and the next `---` line. A text with no such block, or whose block never closes, is whole. A README's one-liner and
-/// search body, and a Markdown file's title (design §3.3), are read from it, while `show` prints the whole file (design §2).
+/// search body, a Markdown file's title, and `show`'s text body (design §3.3) are read from it; `show --json` keeps the whole file.
 pub fn after_frontmatter(text: &str) -> &str {
     let mut pieces = text.split_inclusive('\n');
     let Some(first) = pieces.next().filter(|first| line_of(first) == FENCE) else {

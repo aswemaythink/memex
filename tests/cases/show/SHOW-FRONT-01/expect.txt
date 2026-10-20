@@ -1,0 +1,91 @@
+$ memex show lib
+exit 0
+stdout
+| === lib ===
+| # Slider cases
+| 
+| The slider cases.
+| 
+| children
+|   A-1/  (no README)
+|   deep/  A folder under the root.
+|   showing 2 of 2
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- README.md
+| # Demo
+| 
+| The demo root.
+stderr (empty)
+
+$ memex show lib/deep
+exit 0
+stdout
+| === lib/deep ===
+| # Deep
+| 
+| A folder under the root.
+| 
+| children
+|   (none)
+|   showing 0 of 0
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+| --- lib/README.md
+| # Slider cases
+| 
+| The slider cases.
+| --- README.md
+| # Demo
+| 
+| The demo root.
+stderr (empty)
+
+$ memex show lib/README.md notes.md --up 0
+exit 0
+stdout
+| === lib/README.md ===
+| # Slider cases
+| 
+| The slider cases.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| === notes.md ===
+| # Notes
+| 
+| The notes.
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr (empty)
+
+$ memex show lib --json
+exit 0
+stdout
+| {"docs":[{"ref":"lib","collection":null,"id":null,"path":"lib","title":"The slider cases.","fields":{},"text":"---\nmemex: lib\n---\n\n# Slider cases\n\nThe slider cases.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[{"path":"README.md","text":"# Demo\n\nThe demo root.\n"}],"children":{"total":2,"items":[{"path":"lib/A-1","kind":"dir","title":null},{"path":"lib/deep","kind":"dir","title":"A folder under the root."}]}}],"errors":[]}
+stderr (empty)

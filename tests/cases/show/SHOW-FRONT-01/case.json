@@ -1,0 +1,1 @@
+{"steps": [{"args": ["show", "lib"]}, {"args": ["show", "lib/deep"]}, {"args": ["show", "lib/README.md", "notes.md", "--up", "0"]}, {"args": ["show", "lib", "--json"]}]}
