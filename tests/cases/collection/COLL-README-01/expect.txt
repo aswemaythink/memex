@@ -19,4 +19,4 @@ stdout
 | chain
 |   (none)
 stderr
-| memex: warning: $SANDBOX/repo/docs/README.md is a README, which belongs to the graph; its memex: key is ignored — move that content into its own file
+| memex: warning: $SANDBOX/repo/docs/README.md is a README; its memex: key marks a root of 'decisions', which has no manifest — add .memex/collections/decisions.json, or move that content into its own file

@@ -1,0 +1,14 @@
+$ memex audit
+exit 0
+stdout
+| audit       . · 5 files · 5 folders · 4 findings
+| ids         (showing 1 of 1; duplicate)
+|   lib:X-1  .memex/collections/lib.json
+| (ids): give each doc its own id
+| roots       (showing 3 of 3; collection roots)
+|   .memex/collections/empty.json  no roots
+|   cases/inner  lib: inside cases
+|   docs/README.md  → decisions: no manifest
+| (roots): give each marked collection a manifest and each manifest a root, and nest no root inside another
+stderr
+| memex: warning: $SANDBOX/repo/docs/README.md is a README; its memex: key marks a root of 'decisions', which has no manifest — add .memex/collections/decisions.json, or move that content into its own file

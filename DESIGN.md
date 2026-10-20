@@ -59,7 +59,7 @@ The comment syntax is chosen by extension from a built-in table. Files with unkn
 
 ### 2.2 Collections: `memex: <name>`
 
-A walked Markdown file (listed name ending in `.md`) whose frontmatter holds the key `memex` is a doc in the collection that key names. No manifest or config is needed. README.md is the exception: it is the graph's, so a `memex` key in its frontmatter is ignored with the warning `memex: warning: <path> is a README, which belongs to the graph; its memex: key is ignored — move that content into its own file`.
+A walked Markdown file (listed name ending in `.md`) whose frontmatter holds the key `memex` is a doc in the collection that key names. No manifest or config is needed. README.md is the exception: it is the graph's, so its `memex` key never makes it a doc. Instead the key marks the README's folder as a root of the manifest it names (§4.2 Roots). A README whose key names no manifest gives the warning `memex: warning: <path> is a README; its memex: key marks a root of '<name>', which has no manifest — add .memex/collections/<name>.json, or move that content into its own file`, and `audit` lists it (§3.5d kind 8).
 
 ```markdown
 ---
@@ -270,6 +270,7 @@ How healthy the intent layer is, for the whole root or part of it: where intent 
   5. `thin`: files of 80 lines or more that have a header, ordered by header lines over total lines, lowest first (ties by path). Detail: `<H>/<T> header lines`. It points at where intent is thin; it has no threshold, so it is never "fixed", and it is not a finding: the first line's count, `nothing to fix` and JSON `findings` leave it out.
   6. `cites`: an explicit reference in a README, header or collection doc that resolves to nothing (`unresolved` in `show`, §2.3). Detail: `→ <reference as written>`. Logs are scaffolding and are not audited.
   7. `ids`: a duplicate id within a collection (§2.2). The finding is `<name>:<id>`; detail: its paths, each once.
+  8. `roots`: a collection root that cannot work as written (§4.2 Roots). A README whose `memex:` key names no manifest: the README's path, detail `→ <name>: no manifest`. A manifest with no root, explicit or marked: its file, `.memex/collections/<name>.json`, detail `no roots`; it is in scope only when the root is. A root inside another root of the same manifest: the inner folder, detail `<name>: inside <outer>` (`.` for the root). Fix: `(roots): give each marked collection a manifest and each manifest a root, and nest no root inside another`.
   A manifest doc is in scope by its folder (§4.2). Prefix citations, uncited docs and anything about code bodies are never findings.
 - **Lines.** A line ends at LF; CRLF counts once; a last line without a newline counts if it is not empty. `length` and `thin` count a file's whole text, so `audit` is the one verb that reads past the 8 KiB head (§2.1), and only for files with a comment family; the header and license blocks are found in the head as §2.1 finds them. `info`, `search` and `show` never read further.
 - **Output.**
@@ -322,7 +323,7 @@ With `--json`, stdout is always one JSON document, including errors. Without it,
 ### 4.1 Discovery
 
 1. **Root.** memex walks up from the cwd, or from the path argument for `show`, to the nearest folder that contains `.memex/`; the nearest one wins, as with git. The walk stops at the **toplevel**: the nearest folder at or above the start whose listing has an entry named `.git`, of any kind (a folder in a checkout, a file in a linked worktree or submodule), so a `.memex/` above a repo (say in `$HOME`) never captures it. If there is none, the root is the toplevel, or the start folder when no `.git` lies above it. The toplevel is found by listing, never by asking git, so reads and `init` behave the same whether git is present, missing or failing. Accepted limits: git's environment and config are not consulted (`GIT_DIR`, `GIT_WORK_TREE`, `core.worktree`, `GIT_CEILING_DIRECTORIES`, `safe.directory`, filesystem boundaries); a `.git` entry git would reject (an empty folder, a `.git` file naming a missing git dir) still marks a toplevel; a cwd inside `.git` belongs to the repo that holds it. `log` then needs `.memex/` in the root or the main checkout (item 3).
-2. **Intent layer.** It is read from the root's tree, live, using the `ignore` walker. That means `.gitignore` and `.ignore` are honoured (`.ignore` is the way to exclude paths from memex and rg together). The built-in skip list is hidden entries, anything git-ignored or `.ignore`d, `node_modules` and `target`. Manifest roots may point into hidden folders. A README is matched by its listed filename, `README.md`, exactly. memex never probes with `exists()`, so behaviour is portable across case-insensitive filesystems.
+2. **Intent layer.** It is read from the root's tree, live, using the `ignore` walker. That means `.gitignore` and `.ignore` are honoured (`.ignore` is the way to exclude paths from memex and rg together). The built-in skip list is hidden entries, anything git-ignored or `.ignore`d, `node_modules` and `target`. A manifest's explicit roots may point into hidden folders; the roots READMEs mark are found by this walk (§4.2 Roots). A README is matched by its listed filename, `README.md`, exactly. memex never probes with `exists()`, so behaviour is portable across case-insensitive filesystems.
 3. **Log store.** `.memex/logs/`, ignored by default (`.memex/.gitignore`). Inside a git worktree it resolves to the **main checkout's** `.memex/logs/` (the same root path in the main worktree, found via `git rev-parse --git-common-dir`, or without git from the layout, §4.4 git), so every worktree shares one store and logs survive `git worktree remove`. A bare repo has no main checkout, so its store is `<git-common-dir>/memex/logs/`; there `log` needs `.memex/` in the root only, and no `.gitignore` is written because the store is inside the git dir. `log` is allowed if the root or the main checkout has `.memex/`. With neither, it exits 3 with "run `memex init`". Creating the store also writes `.memex/.gitignore` when it's missing, so logs can never be committed by accident. memex creates the folder on the first `log`.
 4. **`.memex/` contents.** Committed: `collections/<name>.json` manifests, `config.json`, `.gitignore`. Ignored by default: `logs/` and `cache/`. A team that wants to keep logs removes `logs/` from the `.gitignore`; that's their choice. `config.json` has two keys, both optional: `max_logs_mb` (the size cap, default `10`) and `keep_logs` (an age limit, off unless set). It is read from the store owner's `.memex/config.json` (the main checkout's, for a worktree); a missing file means the defaults. Any other key makes the file unusable (§4.3 Cleanup).
 
@@ -349,7 +350,7 @@ A manifest indexes a structure that is not Markdown: one doc per folder that hol
 |---|---|---|
 | `name` | all | label prefix; must equal the file stem; `readmes`, `headers` and `logs` rejected |
 | `description`, `owner` | all | shown in `info`; `owner` names the skill that builds it |
-| `roots` | all | root-relative folders (required) |
+| `roots` | all | root-relative folders (optional; unioned with the folders that READMEs mark, below) |
 | `include` | json | globs under roots |
 | `id` | all | folder: marker field or folder name (default); json: entry field (required) |
 | `title` | all | field for the one-liner (default, for every kind: the first ATX heading outside fenced code, 1–6 `#` then a space or tab, else the first non-blank line; an empty title field falls back to the default; no first-sentence cut) |
@@ -357,6 +358,16 @@ A manifest indexes a structure that is not Markdown: one doc per folder that hol
 | `marker`, `merge` | folder | marker file defines a doc; `merge` globs in that folder are appended to the body |
 | `at` | json | JSON Pointer to the entries array (default: document root) |
 
+- **Roots.** A manifest reads its `roots`, in the order given, then every walked folder whose README.md has `memex: <name>` in its frontmatter, `<name>` being the manifest's name, in walk order; a folder named both ways is read once. So a collection grows by adding a README, with no edit to its manifest:
+
+```markdown
+---
+memex: lib-cases
+---
+# Slider cases
+```
+
+  A marked folder is found by the intent walk (§4.1 item 2), so it honours the same ignores: `.gitignore`, `.ignore`, hidden entries, `node_modules` and `target`. An explicit root may still point into a hidden folder. Marking reads nothing extra: the walk already reads every README whole. The README stays the graph's doc and is not a collection doc, unless the manifest's `marker` or `merge` names it. A manifest with no root reads nothing, and roots that nest are each read, so the inner one's docs come twice; `audit` lists both (§3.5d kind 8).
 - **`folder`.** Each folder containing `marker` is one doc, and that folder is the doc's folder for its relative citations (§2.3). The marker's fields come from top-level JSON scalars, or from frontmatter for a `.md` marker. Each `merge` file adds its full text if it is Markdown, or **only its header** if it is code, so memex still never reads code bodies.
 - **`json`.** Each entry of the array at `at`, in every matched file, is one doc. Scalars become fields and strings are indexed as text. The JSON file's folder is the doc's folder for its relative citations (§2.3).
 - **Frontmatter.** Flat YAML: `key: scalar`, `key: [a, b]`, or `- item` lists. Anything nested is kept as text and cannot be filtered. Frontmatter is optional, and missing fields simply don't score.
@@ -530,7 +541,7 @@ Or download a binary from GitHub Releases. All of these come from one cargo-dist
 1. **Spike 1: can an agent in a sandboxed worktree write to the main checkout's `.memex/logs/`?** Recommended fallback if not: write to the worktree's local `.memex/logs/`, and have reads merge across `git worktree list`.
 2. **Spike 2: agent ids.** If the harness exposes no id, keep `--agent`/`$MEMEX_AGENT` and have the skill tell agents to pass their role name. Never invent ids.
 3. **A `check` verb for drift?** Settled (user, 2026-10-16): `check` ships in 0.1 (§3.5d); renamed `audit` 2026-10-17. Uncited docs are not a finding; roster `<-N` covers orphans.
-4. **Cache.** Settled for now (oracle, 2026-10-15): none. Opening every walked `.md` for frontmatter costs reference-ui +1-2% (info 54 → 55 ms, search 67 → 68, show 60 → 61; budgets 90/115/95) and the 100k tree +2-4% with 3% Markdown, +7-8% with 10%. Revisit when cold start exceeds 200 ms on the largest proving ground; then a stat-keyed cache, with no CLI change.
+4. **Cache.** Settled for now (oracle, 2026-10-15): none. Opening every walked `.md` for frontmatter costs reference-ui +1-2% (info 54 → 55 ms, search 67 → 68, show 60 → 61; budgets 90/115/95) and the 100k tree +2-4% with 3% Markdown, +7-8% with 10%. Revisit when cold start exceeds 200 ms on the largest proving ground; then a stat-keyed cache, with no CLI change. Root marks (2026-10-20, §4.2 Roots) add no read: the walk already reads every README whole, so a marked root costs one frontmatter parse; an A/B against 0.1.1 on reference-ui is within noise (search 310-325 ms both, on a loaded machine).
 5. **Other Markdown (`docs/`, `SPEC.md`) as intent?** Settled: a `memex:` frontmatter line puts any of it in a collection (§2.2). READMEs stay the graph.
 6. **Log retention.** Settled (user, 2026-10-17): a size-capped rolling window, pruned on write; `max_logs_mb` default 10 MiB per repository, since disk space is the practical limit. `keep_logs` stays as an optional age limit, off by default.
 7. **Stemming.** English only. Ids and paths are never stemmed.

@@ -1,0 +1,22 @@
+$ memex search --in lib
+exit 0
+stdout
+| lib  (showing 2 of 2; <-N cited by N)
+|   lib:A-1  Slider drags  <-0
+|   lib:B-1  Tabs switch  <-0
+stderr (empty)
+
+$ memex show a/__e2e__/README.md --json
+exit 0
+stdout
+| {"docs":[{"ref":"a/__e2e__/README.md","collection":"readmes","id":"a/__e2e__/README.md","path":"a/__e2e__/README.md","title":"The slider cases.","fields":{},"text":"---\nmemex: lib\n---\n# Slider cases\n\nThe slider cases.\n","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[{"path":"README.md","text":"# Repo\n\nThe repo.\n"}]}],"errors":[]}
+stderr (empty)
+
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| graph        4 readmes · 0 headers
+| collections  lib 2
+| use          memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+stderr (empty)

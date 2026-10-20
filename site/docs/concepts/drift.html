@@ -72,7 +72,7 @@ Layout and chrome are shared by every page under docs/: the header, footer, site
     </section>
     <section class="mt-16" aria-labelledby="audit">
       <h2 id="audit" class="font-serif text-[1.5rem] leading-tight font-medium">What audit finds, and what it leaves alone</h2>
-      <p class="mt-3"><code>memex audit</code> reports the gaps it can see without reading code: files with no header, folders with no README, files over 500 code lines, one-liners over 100 characters, unresolved references and duplicate ids. Each finding names its fix.</p>
+      <p class="mt-3"><code>memex audit</code> reports the gaps it can see without reading code: files with no header, folders with no README, files over 500 code lines, one-liners over 100 characters, unresolved references, duplicate ids, and collection roots that cannot work as written. Each finding names its fix.</p>
       <p class="mt-3">It is a report, not a gate: it exits 0 whatever it finds. Docs that nothing cites are not findings. Neither are prefix citations or anything about code bodies.</p>
       <p class="mt-3">It also lists where intent is thin, the header share of each file. That list has no threshold to fix to, so it is never a finding.</p>
       <p class="mt-4 text-[0.95rem] text-muted">See the <a href="../reference/audit.html">audit reference</a> for the flags.</p>

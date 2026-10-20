@@ -1,0 +1,8 @@
+$ memex search --in lib
+exit 0
+stdout
+| lib  (showing 3 of 3; <-N cited by N)
+|   lib:A-1  Slider drags  <-0
+|   lib:B-1  Tabs switch  <-0
+|   lib:C-1  Menu opens  <-0
+stderr (empty)

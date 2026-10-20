@@ -14,6 +14,7 @@ use std::thread;
 use crate::cite;
 use crate::collections::frontmatter::Value;
 use crate::collections::manifest;
+use crate::collections::marks::{self, Mark};
 use crate::error::{self, Error};
 use crate::intent::{by_label, files, front, shared, Origin};
 use crate::logs::read::load as load_logs;
@@ -100,6 +101,8 @@ pub struct Corpus {
     pub manifests: Vec<manifest::Loaded>,
     /// The warnings of the manifest files that did not load, in file-name order.
     pub manifest_warnings: Vec<String>,
+    /// The READMEs whose `memex:` key marks their folder as a collection root, in walk order (design §4.2 Roots).
+    pub marks: Vec<Mark>,
 }
 
 impl Corpus {
@@ -131,24 +134,25 @@ impl Corpus {
         Ok((corpus, store))
     }
 
-    /// The intent layer under `root`: every walked entry, the docs of its files, and the docs of its manifests, which are kept with
-    /// their counts and warnings for `info` and `search`. The files are read on several threads. The walk's entries are sorted, so
-    /// the kinds are bulk-built from them, and the docs are grouped by label in one pass that keeps the walk's order within each
-    /// label. A file that cannot be read is skipped with its warning, and a folder that cannot be listed is kept as unlistable
-    /// (design §3.3). The rest of the layer loads (design §4.2). With `lines`, each file's line facts are kept in `heads`.
+    /// The intent layer under `root`: every walked entry, the docs of its files, and those of its manifests over the roots that
+    /// READMEs mark too, kept with their counts and warnings. Files are read on several threads; the sorted entries bulk-build the
+    /// kinds, and the docs are grouped by label keeping walk order. A file that cannot be read is skipped with its warning, and a
+    /// folder that cannot be listed is kept as unlistable (design §3.3, §4.2). With `lines`, each file's line facts go in `heads`.
     fn intent(root: &Path, lines: bool) -> Corpus {
         let (mut read_warnings, mut unlistable) = (Vec::new(), BTreeMap::new());
         let entries = walk::walk_warned(root, &mut read_warnings, &mut unlistable);
         let read = par::map(&entries, |entry| files::read_entry(entry, lines));
         let mut kinds = Vec::with_capacity(entries.len() + 1);
         kinds.push((String::new(), Kind::Dir));
-        let (mut docs, mut titles, mut heads) = (Vec::new(), BTreeMap::new(), BTreeMap::new());
+        let (mut docs, mut titles, mut heads, mut marks) =
+            (Vec::new(), BTreeMap::new(), BTreeMap::new(), Vec::new());
         for (entry, found) in entries.into_iter().zip(read) {
             let kind = if entry.is_dir { Kind::Dir } else { Kind::File };
             match found {
                 Ok(found) => {
                     titles.extend(found.title.map(|title| (entry.rel.clone(), title)));
                     heads.extend(found.head.map(|head| (entry.rel.clone(), head)));
+                    marks.extend(found.mark.map(|name| Mark::new(&entry.rel, name)));
                     docs.extend(found.docs);
                     read_warnings.extend(found.warnings.iter().map(|line| error::warning(line)));
                 }
@@ -168,17 +172,16 @@ impl Corpus {
             read_warnings,
             manifests: Vec::new(),
             manifest_warnings: Vec::new(),
+            marks: Vec::new(),
         };
-        for found in manifest::load(root, &mut corpus.manifest_warnings) {
-            let mut warnings = Vec::new();
-            let docs = manifest::docs(&found, root, &mut warnings);
-            corpus.manifests.push(manifest::Loaded {
-                manifest: found,
-                count: docs.len(),
-                warnings,
-            });
-            docs.into_iter().for_each(|doc| corpus.insert(doc));
-        }
+        let (loaded, docs) = marks::load(
+            root,
+            &marks,
+            &mut corpus.manifest_warnings,
+            &mut corpus.read_warnings,
+        );
+        (corpus.manifests, corpus.marks) = (loaded, marks);
+        docs.into_iter().for_each(|doc| corpus.insert(doc));
         let counts = front::counts(corpus.all_docs());
         front::join(counts, &mut corpus.manifests);
         error::warn(&corpus.read_warnings);

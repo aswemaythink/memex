@@ -23,7 +23,7 @@
 - `render.rs` and `render/`: the sections and misses that `show` prints, as text and as the `--json` document (design §3.3, §3.6).
 - `cite.rs` and `cite/`: the citations a doc makes and the backlinks they give (design §2.3), built the first time a verb asks for them.
 - `intent/`: the readers of the graph (READMEs, headers) and of the Markdown files that join a collection by `memex:` frontmatter (`front.rs`, `entries.rs`), and the one-liner rule they share (design §2); `files.rs` picks the reader for each walked file.
-- `collections/`: manifests, their flat-YAML frontmatter, and the two kinds (`folder` and `json`), each read by its own module (design §4.2); a collection that only frontmatter names has no manifest and is read in `intent/`.
+- `collections/`: manifests, their flat-YAML frontmatter, the roots that READMEs mark (`marks.rs`), and the two kinds (`folder` and `json`), each read by its own module (design §4.2); a collection that only frontmatter names has no manifest and is read in `intent/`.
 - `verbs/`: one module per verb (`search`, `show`, `log`, `info`, `audit`, `init`), and `here.rs`, which loads what the reading verbs share. `lib.rs` reads the clock once as each verb starts.
 - `index/`: the search index of design §3.2, built in memory per run: tokens, stems, BM25F, prefix and one-edit matches, and the ranking; and `filter.rs`, the `field:value` and `since:` filters that narrow the docs first.
 - `render/search.rs`: `search`'s groups as text, with the `(showing N of M)` headings, and as its `--json` document (design §3.2, §3.6).

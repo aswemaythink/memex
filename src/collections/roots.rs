@@ -1,6 +1,6 @@
 //! Keeps the manifest roots that lie inside the repo root (design §4.2 Unreadable files).
-//! It also parses the `roots` key. A root that resolves outside the repo root is left out with its warning, so no reader walks it.
-//! Cases: MANK-ROOTS-01, MAN-LOAD-09, MAN-LOAD-10
+//! It also parses the optional `roots` key. A root that resolves outside the repo root is left out with its warning, so no reader walks it.
+//! Cases: MANK-ROOTS-01, MAN-LOAD-09, MAN-LOAD-10, MAN-ROOTS-01
 
 use std::path::Path;
 
@@ -41,12 +41,13 @@ fn resolves_outside(base: &Path, repo: &Path) -> bool {
     }
 }
 
-/// The roots: present, and each a folder inside the root, written relative to it.
+/// The explicit roots, each a folder inside the root, written relative to it; none when the key is absent, since READMEs may mark
+/// them (design §4.2 Roots).
 pub(super) fn roots_of(object: &Map<String, Json>) -> Result<Vec<String>, String> {
     match object.get("roots") {
         Some(Json::Array(items)) => items.iter().map(root_of).collect(),
         Some(_) => Err("key 'roots' must be a list of folders".to_string()),
-        None => Err("missing key 'roots'".to_string()),
+        None => Ok(Vec::new()),
     }
 }
 

@@ -1,0 +1,6 @@
+$ memex audit cases --json
+exit 0
+stdout
+| {"scope":["cases"],"files":3,"folders":3,"findings":2,"kinds":[{"kind":"ids","total":1,"items":[{"ref":"lib:X-1","detail":".memex/collections/lib.json"}]},{"kind":"roots","total":1,"items":[{"ref":"cases/inner","detail":"lib: inside cases"}]}],"errors":[]}
+stderr
+| memex: warning: $SANDBOX/repo/docs/README.md is a README; its memex: key marks a root of 'decisions', which has no manifest — add .memex/collections/decisions.json, or move that content into its own file

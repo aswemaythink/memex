@@ -4,4 +4,4 @@ stdout
 | readmes  (showing 1 of 1)
 |   docs/README.md  The docs folder.
 stderr
-| memex: warning: $SANDBOX/repo/docs/README.md is a README, which belongs to the graph; its memex: key is ignored — move that content into its own file
+| memex: warning: $SANDBOX/repo/docs/README.md is a README; its memex: key marks a root of 'notes', which has no manifest — add .memex/collections/notes.json, or move that content into its own file

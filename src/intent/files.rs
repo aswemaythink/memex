@@ -1,11 +1,11 @@
 //! Reads one walked file into its docs: a README, a Markdown file's docs, or a header (design §2).
-//! Cases: HDR-CAP-01, HDR-CAP-04, HDR-BIN-01, HDR-EXT-01, INT-BOM-01, INT-LINE-01, HDR-READ-01, HDR-READ-02, COLL-README-01, COLL-UNREAD-01, SHOW-MDCHILD-01, SHOW-MDCHILD-02
+//! Cases: HDR-CAP-01, HDR-CAP-04, HDR-BIN-01, HDR-EXT-01, INT-BOM-01, INT-LINE-01, HDR-READ-01, HDR-READ-02, COLL-README-01, MAN-ROOTS-01, COLL-UNREAD-01, SHOW-MDCHILD-01, SHOW-MDCHILD-02
 
 use super::header::{self, lines};
 use super::{front, lead, readme, Origin};
+use crate::collections::marks;
 use crate::corpus::{Doc, HEADERS};
 use crate::error::Error;
-use crate::root::slash;
 use crate::walk::Entry;
 
 /// What one walked file gives: its docs, the warnings that it gives without losing them (design §4.2), and the title of a Markdown
@@ -20,6 +20,8 @@ pub struct Found {
     pub title: Option<String>,
     /// The line facts of a file with a comment family, when the read asked for them (`audit`, design §3.5d Lines); else None.
     pub head: Option<lines::Head>,
+    /// The collection a README's `memex:` key names, which marks its folder as a root (design §4.2 Roots); None for any other file.
+    pub mark: Option<String>,
 }
 
 /// The docs of one walked entry: none for a folder, and those of its file otherwise (design §2 and §4.2). With `lines`, a file with
@@ -42,20 +44,14 @@ pub fn file_docs(entry: &Entry, lines: bool) -> Result<Found, Error> {
     }
 }
 
-/// The doc of a README, with the warning that its `memex:` key is ignored when it has one (design §2.2). The README is read whole,
-/// in one open, and its head is taken from that read.
+/// The doc of a README, with the collection its `memex:` key names when it has one, which marks its folder as a root (design §2.2
+/// and §4.2 Roots). The README is read whole, in one open, and its head is taken from that read.
 fn readme_found(entry: &Entry) -> Result<Found, Error> {
     let (head, text) = front::Head::read_all(&entry.path)?;
-    let mut warnings = Vec::new();
-    if front::readme_has_key(&head, &text) {
-        warnings.push(format!(
-            "{} is a README, which belongs to the graph; its memex: key is ignored — move that content into its own file",
-            slash(&entry.path)
-        ));
-    }
+    let mark = front::readme_has_key(&head, &text).then(|| marks::name_in(&text));
     Ok(Found {
         docs: vec![readme::doc(&entry.rel, text)],
-        warnings,
+        mark,
         ..Found::default()
     })
 }

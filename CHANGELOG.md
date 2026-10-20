@@ -2,9 +2,13 @@
 
 The release notes of memex. Each GitHub release takes its notes from the matching section here.
 
-## Unreleased
+## 0.2.0 - 2026-10-20
 
+- Collection roots are found, not listed. A README.md with `memex: <name>` in its frontmatter makes its folder a root of the manifest `<name>`, so a manifest in `.memex/collections/` no longer needs `roots`. An explicit `roots` list still works and is read together with the marked folders, each once. Marked folders honour the same ignores as the rest of the walk (`.gitignore`, `.ignore`, hidden entries, `node_modules`, `target`).
+- A README's `memex:` key used to be ignored with a warning. It now marks a root; when it names no manifest, the warning says so and names the manifest file to add.
+- `audit` has a new kind, `roots`: a README whose `memex:` names no manifest, a manifest with no root, and a root nested inside another root of the same manifest.
 - memex is MIT-licensed, in one LICENSE.md (it was MIT OR Apache-2.0).
+- The Claude Code plugin's skill says how a README marks a collection root.
 
 ## 0.1.1 - 2026-10-17
 
