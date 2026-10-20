@@ -51,4 +51,4 @@ Run `cargo run -q -- audit <paths>` (or `memex audit <paths>` with an installed 
 
 ## Releases
 
-A maintainer releases by pushing a tag `vX.Y.Z` on `main`. cargo-dist then builds the binaries and installers (see [dist-workspace.toml](dist-workspace.toml) and [release.yml](.github/workflows/release.yml)). Each version has its own section in [CHANGELOG.md](CHANGELOG.md), and the GitHub release takes its notes from that section.
+A maintainer releases by bumping `version` in Cargo.toml with a CHANGELOG section in the pull request, then pushing a tag `vX.Y.Z` on `main`. That one tag ships every channel: cargo-dist builds the binaries and installers, creates the GitHub release, and publishes npm, Homebrew and crates.io together (see [dist-workspace.toml](dist-workspace.toml), [release.yml](.github/workflows/release.yml) and [publish-crates.yml](.github/workflows/publish-crates.yml)). Nothing is published by hand. Each version has its own section in [CHANGELOG.md](CHANGELOG.md), and the GitHub release takes its notes from that section.

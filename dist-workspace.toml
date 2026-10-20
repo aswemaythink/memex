@@ -28,7 +28,8 @@ formula = "memex"
 # npm scope and package name, so the package is `@aswemaythink/memex`
 npm-scope = "@aswemaythink"
 npm-package = "memex"
-# Publish the formula and the npm package on stable tags. They need the HOMEBREW_TAP_TOKEN and NPM_TOKEN secrets.
-publish-jobs = ["homebrew", "npm"]
+# Publish the formula, the npm package and the crate on stable tags, so one tag ships every channel. They need the
+# HOMEBREW_TAP_TOKEN, NPM_TOKEN and CARGO_REGISTRY_TOKEN secrets; the crate job is .github/workflows/publish-crates.yml.
+publish-jobs = ["homebrew", "npm", "./publish-crates"]
 # Accept action-version bumps (Dependabot) in the generated release.yml instead of failing `dist plan`.
 allow-dirty = ["ci"]

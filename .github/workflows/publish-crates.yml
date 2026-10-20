@@ -1,0 +1,34 @@
+# Publishes the crate to crates.io as one of the release's publish jobs, so a tag ships every channel at once.
+# dist calls it from release.yml (dist-workspace.toml `publish-jobs`) after the GitHub release is up, beside npm and Homebrew.
+# It needs the CARGO_REGISTRY_TOKEN secret. A version that crates.io already has is skipped, so a re-run is safe.
+name: Publish to crates.io
+
+on:
+  workflow_call:
+    inputs:
+      plan:
+        required: true
+        type: string
+
+jobs:
+  crates-io:
+    runs-on: ubuntu-latest
+    env:
+      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Publish unless crates.io has this version
+        run: |
+          version=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "agent-memex") | .version')
+          if curl -fsS -A "agent-memex release (github.com/aswemaythink/memex)" \
+              "https://crates.io/api/v1/crates/agent-memex/${version}" > /dev/null 2>&1; then
+            echo "agent-memex ${version} is already on crates.io; skipped"
+            exit 0
+          fi
+          if [ -z "${CARGO_REGISTRY_TOKEN}" ]; then
+            echo "::error::the CARGO_REGISTRY_TOKEN secret is not set"
+            exit 1
+          fi
+          cargo publish --locked
