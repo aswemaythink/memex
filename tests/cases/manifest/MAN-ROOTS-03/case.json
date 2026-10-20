@@ -1,0 +1,1 @@
+{"git": "init", "steps": [{"args": ["search", "--in", "lib"]}]}

@@ -139,8 +139,20 @@ memex: cases
 - An entry's id has the form `[A-Z][A-Z0-9]*(-[A-Z0-9]+)+`, such as `NAME-001`, and is kept forever. Its claim is the rest of its first line. Backticked paths that name existing files are its evidence.
 - Put each id where `rg <ID>` finds its test: in the test's name where the language allows it (`it("NAME-001 …")`), else in a comment on the test (`// NAME-001`, `# NAME-001`).
 - An entry index is not itself a doc: `memex show NAME-001` prints an entry with its claim, evidence and cited by, while `memex show tests/CASES.md` prints the file.
-- Collection names match `[a-z0-9][a-z0-9-]{0,39}`. README.md belongs to the graph, so a `memex:` key in a README is ignored with a warning.
+- Collection names match `[a-z0-9][a-z0-9-]{0,39}`.
 - Manifests in `.memex/collections/` cover structures that are not Markdown: a `folder` kind has one doc per folder with a marker file (such as `case.json`), and a `json` kind has one doc per entry of a JSON array.
+- A manifest needs no list of folders. A README.md with `memex: <name>` in its frontmatter makes its folder a root of the manifest `<name>`, so a new folder of cases joins by its README, wherever it lives. The README stays the graph's; it is not a collection doc. An optional `roots` list in the manifest still works, and memex reads it together with the marked folders. A README whose `memex:` names no manifest gets a warning.
+
+```json
+{"name": "lib-cases", "kind": "folder", "marker": "case.json", "merge": ["README.md"], "id": "id", "title": "name"}
+```
+
+```markdown
+---
+memex: lib-cases
+---
+# Slider cases
+```
 
 ### Citations and backlinks
 
@@ -176,6 +188,7 @@ Logs are scaffolding: what a run did, useful for a couple of working days. Each 
 - `thin`: a file of 80 lines or more with a header, lowest header ratio first.
 - `cites`: an explicit reference that resolves to nothing. Logs are not audited.
 - `ids`: a duplicate id within a collection.
+- `roots`: a README whose `memex:` names no manifest, a manifest with no root, or a root nested inside another root of the same manifest (its docs would be read twice).
 
 `thin` is a pointer, not a finding. It shows where intent is thin and has no threshold, so it is never "fixed", and it is left out of the finding count and of `nothing to fix`.
 

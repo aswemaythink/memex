@@ -6,6 +6,7 @@ pub mod frontmatter;
 pub mod globs;
 pub mod json;
 pub mod manifest;
+pub mod marks;
 pub mod roots;
 pub mod title;
 

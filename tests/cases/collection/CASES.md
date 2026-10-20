@@ -58,8 +58,8 @@ memex: cases
 
 ## README
 
-- `COLL-README-01` A README whose frontmatter holds `memex:` keeps its graph's doc, the key is ignored with the README warning, and `show docs/README.md` prints it, exit 0.
-  design §2.2 (a README is the graph's, and its key is ignored). Run: memex show docs/README.md.
+- `COLL-README-01` A README whose frontmatter holds `memex:` naming no manifest keeps its graph's doc, marks no root and gives the README warning that names the missing manifest, and `show docs/README.md` prints it, exit 0.
+  design §2.2 (a README is the graph's; its key marks a root of the manifest it names) and §4.2 Roots. Run: memex show docs/README.md.
 
 ## UNREAD
 
@@ -107,7 +107,7 @@ memex: cases
 ## REFINE
 
 - `COLL-REFINE-01` A README longer than 8 KiB whose frontmatter holds `memex:` gives the README warning once and keeps its whole text, so `search zebratail`, a word past the first 8 KiB, finds `docs/README.md`, exit 0.
-  design §2.2 (a README's key is ignored with the warning) and §2 (a README is read in full). Run: memex search zebratail.
+  design §2.2 (a README's key that names no manifest gives the warning) and §2 (a README is read in full). Run: memex search zebratail.
 - `COLL-REFINE-02` An empty `memex:` value is not a collection name: one warning, `'memex: ' is not a collection name`, skips its file, and the other file of `notes` still counts, exit 0.
   design §2.2 (Name: any other value is a warning and the file is skipped). Run: memex info.
 - `COLL-REFINE-03` A README whose closed frontmatter holds no `memex:` key (`title: Docs`) gets no warning and takes its one-liner from the first paragraph after its H1, so `show .` lists `docs` with it and `search guides` shows it; the frontmatter is not searched, so `search title` has no hits, exit 0.

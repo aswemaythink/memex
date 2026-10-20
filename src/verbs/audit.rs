@@ -5,6 +5,7 @@
 
 mod counts;
 mod kinds;
+mod roots;
 mod scope;
 
 use std::path::Path;

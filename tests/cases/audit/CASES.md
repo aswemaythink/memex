@@ -158,6 +158,13 @@ memex: cases
 - `AUD-EXIT-04` `memex audit --help` prints audit's help on stdout and exits 0.
   design §3 Flags (`--help` works after any verb). Run: memex audit --help.
 
+## ROOTS
+
+- `AUD-ROOTS-01` `roots` lists a README whose `memex:` key names no manifest (`→ decisions: no manifest`), a manifest with neither `roots` nor a marking README (`.memex/collections/empty.json  no roots`) and a marked root inside an explicit one (`cases/inner  lib: inside cases`), whose doc is read twice, so `ids` lists it too, exit 0.
+  design §3.5d kind 8 and §4.2 Roots. Run: memex audit.
+- `AUD-ROOTS-02` A scoped audit lists only the `roots` findings in its scope: the nested root under `cases`, and not the README outside it nor the manifest with no root, which is in scope only when the root is, exit 0.
+  design §3.5d kind 8 (scope). Run: memex audit cases --json.
+
 ## REFINE
 
 - `AUD-REFINE-01` An unresolved reference in a collection doc's frontmatter field is listed under `cites`, before the unresolved references of its body, exit 0.

@@ -1,0 +1,1 @@
+{"steps": [{"args": ["search", "--in", "lib"]}, {"args": ["show", "a/__e2e__/README.md", "--json"]}, {"args": ["info"]}]}

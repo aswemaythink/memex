@@ -1,5 +1,5 @@
 //! Finds each kind's findings over the scope, in the order of design §3.5d.
-//! The kinds are headers, readmes, length, one-liners, thin, cites and ids. Each is one function over `Ctx`; `headers` reads the
+//! The kinds are headers, readmes, length, one-liners, thin, cites, ids and roots, which `roots.rs` finds. Each is one function over `Ctx`; `headers` reads the
 //! corpus's head facts, and `length` and `thin` the line counts that `counts.rs` makes from them. Each list is sorted by label (`thin` by its header share) and cut to `--limit` (design §3.3 Limits),
 //! and a kind with no finding is left out. `thin` is listed but is not a finding (design §3.5d).
 //! Cases: AUD-HEADERS-01, AUD-HEADERS-02, AUD-HEADERS-03, AUD-READMES-01, AUD-READMES-02, AUD-READMES-03, AUD-READMES-04, AUD-READMES-05, AUD-LENGTH-01, AUD-LENGTH-02, AUD-LENGTH-03, AUD-LENGTH-04, AUD-LENGTH-05, AUD-LENGTH-06, AUD-LENGTH-07, AUD-ONELINERS-01, AUD-ONELINERS-02, AUD-ONELINERS-03, AUD-ONELINERS-04, AUD-THIN-01, AUD-THIN-02, AUD-THIN-03, AUD-THIN-04, AUD-THIN-05, AUD-THIN-06, AUD-THIN-07, AUD-CITES-01, AUD-CITES-02, AUD-CITES-03, AUD-CITES-04, AUD-CITES-05, AUD-CITES-06, AUD-IDS-01, AUD-IDS-02, AUD-LIMIT-01, AUD-LIMIT-02, AUD-LIMIT-03, AUD-JSON-01, AUD-JSON-03, AUD-REFINE-01, AUD-REFINE-02, AUD-REFINE-03, AUD-REFINE-04
@@ -7,6 +7,7 @@
 use std::collections::BTreeSet;
 
 use super::counts::{self, Counted};
+use super::roots;
 use super::scope::Scope;
 use crate::cite;
 use crate::corpus::{label_of, parent_of, readme_label, Corpus, Doc, Kind};
@@ -76,6 +77,7 @@ pub fn all(ctx: &Ctx<'_>) -> Vec<Group> {
         thin(ctx, &counted),
         cites(ctx),
         ids(ctx),
+        roots::roots(ctx),
     ]
     .into_iter()
     .filter(|group| group.listing.total > 0)
@@ -83,7 +85,7 @@ pub fn all(ctx: &Ctx<'_>) -> Vec<Group> {
 }
 
 /// A kind's group: its items sorted by label (the sort keeps equal labels in the order they came), cut to the limit.
-fn group(
+pub(super) fn group(
     ctx: &Ctx<'_>,
     kind: &'static str,
     what: &'static str,

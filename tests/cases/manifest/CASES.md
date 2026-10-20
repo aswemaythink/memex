@@ -21,8 +21,8 @@ memex: cases
   design §4.2 `weights` (per-field ranking boost, read by search). Run: memex show notes:alpha, with weights for id, title, body and status.
 - `MAN-LOAD-08` A weight that is not a whole number gives the warning `weight 'id' must be a whole number` and skips the manifest, exit 1.
   design §4.2 `weights` and Invalid manifests. Run: memex show notes:alpha, with `"id": "four"`.
-- `MAN-LOAD-09` A manifest with no `kind` and a manifest with no `roots` each give a warning that names the missing key, and both are skipped, exit 1.
-  design §4.2 `roots` (required) and `kind` (the table's kinds). Run: memex show nokind:alpha noroots:alpha.
+- `MAN-LOAD-09` A manifest with no `kind` gives a warning that names the missing key and is skipped, while a manifest with no `roots` loads with no warning and, with no README marking a root, reads nothing, so both refs are not found, exit 1.
+  design §4.2 `roots` (optional) and Roots, and `kind` (the table's kinds). Run: memex show nokind:alpha noroots:alpha.
 - `MAN-LOAD-10` A manifest with an unknown kind, a root that climbs out of the root, or an include glob that does not parse each give one warning and are skipped, exit 1.
   design §4.2 `kind` (folder or json), `roots` (root-relative folders) and `include` (globs, json only). Run: memex show badglob:alpha badkind:alpha outside:alpha, with warnings in file-name order. The unknown kind is `table`, and the bad glob sits in a json manifest, since `include` is json only.
 - `MAN-LOAD-11` A key that its kind does not use, `at` on a folder manifest, gives the warning `key 'at' does not apply to kind 'folder'` and skips the manifest, exit 1.
@@ -35,6 +35,17 @@ memex: cases
   design §4.2 `kind: markdown` (the manifest is skipped with that warning). Run: memex info. The fixture's `notes.json` says `kind: markdown`, and `notes/alpha.md` has no frontmatter.
 
 The folder and json kinds of design §4.2 are cased as `MANK-*` in the [manifest-kinds](../manifest-kinds/CASES.md) family. The Markdown kind is gone: a Markdown collection is a `memex:` frontmatter collection, pinned by the [collection](../collection/CASES.md) family.
+
+## ROOTS
+
+- `MAN-ROOTS-01` A folder manifest with no `roots` reads every walked folder whose README says `memex: lib`, so `lib` holds `A-1` and `B-1` and not the unmarked `C-1`; the marking README stays a `readmes` doc, and `info` counts two docs with no warning, exit 0.
+  design §4.2 Roots and §2.2 (a README's key marks a root and never makes it a doc). Run: memex search --in lib; memex show a/__e2e__/README.md --json; memex info.
+- `MAN-ROOTS-02` The explicit `roots` and the marked folders are read as one union: `c/__e2e__` (explicit only), `a/__e2e__` (explicit and marked) and `b/__e2e__` (marked only) give `C-1`, `A-1` and `B-1`, each once, exit 0.
+  design §4.2 Roots (a folder named both ways is read once). Run: memex search --in lib.
+- `MAN-ROOTS-03` A marking README that the walk skips marks nothing: under a git-ignored `vendor/`, `node_modules/` or a hidden folder, so `lib` holds `A-1` alone, exit 0.
+  design §4.2 Roots and §4.1 item 2 (the skip list). Run: memex search --in lib, in a git repo whose `.gitignore` names `vendor/`.
+- `MAN-ROOTS-04` A README marks a root of a json manifest too, so the json files that `include` matches in its folder give their entries, exit 0.
+  design §4.2 Roots (every manifest kind reads its roots, explicit and marked). Run: memex show rows:R-1.
 
 ## IO
 

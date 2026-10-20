@@ -1,0 +1,6 @@
+$ memex search --in lib
+exit 0
+stdout
+| lib  (showing 1 of 1; <-N cited by N)
+|   lib:A-1  Slider drags  <-0
+stderr (empty)

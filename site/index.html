@@ -260,7 +260,7 @@ pub fn hash(atom: &amp;str) -&gt; u64 {
   <!-- 6. Audit: checking the intent layer against the code. -->
   <section id="audit" class="pt-16" aria-labelledby="h-audit">
     <h2 id="h-audit" class="font-serif text-[1.75rem] leading-tight font-medium">Audit</h2>
-    <p class="mt-4">Code moves on and the intent layer can fall behind it. <code>memex audit</code> checks for the drift: files with no header, folders with no README, files grown too long, one-liners that run long, references that resolve to nothing, duplicate ids. Agents run it on the paths they changed and fix what it lists in the same change, or log the rest to <code>drift</code>.</p>
+    <p class="mt-4">Code moves on and the intent layer can fall behind it. <code>memex audit</code> checks for the drift: files with no header, folders with no README, files grown too long, one-liners that run long, references that resolve to nothing, duplicate ids, collection roots that cannot work. Agents run it on the paths they changed and fix what it lists in the same change, or log the rest to <code>drift</code>.</p>
     <div class="mt-5 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="Terminal sample: memex audit src"><code><span class="p">$</span> <span class="c">memex audit src</span>
 <span class="g">audit</span>       src · 148 files · 12 folders · 2 findings
 <span class="g">headers</span>     <span class="d">(showing 1 of 1; files with no header)</span>
