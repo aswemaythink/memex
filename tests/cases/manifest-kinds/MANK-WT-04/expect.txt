@@ -1,0 +1,14 @@
+$ memex search widget --in mine --json  [cwd wt]
+exit 0
+stdout
+| {"query":"widget","filters":{},"groups":[{"collection":"mine","total":1,"hits":[{"ref":"mine:OWN-1","collection":"mine","id":"OWN-1","path":null,"title":"Worktree doc","fields":{},"score":0.131,"snippet":"Worktree doc","fuzzy":[]}]}]}
+stderr (empty)
+
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| graph        0 readmes · 0 headers
+| collections  mine 2
+| use          memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+stderr (empty)

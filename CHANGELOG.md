@@ -2,6 +2,10 @@
 
 The release notes of memex. Each GitHub release takes its notes from the matching section here.
 
+## 0.2.2 - 2026-10-22
+
+- Collections work in git worktrees. A manifest root that a linked worktree lacks, such as gitignored generated output that only the main checkout holds, is read from the same path in the main checkout, with one warning per root naming where it was read from: `<collection>: root <root> is not in this worktree; read from the main checkout <path>`. A root the worktree has is still its own, and a root that resolves outside the main checkout is still skipped as leading outside the repo. The main checkout is found from the worktree's layout files, so no git call is made.
+
 ## 0.2.1 - 2026-10-20
 
 - `show` no longer prints a README's or Markdown file's frontmatter block as part of its body: a folder's README, a `.md` file shown by path, and each README in the chain now print from after the block, so a README that marks a collection root (`memex: <name>`) reads from its heading. `--json` is unchanged: `text` keeps the whole file.

@@ -1,0 +1,8 @@
+diff --git a/own/OWN-2/index.md b/own/OWN-2/index.md
+new file mode 100644
+--- /dev/null
++++ b/own/OWN-2/index.md
+@@ -0,0 +1,3 @@
++# Main only doc
++
++A widget that only the main checkout holds.

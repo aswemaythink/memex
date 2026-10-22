@@ -1,0 +1,1 @@
+{"git": "commit", "setup": [{"run": ["git", "worktree", "add", "../wt", "-b", "feat"]}], "steps": [{"args": ["search", "slot", "recipe", "--in", "corpus"], "cwd": "wt"}, {"args": ["search", "slot", "recipe", "--in", "corpus", "--json"], "cwd": "wt"}, {"args": ["info"], "cwd": "wt"}]}
