@@ -323,8 +323,8 @@ The shape of a folder in one call: its folders and files a few levels down, each
 - **Exit code.** 0, with or without gaps; 1 when the path names nothing or is ambiguous; 2 for a usage error.
 
 ```
-tree  supabase · 31 files · 3 no header  (showing 6 of 6)
-  supabase/functions/  Owns the Edge Functions folder: one Deno function per subfolder.  (28 files · 3 no header)
+tree  supabase · 11 files · 2 no header  (showing 6 of 6)
+  supabase/functions/  Owns the Edge Functions folder: one Deno function per subfolder.  (10 files · 2 no header)
     supabase/functions/_shared/  Code the functions import.  (6 files)
     supabase/functions/billing/  (no README)  (4 files · 2 no header)
     supabase/functions/deno.json

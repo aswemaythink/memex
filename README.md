@@ -75,8 +75,8 @@ use          memex show <path|ref> · memex search <words> · memex log <stream>
 The `roots` block lists the root's subfolders with their README's one-liner, the folder's name alone when it has no README. `memex tree` goes deeper. It prints a folder's folders and files, two levels down by default (`--depth N`), each with its one-liner, and how many of the files a header is expected on lack one. Its shape, from design §3.5e (a path argument scopes it to a folder or a file):
 
 ```
-tree  supabase · 31 files · 3 no header  (showing 6 of 6)
-  supabase/functions/  Owns the Edge Functions folder: one Deno function per subfolder.  (28 files · 3 no header)
+tree  supabase · 11 files · 2 no header  (showing 6 of 6)
+  supabase/functions/  Owns the Edge Functions folder: one Deno function per subfolder.  (10 files · 2 no header)
     supabase/functions/_shared/  Code the functions import.  (6 files)
     supabase/functions/billing/  (no README)  (4 files · 2 no header)
     supabase/functions/deno.json
