@@ -1,12 +1,13 @@
 //! Turns the arguments of `memex audit` into the scope they name (design §3.5d).
 //! A file is in scope when it is named, when it matches a glob, or when a folder above it is; a folder likewise. A path is
 //! resolved as `show` resolves one (design §3.1), so a path that `show` cannot find is not found by audit either.
-//! `tree` resolves its one path through `scope_path`, so the two cannot drift apart.
-//! Cases: AUD-SCOPE-01, AUD-SCOPE-02, AUD-SCOPE-03, AUD-SCOPE-04, AUD-SCOPE-05, AUD-SCOPE-06, AUD-SCOPE-07, AUD-GLOB-01, AUD-GLOB-02, AUD-GLOB-03
+//! `tree` resolves its one path through `scope_path`, so the two cannot drift apart. A path outside the root is judged lexically
+//! first, so resolving never loads another root's corpus.
+//! Cases: AUD-SCOPE-01, AUD-SCOPE-02, AUD-SCOPE-03, AUD-SCOPE-04, AUD-SCOPE-05, AUD-SCOPE-06, AUD-SCOPE-07, AUD-GLOB-01, AUD-GLOB-02, AUD-GLOB-03, AUD-OUTSIDE-01, AUD-OUTSIDE-02, AUD-OUTSIDE-03, AUD-OUTSIDE-04, TREE-OUTSIDE-01, TREE-OUTSIDE-02, TREE-OUTSIDE-03
 
 use std::collections::BTreeSet;
 use std::iter::successors;
-use std::path::Path;
+use std::path::{Component, Path, PathBuf};
 
 use crate::collections::globs;
 use crate::corpus::{label_of, parent_of, Corpus, Kind};
@@ -102,7 +103,7 @@ fn glob(corpus: &Corpus, arg: &str, tree: &[Entry], resolved: &mut Resolved) {
 
 /// Adds a path argument as `show` resolves it (design §3.1): the file or folder it names, or a miss when it names nothing or
 /// several things. A doc (a label or a bare id) is not a path, so it names nothing here, and so does a path outside the root,
-/// since audit reads only the root it runs in.
+/// which is judged lexically, so audit reads only the root it runs in.
 fn path(corpus: &Corpus, cwd: &Path, store: Option<&Path>, arg: &str, resolved: &mut Resolved) {
     match scope_path(corpus, cwd, store, arg) {
         Ok((rel, kind)) => {
@@ -115,13 +116,17 @@ fn path(corpus: &Corpus, cwd: &Path, store: Option<&Path>, arg: &str, resolved: 
 
 /// The root-relative path and kind that `arg` names as `show` resolves a path (design §3.1 steps 1, 2 and 5), or a miss when it
 /// names nothing or several things. A doc (a label or a bare id) is not a path, so it names nothing here, and so does a path
-/// outside the root, since `audit` and `tree` read only the root they run in.
+/// outside the root, which is judged lexically before anything is resolved, so no other root is ever walked or warned about
+/// (design §3.5d scope).
 pub(crate) fn scope_path(
     corpus: &Corpus,
     cwd: &Path,
     store: Option<&Path>,
     arg: &str,
 ) -> Result<(String, Kind), Miss> {
+    if leaves_root(&corpus.root, cwd, arg) {
+        return Err(Miss::outside(arg));
+    }
     match resolve(corpus, cwd, store, arg) {
         Outcome::Found(Target::Path { rel, kind }) => Ok((rel, kind)),
         Outcome::Ambiguous(candidates) => Err(Miss::ambiguous(arg, candidates)),
@@ -129,6 +134,24 @@ pub(crate) fn scope_path(
             Err(Miss::not_found(arg))
         }
     }
+}
+
+/// True when `arg`, joined to the cwd (an absolute `arg` stands alone) with `.` and `..` folded and no file system access, lies
+/// outside `root`. `cwd` and `root` are canonical, as the corpus keeps them, so they compare directly (design §3.5d scope).
+fn leaves_root(root: &Path, cwd: &Path, arg: &str) -> bool {
+    let mut folded = PathBuf::new();
+    for part in cwd.join(arg).components() {
+        match part {
+            Component::CurDir => {}
+            Component::ParentDir => {
+                folded.pop();
+            }
+            Component::Prefix(_) | Component::RootDir | Component::Normal(_) => {
+                folded.push(part.as_os_str());
+            }
+        }
+    }
+    !folded.starts_with(root)
 }
 
 /// Adds a label to the scope line, unless it is already there.

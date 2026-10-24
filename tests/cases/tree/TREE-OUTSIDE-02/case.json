@@ -1,0 +1,1 @@
+{"platforms": ["unix"], "steps": [{"args": ["tree", "/"]}, {"args": ["tree", "/", "--json"]}]}

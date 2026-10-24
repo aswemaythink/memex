@@ -1,0 +1,17 @@
+$ memex audit ../repo/src
+exit 0
+stdout
+| audit       src · 3 files · 1 folder · 1 finding
+| headers     (showing 1 of 1; files with no header)
+|   src/bare.rs
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+stderr (empty)
+
+$ memex audit ../repo/src/bare.rs
+exit 0
+stdout
+| audit       src/bare.rs · 1 file · 0 folders · 1 finding
+| headers     (showing 1 of 1; files with no header)
+|   src/bare.rs
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+stderr (empty)

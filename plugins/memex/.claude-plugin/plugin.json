@@ -1,6 +1,6 @@
 {
   "name": "memex",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "memex for Claude Code: prints the repo's intent-layer overview at session start, and gives each sub-agent its memex id.",
   "author": {
     "name": "As We May Think"

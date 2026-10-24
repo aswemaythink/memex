@@ -151,6 +151,18 @@ impl Miss {
         }
     }
 
+    /// A path that leads outside the current root, which `audit` and `tree` never read (design §3.5d scope).
+    pub fn outside(arg: &str) -> Miss {
+        Miss {
+            arg: arg.to_string(),
+            code: Code::NotFound,
+            message: format!(
+                "not found: {arg} (outside the root; run memex from there) (find refs with memex search <words>)"
+            ),
+            candidates: Vec::new(),
+        }
+    }
+
     /// A ref that names several targets, which are listed as candidates.
     pub fn ambiguous(arg: &str, candidates: Vec<String>) -> Miss {
         Miss {
