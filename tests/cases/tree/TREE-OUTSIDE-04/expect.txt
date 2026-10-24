@@ -1,0 +1,14 @@
+$ memex tree ../link/src
+exit 0
+stdout
+| tree  src · 2 files · 1 no header  (showing 2 of 2)
+|   src/bare.rs  (no header)
+|   src/good.rs  Does the good thing.
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+stderr (empty)
+
+$ memex tree ../link/src/bare.rs --json
+exit 0
+stdout
+| {"scope":"src/bare.rs","depth":2,"files":1,"no_header":1,"total":1,"items":[{"path":"src/bare.rs","kind":"file","depth":1,"title":"","gap":"header"}]}
+stderr (empty)

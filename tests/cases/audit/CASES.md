@@ -188,3 +188,5 @@ Scenario for these: the sandbox holds a README.md with `memex: decisions` (a key
   design §3.5d Scope (`.` and `..` folded). Run: memex audit ../repo/src, then memex audit ../repo/src/bare.rs.
 - `AUD-OUTSIDE-04` An outside path next to a good one gives its `not found` while the good one is still audited, exit 1: `..` with `src/bare.rs` as text, and `src/good.rs` with `../README.md` with `--json`.
   design §3.5d Scope. Run: memex audit .. src/bare.rs, then memex audit src/good.rs ../README.md --json.
+- `AUD-OUTSIDE-05` A path spelled through a symlink that lands inside the root still audits: with `../link` a symlink to `repo`, `../link/src` and `../link/src/bare.rs --json` are judged by their canonical path, so they audit that folder and file as the plain path would, with nothing from the parent folder on stderr, exit 0.
+  design §3.5d Scope (a symlinked spelling counts as inside). Setup: a git apply makes the symlink in the sandbox. Run: memex audit ../link/src, then memex audit ../link/src/bare.rs --json.

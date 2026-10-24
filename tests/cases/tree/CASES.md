@@ -103,6 +103,9 @@ Scenario for these: the sandbox holds a README.md with `memex: decisions` (a key
 - `TREE-OUTSIDE-03` A path that leaves the root and folds back in (`../repo/src`, `../repo/src/bare.rs`) is judged by where it lands, so it lists that folder or file as the plain path would, exit 0.
   design §3.5e Scope and §3.5d Scope (`.` and `..` folded). Run: memex tree ../repo/src, then memex tree ../repo/src/bare.rs.
 
+- `TREE-OUTSIDE-04` A path spelled through a symlink that lands inside the root still lists: with `../link` a symlink to `repo`, `../link/src` and `../link/src/bare.rs --json` are judged by their canonical path, so they list as the plain path would, exit 0.
+  design §3.5e Scope and §3.5d Scope (a symlinked spelling counts as inside). Setup: a git apply makes the symlink in the sandbox. Run: memex tree ../link/src, then memex tree ../link/src/bare.rs --json.
+
 ## READ
 
 - `TREE-READ-01` A folder whose README.md cannot be read reads `(no README)` on its line when its subtree holds files a header is expected on, as a README that is missing does, and the one unreadable-file warning is printed once on stderr, exit 0.

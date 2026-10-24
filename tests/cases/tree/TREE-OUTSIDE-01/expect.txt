@@ -2,10 +2,10 @@ $ memex tree ..
 exit 1
 stdout (empty)
 stderr
-| memex: not found: .. (outside the root; run memex from there) (find refs with memex search <words>)
+| memex: not found: .. (outside the root; run memex from there)
 
 $ memex tree .. --json
 exit 1
 stdout
-| {"error":{"code":"not_found","message":"not found: .. (outside the root; run memex from there) (find refs with memex search <words>)"}}
+| {"error":{"code":"not_found","message":"not found: .. (outside the root; run memex from there)"}}
 stderr (empty)

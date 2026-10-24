@@ -2,8 +2,8 @@
 //! A file is in scope when it is named, when it matches a glob, or when a folder above it is; a folder likewise. A path is
 //! resolved as `show` resolves one (design §3.1), so a path that `show` cannot find is not found by audit either.
 //! `tree` resolves its one path through `scope_path`, so the two cannot drift apart. A path outside the root is judged lexically
-//! first, so resolving never loads another root's corpus.
-//! Cases: AUD-SCOPE-01, AUD-SCOPE-02, AUD-SCOPE-03, AUD-SCOPE-04, AUD-SCOPE-05, AUD-SCOPE-06, AUD-SCOPE-07, AUD-GLOB-01, AUD-GLOB-02, AUD-GLOB-03, AUD-OUTSIDE-01, AUD-OUTSIDE-02, AUD-OUTSIDE-03, AUD-OUTSIDE-04, TREE-OUTSIDE-01, TREE-OUTSIDE-02, TREE-OUTSIDE-03
+//! first, then by its canonical path once, so resolving never loads another root's corpus.
+//! Cases: AUD-SCOPE-01, AUD-SCOPE-02, AUD-SCOPE-03, AUD-SCOPE-04, AUD-SCOPE-05, AUD-SCOPE-06, AUD-SCOPE-07, AUD-GLOB-01, AUD-GLOB-02, AUD-GLOB-03, AUD-OUTSIDE-01, AUD-OUTSIDE-02, AUD-OUTSIDE-03, AUD-OUTSIDE-04, AUD-OUTSIDE-05, TREE-OUTSIDE-01, TREE-OUTSIDE-02, TREE-OUTSIDE-03, TREE-OUTSIDE-04
 
 use std::collections::BTreeSet;
 use std::iter::successors;
@@ -124,7 +124,7 @@ pub(crate) fn scope_path(
     store: Option<&Path>,
     arg: &str,
 ) -> Result<(String, Kind), Miss> {
-    if leaves_root(&corpus.root, cwd, arg) {
+    if leaves_root(&corpus.root, cwd, arg) && !lands_in_root(&corpus.root, cwd, arg) {
         return Err(Miss::outside(arg));
     }
     match resolve(corpus, cwd, store, arg) {
@@ -137,7 +137,7 @@ pub(crate) fn scope_path(
 }
 
 /// True when `arg`, joined to the cwd (an absolute `arg` stands alone) with `.` and `..` folded and no file system access, lies
-/// outside `root`. `cwd` and `root` are canonical, as the corpus keeps them, so they compare directly (design §3.5d scope).
+/// outside `root` by that test alone. `cwd` and `root` are canonical, as the corpus keeps them, so they compare directly (design §3.5d scope).
 fn leaves_root(root: &Path, cwd: &Path, arg: &str) -> bool {
     let mut folded = PathBuf::new();
     for part in cwd.join(arg).components() {
@@ -152,6 +152,12 @@ fn leaves_root(root: &Path, cwd: &Path, arg: &str) -> bool {
         }
     }
     !folded.starts_with(root)
+}
+
+/// True when the canonical path of `arg` joined to the cwd lies inside `root`: a symlinked spelling of a path inside the root.
+/// This is one call and never a walk; a path that cannot be canonicalised names nothing (design §3.5d scope).
+fn lands_in_root(root: &Path, cwd: &Path, arg: &str) -> bool {
+    dunce::canonicalize(cwd.join(arg)).is_ok_and(|full| full.starts_with(root))
 }
 
 /// Adds a label to the scope line, unless it is already there.

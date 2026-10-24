@@ -156,9 +156,7 @@ impl Miss {
         Miss {
             arg: arg.to_string(),
             code: Code::NotFound,
-            message: format!(
-                "not found: {arg} (outside the root; run memex from there) (find refs with memex search <words>)"
-            ),
+            message: format!("not found: {arg} (outside the root; run memex from there)"),
             candidates: Vec::new(),
         }
     }

@@ -2,7 +2,7 @@
 //! It lists folders and files with their one-liners, and how much of each subtree has a header.
 //! It resolves its one path as `audit` resolves a scope path, counts the files a header is expected on once, then lists the walked
 //! folders and files depth first, in the order `show` lists a folder's children, and `render/tree.rs` prints them.
-//! Cases: TREE-DEFAULT-01, TREE-DEPTH-01, TREE-DEPTH-02, TREE-SCOPE-01, TREE-SCOPE-02, TREE-SCOPE-03, TREE-SCOPE-04, TREE-NOHDR-01, TREE-NOHDR-02, TREE-COUNT-01, TREE-COUNT-02, TREE-GAP-01, TREE-LIMIT-01, TREE-JSON-01, TREE-JSON-02, TREE-SKIP-01, TREE-USAGE-04, TREE-OUTSIDE-01, TREE-OUTSIDE-02, TREE-OUTSIDE-03, TREE-READ-01
+//! Cases: TREE-DEFAULT-01, TREE-DEPTH-01, TREE-DEPTH-02, TREE-SCOPE-01, TREE-SCOPE-02, TREE-SCOPE-03, TREE-SCOPE-04, TREE-NOHDR-01, TREE-NOHDR-02, TREE-COUNT-01, TREE-COUNT-02, TREE-GAP-01, TREE-LIMIT-01, TREE-JSON-01, TREE-JSON-02, TREE-SKIP-01, TREE-USAGE-04, TREE-OUTSIDE-01, TREE-OUTSIDE-02, TREE-OUTSIDE-03, TREE-OUTSIDE-04, TREE-READ-01
 
 use std::collections::HashMap;
 use std::path::Path;
