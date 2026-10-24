@@ -110,3 +110,8 @@ Scenario for these: the sandbox holds a README.md with `memex: decisions` (a key
 
 - `TREE-READ-01` A folder whose README.md cannot be read reads `(no README)` on its line when its subtree holds files a header is expected on, as a README that is missing does, and the one unreadable-file warning is printed once on stderr, exit 0.
   design §3.5e Rulings (an unreadable README counts as none) and §4.2. Run: memex tree, with lib/README.md at mode 000.
+
+## SYMLINK
+
+- `TREE-SYMLINK-01` A path through a symlink inside the root names nothing, because the walk skips links, and no other tree is read: with `repo/out` a link to `../other` (whose README carries a `memex:` key that names no manifest, so any walk of it would warn), `tree ../repo/out` and `audit ../repo/out` are `not found` with only that error on stderr and exit 1, while `tree ../repo/out/..` folds to the root and lists it, exit 0.
+  design §3.5d Scope and §3.5e Scope (2026-10-24). Setup: a git apply makes the link. Run: memex tree ../repo/out, then memex audit ../repo/out, then memex tree ../repo/out/...
