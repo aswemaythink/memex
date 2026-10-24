@@ -141,8 +141,8 @@ fn generated(folders: usize, cases: usize) -> [u64; 3] {
     ]
 }
 
-/// 100k files (10k folders of a README and nine `.rs` files, 2k cases): `info` counts them all, and `info`, `search`, `show` and
-/// `audit` run within their budgets.
+/// 100k files (10k folders of a README and nine `.rs` files, 2k cases): `info` counts them all, and `info`, `search`, `show`,
+/// `audit` and `tree` run within their budgets. The 10k folders are 10k roots, so `info` also times its roots-block cut.
 #[test]
 #[ignore = "stress suite: cargo test --release --test stress -- --ignored scale_"]
 fn scale_100k_files() {
@@ -157,12 +157,17 @@ fn scale_100k_files() {
     let search_ms = time_verb(&sandbox, "search cache, 100k files", &["search", "cache"]);
     let show_ms = time_verb(&sandbox, "show dir05000, 100k files", &["show", "dir05000"]);
     let audit_ms = time_verb(&sandbox, "audit, 100k files", &["audit"]);
+    let tree_ms = time_verb(&sandbox, "tree, 100k files", &["tree"]);
+    let deep_ms = time_verb(&sandbox, "tree --depth 4, 100k files", &["tree", "--depth", "4"]);
     // show <dir> loads the same corpus as info, so it shares info's 1.3 s budget (coordinator ruling).
     let timed = [
         ("info", info_ms, 1_300.0),
         ("search", search_ms, 1_600.0),
         ("show", show_ms, 1_300.0),
         ("audit", audit_ms, 2_000.0),
+        // tree reads line facts for its coverage counts, as audit does, so it shares audit's budget.
+        ("tree", tree_ms, 2_000.0),
+        ("tree --depth 4", deep_ms, 2_000.0),
     ];
     let breaches = over_budget(&timed);
     assert!(breaches.is_empty(), "over budget: {breaches:?}");
