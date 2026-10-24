@@ -1,0 +1,7 @@
+diff --git a/out b/out
+new file mode 120000
+--- /dev/null
++++ b/out
+@@ -0,0 +1 @@
++../other
+\ No newline at end of file

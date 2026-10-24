@@ -1,6 +1,6 @@
 //! Loads and validates the manifests of design §4.2.
 //! Each manifest's docs come from the reader of its kind; a file whose name has no label is skipped before any io (design §4.4).
-//! Cases: MAN-LOAD-01, MAN-LOAD-02, MAN-LOAD-03, MAN-LOAD-04, MAN-LOAD-05, MAN-LOAD-06, MAN-LOAD-07, MAN-LOAD-08, MAN-LOAD-09, MAN-LOAD-10, MAN-LOAD-11, MAN-LOAD-12, MAN-LOAD-14, MAN-IO-01
+//! Cases: MAN-LOAD-01, MAN-LOAD-02, MAN-LOAD-03, MAN-LOAD-04, MAN-LOAD-05, MAN-LOAD-06, MAN-LOAD-07, MAN-LOAD-08, MAN-LOAD-09, MAN-LOAD-10, MAN-LOAD-11, MAN-LOAD-12, MAN-LOAD-14, MAN-IO-01, MANK-WT-01, MANK-WT-02, MANK-WT-03, MANK-WT-04, MANK-WT-05
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -85,15 +85,15 @@ pub fn load(root: &Path, warnings: &mut Vec<String>) -> Vec<Manifest> {
     manifests
 }
 
-/// The docs of one manifest, read by the reader of its kind from the roots that lie inside the repo root (design §4.2). A file that
-/// cannot be used adds its warning to `warnings`.
+/// The docs of one manifest, read by the reader of its kind from the roots that `roots::inside_repo` keeps, each with the folder it is
+/// read from (design §4.2). A file that cannot be used adds its warning to `warnings`.
 pub fn docs(manifest: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Vec<Doc> {
-    let usable = roots::inside_repo(manifest, root, warnings);
-    match usable.kind {
+    let roots = roots::inside_repo(manifest, root, warnings);
+    match manifest.kind {
         // A collection that only frontmatter names has no manifest, so no manifest reads it.
         Kind::Markdown => Vec::new(),
-        Kind::Folder => folder::docs(&usable, root, warnings),
-        Kind::Json => json::docs(&usable, root, warnings),
+        Kind::Folder => folder::docs(manifest, &roots, warnings),
+        Kind::Json => json::docs(manifest, &roots, warnings),
     }
 }
 

@@ -1,0 +1,7 @@
+$ memex tree src  [cwd repo/src]
+exit 1
+stdout (empty)
+stderr
+| memex: ambiguous: src
+|   src
+|   src/src

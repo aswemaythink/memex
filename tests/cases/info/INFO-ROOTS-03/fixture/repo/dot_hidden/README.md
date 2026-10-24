@@ -1,0 +1,3 @@
+# Hidden
+
+A hidden folder.

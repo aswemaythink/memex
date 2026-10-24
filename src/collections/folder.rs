@@ -1,6 +1,6 @@
 //! Reads a `folder` manifest's docs: each folder with its marker file is one doc (design §4.2).
 //! The marker gives the fields and, when it is Markdown, the start of the text; `merge` files add the rest, and one that cannot be read warns.
-//! Cases: MANK-FOLDER-01, MANK-FOLDER-02, MANK-FOLDER-03, MANK-FOLDER-04, MANK-FOLDER-05, MANK-FOLDER-06, MANK-FOLDER-07, MANK-FOLDER-08, MANK-FOLDER-09, MANK-MERGE-01, MANK-CITE-01, CITE-FIELD-07, CITE-FIELD-09
+//! Cases: MANK-FOLDER-01, MANK-FOLDER-02, MANK-FOLDER-03, MANK-FOLDER-04, MANK-FOLDER-05, MANK-FOLDER-06, MANK-FOLDER-07, MANK-FOLDER-08, MANK-FOLDER-09, MANK-MERGE-01, MANK-CITE-01, CITE-FIELD-07, CITE-FIELD-09, MANK-WT-02
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -9,20 +9,22 @@ use super::frontmatter::{self, Value};
 use super::globs;
 use super::json::{doc, field_text, folder_under, read_json, scalar_fields, warn};
 use super::manifest::{self, Manifest};
+use super::roots::Root;
 use crate::corpus::{name_of, parent_of, Doc};
 use crate::intent::{header, Origin};
 use crate::text;
 use crate::walk::{self, Entry};
 
 /// The docs of a folder manifest: one per folder under its roots that holds the marker file. A marker that cannot be read or
-/// parsed, or whose `id` field is missing or empty, adds its warning to `warnings` and gives no doc.
-pub fn docs(manifest: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Vec<Doc> {
+/// parsed, or whose `id` field is missing or empty, adds its warning to `warnings` and gives no doc. Each root is walked from its home,
+/// which is the main checkout's copy for a root that a linked worktree lacks, and its folders keep the root-relative paths.
+pub fn docs(manifest: &Manifest, roots: &[Root], warnings: &mut Vec<String>) -> Vec<Doc> {
     let Some(marker) = manifest.marker.as_deref() else {
         return Vec::new();
     };
     let mut docs = Vec::new();
-    for dir in &manifest.roots {
-        let base = root.join(dir);
+    for root in roots {
+        let base = root.home.join(&root.rel);
         let entries = walk::walk(&base);
         let files = files_by_folder(&entries);
         for file in entries.iter().filter(|entry| is_marker(entry, marker)) {
@@ -30,7 +32,7 @@ pub fn docs(manifest: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Vec
             let siblings = files
                 .get(rel_folder)
                 .map_or(&[][..], |list| list.as_slice());
-            let folder = folder_under(dir, rel_folder);
+            let folder = folder_under(&root.rel, rel_folder);
             docs.extend(folder_doc(
                 manifest, &base, file, siblings, warnings, folder,
             ));

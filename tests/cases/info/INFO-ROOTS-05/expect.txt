@@ -1,0 +1,5 @@
+$ memex info --json
+exit 0
+stdout
+| {"root":"$SANDBOX/repo","log_store":"$SANDBOX/repo/.memex/logs","collections":[{"name":"readmes","kind":null,"builtin":true,"count":3,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":1,"description":null,"owner":null}],"roots":[{"path":"docs","title":"The user guide and reference."},{"path":"scripts","title":""},{"path":"zeta","title":"The Zeta folder keeps a deliberately long first sentence so that the roots line has to cut it at a whole word before the limit of one hundred and twenty characters."}],"warnings":[]}
+stderr (empty)

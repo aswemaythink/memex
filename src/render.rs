@@ -3,17 +3,19 @@
 //! Cases: SHOW-FILE-01, SHOW-DIR-01, SHOW-LOG-01, SHOW-LIMIT-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-JSON-01, CASE-SECT-01, CASE-JSON-01, SHOW-OTHER-01, CLI-HINT-01, CLI-HINT-02, SHOW-COMMENTS-01, SHOW-COMMENTS-02, SHOW-COMMENTS-03, SHOW-COMMENTS-05, SHOW-COMMENTS-09
 
 pub mod audit;
+pub mod clip;
 pub mod info;
 pub mod json;
 pub mod search;
 pub mod text;
+pub mod tree;
 
 use std::io;
 
 use crate::cite::Cite;
 use crate::collections::frontmatter::Value;
 use crate::corpus::Child;
-use crate::error::Code;
+use crate::error::{Code, Error};
 use crate::intent::header::CommentBlock;
 
 /// One section: a file, a folder or a doc, with the parts that `show` prints for it.
@@ -149,6 +151,16 @@ impl Miss {
         }
     }
 
+    /// A path that leads outside the current root, which `audit` and `tree` never read (design §3.5d scope).
+    pub fn outside(arg: &str) -> Miss {
+        Miss {
+            arg: arg.to_string(),
+            code: Code::NotFound,
+            message: format!("not found: {arg} (outside the root; run memex from there)"),
+            candidates: Vec::new(),
+        }
+    }
+
     /// A ref that names several targets, which are listed as candidates.
     pub fn ambiguous(arg: &str, candidates: Vec<String>) -> Miss {
         Miss {
@@ -166,6 +178,21 @@ impl Miss {
             code: Code::Io,
             message: format!("cannot read {arg} ({:?})", failure.kind()),
             candidates: Vec::new(),
+        }
+    }
+}
+
+impl From<Miss> for Error {
+    /// The fatal error for a miss: its code and message, with each candidate indented as a note.
+    fn from(miss: Miss) -> Error {
+        Error {
+            code: miss.code,
+            message: miss.message,
+            notes: miss
+                .candidates
+                .iter()
+                .map(|candidate| format!("  {candidate}"))
+                .collect(),
         }
     }
 }

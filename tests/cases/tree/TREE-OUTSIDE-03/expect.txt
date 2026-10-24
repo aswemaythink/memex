@@ -1,0 +1,16 @@
+$ memex tree ../repo/src
+exit 0
+stdout
+| tree  src · 2 files · 1 no header  (showing 2 of 2)
+|   src/bare.rs  (no header)
+|   src/good.rs  Does the good thing.
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+stderr (empty)
+
+$ memex tree ../repo/src/bare.rs
+exit 0
+stdout
+| tree  src/bare.rs · 1 file · 1 no header  (showing 1 of 1)
+|   src/bare.rs  (no header)
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+stderr (empty)

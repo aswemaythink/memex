@@ -1,0 +1,19 @@
+$ memex show built:BUILT-1  [cwd wt]
+exit 0
+stdout
+| === built:BUILT-1 ===
+| # Built unit
+| 
+| The merged text of a borrowed doc.
+| 
+| fields
+|   status: open
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+stderr
+| memex: warning: built: root built is not in this worktree; read from the main checkout $SANDBOX/repo/built

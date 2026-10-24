@@ -9,5 +9,5 @@ stderr (empty)
 $ memex info --json  [cwd wt]  [env PATH=/nonexistent]
 exit 0
 stdout
-| {"root":"$SANDBOX/wt","log_store":"$SANDBOX/repo/.memex/logs","collections":[{"name":"readmes","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null}],"warnings":[]}
+| {"root":"$SANDBOX/wt","log_store":"$SANDBOX/repo/.memex/logs","collections":[{"name":"readmes","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null}],"roots":[],"warnings":[]}
 stderr (empty)

@@ -1,0 +1,24 @@
+$ memex search slot recipe --in corpus  [cwd wt]
+exit 0
+stdout
+| corpus  (showing 1 of 1)
+|   corpus:panda:slot-recipes  Slot Recipe
+stderr
+| memex: warning: corpus: root corpus is not in this worktree; read from the main checkout $SANDBOX/repo/corpus
+
+$ memex search slot recipe --in corpus --json  [cwd wt]
+exit 0
+stdout
+| {"query":"slot recipe","filters":{},"groups":[{"collection":"corpus","total":1,"hits":[{"ref":"corpus:panda:slot-recipes","collection":"corpus","id":"panda:slot-recipes","path":null,"title":"Slot Recipe","fields":{"id":"panda:slot-recipes","title":"Slot Recipe","body":"slot recipe for multi-part components"},"score":1.204,"snippet":"Slot Recipe","fuzzy":[]}]}]}
+stderr
+| memex: warning: corpus: root corpus is not in this worktree; read from the main checkout $SANDBOX/repo/corpus
+
+$ memex info  [cwd wt]
+exit 0
+stdout
+| memex  $SANDBOX/wt · log store $SANDBOX/repo/.memex/logs
+| graph        0 readmes · 0 headers
+| collections  corpus 2
+| use          memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+stderr
+| memex: warning: corpus: root corpus is not in this worktree; read from the main checkout $SANDBOX/repo/corpus

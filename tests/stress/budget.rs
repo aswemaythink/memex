@@ -1,7 +1,7 @@
 //! Budget tests: the read verbs against their timing budgets, run by the stress suite.
-//! `budget_info`, `budget_search`, `budget_show` and `budget_audit` time `memex info`, `memex search button`, `memex show packages`
-//! and `memex audit` in the repository that MEMEX_STRESS_REPO names: a release build, three untimed warm-ups, then the median of
-//! nine timed runs against 90, 115, 95 and 150 ms. Without the variable each test prints a skip line and passes. The commands only read that
+//! `budget_info`, `budget_search`, `budget_show`, `budget_tree` and `budget_audit` time `memex info`, `memex search button`,
+//! `memex show packages`, `memex tree` and `memex audit` in the repository that MEMEX_STRESS_REPO names: a release build, three
+//! untimed warm-ups, then the median of nine timed runs against 90, 115, 95, 95 and 150 ms. Without the variable each test prints a skip line and passes. The commands only read that
 //! repository; they run there with MEMEX_* removed, so the real clock is read, and with HOME unchanged.
 //! Cases: none (stress)
 
@@ -43,6 +43,13 @@ fn budget_search() {
 #[ignore = "stress suite: run with cargo test --release --test stress -- --ignored"]
 fn budget_show() {
     check_budget("budget_show", &["show", "packages"], 95.0);
+}
+
+/// `memex tree` in the reference repository stays within its 95 ms budget.
+#[test]
+#[ignore = "stress suite: run with cargo test --release --test stress -- --ignored"]
+fn budget_tree() {
+    check_budget("budget_tree", &["tree"], 95.0);
 }
 
 /// `memex audit` in the reference repository stays within its 150 ms budget.

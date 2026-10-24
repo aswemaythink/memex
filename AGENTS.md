@@ -4,7 +4,7 @@ This repo keeps an intent layer. The graph: README.md per folder and a header co
 (first line = purpose). Dimensions: any Markdown file with `memex: <collection>` in its frontmatter
 joins that collection, such as CASES.md (`memex: cases`): test ids with their claims; each id is in its test's name or in a comment on it.
 - Overview: `memex info`: where everything is (graph, collections, streams, messages for you).
-- Orient: `memex show <path>`: header, cites, who cites it, README chain; folders list children.
+- Orient: `memex show <path>`: header, cites, who cites it, README chain; folders list children. `memex tree [path]`: folders and files two levels down, with one-liners and header coverage.
 - Find: `memex search <words>` over READMEs, headers, collections and logs. Use `rg` for symbols.
 - Tests for X: `memex search <words> --in cases` (or the collection `memex info` names); `memex show <ID>` gives claim and evidence; `rg <ID>` finds the test.
 - Findings: `memex log <stream> [--to <agent>] <<'EOF' … EOF` prints a ref. Hand back the ref, not the report.
@@ -55,5 +55,5 @@ Golden policy:
 
 - Shared files belong to the orchestrator, not to parallel slices: `tests/cases/README.md` (the hub), `src/README.md`, `src/lib.rs` dispatch lines, and any family README or CASES.md that another running slice also touches. A brief names which of these, if any, the slice may edit.
 - A slice that adds cases to a family another slice is also extending adds them under its own new `## TOPIC` heading, never inside an existing topic.
-- Read-path slices (corpus, walk, index, cite, resolve, any verb) carry a timing budget in DONE: release `memex info` and `memex search <word>` in /Users/ryn/Developer/reference-ui (read-only) under 90 ms and 115 ms (and `memex show packages` under 95 ms, `memex audit` under 150 ms; on the 100k stress tree `audit` under 2 s), the budgets tests/stress/budget.rs enforces; on a loaded machine, judge by an interleaved A/B against main's binary instead.
+- Read-path slices (corpus, walk, index, cite, resolve, any verb) carry a timing budget in DONE: release `memex info` and `memex search <word>` in /Users/ryn/Developer/reference-ui (read-only) under 90 ms and 115 ms (and `memex show packages` under 95 ms, `memex tree` under 95 ms, `memex audit` under 150 ms; on the 100k stress tree `audit` under 2 s), the budgets tests/stress/budget.rs enforces; on a loaded machine, judge by an interleaved A/B against main's binary instead.
 - Rulings made where DESIGN.md was silent are committed to DESIGN.md and listed in the PR description, so the user can review them in one place.

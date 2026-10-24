@@ -1,0 +1,20 @@
+$ memex tree
+exit 0
+stdout
+| tree  . · 4 files · 2 no header  (showing 6 of 6)
+|   clean/  Every file has a header.  (2 files)
+|     clean/a.rs  A.
+|     clean/b.rs  B.
+|   mixed/  Some files lack a header.  (2 files · 2 no header)
+|     mixed/a.rs  (no header)
+|     mixed/b.rs  (no header)
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+stderr (empty)
+
+$ memex tree clean
+exit 0
+stdout
+| tree  clean · 2 files  (showing 2 of 2)
+|   clean/a.rs  A.
+|   clean/b.rs  B.
+stderr (empty)

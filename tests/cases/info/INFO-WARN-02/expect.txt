@@ -1,7 +1,7 @@
 $ memex info --json
 exit 0
 stdout
-| {"root":"$SANDBOX/repo","log_store":"$SANDBOX/repo/.memex/logs","collections":[{"name":"readmes","kind":null,"builtin":true,"count":1,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"cases","kind":"markdown","builtin":false,"count":2,"description":null,"owner":null}],"warnings":["memex: warning: $SANDBOX/repo/.memex/collections/bad.json: unknown key 'colour'","memex: warning: duplicate id cases:DUP-001 in CASES.md, sub/CASES.md"]}
+| {"root":"$SANDBOX/repo","log_store":"$SANDBOX/repo/.memex/logs","collections":[{"name":"readmes","kind":null,"builtin":true,"count":1,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"cases","kind":"markdown","builtin":false,"count":2,"description":null,"owner":null}],"roots":[{"path":"notes","title":""},{"path":"sub","title":""}],"warnings":["memex: warning: $SANDBOX/repo/.memex/collections/bad.json: unknown key 'colour'","memex: warning: duplicate id cases:DUP-001 in CASES.md, sub/CASES.md"]}
 stderr
 | memex: warning: $SANDBOX/repo/.memex/collections/bad.json: unknown key 'colour'
 | memex: warning: duplicate id cases:DUP-001 in CASES.md, sub/CASES.md

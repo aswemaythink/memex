@@ -1,0 +1,19 @@
+$ memex show far:UNIT-1 far:Outside --json  [cwd wt]
+exit 1
+stdout
+| {"docs":[{"ref":"far:UNIT-1","collection":"far","id":"UNIT-1","path":null,"title":"Unit one","fields":{},"text":"# Unit one\n\nA committed unit in the repo.","cites":[],"cited_by":{"total":0,"refs":[]},"chain":[]}],"errors":[{"arg":"far:Outside","code":"not_found","message":"not found: far:Outside (find refs with memex search <words>)"}]}
+stderr
+| memex: warning: far: root linked leads outside the repo; skipped
+| memex: warning: far: root ghost leads outside the repo; skipped
+
+$ memex info  [cwd wt]
+exit 0
+stdout
+| memex  $SANDBOX/wt · log store $SANDBOX/repo/.memex/logs
+| graph        0 readmes · 0 headers
+| collections  far 1
+| roots        units
+| use          memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+stderr
+| memex: warning: far: root linked leads outside the repo; skipped
+| memex: warning: far: root ghost leads outside the repo; skipped
