@@ -50,6 +50,7 @@ Now look around:
 
 ```sh
 memex info                  # where everything is: graph, collections, streams, messages for you
+memex tree                  # folders and files two levels down, with one-liners and header coverage
 memex show <dir>            # its README, its children's one-liners, the chain up to the root
 memex show <file>           # its header, what it cites, who cites it, the chain
 memex search <words>        # ranked hits, grouped by collection
@@ -63,9 +64,25 @@ memex  /repo · log store .memex/logs/
 graph        48 readmes · 912 headers
 collections  cases 214 · doom 41 · neo-cases 294 · perf 212
 streams      impl 12 (3 new in 24h) · review 3 (1 new) · drift 5
+roots        crates — The Rust crates that ship.
+             docs — The user guide and reference.
+             scripts
 to cook-2    2 messages → memex search to:cook-2
 here         crates/namer — Namer: turns atoms into stable class names
 use          memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+```
+
+The `roots` block lists the root's subfolders with their README's one-liner, the folder's name alone when it has no README. `memex tree` goes deeper. It prints a folder's folders and files, two levels down by default (`--depth N`), each with its one-liner, and how many of the files a header is expected on lack one. Its shape, from design §3.5e (a path argument scopes it to a folder or a file):
+
+```
+tree  supabase · 31 files · 3 no header  (showing 6 of 6)
+  supabase/functions/  Owns the Edge Functions folder: one Deno function per subfolder.  (28 files · 3 no header)
+    supabase/functions/_shared/  Code the functions import.  (6 files)
+    supabase/functions/billing/  (no README)  (4 files · 2 no header)
+    supabase/functions/deno.json
+  supabase/migrations/  Schema changes, oldest first.
+  supabase/seed.ts  Seeds a local database with test users.
+(no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
 ```
 
 Search output has one group per collection, in this order: the graph (readmes, headers), the collections alphabetically, then the logs. Its shape, from design §3.2:
@@ -105,7 +122,7 @@ The intent layer has two parts, tied together by citations. The **graph** sits o
 
 The comment syntax comes from the file's extension: `//` for Rust, Go and TypeScript, `#` for Python, shell and YAML (a Python file with no leading `#` block uses its module docstring), `<!-- -->` for HTML and XML, and more. Files with other extensions are not harvested. A Markdown file has no header: `show` prints it in full, and a collection doc's one-liner is its first heading.
 
-The one-liner is the first sentence of a README's first paragraph, or of a header's block. Text output cuts it at 120 characters with `…`. JSON keeps all of it.
+The one-liner is the first sentence of a README's first paragraph, or of a header's block. In a README the markers of an HTML comment are not text, so a purpose written as `<!-- … -->`, which keeps it out of the rendered page, still reads as prose. Text output cuts a one-liner at 120 characters with `…`, on a whole word where that keeps at least 60 characters. JSON keeps all of it.
 
 ### Dimensions
 
@@ -224,7 +241,7 @@ This repo keeps an intent layer. The graph: README.md per folder and a header co
 (first line = purpose). Dimensions: any Markdown file with `memex: <collection>` in its frontmatter
 joins that collection, such as CASES.md (`memex: cases`): test ids with their claims; each id is in its test's name or in a comment on it.
 - Overview: `memex info`: where everything is (graph, collections, streams, messages for you).
-- Orient: `memex show <path>`: header, cites, who cites it, README chain; folders list children.
+- Orient: `memex show <path>`: header, cites, who cites it, README chain; folders list children. `memex tree [path]`: folders and files two levels down, with one-liners and header coverage.
 - Find: `memex search <words>` over READMEs, headers, collections and logs. Use `rg` for symbols.
 - Tests for X: `memex search <words> --in cases` (or the collection `memex info` names); `memex show <ID>` gives claim and evidence; `rg <ID>` finds the test.
 - Findings: `memex log <stream> [--to <agent>] <<'EOF' … EOF` prints a ref. Hand back the ref, not the report.

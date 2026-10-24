@@ -60,7 +60,7 @@ Layout and chrome are shared by every page under docs/: the header, footer, site
     <p class="mt-4 font-serif text-[1.2rem] leading-[1.5] sm:text-[1.3rem]">Where everything is: the graph, collections, log streams and messages waiting for you.</p>
     <section class="mt-16" aria-labelledby="what">
       <h2 id="what" class="font-serif text-[1.5rem] leading-tight font-medium">What it does</h2>
-      <p class="mt-3">The atlas: names, counts and the commands to get there, never their contents. It is the overview for humans and agents, and what the optional Claude Code start hook prints.</p><p class="mt-3">Streams show how many entries are new in the last 24 hours. The <code>here</code> line appears when you run it below the root: the nearest README’s one-liner.</p>
+      <p class="mt-3">The atlas: names, counts and the commands to get there, never their contents. It is the overview for humans and agents, and what the optional Claude Code start hook prints.</p><p class="mt-3">The <code>roots</code> block lists the root’s subfolders with their README’s one-liner, and a folder with no README by its name alone; <a href="tree.html">memex tree</a> goes deeper. Past 3,000 bytes the block ends with <code>+N more → memex tree</code>.</p><p class="mt-3">Streams show how many entries are new in the last 24 hours. The <code>here</code> line appears when you run it below the root: the nearest README’s one-liner.</p>
     </section>
     <section class="mt-16" aria-labelledby="flags">
       <h2 id="flags" class="font-serif text-[1.5rem] leading-tight font-medium">Flags</h2>
@@ -73,6 +73,9 @@ Layout and chrome are shared by every page under docs/: the header, footer, site
 <span class="k">graph</span>        48 readmes · 912 headers
 <span class="k">collections</span>  cases 214 · doom 41 · neo-cases 294 · perf 212
 <span class="k">streams</span>      impl 12 (3 new in 24h) · review 3 (1 new) · drift 5
+<span class="k">roots</span>        crates — The Rust crates that ship.
+             docs — The user guide and reference.
+             scripts
 <span class="k">to worker-2</span>    2 messages <span class="d">→</span> memex search to:worker-2
 <span class="k">here</span>         <span class="l">crates/namer</span> — Namer: turns atoms into stable class names
 <span class="k">use</span>          memex show &lt;path|ref&gt; · memex search &lt;words&gt; · memex log &lt;stream&gt; &lt;&lt;'EOF' … EOF</code></pre></div>

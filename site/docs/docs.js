@@ -24,6 +24,7 @@
       ['init', 'reference/init.html', 'mono'],
       ['info', 'reference/info.html', 'mono'],
       ['show', 'reference/show.html', 'mono'],
+      ['tree', 'reference/tree.html', 'mono'],
       ['search', 'reference/search.html', 'mono'],
       ['audit', 'reference/audit.html', 'mono'],
       ['log', 'reference/log.html', 'mono'],
