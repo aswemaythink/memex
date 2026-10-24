@@ -60,7 +60,7 @@ Layout and chrome are shared by every page under docs/: the header, footer, site
     <p class="mt-4 font-serif text-[1.2rem] leading-[1.5] sm:text-[1.3rem]">List where intent is missing or a citation is broken.</p>
     <section class="mt-16" aria-labelledby="what">
       <h2 id="what" class="font-serif text-[1.5rem] leading-tight font-medium">What it does</h2>
-      <p class="mt-3">For the whole repo, or the paths and globs you name: files with no header, folders with no README, files grown too long, one-liners that run long, unresolved references, duplicate ids, and collection roots that cannot work as written. Each kind names its fix.</p><p class="mt-3">It is a report, not a gate: it exits 0 whatever it finds, and 1 only if a path you named does not exist.</p>
+      <p class="mt-3">For the whole repo, or the paths and globs you name: files with no header, folders with no README, files grown too long, one-liners that run long, unresolved references, duplicate ids, and collection roots that cannot work as written. Each kind names its fix. A path outside the root, or one through a symlink that leads out, is <code>not found</code>: run memex from there. Only <code>show</code> reads other roots.</p><p class="mt-3">It is a report, not a gate: it exits 0 whatever it finds, and 1 only if a path you named does not exist.</p>
     </section>
     <section class="mt-16" aria-labelledby="flags">
       <h2 id="flags" class="font-serif text-[1.5rem] leading-tight font-medium">Flags</h2>

@@ -91,3 +91,27 @@ memex: cases
 
 - `TREE-SKIP-01` What the walk skips is absent from the listing and the counts: a hidden folder, `node_modules`, `target` and a folder named in `.ignore`, exit 0.
   design §3.5e What is listed and §4.1 item 2. Run: memex tree.
+
+## OUTSIDE
+
+Scenario for these: the sandbox holds a README.md with `memex: decisions` (a key that names no manifest, so walking that folder would warn) and `repo/`, the root, with `src/good.rs` (a header), `src/bare.rs` (none) and READMEs.
+
+- `TREE-OUTSIDE-01` `..` from the root is a fatal `not found` with `(outside the root; run memex from there)` and nothing else on stderr, since the parent folder is never walked and its README's warning never appears, exit 1, as text and with `--json` (the error document on stdout).
+  design §3.5e Scope and §3.5d Scope (2026-10-24). Run: memex tree .., then memex tree .. --json.
+- `TREE-OUTSIDE-02` An absolute path outside the root is the same fatal `not found`, with no walk of that folder, exit 1, as text and with `--json`.
+  design §3.5e Scope. Run: memex tree /, then memex tree / --json.
+- `TREE-OUTSIDE-03` A path that leaves the root and folds back in (`../repo/src`, `../repo/src/bare.rs`) is judged by where it lands, so it lists that folder or file as the plain path would, exit 0.
+  design §3.5e Scope and §3.5d Scope (`.` and `..` folded). Run: memex tree ../repo/src, then memex tree ../repo/src/bare.rs.
+
+- `TREE-OUTSIDE-04` A path spelled through a symlink that lands inside the root still lists: with `../link` a symlink to `repo`, `../link/src` and `../link/src/bare.rs --json` are judged by their canonical path, so they list as the plain path would, exit 0.
+  design §3.5e Scope and §3.5d Scope (a symlinked spelling counts as inside). Setup: a git apply makes the symlink in the sandbox. Run: memex tree ../link/src, then memex tree ../link/src/bare.rs --json.
+
+## READ
+
+- `TREE-READ-01` A folder whose README.md cannot be read reads `(no README)` on its line when its subtree holds files a header is expected on, as a README that is missing does, and the one unreadable-file warning is printed once on stderr, exit 0.
+  design §3.5e Rulings (an unreadable README counts as none) and §4.2. Run: memex tree, with lib/README.md at mode 000.
+
+## SYMLINK
+
+- `TREE-SYMLINK-01` A path through a symlink inside the root names nothing, because the walk skips links, and no other tree is read: with `repo/out` a link to `../other` (whose README carries a `memex:` key that names no manifest, so any walk of it would warn), `tree ../repo/out` and `audit ../repo/out` are `not found` with only that error on stderr and exit 1, while `tree ../repo/out/..` folds to the root and lists it, exit 0.
+  design §3.5d Scope and §3.5e Scope (2026-10-24). Setup: a git apply makes the link. Run: memex tree ../repo/out, then memex audit ../repo/out, then memex tree ../repo/out/...

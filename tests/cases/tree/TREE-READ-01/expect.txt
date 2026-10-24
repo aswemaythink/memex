@@ -1,0 +1,9 @@
+$ memex tree
+exit 0
+stdout
+| tree  . · 1 file  (showing 2 of 2)
+|   lib/  (no README)  (1 file)
+|     lib/a.rs  Does a thing.
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+stderr
+| memex: warning: cannot read $SANDBOX/repo/lib/README.md (PermissionDenied)

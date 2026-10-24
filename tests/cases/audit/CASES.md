@@ -17,7 +17,7 @@ memex: cases
   design §3.5d Scope and §3.5c. Run: memex audit nope.rs src/b.rs.
 - `AUD-SCOPE-06` From a subfolder, `.` names the root and `..` names its parent folder, which the scope line labels by its root-relative path.
   design §3.1 step 2 and §3.5d Scope. Run from src/deep: memex audit . ; memex audit ...
-- `AUD-SCOPE-07` A path that leads outside the root names nothing that audit covers, so it is `not found` with exit 1 (a ruling: design §3.5d says nothing about other roots).
+- `AUD-SCOPE-07` A path that leads outside the root names nothing that audit covers, so it is `not found` with exit 1 and the message adds `(outside the root; run memex from there)`.
   design §3.5d Scope. Run: memex audit ../outside.rs.
 - `AUD-SCOPE-08` A path that names two different entries, one from the cwd and one from the root, is `ambiguous` on stderr with both candidates and exit 1, and no scope is guessed.
   design §3.1 step 2 and §3.5d Scope. Run from src: memex audit src.
@@ -175,3 +175,18 @@ memex: cases
   design §3.5d Lines and §2.1 (the 8 KiB head). Run: memex audit.
 - `AUD-REFINE-04` A binary file, a `.rs` file with a NUL byte in its head and no header, is skipped: it is no `headers`, `length` or `thin` entry, exit 0.
   design §2.1 (binary files are skipped). Run: memex audit.
+
+## OUTSIDE
+
+Scenario for these: the sandbox holds a README.md with `memex: decisions` (a key that names no manifest, so walking that folder would warn) and `repo/`, the root, with `src/good.rs` (a header), `src/bare.rs` (none) and READMEs.
+
+- `AUD-OUTSIDE-01` `..` from the root is `not found` with `(outside the root; run memex from there)` and nothing else on stderr, since the parent folder is never walked and its README's warning never appears; the scope line stays empty, exit 1, as text and with `--json` (the error in `errors`, code `not_found`).
+  design §3.5d Scope (2026-10-24). Run: memex audit .., then memex audit .. --json.
+- `AUD-OUTSIDE-02` An absolute path outside the root is the same `not found`, with no walk of that folder, exit 1, as text and with `--json`.
+  design §3.5d Scope. Run: memex audit /, then memex audit / --json.
+- `AUD-OUTSIDE-03` A path that leaves the root and folds back in (`../repo/src`, `../repo/src/bare.rs`) is judged by where it lands, so it audits that folder or file as the plain path would, exit 0.
+  design §3.5d Scope (`.` and `..` folded). Run: memex audit ../repo/src, then memex audit ../repo/src/bare.rs.
+- `AUD-OUTSIDE-04` An outside path next to a good one gives its `not found` while the good one is still audited, exit 1: `..` with `src/bare.rs` as text, and `src/good.rs` with `../README.md` with `--json`.
+  design §3.5d Scope. Run: memex audit .. src/bare.rs, then memex audit src/good.rs ../README.md --json.
+- `AUD-OUTSIDE-05` A path spelled through a symlink that lands inside the root still audits: with `../link` a symlink to `repo`, `../link/src` and `../link/src/bare.rs --json` are judged by their canonical path, so they audit that folder and file as the plain path would, with nothing from the parent folder on stderr, exit 0.
+  design §3.5d Scope (a symlinked spelling counts as inside). Setup: a git apply makes the symlink in the sandbox. Run: memex audit ../link/src, then memex audit ../link/src/bare.rs --json.

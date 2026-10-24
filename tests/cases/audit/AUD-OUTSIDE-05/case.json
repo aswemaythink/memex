@@ -1,0 +1,1 @@
+{"platforms": ["unix"], "setup": [{"run": ["git", "-C", "..", "apply", "link.patch"]}], "steps": [{"args": ["audit", "../link/src"]}, {"args": ["audit", "../link/src/bare.rs", "--json"]}]}

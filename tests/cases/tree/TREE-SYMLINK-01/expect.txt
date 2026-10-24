@@ -1,0 +1,21 @@
+$ memex tree ../repo/out
+exit 1
+stdout (empty)
+stderr
+| memex: not found: ../repo/out (find refs with memex search <words>)
+
+$ memex audit ../repo/out
+exit 1
+stdout
+| audit       0 files · 0 folders · 0 findings
+| nothing to fix
+stderr
+| memex: not found: ../repo/out (find refs with memex search <words>)
+
+$ memex tree ../repo/out/..
+exit 0
+stdout
+| tree  . · 1 file  (showing 2 of 2)
+|   src/  The source of the repo.  (1 file)
+|     src/good.rs  Does the good thing.
+stderr (empty)

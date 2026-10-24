@@ -2,6 +2,11 @@
 
 The release notes of memex. Each GitHub release takes its notes from the matching section here.
 
+## 0.3.1 - 2026-10-24
+
+- `audit` and `tree` no longer walk another root, whatever the spelling of the path: `memex tree ..` from a repo's root used to read the parent folder, and a path through a symlink that leaves the root (`link/..`, an absolute path to a link) read the tree it points to, taking seconds and printing that tree's warnings. Such a path is now a plain `not found` (outside the root; run memex from there), and the walk, which skips symlinks, names nothing through a link. A symlinked spelling of a path inside the root still works. `show` still reads other roots.
+- `info` is fast again on a root with thousands of top-level folders: fitting the `roots` block under the 3,000-byte cap took time quadratic in the number of folders (48 s for 10,000), and now takes one pass (about 1 s, as in 0.2.2). The output is unchanged.
+
 ## 0.3.0 - 2026-10-24
 
 - New verb `tree`: the shape of a folder in one call. `memex tree [<path>] [--depth N] [--limit N] [--json]` lists the walked folders and files below the root or a path, two levels down by default, depth first and in the order `show` lists children. Each folder line carries its README's one-liner, or `(no README)` when its subtree holds files a header is expected on, and `(N files · H no header)` counting those files across the whole subtree; each file line carries its header's one-liner, `(no header)`, or a Markdown file's title. The first line gives the scope's totals, and the gap lines `show` prints follow the list.
