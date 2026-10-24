@@ -125,3 +125,7 @@ memex: cases
   Scenario: the folders of ROOTS-01 without the cut: `docs`, `scripts` and `zeta`. design §3.6 `info`. Run: memex info --json.
 - `INFO-ROOTS-06` In JSON, `roots` is an empty list when the root has no subfolder.
   Scenario: as ROOTS-02. design §3.6 `info`. Run: memex info --json.
+- `INFO-ROOTS-07` Over the cap the roots block is cut before the lists: the roots end in a `+N more → memex tree` line and the streams line is printed whole.
+  Scenario: six log streams, whose line is a few hundred bytes, and 30 root folders with READMEs whose one-liners are about 100 characters; the block shows its first folders and `+N more → memex tree`, the streams line has no `+N more`, and the output stays within 3,000 bytes. design §3.5 `roots` block (cut first, from its end). Run: memex info.
+- `INFO-ROOTS-08` With no root left under the cap the roots block is the single line `roots  +N more → memex tree`, and the lists are cut after it.
+  Scenario: the 200 streams of CAP-01 and three root folders; the block is `roots  +3 more → memex tree` and the streams line is cut with its own `+N more`. design §3.5 `roots` block. Run: memex info.
