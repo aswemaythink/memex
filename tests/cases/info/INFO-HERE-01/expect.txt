@@ -3,6 +3,7 @@ exit 0
 stdout
 | memex  $SANDBOX/repo · log store .memex/logs/
 | graph  2 readmes · 1 header
+| roots  src — The source folder holds the library.
 | here   src — The source folder holds the library.
 | use    memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr (empty)

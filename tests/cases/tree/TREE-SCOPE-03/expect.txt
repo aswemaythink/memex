@@ -1,0 +1,11 @@
+$ memex tree nope
+exit 1
+stdout (empty)
+stderr
+| memex: not found: nope (find refs with memex search <words>)
+
+$ memex tree nope --json
+exit 1
+stdout
+| {"error":{"code":"not_found","message":"not found: nope (find refs with memex search <words>)"}}
+stderr (empty)

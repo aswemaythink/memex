@@ -1,0 +1,30 @@
+$ memex tree --limit 4
+exit 0
+stdout
+| tree  . · 6 files  (showing 4 of 9; --limit 9 for all)
+|   alpha/  The alpha folder.  (2 files)
+|     alpha/one.rs  The one file of alpha.
+|     alpha/two.rs  The two file of alpha.
+|   beta/  The beta folder.  (2 files)
+stderr (empty)
+
+$ memex tree --limit 0
+exit 0
+stdout
+| tree  . · 6 files  (showing 0 of 9; --limit 9 for all)
+stderr (empty)
+
+$ memex tree --limit 9
+exit 0
+stdout
+| tree  . · 6 files  (showing 9 of 9)
+|   alpha/  The alpha folder.  (2 files)
+|     alpha/one.rs  The one file of alpha.
+|     alpha/two.rs  The two file of alpha.
+|   beta/  The beta folder.  (2 files)
+|     beta/one.rs  The one file of beta.
+|     beta/two.rs  The two file of beta.
+|   gamma/  The gamma folder.  (2 files)
+|     gamma/one.rs  The one file of gamma.
+|     gamma/two.rs  The two file of gamma.
+stderr (empty)

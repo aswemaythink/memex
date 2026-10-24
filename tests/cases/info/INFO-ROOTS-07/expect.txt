@@ -1,0 +1,29 @@
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| graph    31 readmes · 0 headers
+| streams  alpha-notes-stream 1 (1 new in 24h) · bravo-notes-stream 1 (1 new) · charlie-notes-stream 1 (1 new) · delta-notes-stream 1 (1 new) · echo-notes-stream 1 (1 new) · foxtrot-notes-stream 1 (1 new)
+| roots    area-01 — Area 01 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-02 — Area 02 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-03 — Area 03 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-04 — Area 04 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-05 — Area 05 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-06 — Area 06 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-07 — Area 07 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-08 — Area 08 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-09 — Area 09 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-10 — Area 10 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-11 — Area 11 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-12 — Area 12 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-13 — Area 13 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-14 — Area 14 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-15 — Area 15 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-16 — Area 16 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-17 — Area 17 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-18 — Area 18 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-19 — Area 19 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          area-20 — Area 20 owns a slice of the demo, and this sentence is long enough to fill its line in the info page.
+|          +10 more → memex tree
+| use      memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+stderr (empty)

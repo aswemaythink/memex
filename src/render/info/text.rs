@@ -1,6 +1,6 @@
 //! Prints `info`'s atlas as text under the 3,000-byte cap (design §3.5).
-//! It prints the header, one line per part and the use line, and cuts the longest list until the text fits.
-//! Cases: INFO-HEAD-01, INFO-HEAD-02, INFO-INTENT-01, INFO-INTENT-02, INFO-INTENT-03, INFO-COLL-01, INFO-COLL-02, INFO-STREAM-01, INFO-STREAM-02, INFO-STREAM-03, INFO-STREAM-04, INFO-TO-01, INFO-TO-02, INFO-TO-03, INFO-TO-04, INFO-HERE-01, INFO-HERE-02, INFO-HERE-03, INFO-HERE-04, INFO-USE-01, INFO-CAP-01, INFO-NOROOT-01, INFO-NOROOT-02, INFO-WARN-01, INFO-ZERO-01, INFO-ZERO-02
+//! It prints the header, one line per part and the use line; over the cap it cuts the roots block in one pass, then the longest list until the text fits.
+//! Cases: INFO-ROOTS-01, INFO-ROOTS-02, INFO-ROOTS-03, INFO-ROOTS-04, INFO-ROOTS-07, INFO-ROOTS-08, INFO-HEAD-01, INFO-HEAD-02, INFO-INTENT-01, INFO-INTENT-02, INFO-INTENT-03, INFO-COLL-01, INFO-COLL-02, INFO-STREAM-01, INFO-STREAM-02, INFO-STREAM-03, INFO-STREAM-04, INFO-TO-01, INFO-TO-02, INFO-TO-03, INFO-TO-04, INFO-HERE-01, INFO-HERE-02, INFO-HERE-03, INFO-HERE-04, INFO-USE-01, INFO-CAP-01, INFO-NOROOT-01, INFO-NOROOT-02, INFO-WARN-01, INFO-ZERO-01, INFO-ZERO-02
 
 use super::{Atlas, Collection, HereLine, Intent, Stream, ToCount};
 use crate::render::text::clip;
@@ -15,14 +15,21 @@ const DOT: &str = " · ";
 const USE: &str = "memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF";
 
 /// The text of the atlas (design §3.5): the header, then one line per part that has something to show. Text over the cap has
-/// its longest list line cut to its first items and a `+N more` ending, until the whole text is under the cap.
+/// its roots block cut first, from its end, to a `+N more → memex tree` line, and then its longest list line cut to its first
+/// items and a `+N more` ending, until the whole text is under the cap.
 pub fn text(atlas: &Atlas) -> String {
     let mut lists = [
         List::new("collections", collection_items(&atlas.collections)),
         List::new("streams", stream_items(&atlas.streams)),
     ];
+    let values: Vec<String> = atlas
+        .roots
+        .iter()
+        .map(|root| dashed(&root.path, &root.title))
+        .collect();
+    let roots = fitting_roots(atlas, &lists, &values);
     loop {
-        let out = assemble(atlas, &lists);
+        let out = join(atlas, rows(atlas, &lists, &values, roots));
         if out.len() <= CAP {
             return out;
         }
@@ -35,6 +42,27 @@ pub fn text(atlas: &Atlas) -> String {
             None => return out,
         }
     }
+}
+
+/// How many root lines the cap lets print: the most that fit, cutting from the end, or 0 when none does. Each line's length is
+/// known once it is rendered, and the label column does not change with the count, so the cut is found by arithmetic on one
+/// assembled text rather than by assembling it once per root (a tree with 10,000 roots made that quadratic).
+fn fitting_roots(atlas: &Atlas, lists: &[List], values: &[String]) -> usize {
+    let all = rows(atlas, lists, values, values.len());
+    let width = all.iter().map(|(label, _)| label.len()).max().unwrap_or(0);
+    let mut len = join_len(width, &all, atlas);
+    if len <= CAP || values.is_empty() {
+        return values.len();
+    }
+    let line = |value_len: usize| width + 2 + value_len + 1;
+    for shown in (0..values.len()).rev() {
+        len -= line(values[shown].len());
+        let more = line(more_line(values.len() - shown).len());
+        if len + more <= CAP {
+            return shown;
+        }
+    }
+    0
 }
 
 /// A list line of the text: its label, its items, and how many of them the cap lets it show.
@@ -73,13 +101,14 @@ impl List {
     }
 }
 
-/// The whole text with each list at its current length: the header, the graph line, each list that has items, the to and
-/// here lines, then the use line. Every label is padded to the longest label that prints, and the value follows two spaces on.
-fn assemble(atlas: &Atlas, lists: &[List]) -> String {
+/// The rows of the text, each a label and its value, with each list at its current length and `roots` root lines shown: the graph
+/// line, each list that has items, the roots block, the to and here lines, then the use line.
+fn rows(atlas: &Atlas, lists: &[List], values: &[String], roots: usize) -> Vec<(String, String)> {
     let mut lines: Vec<(String, String)> = vec![("graph".to_string(), intent_value(&atlas.intent))];
     for list in lists.iter().filter(|list| !list.items.is_empty()) {
         lines.push((list.label.to_string(), list.value()));
     }
+    lines.extend(roots_lines(values, roots));
     if let Some(to) = &atlas.to {
         lines.push((format!("to {}", to.agent), to_value(to)));
     }
@@ -87,16 +116,54 @@ fn assemble(atlas: &Atlas, lists: &[List]) -> String {
         lines.push(("here".to_string(), here_value(here)));
     }
     lines.push(("use".to_string(), USE.to_string()));
+    lines
+}
+
+/// The header line, then every row with its label padded to the longest label and its value two spaces on.
+fn join(atlas: &Atlas, lines: Vec<(String, String)>) -> String {
     let width = lines
         .iter()
         .map(|(label, _)| label.len())
         .max()
         .unwrap_or(0);
-    let mut out = format!("memex  {} · log store {}\n", atlas.root, atlas.store_label);
+    let mut out = header(atlas);
     for (label, value) in lines {
         out.push_str(&format!("{label:<width$}  {value}\n"));
     }
     out
+}
+
+/// The length in bytes that `join` gives these rows, labels padded to `width` (labels are ASCII, so bytes and characters agree).
+fn join_len(width: usize, lines: &[(String, String)], atlas: &Atlas) -> usize {
+    header(atlas).len()
+        + lines
+            .iter()
+            .map(|(label, value)| width.max(label.len()) + 2 + value.len() + 1)
+            .sum::<usize>()
+}
+
+/// The first line of the atlas: the root, then the log store.
+fn header(atlas: &Atlas) -> String {
+    format!("memex  {} · log store {}\n", atlas.root, atlas.store_label)
+}
+
+/// The lines of the roots block (design §3.5): the first is labelled `roots`, the rest have no label and so are indented to its
+/// column. Each shows a root folder; when some are cut, a last line says how many and where to see them.
+fn roots_lines(values: &[String], shown: usize) -> Vec<(String, String)> {
+    let mut lines: Vec<String> = values[..shown].to_vec();
+    if shown < values.len() {
+        lines.push(more_line(values.len() - shown));
+    }
+    lines
+        .into_iter()
+        .enumerate()
+        .map(|(index, value)| (if index == 0 { "roots" } else { "" }.to_string(), value))
+        .collect()
+}
+
+/// The last line of a cut roots block: how many roots are left out and where to see them.
+fn more_line(cut: usize) -> String {
+    format!("+{cut} more → memex tree")
 }
 
 /// The graph line's value: the counts of READMEs and headers, in that order (design §3.5).
@@ -150,16 +217,22 @@ fn to_value(to: &ToCount) -> String {
 /// The value of the here line: the folder, then its one-liner cut at 120 characters; the dash and the one-liner are left out
 /// when the README has none.
 fn here_value(here: &HereLine) -> String {
-    if here.title.is_empty() {
-        here.path.clone()
+    dashed(&here.path, &here.title)
+}
+
+/// A folder's name, then ` — ` and its one-liner cut at 120 characters; the name alone when there is no one-liner.
+fn dashed(path: &str, title: &str) -> String {
+    if title.is_empty() {
+        path.to_string()
     } else {
-        format!("{} — {}", here.path, clip(&here.title))
+        format!("{path} — {}", clip(title))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::render::info::Root;
 
     #[test]
     fn a_count_of_one_is_singular() {
@@ -176,6 +249,58 @@ mod tests {
         assert_eq!(list.value(), "a 1 · +1 more");
         list.shown = 0;
         assert_eq!(list.value(), "+2 more");
+    }
+
+    /// The cut the one-at-a-time loop made before `fitting_roots`: the most roots, from the end down, whose text fits.
+    fn cut_one_at_a_time(atlas: &Atlas, lists: &[List], values: &[String]) -> usize {
+        (0..=values.len())
+            .rev()
+            .find(|&shown| join(atlas, rows(atlas, lists, values, shown)).len() <= CAP)
+            .unwrap_or(0)
+    }
+
+    #[test]
+    fn the_roots_cut_in_one_pass_matches_the_cut_one_at_a_time() {
+        for (count, title_len, here) in [
+            (0, 0, false),
+            (3, 10, false),
+            (40, 90, false),
+            (45, 70, true),
+            (300, 0, true),
+            (2_000, 30, false),
+        ] {
+            let atlas = Atlas {
+                root: "/repo".to_string(),
+                store: None,
+                store_label: "none".to_string(),
+                intent: Intent::default(),
+                collections: Vec::new(),
+                streams: Vec::new(),
+                roots: (0..count)
+                    .map(|index| Root {
+                        path: format!("dir{index:04}"),
+                        title: "word ".repeat(title_len / 5 + index % 3),
+                    })
+                    .collect(),
+                to: None,
+                here: here.then(|| HereLine {
+                    path: "dir0001".to_string(),
+                    title: "Here.".to_string(),
+                }),
+                warnings: Vec::new(),
+            };
+            let lists = [List::new("streams", Vec::new())];
+            let values: Vec<String> = atlas
+                .roots
+                .iter()
+                .map(|root| dashed(&root.path, &root.title))
+                .collect();
+            assert_eq!(
+                fitting_roots(&atlas, &lists, &values),
+                cut_one_at_a_time(&atlas, &lists, &values),
+                "{count} roots"
+            );
+        }
     }
 
     #[test]

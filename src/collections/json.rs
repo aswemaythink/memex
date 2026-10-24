@@ -1,6 +1,6 @@
 //! Reads a `json` manifest's docs: each object of the array at `at` is one doc (design §4.2).
 //! It also holds the scalar, field and doc helpers that the folder kind shares with it.
-//! Cases: MANK-JSON-01, MANK-JSON-02, MANK-JSON-03, MANK-JSON-04, MANK-JSON-05, MANK-JSON-06, MANK-JSON-07, MANK-JSON-08, MANK-TITLE-01, MANK-TITLE-02, MANK-TITLE-03, MANK-CITE-02
+//! Cases: MANK-JSON-01, MANK-JSON-02, MANK-JSON-03, MANK-JSON-04, MANK-JSON-05, MANK-JSON-06, MANK-JSON-07, MANK-JSON-08, MANK-TITLE-01, MANK-TITLE-02, MANK-TITLE-03, MANK-CITE-02, MANK-WT-01, MANK-WT-05
 
 use std::path::Path;
 
@@ -9,6 +9,7 @@ use serde_json::{Map, Value as Json};
 use super::frontmatter::Value;
 use super::globs;
 use super::manifest::{self, Manifest};
+use super::roots::Root;
 use super::title;
 use crate::corpus::{parent_of, Doc};
 use crate::intent::Origin;
@@ -16,19 +17,20 @@ use crate::text;
 use crate::walk::{self, Entry};
 
 /// The docs of a json manifest: one per object, in each matched file, whose `id` field is text. A manifest with no `id` key
-/// gives none, since the id is required. A file that cannot be used adds its warning to `warnings`.
-pub fn docs(manifest: &Manifest, root: &Path, warnings: &mut Vec<String>) -> Vec<Doc> {
+/// gives none, since the id is required. A file that cannot be used adds its warning to `warnings`. Each root is walked from its home,
+/// as the folder reader does.
+pub fn docs(manifest: &Manifest, roots: &[Root], warnings: &mut Vec<String>) -> Vec<Doc> {
     let Some(key) = manifest.id.as_deref() else {
         return Vec::new();
     };
     let at = manifest.at.as_deref().unwrap_or("");
     let mut docs = Vec::new();
-    for dir in &manifest.roots {
-        let base = root.join(dir);
+    for root in roots {
+        let base = root.home.join(&root.rel);
         let entries = walk::walk(&base);
         let files: Vec<&Entry> = entries.iter().filter(|entry| !entry.is_dir).collect();
         for file in globs::hits(&base, &manifest.include, &files) {
-            let folder = folder_under(dir, parent_of(&file.rel).unwrap_or_default());
+            let folder = folder_under(&root.rel, parent_of(&file.rel).unwrap_or_default());
             for item in items_at(&file.path, at, warnings) {
                 docs.extend(entry_doc(manifest, key, &item, &folder));
             }
@@ -161,9 +163,9 @@ pub(super) fn doc(
 
 #[cfg(test)]
 mod tests {
-    use super::docs;
+    // The tests read through the loader's `docs`, which vets each root before the reader walks it.
     use crate::collections::frontmatter::Value;
-    use crate::collections::manifest::{Kind, Manifest};
+    use crate::collections::manifest::{docs, Kind, Manifest};
     use crate::collections::testing::{self, labels, tree};
 
     /// A json manifest named `cases` over `roots`, with `id` set to the entry field `name` and no other keys.

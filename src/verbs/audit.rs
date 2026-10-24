@@ -6,7 +6,7 @@
 mod counts;
 mod kinds;
 mod roots;
-mod scope;
+pub(crate) mod scope;
 
 use std::path::Path;
 

@@ -1,0 +1,1 @@
+{"platforms": ["unix"], "setup": [{"run": ["git", "apply", "../link.patch"]}], "steps": [{"args": ["tree", "../repo/out"]}, {"args": ["audit", "../repo/out"]}, {"args": ["tree", "../repo/out/.."]}]}

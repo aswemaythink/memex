@@ -1,0 +1,5 @@
+$ memex tree --json
+exit 0
+stdout
+| {"scope":".","depth":2,"files":2,"no_header":1,"total":6,"items":[{"path":"a","kind":"dir","depth":1,"title":"The documented folder.","gap":null,"files":1,"no_header":0},{"path":"a/x.rs","kind":"file","depth":2,"title":"The x file carries a first sentence that runs well past one hundred and fifty characters, so that the JSON title shows it in full and unclipped by the text rule.","gap":null},{"path":"b","kind":"dir","depth":1,"title":"","gap":"readme","files":1,"no_header":1},{"path":"b/y.rs","kind":"file","depth":2,"title":"","gap":"header"},{"path":"c.md","kind":"file","depth":1,"title":"See","gap":null},{"path":"d.json","kind":"file","depth":1,"title":"","gap":null}]}
+stderr (empty)

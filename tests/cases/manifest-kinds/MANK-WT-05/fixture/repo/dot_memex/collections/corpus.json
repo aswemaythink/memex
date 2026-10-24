@@ -1,0 +1,1 @@
+{"name": "corpus", "kind": "json", "roots": ["corpus"], "include": ["corpus.json"], "at": "/docs", "id": "id", "title": "title"}

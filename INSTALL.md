@@ -21,6 +21,7 @@ Work through the steps in order. Run commands yourself; ask the user only where 
 Before asking anything, get the facts:
 
 - `memex info`: what the graph and collections already hold.
+- `memex tree`: the folders and files two levels down, with their one-liners and how many files lack a header.
 - `memex audit`: folders with no README, files with no header, broken references.
 - The top-level folders, whether they have READMEs, and whether there is a test suite and where.
 

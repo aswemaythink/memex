@@ -94,7 +94,7 @@ memex: cases
 
 ## LINE
 
-- `SRCH-LINE-01` In text, a one-liner longer than 120 characters is cut to 119 characters and an ellipsis, while the JSON snippet keeps all of it.
+- `SRCH-LINE-01` In text, a one-liner longer than 120 characters is cut to at most 119 characters and an ellipsis, on a whole word (a single long word is cut mid-word), while the JSON snippet keeps all of it.
   design §2 One-liners (text cuts at 120 characters with an ellipsis; JSON keeps the full text). Run: memex search widget, then memex search widget --json.
 
 ## FILTER

@@ -18,7 +18,7 @@ stderr (empty)
 | (first line = purpose). Dimensions: any Markdown file with `memex: <collection>` in its frontmatter
 | joins that collection, such as CASES.md (`memex: cases`): test ids with their claims; each id is in its test's name or in a comment on it.
 | - Overview: `memex info`: where everything is (graph, collections, streams, messages for you).
-| - Orient: `memex show <path>`: header, cites, who cites it, README chain; folders list children.
+| - Orient: `memex show <path>`: header, cites, who cites it, README chain; folders list children. `memex tree [path]`: folders and files two levels down, with one-liners and header coverage.
 | - Find: `memex search <words>` over READMEs, headers, collections and logs. Use `rg` for symbols.
 | - Tests for X: `memex search <words> --in cases` (or the collection `memex info` names); `memex show <ID>` gives claim and evidence; `rg <ID>` finds the test.
 | - Findings: `memex log <stream> [--to <agent>] <<'EOF' … EOF` prints a ref. Hand back the ref, not the report.

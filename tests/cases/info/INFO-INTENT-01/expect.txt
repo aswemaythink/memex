@@ -4,5 +4,6 @@ stdout
 | memex  $SANDBOX/repo · log store .memex/logs/
 | graph        3 readmes · 1 header
 | collections  cases 2
+| roots        src — The source folder.
 | use          memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr (empty)

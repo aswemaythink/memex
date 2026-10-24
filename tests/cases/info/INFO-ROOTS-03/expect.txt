@@ -1,0 +1,8 @@
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| graph  2 readmes · 0 headers
+| roots  app — The one folder the walk keeps.
+| use    memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+stderr (empty)

@@ -1,0 +1,27 @@
+$ memex show .
+exit 0
+stdout
+| === . ===
+| (no README)
+| 
+| children
+|   alpha/  Alpha holds the first part of the system.
+|   showing 1 of 1
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+| 
+| cites
+|   (none)
+| 
+| cited by
+|   (none)
+|   showing 0 of 0
+| 
+| chain
+|   (none)
+stderr (empty)
+
+$ memex show . --json
+exit 0
+stdout
+| {"docs":[{"ref":".","collection":null,"id":null,"path":".","title":null,"fields":{},"text":null,"cites":[],"cited_by":{"total":0,"refs":[]},"chain":[],"children":{"total":1,"items":[{"path":"alpha","kind":"dir","title":"Alpha holds the first part of the system."}]}}],"errors":[]}
+stderr (empty)

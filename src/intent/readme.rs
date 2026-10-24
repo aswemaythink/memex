@@ -1,5 +1,5 @@
 //! Reads a README (design §2 and §4.2): its doc, and the one-liner that its folder lists.
-//! Cases: INT-LINE-01, INT-LINE-02, INT-LINE-03, INT-LINE-04, INT-LINE-05, INT-NOHEAD-01, INT-NOHEAD-02, SHOW-DIR-01, SHOW-ROOT-01, SHOW-LINE-01, COLL-REFINE-03
+//! Cases: INT-LINE-01, INT-LINE-02, INT-LINE-03, INT-LINE-04, INT-LINE-05, INT-COMMENT-01, INT-COMMENT-02, INT-COMMENT-03, INT-NOHEAD-01, INT-NOHEAD-02, SHOW-DIR-01, SHOW-ROOT-01, SHOW-LINE-01, COLL-REFINE-03
 
 use super::{sentence, Origin};
 use crate::collections::frontmatter::after_frontmatter;
@@ -38,20 +38,28 @@ fn one_liner(text: &str) -> String {
     }
 }
 
-/// The first prose paragraph of some lines: the first run of lines that are neither blank nor headings. A blank line or
-/// a heading ends a run, and a heading is never prose.
+/// The first prose paragraph of some lines: the first run of lines that are neither blank nor headings, with its HTML comment markers
+/// removed (design §2 One-liners). A blank line or a heading ends a run, and a heading is never prose. A run that is empty once
+/// the markers are removed is skipped.
 fn prose(lines: &[&str]) -> Option<String> {
     let mut run: Vec<&str> = Vec::new();
     for &line in lines {
         if line.trim().is_empty() || is_heading(line) {
-            if !run.is_empty() {
-                break;
+            if let Some(text) = unmarked(&run) {
+                return Some(text);
             }
+            run.clear();
         } else {
             run.push(line);
         }
     }
-    (!run.is_empty()).then(|| run.join("\n"))
+    unmarked(&run)
+}
+
+/// The text of a run with `<!--` and `-->` removed, or None when nothing but space is left (design §2 One-liners).
+fn unmarked(run: &[&str]) -> Option<String> {
+    let text = run.join("\n").replace("<!--", "").replace("-->", "");
+    (!text.trim().is_empty()).then_some(text)
 }
 
 /// True for an ATX heading line: one to six `#` marks, then a space or the end of the line. `#tag` is prose.
@@ -83,5 +91,19 @@ mod tests {
         assert_eq!(one_liner("## Part\n\nAfter it.\n"), "After it.");
         assert_eq!(one_liner("## Part\n"), "");
         assert_eq!(one_liner("#tag stays prose.\n"), "#tag stays prose.");
+    }
+
+    #[test]
+    fn comment_markers_are_not_text_and_an_empty_paragraph_is_skipped() {
+        assert_eq!(
+            one_liner("# Demo\n\n<!-- Why it exists. More. -->\n"),
+            "Why it exists."
+        );
+        assert_eq!(
+            one_liner("# Demo\n\n<!--\nWhy it exists.\n-->\n"),
+            "Why it exists."
+        );
+        assert_eq!(one_liner("# Demo\n\n<!-- -->\n\nThe demo.\n"), "The demo.");
+        assert_eq!(one_liner("# Demo\n\n<!-- -->\n"), "Demo");
     }
 }

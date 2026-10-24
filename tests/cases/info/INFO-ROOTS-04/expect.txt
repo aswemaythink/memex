@@ -1,0 +1,31 @@
+$ memex info --agent cook-2  [cwd repo/area-02]
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| graph      46 readmes · 0 headers
+| roots      area-01 — Area 01 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-02 — Area 02 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-03 — Area 03 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-04 — Area 04 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-05 — Area 05 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-06 — Area 06 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-07 — Area 07 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-08 — Area 08 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-09 — Area 09 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-10 — Area 10 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-11 — Area 11 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-12 — Area 12 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-13 — Area 13 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-14 — Area 14 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-15 — Area 15 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-16 — Area 16 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-17 — Area 17 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-18 — Area 18 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-19 — Area 19 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-20 — Area 20 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            area-21 — Area 21 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+|            +24 more → memex tree
+| to cook-2  0 messages → memex search to:cook-2
+| here       area-02 — Area 02 owns a slice of the demo, and this sentence is long enough to fill its line in the info.
+| use        memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+stderr (empty)

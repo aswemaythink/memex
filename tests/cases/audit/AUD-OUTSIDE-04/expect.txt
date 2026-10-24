@@ -1,0 +1,15 @@
+$ memex audit .. src/bare.rs
+exit 1
+stdout
+| audit       src/bare.rs · 1 file · 0 folders · 1 finding
+| headers     (showing 1 of 1; files with no header)
+|   src/bare.rs
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+stderr
+| memex: not found: .. (outside the root; run memex from there)
+
+$ memex audit src/good.rs ../README.md --json
+exit 1
+stdout
+| {"scope":["src/good.rs"],"files":1,"folders":0,"findings":0,"kinds":[],"errors":[{"arg":"../README.md","code":"not_found","message":"not found: ../README.md (outside the root; run memex from there)"}]}
+stderr (empty)

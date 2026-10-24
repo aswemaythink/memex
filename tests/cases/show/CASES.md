@@ -88,7 +88,7 @@ memex: cases
 
 ## LINE
 
-- `SHOW-LINE-01` In text output a one-liner longer than 120 characters is cut to 119 characters and an ellipsis, so the line is 120 characters, exit 0.
+- `SHOW-LINE-01` In text output a one-liner longer than 120 characters is cut to at most 119 characters and an ellipsis, on a whole word, so the line is at most 120 characters, exit 0.
   design §2 One-liners: text output truncates at 120 characters with an ellipsis. Run: memex show src/deep, whose child long.rs has a long first sentence.
 
 ## JSON

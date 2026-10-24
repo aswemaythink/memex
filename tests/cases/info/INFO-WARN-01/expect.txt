@@ -4,6 +4,7 @@ stdout
 | memex  $SANDBOX/repo · log store .memex/logs/
 | graph        1 readme · 0 headers
 | collections  good 1
+| roots        notes
 | use          memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr
 | memex: warning: $SANDBOX/repo/.memex/collections/bad.json: unknown key 'colour'

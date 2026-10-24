@@ -1,0 +1,12 @@
+$ memex tree
+exit 0
+stdout
+| tree  . · 3 files · 1 no header  (showing 5 of 5)
+|   lib/  (no README)  (1 file)
+|     lib/a.rs  A.
+|   raw/  (no README)  (2 files · 1 no header)
+|     raw/b.rs  (no header)
+|     raw/c.rs  C.
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+stderr (empty)

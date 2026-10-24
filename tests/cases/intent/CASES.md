@@ -13,8 +13,30 @@ memex: cases
   design §2 One-liners (paragraphs after the H1). Run: memex show .
 - `INT-LINE-04` A sentence ends at `!`, `.` or `?` followed by whitespace, so `4.1` and `v1.2` do not end one, and a line break inside a paragraph reads as a single space, exit 0.
   design §2 One-liners (the sentence rule). Run: memex show .
-- `INT-LINE-05` A one-liner longer than 120 characters is cut to 119 characters and an ellipsis in text output, while `--json` keeps the whole one-liner, exit 0.
+- `INT-LINE-05` A one-liner longer than 120 characters is cut to at most 119 characters and an ellipsis in text output, on a whole word (INT-CLIP-01), while `--json` keeps the whole one-liner, exit 0.
   design §2 One-liners (text truncates at 120, JSON keeps the full text) and design §3.6. Run: memex show . and memex show . --json.
+
+## COMMENT
+
+- `INT-COMMENT-01` The markers of an HTML comment are not text in a README: a purpose written as `<!-- … -->` on one line reads as prose, so the folder's child line shows its first sentence without the markers and `--json` has the same title, exit 0.
+  design §2 One-liners (2026-10-24). Run: memex show . and memex show . --json.
+- `INT-COMMENT-02` A comment that spans lines reads the same: the lines between `<!--` and `-->` are the paragraph, so the one-liner is their first sentence, exit 0.
+  design §2 One-liners (2026-10-24). Run: memex show . and memex show . --json.
+- `INT-COMMENT-03` A paragraph that is empty once its markers are removed is skipped: an empty comment before a paragraph leaves that paragraph as the one-liner, and a README with only an empty comment after its H1 reads as its H1 text, exit 0.
+  design §2 One-liners (2026-10-24). Run: memex show . and memex show . --json.
+
+## CLIP
+
+- `INT-CLIP-01` A text one-liner over 120 characters is cut at the last whitespace before the limit when that leaves at least 60 characters, so the line ends on a whole word and then `…`, exit 0.
+  design §2 One-liners (2026-10-24). Run: memex show .
+- `INT-CLIP-02` A `,`, `;` or `:` that ends what is kept is dropped before the `…`, so a cut after `psi,` shows `psi…`, exit 0.
+  design §2 One-liners (2026-10-24). Run: memex show .
+- `INT-CLIP-03` A single word longer than the limit has no whitespace to cut at, so it is cut mid-word to 119 characters and `…`, exit 0.
+  design §2 One-liners (2026-10-24). Run: memex show .
+- `INT-CLIP-04` A last whitespace that would keep fewer than 60 characters is passed over: the cut falls mid-word at 119 characters, exit 0.
+  design §2 One-liners (2026-10-24). Run: memex show .
+- `INT-CLIP-05` A word that ends exactly at character 119, with whitespace right after it, is kept whole, exit 0.
+  design §2 One-liners (2026-10-24). Run: memex show .
 
 ## NOHEAD
 

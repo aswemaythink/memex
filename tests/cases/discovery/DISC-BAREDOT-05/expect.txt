@@ -3,6 +3,7 @@ exit 0
 stdout
 | memex  $SANDBOX/repo · log store bare.git/memex/logs/
 | graph  0 readmes · 0 headers
+| roots  bare.git
 | use    memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr (empty)
 

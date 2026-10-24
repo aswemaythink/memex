@@ -4,5 +4,7 @@ stdout
 | memex  $SANDBOX/repo · log store .memex/logs/
 | graph        1 readme · 0 headers
 | collections  alpha 0 · doom 2 · perf 1
+| roots        doom
+|              perf
 | use          memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr (empty)

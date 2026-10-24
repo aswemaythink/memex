@@ -1,0 +1,7 @@
+$ memex search slot recipe --in corpus  [cwd wt]  [env PATH=/nonexistent]
+exit 0
+stdout
+| corpus  (showing 1 of 1)
+|   corpus:panda:slot-recipes  Slot Recipe
+stderr
+| memex: warning: corpus: root corpus is not in this worktree; read from the main checkout $SANDBOX/repo/corpus

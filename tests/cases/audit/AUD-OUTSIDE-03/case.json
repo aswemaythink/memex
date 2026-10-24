@@ -1,0 +1,1 @@
+{"steps": [{"args": ["audit", "../repo/src"]}, {"args": ["audit", "../repo/src/bare.rs"]}]}

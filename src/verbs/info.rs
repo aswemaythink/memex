@@ -1,5 +1,5 @@
 //! Carries out `memex info` (design §3.5 and §3.6): the atlas of where things are, as text or JSON.
-//! Cases: INFO-HEAD-01, INFO-HEAD-02, INFO-INTENT-01, INFO-INTENT-02, INFO-INTENT-03, INFO-COLL-01, INFO-COLL-02, INFO-STREAM-01, INFO-STREAM-02, INFO-STREAM-03, INFO-STREAM-04, INFO-TO-01, INFO-TO-02, INFO-TO-03, INFO-TO-04, INFO-TO-05, INFO-HERE-01, INFO-HERE-02, INFO-HERE-03, INFO-HERE-04, INFO-USE-01, INFO-CAP-01, INFO-WARN-01, INFO-WARN-02, INFO-NOROOT-01, INFO-NOROOT-02, INFO-JSON-01, INFO-JSON-02, INFO-JSON-03, CASE-DUP-02, INIT-INFO-03, INFO-ZERO-01, INFO-ZERO-02, COLL-SHARED-04, COLL-DUP-01, COLL-DUP-02, COLL-DUP-03
+//! Cases: INFO-ROOTS-01, INFO-ROOTS-02, INFO-ROOTS-03, INFO-ROOTS-04, INFO-ROOTS-05, INFO-ROOTS-06, INFO-HEAD-01, INFO-HEAD-02, INFO-INTENT-01, INFO-INTENT-02, INFO-INTENT-03, INFO-COLL-01, INFO-COLL-02, INFO-STREAM-01, INFO-STREAM-02, INFO-STREAM-03, INFO-STREAM-04, INFO-TO-01, INFO-TO-02, INFO-TO-03, INFO-TO-04, INFO-TO-05, INFO-HERE-01, INFO-HERE-02, INFO-HERE-03, INFO-HERE-04, INFO-USE-01, INFO-CAP-01, INFO-WARN-01, INFO-WARN-02, INFO-NOROOT-01, INFO-NOROOT-02, INFO-JSON-01, INFO-JSON-02, INFO-JSON-03, CASE-DUP-02, INIT-INFO-03, INFO-ZERO-01, INFO-ZERO-02, COLL-SHARED-04, COLL-DUP-01, COLL-DUP-02, COLL-DUP-03
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -8,11 +8,13 @@ use crate::cli::Verb;
 use crate::clock::{self, Timestamp};
 use crate::collections::frontmatter::Value;
 use crate::collections::manifest::{Kind, Loaded};
-use crate::corpus::{label_of, parent_of, readme_label, Corpus, Doc};
+use crate::corpus::{label_of, parent_of, readme_label, Corpus, Doc, Kind as Walked};
 use crate::error::{self, Error};
 use crate::intent::shared;
 use crate::logs::values;
-use crate::render::info::{self as render, Atlas, Collection, HereLine, Intent, Stream, ToCount};
+use crate::render::info::{
+    self as render, Atlas, Collection, HereLine, Intent, Root, Stream, ToCount,
+};
 use crate::root::slash;
 use crate::scan::fail;
 use crate::verbs::here::{self, Here};
@@ -75,6 +77,7 @@ fn atlas(here: &Here, agent: Option<String>, now: Timestamp, duplicates: &[Strin
         intent: intent_of(corpus),
         collections,
         streams: streams_of(corpus, now),
+        roots: roots_of(corpus),
         to: agent.map(|agent| to_of(corpus, agent)),
         here: here_of(corpus, &here.cwd),
         warnings,
@@ -141,6 +144,20 @@ fn intent_of(corpus: &Corpus) -> Intent {
         }
     }
     intent
+}
+
+/// The root's walked subfolders in byte order, each with its README's one-liner (design §3.5 `roots` block). What the walk skips is
+/// not in the corpus, so it is left out; a folder with no README, or a README with no one-liner, has an empty title.
+fn roots_of(corpus: &Corpus) -> Vec<Root> {
+    corpus
+        .children("")
+        .into_iter()
+        .filter(|child| child.kind == Walked::Dir)
+        .map(|child| Root {
+            path: child.rel,
+            title: child.title.unwrap_or_default(),
+        })
+        .collect()
 }
 
 /// The log streams, newest entry first and then by name (design §3.5 Streams): each with its entry count, its new entries and the

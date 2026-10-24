@@ -1,0 +1,19 @@
+$ memex tree
+exit 0
+stdout
+| tree  . · 7 files · 3 no header  (showing 12 of 12)
+|   build.rs  Builds the shop.
+|   docs/  The notes of the shop.
+|     docs/data.json
+|     docs/notes.md  Shop notes
+|   fixtures/
+|     fixtures/cases/
+|     fixtures/sample.json
+|   src/  The source of the shop.  (6 files · 3 no header)
+|     src/deep/  The deepest folder of the source.  (2 files)
+|     src/main.rs  Starts the shop.
+|     src/raw/  (no README)  (2 files · 2 no header)
+|     src/util.rs  (no header)
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+stderr (empty)
