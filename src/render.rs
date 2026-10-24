@@ -15,7 +15,7 @@ use std::io;
 use crate::cite::Cite;
 use crate::collections::frontmatter::Value;
 use crate::corpus::Child;
-use crate::error::Code;
+use crate::error::{Code, Error};
 use crate::intent::header::CommentBlock;
 
 /// One section: a file, a folder or a doc, with the parts that `show` prints for it.
@@ -168,6 +168,21 @@ impl Miss {
             code: Code::Io,
             message: format!("cannot read {arg} ({:?})", failure.kind()),
             candidates: Vec::new(),
+        }
+    }
+}
+
+impl From<Miss> for Error {
+    /// The fatal error for a miss: its code and message, with each candidate indented as a note.
+    fn from(miss: Miss) -> Error {
+        Error {
+            code: miss.code,
+            message: miss.message,
+            notes: miss
+                .candidates
+                .iter()
+                .map(|candidate| format!("  {candidate}"))
+                .collect(),
         }
     }
 }

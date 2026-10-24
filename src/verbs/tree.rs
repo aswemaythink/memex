@@ -9,12 +9,12 @@ use std::path::Path;
 
 use crate::cli::Verb;
 use crate::corpus::{label_of, parent_of, Child, Corpus, Kind};
-use crate::error::{Code, Error};
+use crate::error::Error;
 use crate::intent::coverage;
+use crate::render;
 use crate::render::tree::{Counts, Gap, Item, Tree};
-use crate::render::{self, Miss};
-use crate::resolve::{resolve, Outcome, Target};
 use crate::scan::fail;
+use crate::verbs::audit::scope::scope_path;
 use crate::verbs::here;
 
 /// The `--depth` when the flag is not given (design §3.5e Depth).
@@ -53,7 +53,8 @@ fn tree_in(
     store: Option<&Path>,
     request: &Request,
 ) -> Result<String, Error> {
-    let (rel, kind) = scope(corpus, cwd, store, request.path.as_deref().unwrap_or("."))?;
+    let (rel, kind) = scope_path(corpus, cwd, store, request.path.as_deref().unwrap_or("."))
+        .map_err(Error::from)?;
     let coverage = Coverage::of(corpus);
     let depth = request.depth.unwrap_or(DEFAULT_DEPTH);
     let mut list = Listing::new(request.limit.unwrap_or(DEFAULT_LIMIT));
@@ -84,36 +85,6 @@ fn tree_in(
     } else {
         render::tree::text(&tree)
     })
-}
-
-/// The folder or file the argument names, as `audit` resolves a scope path (design §3.1 steps 1, 2 and 5). A doc (a label or a bare
-/// id) is not a path, and neither is a path outside the root, since `tree` reads only the root it runs in.
-fn scope(
-    corpus: &Corpus,
-    cwd: &Path,
-    store: Option<&Path>,
-    arg: &str,
-) -> Result<(String, Kind), Error> {
-    match resolve(corpus, cwd, store, arg) {
-        Outcome::Found(Target::Path { rel, kind }) => Ok((rel, kind)),
-        Outcome::Ambiguous(candidates) => {
-            let miss = Miss::ambiguous(arg, candidates);
-            Err(Error {
-                code: Code::Ambiguous,
-                message: miss.message,
-                notes: miss
-                    .candidates
-                    .iter()
-                    .map(|candidate| format!("  {candidate}"))
-                    .collect(),
-            })
-        }
-        Outcome::Found(Target::Doc(_)) | Outcome::Elsewhere(_) | Outcome::NotFound => Err(Error {
-            code: Code::NotFound,
-            message: Miss::not_found(arg).message,
-            notes: Vec::new(),
-        }),
-    }
 }
 
 /// The entries printed so far, and how many there are in all: past the limit an entry is only counted, never built.
