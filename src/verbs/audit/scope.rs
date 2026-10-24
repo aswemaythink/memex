@@ -252,7 +252,9 @@ mod tests {
 
     fn found(root: &Path, arg: &str) -> Option<String> {
         let corpus = Corpus::load(root, None);
-        scope_path(&corpus, root, None, arg).ok().map(|(rel, _)| rel)
+        scope_path(&corpus, root, None, arg)
+            .ok()
+            .map(|(rel, _)| rel)
     }
 
     #[cfg(unix)]

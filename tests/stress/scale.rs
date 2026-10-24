@@ -158,7 +158,11 @@ fn scale_100k_files() {
     let show_ms = time_verb(&sandbox, "show dir05000, 100k files", &["show", "dir05000"]);
     let audit_ms = time_verb(&sandbox, "audit, 100k files", &["audit"]);
     let tree_ms = time_verb(&sandbox, "tree, 100k files", &["tree"]);
-    let deep_ms = time_verb(&sandbox, "tree --depth 4, 100k files", &["tree", "--depth", "4"]);
+    let deep_ms = time_verb(
+        &sandbox,
+        "tree --depth 4, 100k files",
+        &["tree", "--depth", "4"],
+    );
     // show <dir> loads the same corpus as info, so it shares info's 1.3 s budget (coordinator ruling).
     let timed = [
         ("info", info_ms, 1_300.0),
