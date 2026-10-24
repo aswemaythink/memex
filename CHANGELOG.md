@@ -4,7 +4,8 @@ The release notes of memex. Each GitHub release takes its notes from the matchin
 
 ## 0.3.1 - 2026-10-24
 
-- `audit` and `tree` no longer walk another root for a path outside the current one: `memex tree ..` from a repo's root used to read the parent folder, and could take seconds and print its warnings. Such a path is now a plain `not found` (outside the root; run memex from there), judged without touching the file system. `show` still reads other roots.
+- `audit` and `tree` no longer walk another root for a path outside the current one: `memex tree ..` from a repo's root used to read the parent folder, and could take seconds and print its warnings. Such a path is now a plain `not found` (outside the root; run memex from there), judged from the path itself and, for a symlinked spelling, its real path, never by walking. `show` still reads other roots.
+- `info` is fast again on a root with thousands of top-level folders: fitting the `roots` block under the 3,000-byte cap took time quadratic in the number of folders (48 s for 10,000), and now takes one pass (about 1 s, as in 0.2.2). The output is unchanged.
 
 ## 0.3.0 - 2026-10-24
 
