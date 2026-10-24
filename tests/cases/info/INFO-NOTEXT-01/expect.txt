@@ -10,5 +10,5 @@ stderr (empty)
 $ memex info --json
 exit 0
 stdout
-| {"root":"$SANDBOX/repo","log_store":"$SANDBOX/repo/.memex/logs","collections":[{"name":"readmes","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"review","kind":"log","builtin":false,"count":1,"description":null,"owner":null,"new_24h":1,"newest":"2026-10-13T11:55:00Z"},{"name":"impl","kind":"log","builtin":false,"count":1,"description":null,"owner":null,"new_24h":1,"newest":"2026-10-13T11:50:00Z"}],"warnings":[]}
+| {"root":"$SANDBOX/repo","log_store":"$SANDBOX/repo/.memex/logs","collections":[{"name":"readmes","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"review","kind":"log","builtin":false,"count":1,"description":null,"owner":null,"new_24h":1,"newest":"2026-10-13T11:55:00Z"},{"name":"impl","kind":"log","builtin":false,"count":1,"description":null,"owner":null,"new_24h":1,"newest":"2026-10-13T11:50:00Z"}],"roots":[],"warnings":[]}
 stderr (empty)

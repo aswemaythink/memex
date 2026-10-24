@@ -3,6 +3,7 @@ exit 0
 stdout
 | memex  $SANDBOX/repo · log store none (run memex init)
 | graph      1 readme · 1 header
+| roots      src
 | to cook-2  0 messages → memex search to:cook-2
 | use        memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr (empty)

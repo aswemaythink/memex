@@ -10,5 +10,5 @@ stderr (empty)
 $ memex info --json --agent x
 exit 0
 stdout
-| {"root":"$SANDBOX/repo","log_store":"$SANDBOX/repo/.memex/logs","collections":[{"name":"readmes","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null}],"warnings":[],"to":{"agent":"x","count":0}}
+| {"root":"$SANDBOX/repo","log_store":"$SANDBOX/repo/.memex/logs","collections":[{"name":"readmes","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null}],"roots":[],"warnings":[],"to":{"agent":"x","count":0}}
 stderr (empty)

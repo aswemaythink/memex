@@ -1,0 +1,14 @@
+$ memex tree --depth 1
+exit 0
+stdout
+| tree  . · 2 files · 1 no header  (showing 1 of 1)
+|   a/  The top folder.  (2 files · 1 no header)
+stderr (empty)
+
+$ memex tree a --depth 1
+exit 0
+stdout
+| tree  a · 2 files · 1 no header  (showing 1 of 1)
+|   a/b/  (no README)  (2 files · 1 no header)
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+stderr (empty)

@@ -1,0 +1,14 @@
+$ memex tree
+exit 0
+stdout
+| tree  . · 3 files · 1 no header  (showing 8 of 8)
+|   blank.md
+|   blob.rs
+|   data.json
+|   empty.rs
+|   long.rs  This header sentence is deliberately long, so that the tree line has to cut it short at a whole word before the limit…
+|   no_header.rs  (no header)
+|   notes.md  A Markdown title
+|   with_header.rs  Has a header.
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+stderr (empty)

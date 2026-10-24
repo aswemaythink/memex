@@ -5,7 +5,7 @@ stdout
 | (no README)
 | 
 | children
-|   long.rs  This header sentence is deliberately long, so that the children list of its folder has to cut it short with an ellipsis…
+|   long.rs  This header sentence is deliberately long, so that the children list of its folder has to cut it short with an…
 |   showing 1 of 1
 | (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
 | 

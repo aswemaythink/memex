@@ -1,5 +1,5 @@
 //! The atlas that `info` prints (design §3.5 and §3.6): its parts as data, with its two renderings.
-//! Cases: INFO-CAP-02
+//! Cases: INFO-CAP-02, INFO-ROOTS-04
 
 mod json;
 mod text;
@@ -21,6 +21,8 @@ pub struct Atlas {
     pub collections: Vec<Collection>,
     /// The log streams, newest entry first and then by name.
     pub streams: Vec<Stream>,
+    /// The root's walked subfolders in byte order, each with its README's one-liner (design §3.5 `roots` block).
+    pub roots: Vec<Root>,
     /// The entries addressed to the agent, whenever an agent is known, zero included (design §3.5).
     pub to: Option<ToCount>,
     /// The nearest README at or above the cwd, when the cwd is below the root and such a README exists.
@@ -76,6 +78,15 @@ pub struct ToCount {
     pub count: usize,
 }
 
+/// A folder directly under the root: its name and its README's one-liner (design §3.5 `roots` block).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Root {
+    /// The folder's name, which is its root-relative path.
+    pub path: String,
+    /// The README's one-liner, in full; empty when the folder has no README or its README has none.
+    pub title: String,
+}
+
 /// The nearest README of the cwd: its folder's label and its one-liner.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HereLine {
@@ -105,6 +116,7 @@ mod tests {
             intent: Intent::default(),
             collections: Vec::new(),
             streams: (0..40).map(stream).collect(),
+            roots: Vec::new(),
             to: None,
             here: None,
             warnings: Vec::new(),
@@ -121,5 +133,43 @@ mod tests {
         assert!(exact.len() == CAP && !exact.contains("more"), "{exact}");
         let over = text(&atlas_with_root("/".repeat(CAP - short.len() + 1)));
         assert!(over.len() <= CAP && over.contains("+1 more"), "{over}");
+    }
+
+    /// INFO-ROOTS-04: roots over the cap are cut from their end to a `+N more → memex tree` line, and the to, here and use lines stay.
+    #[test]
+    fn info_roots_04_a_long_roots_block_is_cut_from_its_end_and_keeps_the_lines_after_it() {
+        let mut atlas = atlas_with_root(String::new());
+        atlas.streams.clear();
+        atlas.roots = (0..60)
+            .map(|index| Root {
+                path: format!("folder-{index:02}"),
+                title: "A one-liner that is long enough to fill its line.".to_string(),
+            })
+            .collect();
+        atlas.to = Some(ToCount {
+            agent: "cook".to_string(),
+            count: 1,
+        });
+        let out = text(&atlas);
+        assert!(out.len() <= CAP, "{out}");
+        assert!(out.contains("folder-00 — A one-liner"), "{out}");
+        assert!(!out.contains("folder-59"), "{out}");
+        let more: Vec<&str> = out
+            .lines()
+            .filter(|line| line.contains("more → memex tree"))
+            .collect();
+        assert_eq!(more.len(), 1, "{out}");
+        assert!(
+            out.lines()
+                .nth_back(1)
+                .is_some_and(|line| line.starts_with("to cook")),
+            "{out}"
+        );
+        assert!(
+            out.lines()
+                .next_back()
+                .is_some_and(|line| line.starts_with("use ")),
+            "{out}"
+        );
     }
 }

@@ -56,8 +56,8 @@ memex: cases
   Scenario: cwd `src/deep`, which has no README, under a `src/README.md` whose one-liner is `The source folder holds the library.`; the line names the folder `src` and gives that one-liner after `—`. design §3.5 `here` line.
 - `INFO-HERE-02` From the root itself the here line is left out, though the root has a README.
   Scenario: the cwd is the root, which has a README. design §3.5 `here` line (shown only when the cwd is not the root).
-- `INFO-HERE-03` A one-liner in the here line is cut at 120 characters, the last of them `…`.
-  Scenario: a `src/README.md` whose first sentence is 150 characters; the here line keeps its first 119 characters and ends with `…`, 120 characters in all. design §2 One-liners and §3.5 `here` line.
+- `INFO-HERE-03` A one-liner in the here line is cut to at most 120 characters, the last of them `…`, on a whole word.
+  Scenario: a `src/README.md` whose first sentence is 150 characters; the here line keeps the whole words among its first 119 characters and ends with `…`. design §2 One-liners and §3.5 `here` line.
 - `INFO-HERE-04` With no README at or above the cwd, the here line is left out.
   Scenario: a root with no README and a cwd in `src/`, which has none. design §3.5 `here` line.
 
@@ -110,3 +110,22 @@ memex: cases
   Scenario: a root with a `.memex/` and no log entries; run `info --agent x`, then `info --json --agent x`. design §3.5 `to` line (shown including at zero, so an agent can tell that it is wired up) and §3.6 info (`to` is present whenever an agent is known).
 - `INFO-ZERO-02` `$MEMEX_AGENT` alone gives the same zero line in text and in JSON, with no `--agent` given.
   Scenario: the ZERO-01 root with MEMEX_AGENT=x; run `info`, then `info --json`. design §3.4 Agent id and §3.5 `to` line.
+
+## ROOTS
+
+- `INFO-ROOTS-01` The roots block lists the root's subfolders in byte order, each as its name, ` — ` and its README's one-liner cut at 120 characters on a whole word, with a folder that has no README as its name alone; the first line is headed `roots`, the others are indented to its column, and the block sits after the streams and before `to`, `here` and `use`. Files at the root are not listed.
+  Scenario: folders `crates`, `docs` (READMEs), `scripts` (a script, no README) and `zeta` (a 160-character first sentence), and a root `build.rs`; no `.memex/logs`, so no streams line. design §3.5 `roots` block and §2 One-liners. Run: memex info.
+- `INFO-ROOTS-02` A root with no subfolder prints no roots block, though it has files.
+  Scenario: a README.md and a `main.rs` at the root. design §3.5 `roots` block (left out when the root has no subfolder). Run: memex info.
+- `INFO-ROOTS-03` What the walk skips is left out of the roots block: a hidden folder, `node_modules`, `target` and a folder named in `.ignore`.
+  Scenario: those four beside one kept folder `app`; the block lists `app` alone. design §3.5 `roots` block and §4.1 item 2. Run: memex info.
+- `INFO-ROOTS-04` A block that would pass the 3,000-byte cap is cut from its end and closed with a line `+N more → memex tree`, and the `to`, `here` and `use` lines are kept.
+  Scenario: 45 root folders with READMEs, `--agent cook-2`, run from `area-02`; the lines shown are the first folders in byte order, the `+N more → memex tree` line follows, and the output stays within 3,000 bytes. design §3.5 `roots` block. Run: memex info --agent cook-2.
+- `INFO-ROOTS-05` In JSON, `roots` lists every root folder as `{path, title}`, with the one-liner in full and empty for a folder with no README.
+  Scenario: the folders of ROOTS-01 without the cut: `docs`, `scripts` and `zeta`. design §3.6 `info`. Run: memex info --json.
+- `INFO-ROOTS-06` In JSON, `roots` is an empty list when the root has no subfolder.
+  Scenario: as ROOTS-02. design §3.6 `info`. Run: memex info --json.
+- `INFO-ROOTS-07` Over the cap the roots block is cut before the lists: the roots end in a `+N more → memex tree` line and the streams line is printed whole.
+  Scenario: six log streams, whose line is a few hundred bytes, and 30 root folders with READMEs whose one-liners are about 100 characters; the block shows its first folders and `+N more → memex tree`, the streams line has no `+N more`, and the output stays within 3,000 bytes. design §3.5 `roots` block (cut first, from its end). Run: memex info.
+- `INFO-ROOTS-08` With no root left under the cap the roots block is the single line `roots  +N more → memex tree`, and the lists are cut after it.
+  Scenario: the 200 streams of CAP-01 and three root folders; the block is `roots  +3 more → memex tree` and the streams line is cut with its own `+N more`. design §3.5 `roots` block. Run: memex info.

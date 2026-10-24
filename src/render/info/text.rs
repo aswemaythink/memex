@@ -1,8 +1,8 @@
 //! Prints `info`'s atlas as text under the 3,000-byte cap (design §3.5).
 //! It prints the header, one line per part and the use line, and cuts the longest list until the text fits.
-//! Cases: INFO-HEAD-01, INFO-HEAD-02, INFO-INTENT-01, INFO-INTENT-02, INFO-INTENT-03, INFO-COLL-01, INFO-COLL-02, INFO-STREAM-01, INFO-STREAM-02, INFO-STREAM-03, INFO-STREAM-04, INFO-TO-01, INFO-TO-02, INFO-TO-03, INFO-TO-04, INFO-HERE-01, INFO-HERE-02, INFO-HERE-03, INFO-HERE-04, INFO-USE-01, INFO-CAP-01, INFO-NOROOT-01, INFO-NOROOT-02, INFO-WARN-01, INFO-ZERO-01, INFO-ZERO-02
+//! Cases: INFO-ROOTS-01, INFO-ROOTS-02, INFO-ROOTS-03, INFO-ROOTS-04, INFO-ROOTS-07, INFO-ROOTS-08, INFO-HEAD-01, INFO-HEAD-02, INFO-INTENT-01, INFO-INTENT-02, INFO-INTENT-03, INFO-COLL-01, INFO-COLL-02, INFO-STREAM-01, INFO-STREAM-02, INFO-STREAM-03, INFO-STREAM-04, INFO-TO-01, INFO-TO-02, INFO-TO-03, INFO-TO-04, INFO-HERE-01, INFO-HERE-02, INFO-HERE-03, INFO-HERE-04, INFO-USE-01, INFO-CAP-01, INFO-NOROOT-01, INFO-NOROOT-02, INFO-WARN-01, INFO-ZERO-01, INFO-ZERO-02
 
-use super::{Atlas, Collection, HereLine, Intent, Stream, ToCount};
+use super::{Atlas, Collection, HereLine, Intent, Root, Stream, ToCount};
 use crate::render::text::clip;
 
 /// The most bytes that the text of the atlas may take (design §3.5).
@@ -15,16 +15,22 @@ const DOT: &str = " · ";
 const USE: &str = "memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF";
 
 /// The text of the atlas (design §3.5): the header, then one line per part that has something to show. Text over the cap has
-/// its longest list line cut to its first items and a `+N more` ending, until the whole text is under the cap.
+/// its roots block cut first, from its end, to a `+N more → memex tree` line, and then its longest list line cut to its first
+/// items and a `+N more` ending, until the whole text is under the cap.
 pub fn text(atlas: &Atlas) -> String {
     let mut lists = [
         List::new("collections", collection_items(&atlas.collections)),
         List::new("streams", stream_items(&atlas.streams)),
     ];
+    let mut roots = atlas.roots.len();
     loop {
-        let out = assemble(atlas, &lists);
+        let out = assemble(atlas, &lists, roots);
         if out.len() <= CAP {
             return out;
+        }
+        if roots > 0 {
+            roots -= 1;
+            continue;
         }
         let longest = lists
             .iter_mut()
@@ -73,13 +79,15 @@ impl List {
     }
 }
 
-/// The whole text with each list at its current length: the header, the graph line, each list that has items, the to and
-/// here lines, then the use line. Every label is padded to the longest label that prints, and the value follows two spaces on.
-fn assemble(atlas: &Atlas, lists: &[List]) -> String {
+/// The whole text with each list at its current length and `roots` root lines shown: the header, the graph line, each list that
+/// has items, the roots block, the to and here lines, then the use line. Every label is padded to the longest label that prints,
+/// and the value follows two spaces on.
+fn assemble(atlas: &Atlas, lists: &[List], roots: usize) -> String {
     let mut lines: Vec<(String, String)> = vec![("graph".to_string(), intent_value(&atlas.intent))];
     for list in lists.iter().filter(|list| !list.items.is_empty()) {
         lines.push((list.label.to_string(), list.value()));
     }
+    lines.extend(roots_lines(&atlas.roots, roots));
     if let Some(to) = &atlas.to {
         lines.push((format!("to {}", to.agent), to_value(to)));
     }
@@ -97,6 +105,23 @@ fn assemble(atlas: &Atlas, lists: &[List]) -> String {
         out.push_str(&format!("{label:<width$}  {value}\n"));
     }
     out
+}
+
+/// The lines of the roots block (design §3.5): the first is labelled `roots`, the rest have no label and so are indented to its
+/// column. Each shows a root folder; when some are cut, a last line says how many and where to see them.
+fn roots_lines(roots: &[Root], shown: usize) -> Vec<(String, String)> {
+    let mut values: Vec<String> = roots[..shown]
+        .iter()
+        .map(|root| dashed(&root.path, &root.title))
+        .collect();
+    if shown < roots.len() {
+        values.push(format!("+{} more → memex tree", roots.len() - shown));
+    }
+    values
+        .into_iter()
+        .enumerate()
+        .map(|(index, value)| (if index == 0 { "roots" } else { "" }.to_string(), value))
+        .collect()
 }
 
 /// The graph line's value: the counts of READMEs and headers, in that order (design §3.5).
@@ -150,10 +175,15 @@ fn to_value(to: &ToCount) -> String {
 /// The value of the here line: the folder, then its one-liner cut at 120 characters; the dash and the one-liner are left out
 /// when the README has none.
 fn here_value(here: &HereLine) -> String {
-    if here.title.is_empty() {
-        here.path.clone()
+    dashed(&here.path, &here.title)
+}
+
+/// A folder's name, then ` — ` and its one-liner cut at 120 characters; the name alone when there is no one-liner.
+fn dashed(path: &str, title: &str) -> String {
+    if title.is_empty() {
+        path.to_string()
     } else {
-        format!("{} — {}", here.path, clip(&here.title))
+        format!("{path} — {}", clip(title))
     }
 }
 

@@ -1,6 +1,6 @@
 //! Parses the argv grammar of design §3 into a typed Command.
 //! Or into the usage error the grammar calls for.
-//! Cases: CLI-*, CLI-BARE-01, CLI-VERB-01, CLI-VERB-02, CLI-VERB-03, CLI-FLAG-06, CLI-HELP-01, CLI-JSON-03, CLI-JSON-04, CLI-HINT-10, CLI-HINT-11, AUD-EXIT-02, AUD-EXIT-03
+//! Cases: TREE-HELP-01, TREE-USAGE-03, CLI-*, CLI-BARE-01, CLI-VERB-01, CLI-VERB-02, CLI-VERB-03, CLI-FLAG-06, CLI-HELP-01, CLI-JSON-03, CLI-JSON-04, CLI-HINT-10, CLI-HINT-11, AUD-EXIT-02, AUD-EXIT-03
 
 use std::ffi::OsString;
 
@@ -9,7 +9,7 @@ use crate::grammar::{flag_entry, split_inline, takes_value};
 use crate::help;
 use crate::scan::{fail, parse_verb};
 
-/// The six verbs of design §3, in the order of the grammar block.
+/// The seven verbs of design §3, in the order of the grammar block.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Verb {
     /// `memex search`.
@@ -20,6 +20,8 @@ pub enum Verb {
     Log,
     /// `memex info`.
     Info,
+    /// `memex tree`.
+    Tree,
     /// `memex audit`.
     Audit,
     /// `memex init`.
@@ -28,11 +30,12 @@ pub enum Verb {
 
 impl Verb {
     /// Every verb, in grammar order.
-    pub const ALL: [Verb; 6] = [
+    pub const ALL: [Verb; 7] = [
         Verb::Search,
         Verb::Show,
         Verb::Log,
         Verb::Info,
+        Verb::Tree,
         Verb::Audit,
         Verb::Init,
     ];
@@ -44,6 +47,7 @@ impl Verb {
             Verb::Show => "show",
             Verb::Log => "log",
             Verb::Info => "info",
+            Verb::Tree => "tree",
             Verb::Audit => "audit",
             Verb::Init => "init",
         }
@@ -99,6 +103,17 @@ pub enum Command {
     Info {
         /// The value of `--agent`, if the flag was given.
         agent: Option<String>,
+        /// True when `--json` was given.
+        json: bool,
+    },
+    /// `memex tree`, with its path and flags.
+    Tree {
+        /// The folder or file to show; none shows the root.
+        path: Option<String>,
+        /// The value of `--depth`, if the flag was given.
+        depth: Option<usize>,
+        /// The value of `--limit`, if the flag was given.
+        limit: Option<usize>,
         /// True when `--json` was given.
         json: bool,
     },

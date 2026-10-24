@@ -3,7 +3,7 @@
 
 [package]
 name = "agent-memex"
-version = "0.2.2"
+version = "0.3.0"
 edition = "2021"
 rust-version = "1.88"
 license = "MIT"

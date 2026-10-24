@@ -1,0 +1,11 @@
+$ memex tree
+exit 0
+stdout
+| tree  . · 0 files  (showing 6 of 6)
+|   data/
+|     data/a.json
+|     data/b.txt
+|     data/deep/
+|   docs/  The documents.
+|     docs/x.json
+stderr (empty)

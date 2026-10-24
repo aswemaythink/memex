@@ -9,3 +9,4 @@ pub mod init;
 pub mod log;
 pub mod search;
 pub mod show;
+pub mod tree;

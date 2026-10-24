@@ -8,6 +8,7 @@ stderr
 | memex show   <path|ref>... [--up N] [--comments] [--limit N] [--json]
 | memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
 | memex info   [--agent <id>] [--json]
+| memex tree   [<path>] [--depth N] [--limit N] [--json]
 | memex audit  [<path|glob>...] [--limit N] [--json]
 | memex init
 | memex --help | --version

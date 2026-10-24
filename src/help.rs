@@ -1,21 +1,22 @@
 //! The help texts and the grammar block of design §3, plus the usage lines that usage errors print.
-//! Cases: CLI-*, CLI-HELP-01, CLI-HELP-02, CLI-HELP-03, CLI-HELP-04, CLI-HELP-05, CLI-HELP-06, CLI-HINTB-01, AUD-EXIT-04
+//! Cases: TREE-HELP-01, CLI-*, CLI-HELP-01, CLI-HELP-02, CLI-HELP-03, CLI-HELP-04, CLI-HELP-05, CLI-HELP-06, CLI-HINTB-01, AUD-EXIT-04
 
 use crate::cli::Verb;
 
 /// The grammar block of design §3: one line per verb, then the top-level flags.
-/// The first six lines are in `Verb::ALL` order, so `Verb as usize` indexes them.
-const GRAMMAR: [&str; 7] = [
+/// The first seven lines are in `Verb::ALL` order, so `Verb as usize` indexes them.
+const GRAMMAR: [&str; 8] = [
     "memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]",
     "memex show   <path|ref>... [--up N] [--comments] [--limit N] [--json]",
     "memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF",
     "memex info   [--agent <id>] [--json]",
+    "memex tree   [<path>] [--depth N] [--limit N] [--json]",
     "memex audit  [<path|glob>...] [--limit N] [--json]",
     "memex init",
     "memex --help | --version",
 ];
 
-const TOP: [&str; 16] = [
+const TOP: [&str; 18] = [
     "memex is authored context compression: it indexes a repo's intent layer so agents read intent before code.",
     "",
     GRAMMAR[0],
@@ -25,11 +26,13 @@ const TOP: [&str; 16] = [
     GRAMMAR[4],
     GRAMMAR[5],
     GRAMMAR[6],
+    GRAMMAR[7],
     "",
     "search  find docs by words and field:value filters",
     "show    print the header, citations and chain of each ref",
     "log     append an entry from stdin and print its ref",
     "info    print where things are, never their contents",
+    "tree    print the shape of a folder: its folders and files with one-liners and header coverage",
     "audit   report where intent is missing or broken, for the root or some of it",
     "init    set up .memex/ and the AGENTS.md snippet",
 ];
@@ -68,8 +71,16 @@ const INFO: [&str; 4] = [
     "  --json        print one JSON document instead of text",
 ];
 
-const AUDIT: [&str; 5] = [
+const TREE: [&str; 5] = [
     GRAMMAR[4],
+    "Print the shape of a folder in one call: its folders and files a few levels down, each with its one-liner, and how many files lack a header.",
+    "  --depth N   levels below the path to list, 1 or more (default 2)",
+    "  --limit N   entries printed (default 200)",
+    "  --json      print one JSON document instead of text",
+];
+
+const AUDIT: [&str; 5] = [
+    GRAMMAR[5],
     "Report where the intent layer is missing, thin or broken: headers, readmes, length, one-liners, thin, cites and ids.",
     "A path names a file or folder, and a glob (with *, ? or [) matches walked paths; with none, the root is audited.",
     "  --limit N   findings listed per kind (default 20)",
@@ -77,7 +88,7 @@ const AUDIT: [&str; 5] = [
 ];
 
 const INIT: [&str; 2] = [
-    GRAMMAR[5],
+    GRAMMAR[6],
     "Set up .memex/ and the AGENTS.md snippet; safe to run again, and it never overwrites a file.",
 ];
 
@@ -101,6 +112,7 @@ pub fn text(verb: Option<Verb>) -> String {
         Some(Verb::Show) => &SHOW,
         Some(Verb::Log) => &LOG,
         Some(Verb::Info) => &INFO,
+        Some(Verb::Tree) => &TREE,
         Some(Verb::Audit) => &AUDIT,
         Some(Verb::Init) => &INIT,
     };

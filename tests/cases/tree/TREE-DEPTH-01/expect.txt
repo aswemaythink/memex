@@ -1,0 +1,9 @@
+$ memex tree --depth 1
+exit 0
+stdout
+| tree  . · 7 files · 3 no header  (showing 4 of 4)
+|   build.rs  Builds the shop.
+|   docs/  The notes of the shop.
+|   fixtures/
+|   src/  The source of the shop.  (6 files · 3 no header)
+stderr (empty)

@@ -1,6 +1,7 @@
 //! Turns the arguments of `memex audit` into the scope they name (design §3.5d).
 //! A file is in scope when it is named, when it matches a glob, or when a folder above it is; a folder likewise. A path is
 //! resolved as `show` resolves one (design §3.1), so a path that `show` cannot find is not found by audit either.
+//! `tree` resolves its one path through `scope_path`, so the two cannot drift apart.
 //! Cases: AUD-SCOPE-01, AUD-SCOPE-02, AUD-SCOPE-03, AUD-SCOPE-04, AUD-SCOPE-05, AUD-SCOPE-06, AUD-SCOPE-07, AUD-GLOB-01, AUD-GLOB-02, AUD-GLOB-03
 
 use std::collections::BTreeSet;
@@ -103,14 +104,29 @@ fn glob(corpus: &Corpus, arg: &str, tree: &[Entry], resolved: &mut Resolved) {
 /// several things. A doc (a label or a bare id) is not a path, so it names nothing here, and so does a path outside the root,
 /// since audit reads only the root it runs in.
 fn path(corpus: &Corpus, cwd: &Path, store: Option<&Path>, arg: &str, resolved: &mut Resolved) {
-    match resolve(corpus, cwd, store, arg) {
-        Outcome::Found(Target::Path { rel, kind }) => {
+    match scope_path(corpus, cwd, store, arg) {
+        Ok((rel, kind)) => {
             resolved.scope.add(&rel, kind == Kind::Dir);
             label(resolved, label_of(&rel));
         }
-        Outcome::Ambiguous(candidates) => resolved.misses.push(Miss::ambiguous(arg, candidates)),
+        Err(miss) => resolved.misses.push(miss),
+    }
+}
+
+/// The root-relative path and kind that `arg` names as `show` resolves a path (design §3.1 steps 1, 2 and 5), or a miss when it
+/// names nothing or several things. A doc (a label or a bare id) is not a path, so it names nothing here, and so does a path
+/// outside the root, since `audit` and `tree` read only the root they run in.
+pub(crate) fn scope_path(
+    corpus: &Corpus,
+    cwd: &Path,
+    store: Option<&Path>,
+    arg: &str,
+) -> Result<(String, Kind), Miss> {
+    match resolve(corpus, cwd, store, arg) {
+        Outcome::Found(Target::Path { rel, kind }) => Ok((rel, kind)),
+        Outcome::Ambiguous(candidates) => Err(Miss::ambiguous(arg, candidates)),
         Outcome::Found(Target::Doc(_)) | Outcome::Elsewhere(_) | Outcome::NotFound => {
-            resolved.misses.push(Miss::not_found(arg));
+            Err(Miss::not_found(arg))
         }
     }
 }

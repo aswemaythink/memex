@@ -1,0 +1,28 @@
+$ memex tree src/main.rs
+exit 0
+stdout
+| tree  src/main.rs · 1 file  (showing 1 of 1)
+|   src/main.rs  Starts the shop.
+stderr (empty)
+
+$ memex tree src/util.rs
+exit 0
+stdout
+| tree  src/util.rs · 1 file · 1 no header  (showing 1 of 1)
+|   src/util.rs  (no header)
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+stderr (empty)
+
+$ memex tree src/README.md
+exit 0
+stdout
+| tree  src/README.md · 0 files  (showing 1 of 1)
+|   src/README.md  The source of the shop.
+stderr (empty)
+
+$ memex tree docs/data.json
+exit 0
+stdout
+| tree  docs/data.json · 0 files  (showing 1 of 1)
+|   docs/data.json
+stderr (empty)

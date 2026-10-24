@@ -2,6 +2,14 @@
 
 The release notes of memex. Each GitHub release takes its notes from the matching section here.
 
+## 0.3.0 - 2026-10-24
+
+- New verb `tree`: the shape of a folder in one call. `memex tree [<path>] [--depth N] [--limit N] [--json]` lists the walked folders and files below the root or a path, two levels down by default, depth first and in the order `show` lists children. Each folder line carries its README's one-liner, or `(no README)` when its subtree holds files a header is expected on, and `(N files · H no header)` counting those files across the whole subtree; each file line carries its header's one-liner, `(no header)`, or a Markdown file's title. The first line gives the scope's totals, and the gap lines `show` prints follow the list.
+- `info` prints a `roots` block: the root's subfolders in byte order, each with its README's one-liner (the name alone when it has no README). When the block would pass the 3,000-byte cap it ends with `+N more → memex tree`, and the `to`, `here` and `use` lines are kept. `info --json` gains `roots`, with no cap.
+- A README's HTML comment markers are not text: a purpose written as `<!-- … -->` reads as prose, and a paragraph that is empty without them is skipped.
+- Text output clips a one-liner on a whole word when that keeps at least 60 of its 120 characters, and drops a trailing `,`, `;` or `:` before the `…`.
+- The AGENTS.md snippet that `init` writes now points to `memex tree`; run `memex init` again to refresh it.
+
 ## 0.2.2 - 2026-10-22
 
 - Collections work in git worktrees. A manifest root that a linked worktree lacks, such as gitignored generated output that only the main checkout holds, is read from the same path in the main checkout, with one warning per root naming where it was read from: `<collection>: root <root> is not in this worktree; read from the main checkout <path>`. A root the worktree has is still its own, and a root that resolves outside the main checkout is still skipped as leading outside the repo. The main checkout is found from the worktree's layout files, so no git call is made.

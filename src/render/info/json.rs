@@ -1,5 +1,5 @@
 //! Builds `info`'s atlas as the `--json` document (design §3.6).
-//! Cases: INFO-JSON-01, INFO-JSON-02, INFO-JSON-03, INFO-WARN-02
+//! Cases: INFO-ROOTS-05, INFO-ROOTS-06, INFO-JSON-01, INFO-JSON-02, INFO-JSON-03, INFO-WARN-02
 
 use serde_json::{json, Value as Json};
 
@@ -12,6 +12,7 @@ pub fn document(atlas: &Atlas) -> String {
         "root": atlas.root,
         "log_store": atlas.store,
         "collections": collections_json(atlas),
+        "roots": roots_json(atlas),
         "warnings": atlas.warnings,
     });
     if let Some(to) = &atlas.to {
@@ -21,6 +22,15 @@ pub fn document(atlas: &Atlas) -> String {
         out["here"] = json!({"path": here.path, "title": here.title});
     }
     format!("{out}\n")
+}
+
+/// The `roots` of the JSON document (design §3.6): every root folder, with no cap, and its one-liner in full, empty when it has none.
+fn roots_json(atlas: &Atlas) -> Vec<Json> {
+    atlas
+        .roots
+        .iter()
+        .map(|root| json!({"path": root.path, "title": root.title}))
+        .collect()
 }
 
 /// The collections of the JSON document (design §3.6): the two built-ins, then the collections (manifests and frontmatter alike), then

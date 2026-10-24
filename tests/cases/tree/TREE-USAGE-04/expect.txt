@@ -1,0 +1,6 @@
+$ memex tree ''
+exit 2
+stdout (empty)
+stderr
+| memex: empty path
+| usage: memex tree   [<path>] [--depth N] [--limit N] [--json]

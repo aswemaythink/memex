@@ -1,0 +1,12 @@
+$ memex tree --depth 2
+exit 0
+stdout
+| tree  . · 5 files  (showing 7 of 7)
+|   B/  Upper case sorts first.  (1 file)
+|     B/z.rs  Z.
+|   a/  A folder.  (1 file)
+|     a/y.rs  Y.
+|   a-x.rs  A dash x.
+|   a.rs  A dot rs.
+|   b.rs  B.
+stderr (empty)

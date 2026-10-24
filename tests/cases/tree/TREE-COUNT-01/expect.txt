@@ -1,0 +1,17 @@
+$ memex tree
+exit 0
+stdout
+| tree  . · 7 files · 2 no header  (showing 11 of 11)
+|   bare/  One file, no header.  (1 file · 1 no header)
+|     bare/a.rs  (no header)
+|   one/  One file.  (1 file)
+|     one/a.rs  A.
+|   three/  Three files.  (3 files · 1 no header)
+|     three/a.rs  A.
+|     three/b.rs  B.
+|     three/c.rs  (no header)
+|   two/  Two files.  (2 files)
+|     two/a.rs  A.
+|     two/b.rs  B.
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+stderr (empty)

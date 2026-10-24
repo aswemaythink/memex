@@ -36,7 +36,7 @@ Five conventions:
 4. **Cite, don't copy.** Write ids, paths and refs into READMEs, headers, docs and logs. memex derives links both ways from them. There are no mapping files.
 5. **Intent ships with code.** A change to behaviour updates its header or README in the same commit.
 
-**One-liners.** A README's one-liner is the first sentence of the first paragraph after the H1, or the H1 text if there is no paragraph; a closed frontmatter block atop a README is not part of that text (search skips it too, and so does `show`'s text, §3.3). A header's is the first sentence of the block. A sentence ends at `.`, `!` or `?` followed by whitespace or the end of the paragraph. Text output truncates a one-liner at 120 chars with `…`; JSON keeps the full text.
+**One-liners.** A README's one-liner is the first sentence of the first paragraph after the H1, or the H1 text if there is no paragraph; a closed frontmatter block atop a README is not part of that text (search skips it too, and so does `show`'s text, §3.3). A header's is the first sentence of the block. A sentence ends at `.`, `!` or `?` followed by whitespace or the end of the paragraph. In a README, an HTML comment's markers are not text: `<!--` and `-->` are removed from the paragraph before the sentence is taken, so a purpose written inside a comment (to keep it out of the rendered page) reads as prose, and a paragraph that is empty once they are removed is skipped (2026-10-24). Text output truncates a one-liner at 120 chars with `…`, cutting at the last whitespace before the limit when that leaves at least 60 chars, else mid-word, so a line ends on a whole word; the trailing whitespace and any trailing `,`, `;` or `:` are dropped before the `…`, on a mid-word cut too; when the character after the first 119 is whitespace the cut already ends a word (2026-10-24). JSON keeps the full text.
 
 ### 2.1 Header detection
 
@@ -124,6 +124,7 @@ memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--js
 memex show   <path|ref>... [--up N] [--comments] [--limit N] [--json]
 memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
 memex info   [--agent <id>] [--json]
+memex tree   [<path>] [--depth N] [--limit N] [--json]
 memex audit  [<path|glob>...] [--limit N] [--json]
 memex init
 memex --help | --version
@@ -214,6 +215,9 @@ memex  /repo · log store .memex/logs/
 graph        48 readmes · 912 headers
 collections  cases 214 · doom 41 · neo-cases 294 · perf 212
 streams      impl 12 (3 new in 24h) · review 3 (1 new) · drift 5
+roots        crates — The Rust crates that ship.
+             docs — The user guide and reference.
+             scripts
 to cook-2    2 messages → memex search to:cook-2
 here         crates/namer — Namer: turns atoms into stable class names
 use          memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
@@ -223,6 +227,7 @@ use          memex show <path|ref> · memex search <words> · memex log <stream>
 - **Collections.** Name and doc count, alphabetical, from frontmatter and manifests alike; `--json` adds kind, description and owner. Invalid manifests, invalid collection names, duplicate ids and shared names (§4.2) are listed as warnings.
 - **Streams.** Total entries and how many are new in the last 24 hours, ordered by most recent activity.
 - **`to` line.** A count only: every entry in the store addressed to the id. Shown when an agent id is known (`--agent`, `$MEMEX_AGENT`), including at zero (`to cook-2    0 messages → memex search to:cook-2`), so an agent can tell that it is wired up; JSON `to` is then always present.
+- **`roots` block** (2026-10-24). The root's walked subfolders (depth 1; what the walk skips is left out, §4.1 item 2), in byte order, one per line: the first line is headed `roots`, the next are indented to the same column. Each line is the folder's name, then ` — ` and its README's one-liner (§2, clipped as text output clips one), or the name alone when the folder has no README. Left out when the root has no subfolder. It answers "where is everything" in the overview; `memex tree` goes deeper. The block counts toward the 3,000-byte cap: when it would pass it, it ends with a line `+N more → memex tree`, and the lines after it (`to`, `here`, `use`) are always kept. Over the cap the roots block is cut first, from its end, before the collections and streams lists are; with no root left it is one line, `roots  +N more → memex tree` (2026-10-24).
 - **`here` line.** Shown only when the cwd is not the root: the nearest README's one-liner.
 
 ### 3.5b `init`
@@ -299,15 +304,45 @@ ids         (showing 1 of 1; duplicate)
   The first line names the scope (`.` for the root; several arguments are joined with ` · `), the walked files and folders in it, and the total findings. Each kind is a group headed like a search group, `<kind>  (showing N of M; <what it lists>)`, its lines are `<label>  <detail>`, and its fix line follows; `one-liners` says `(one-liners): shorten the first sentence to 100 characters or fewer`, and `thin` has no fix line. With no finding, the first line is followed by `nothing to fix`. Each kind's list uses `--limit` (default 20); when it is cut, the heading reads `(showing N of M; --limit M for all; <what it lists>)`.
 - **Exit code.** 0 whatever it finds, since a finding is not an error; 1 if a path argument names nothing; 2 for a usage error.
 
+### 3.5e `tree` (2026-10-24)
+
+The shape of a folder in one call: its folders and files a few levels down, each with its one-liner, and how much of each subtree has intent. `show <folder>` reads one level; `tree` is the orientation that would otherwise take a `show` per folder. Like `info`, it prints one-liners, never bodies.
+
+- **Scope.** With no argument, the root. One path argument, resolved as `audit` resolves a scope path (§3.1 steps 1, 2 and 5); a label, a bare id or a glob is not a path and is `not found` (fatal, exit 1). A path naming a file prints the first line and that file's line alone. More than one argument is a usage error.
+- **Depth.** `--depth N` lists the entries at most N levels below the scope folder; N is a whole number of 1 or more (else a usage error); the default is 2. A folder at the last level still carries its whole subtree's counts.
+- **What is listed.** The walked folders and files under the scope (what the walk skips is left out, §4.1 item 2), depth first, each folder's entries in the order `show` lists a folder's children (§3.3); a folder's own README.md is not listed, since its one-liner is on the folder's line.
+- **Counts.** A folder's *files* are the files in its subtree that have a comment family (§2.1) and are neither empty nor binary: the files a header is expected on, as `audit`'s `headers` kind counts them (§3.5d). Its *no header* count is those of them with no header.
+- **Lines.** Each line is indented two spaces per level (the scope's children at two) and starts with the entry's root-relative label, so every line round-trips into `show` (§3.1); a folder's label ends with `/`. Then two spaces and:
+  - a folder: its README's one-liner; with no README, `(no README)` when its files count is above 0 (as `audit`'s `readmes` kind judges a unit, §3.5d), else nothing. Then, when its files count is above 0, two spaces and `(<F> files · <H> no header)`, leaving out ` · <H> no header` when H is 0; a count of one is singular (`1 file`).
+  - a file: as a child line of `show` (§3.3): its header's one-liner, `(no header)` for a file the counts would count that has none, a Markdown file's title, or nothing (the label alone) for any other file.
+  One-liners are clipped as text output clips them (§2).
+- **First line.** `tree  <scope label> · <F> files · <H> no header  (showing N of M)`, with the scope's counts (` · <H> no header` left out at 0), where M is the number of entries within the depth and N those printed; `; --limit M for all` is added when the list was cut.
+- **Limit.** `--limit` bounds the entries printed (default 200), cutting the depth-first list at its end.
+- **Gaps.** After the list, the gap lines `show` prints (§3.3), once each, for the placeholders the list used.
+- **Rulings** (2026-10-24). The first line's counts are singular at one too (`1 file`); the root's scope label is `.`. An empty path argument is a usage error, as for `audit`; a path that names two entries is `ambiguous` (exit 1, candidates on stderr). A README that exists but cannot be read counts as none on a folder line, as on a `show` child line. `(no README)` follows the files count, so a folder holding only empty or binary code files gets no placeholder here though `audit`'s `readmes` kind lists it.
+- **Exit code.** 0, with or without gaps; 1 when the path names nothing or is ambiguous; 2 for a usage error.
+
+```
+tree  supabase · 11 files · 2 no header  (showing 6 of 6)
+  supabase/functions/  Owns the Edge Functions folder: one Deno function per subfolder.  (10 files · 2 no header)
+    supabase/functions/_shared/  Code the functions import.  (6 files)
+    supabase/functions/billing/  (no README)  (4 files · 2 no header)
+    supabase/functions/deno.json
+  supabase/migrations/  Schema changes, oldest first.
+  supabase/seed.ts  Seeds a local database with test users.
+(no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+```
+
 ### 3.6 JSON
 
 With `--json`, stdout is always one JSON document, including errors. Without it, errors go to stderr as text.
 
 - **Doc:** `{ref, collection, id, path, title, fields:{…}}`. `fields` holds frontmatter and manifest fields (an entry's are `group` and `evidence`); logs add `time, agent, to[], tags[], branch, worktree, commit`.
 - **`search` (with words or filters, or a roster):** `{query, filters:{…}, groups:[{collection, total, hits:[doc + {score|null, snippet, fuzzy:[]}]}]}`. Roster hits have `score: null` and `cited_by: N`, which, like `<-N`, excludes prefix citations. JSON scores are rounded to 3 decimals. The shape is the same with or without `--in`. A filter left out by `!` is listed under its name with the `!`, as `"!tag": ["show"]`; `+` adds nothing to the name.
-- **`info`:** `{root, log_store, collections:[{name, kind, builtin, count, description, owner, new_24h?, newest?, error?}], to?:{agent, count}, here?:{path, title}, warnings:[]}`, where `kind` is `null` for `readmes` and `headers` (`builtin: true`), `markdown` for a collection declared by frontmatter, the manifest's kind (`folder`, `json`) for one declared by a manifest, and `log` for streams.
+- **`info`:** `{root, log_store, collections:[{name, kind, builtin, count, description, owner, new_24h?, newest?, error?}], roots:[{path, title}], to?:{agent, count}, here?:{path, title}, warnings:[]}`, where `kind` is `null` for `readmes` and `headers` (`builtin: true`), `markdown` for a collection declared by frontmatter, the manifest's kind (`folder`, `json`) for one declared by a manifest, and `log` for streams.
 - **`show`:** `{docs:[doc + {text, cites:[{ref, title, resolved}], cited_by:{total, refs:[{ref, title, via?}]}, children?:{total, items:[{path, kind:"dir"|"file", title}]}, comments?:{total, cut, items:[{line, text}]}, chain:[{path, text}]}], errors:[{arg, code, message, candidates?}]}`. `cites` and `cited_by` are `null` for an entry in another root (§3.1).
 - **`audit`:** `{scope:[…], files, folders, findings, kinds:[{kind, total, items:[{ref, detail}]}], errors:[{arg, code, message}]}`, where `kinds` holds only kinds with items, in §3.5d order, each list bounded by `--limit` (`thin` is listed there but, as a pointer, is not counted in `findings`); `detail` is `null` where the text has none.
+- **`tree`:** `{scope, depth, files, no_header, total, items:[{path, kind:"dir"|"file", depth, title, gap, files?, no_header?}]}`, where `total` is M, `items` holds the printed entries, `path` is the label without a trailing `/`, `title` is the full one-liner (empty when there is none), `gap` is `"readme"`, `"header"` or `null` as the text's placeholder, and `files`/`no_header` are present on folders. `info`'s `roots` lists every root folder (no cap), `title` empty when it has no README.
 - **`log`:** `{ref, path}`, where `path` is absolute and `/`-separated.
 - **Fatal errors:** `{error:{code, message}}`, where `code` is one of `usage | not_found | ambiguous | no_root | io`. `no_root` is `log` with no `.memex/` (§4.1).
 - **Exit codes:**
@@ -483,7 +518,7 @@ This repo keeps an intent layer. The graph: README.md per folder and a header co
 (first line = purpose). Dimensions: any Markdown file with `memex: <collection>` in its frontmatter
 joins that collection, such as CASES.md (`memex: cases`): test ids with their claims; each id is in its test's name or in a comment on it.
 - Overview: `memex info`: where everything is (graph, collections, streams, messages for you).
-- Orient: `memex show <path>`: header, cites, who cites it, README chain; folders list children.
+- Orient: `memex show <path>`: header, cites, who cites it, README chain; folders list children. `memex tree [path]`: folders and files two levels down, with one-liners and header coverage.
 - Find: `memex search <words>` over READMEs, headers, collections and logs. Use `rg` for symbols.
 - Tests for X: `memex search <words> --in cases` (or the collection `memex info` names); `memex show <ID>` gives claim and evidence; `rg <ID>` finds the test.
 - Findings: `memex log <stream> [--to <agent>] <<'EOF' … EOF` prints a ref. Hand back the ref, not the report.
@@ -537,6 +572,7 @@ Or download a binary from GitHub Releases. All of these, and the plugin manifest
 3. **Global search covers the intent layer.** This settles an open question. Grouped output solves the drowning problem that made the prototype keep the graph targeted-only.
 4. **New verb `info`: the atlas.** Where things are, never contents. It replaces bare `search` as the one overview, and it's the start hook's single, size-capped call.
 5. **Log body limits.** 16 KiB cap; bodies may carry their own frontmatter; logs are immutable.
+6. **New verb `tree`; `info` prints the roots** (user, 2026-10-24). Playtest friction on a 541-README repo: orienting took a `show` per folder, `info` printed counts but not where things are, and nothing showed header coverage per subtree. `tree` (§3.5e) is the deep map with coverage counts; `info`'s `roots` block (§3.5) is its first level. One-liners drop HTML comment markers and clip on a word (§2).
 
 ## 9. Open questions (with recommendations)
 

@@ -3,5 +3,6 @@ exit 0
 stdout
 | memex  $SANDBOX/repo · log store .memex/logs/
 | graph  1 readme · 1 header
+| roots  src
 | use    memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr (empty)
