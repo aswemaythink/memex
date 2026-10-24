@@ -1,0 +1,11 @@
+$ memex info
+exit 0
+stdout
+| memex  $SANDBOX/repo · log store .memex/logs/
+| graph  4 readmes · 2 headers
+| roots  crates — The Rust crates that ship.
+|        docs — The user guide and reference.
+|        scripts
+|        zeta — The Zeta folder keeps a deliberately long first sentence so that the roots line has to cut it at a whole word before…
+| use    memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
+stderr (empty)

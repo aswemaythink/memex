@@ -4,11 +4,12 @@ stdout
 | memex  $SANDBOX/repo · log store .memex/logs/
 | graph        0 readmes · 0 headers
 | collections  decisions 2
+| roots        decisions
 | use          memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr (empty)
 
 $ memex info --json
 exit 0
 stdout
-| {"root":"$SANDBOX/repo","log_store":"$SANDBOX/repo/.memex/logs","collections":[{"name":"readmes","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"decisions","kind":"markdown","builtin":false,"count":2,"description":null,"owner":null}],"warnings":[]}
+| {"root":"$SANDBOX/repo","log_store":"$SANDBOX/repo/.memex/logs","collections":[{"name":"readmes","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"decisions","kind":"markdown","builtin":false,"count":2,"description":null,"owner":null}],"roots":[{"path":"decisions","title":""}],"warnings":[]}
 stderr (empty)

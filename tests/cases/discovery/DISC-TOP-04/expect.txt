@@ -9,5 +9,5 @@ stderr (empty)
 $ memex info --json  [cwd repo/sub]
 exit 0
 stdout
-| {"root":"$SANDBOX/repo/sub","log_store":null,"collections":[{"name":"readmes","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null}],"warnings":[]}
+| {"root":"$SANDBOX/repo/sub","log_store":null,"collections":[{"name":"readmes","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null}],"roots":[],"warnings":[]}
 stderr (empty)

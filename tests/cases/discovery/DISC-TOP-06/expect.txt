@@ -3,11 +3,12 @@ exit 0
 stdout
 | memex  $SANDBOX/repo · log store none (run memex init)
 | graph  0 readmes · 0 headers
+| roots  sub
 | use    memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr (empty)
 
 $ memex info --json  [cwd repo/sub]
 exit 0
 stdout
-| {"root":"$SANDBOX/repo","log_store":null,"collections":[{"name":"readmes","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null}],"warnings":[]}
+| {"root":"$SANDBOX/repo","log_store":null,"collections":[{"name":"readmes","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null}],"roots":[{"path":"sub","title":""}],"warnings":[]}
 stderr (empty)

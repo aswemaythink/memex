@@ -110,3 +110,18 @@ memex: cases
   Scenario: a root with a `.memex/` and no log entries; run `info --agent x`, then `info --json --agent x`. design §3.5 `to` line (shown including at zero, so an agent can tell that it is wired up) and §3.6 info (`to` is present whenever an agent is known).
 - `INFO-ZERO-02` `$MEMEX_AGENT` alone gives the same zero line in text and in JSON, with no `--agent` given.
   Scenario: the ZERO-01 root with MEMEX_AGENT=x; run `info`, then `info --json`. design §3.4 Agent id and §3.5 `to` line.
+
+## ROOTS
+
+- `INFO-ROOTS-01` The roots block lists the root's subfolders in byte order, each as its name, ` — ` and its README's one-liner cut at 120 characters on a whole word, with a folder that has no README as its name alone; the first line is headed `roots`, the others are indented to its column, and the block sits after the streams and before `to`, `here` and `use`. Files at the root are not listed.
+  Scenario: folders `crates`, `docs` (READMEs), `scripts` (a script, no README) and `zeta` (a 160-character first sentence), and a root `build.rs`; no `.memex/logs`, so no streams line. design §3.5 `roots` block and §2 One-liners. Run: memex info.
+- `INFO-ROOTS-02` A root with no subfolder prints no roots block, though it has files.
+  Scenario: a README.md and a `main.rs` at the root. design §3.5 `roots` block (left out when the root has no subfolder). Run: memex info.
+- `INFO-ROOTS-03` What the walk skips is left out of the roots block: a hidden folder, `node_modules`, `target` and a folder named in `.ignore`.
+  Scenario: those four beside one kept folder `app`; the block lists `app` alone. design §3.5 `roots` block and §4.1 item 2. Run: memex info.
+- `INFO-ROOTS-04` A block that would pass the 3,000-byte cap is cut from its end and closed with a line `+N more → memex tree`, and the `to`, `here` and `use` lines are kept.
+  Scenario: 45 root folders with READMEs, `--agent cook-2`, run from `area-02`; the lines shown are the first folders in byte order, the `+N more → memex tree` line follows, and the output stays within 3,000 bytes. design §3.5 `roots` block. Run: memex info --agent cook-2.
+- `INFO-ROOTS-05` In JSON, `roots` lists every root folder as `{path, title}`, with the one-liner in full and empty for a folder with no README.
+  Scenario: the folders of ROOTS-01 without the cut: `docs`, `scripts` and `zeta`. design §3.6 `info`. Run: memex info --json.
+- `INFO-ROOTS-06` In JSON, `roots` is an empty list when the root has no subfolder.
+  Scenario: as ROOTS-02. design §3.6 `info`. Run: memex info --json.

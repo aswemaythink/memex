@@ -9,6 +9,7 @@ stdout
 | 
 | memex  $SANDBOX/repo/outer · log store .memex/logs/
 | graph  0 readmes · 0 headers
+| roots  inner
 | use    memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr (empty)
 == snapshot repo/outer/inner

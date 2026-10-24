@@ -9,7 +9,7 @@ stderr (empty)
 $ memex info --json
 exit 0
 stdout
-| {"root":"$SANDBOX/repo","log_store":null,"collections":[{"name":"readmes","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null}],"warnings":[]}
+| {"root":"$SANDBOX/repo","log_store":null,"collections":[{"name":"readmes","kind":null,"builtin":true,"count":0,"description":null,"owner":null},{"name":"headers","kind":null,"builtin":true,"count":0,"description":null,"owner":null}],"roots":[],"warnings":[]}
 stderr (empty)
 
 $ memex log impl

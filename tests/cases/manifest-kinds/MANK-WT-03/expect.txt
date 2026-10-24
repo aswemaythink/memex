@@ -12,6 +12,7 @@ stdout
 | memex  $SANDBOX/wt · log store $SANDBOX/repo/.memex/logs
 | graph        0 readmes · 0 headers
 | collections  far 1
+| roots        units
 | use          memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr
 | memex: warning: far: root linked leads outside the repo; skipped
