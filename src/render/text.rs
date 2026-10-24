@@ -5,13 +5,11 @@
 //! A README or Markdown body prints from after its frontmatter block, which JSON keeps (design §3.3 Frontmatter).
 //! Cases: SHOW-FRONT-01, SHOW-FILE-01, SHOW-FILE-02, SHOW-DIR-01, SHOW-DIR-02, SHOW-MD-01, SHOW-MD-02, SHOW-LOG-01, SHOW-UP-01, SHOW-ROOT-01, SHOW-LIMIT-01, SHOW-LIMIT-02, SHOW-SEP-01, SHOW-ERR-01, SHOW-ERR-02, SHOW-LINE-01, INT-NOHEAD-03, CASE-SECT-01, CITE-PREFIX-01, CITE-UNRES-01, CITE-BACK-01, CITE-BACK-04, CITE-LINK-03, SHOW-OTHER-01, SHOW-GAP-01, SHOW-GAP-02, SHOW-GAP-03, SHOW-MDCHILD-01, SHOW-MDCHILD-02, SHOW-MDCHILD-03, SHOW-MDCHILD-04, SHOW-COMMENTS-01, SHOW-COMMENTS-03, SHOW-COMMENTS-04, SHOW-COMMENTS-05, SHOW-COMMENTS-06, SHOW-COMMENTS-08, SHOW-COMMENTS-09
 
+pub use super::clip::clip;
 use super::{CaseParts, Citations, Comments, Fields, Link, Listing, Miss, Ref, Section};
 use crate::cite::Cite;
 use crate::collections::frontmatter::{after_frontmatter, Value};
 use crate::corpus::{is_markdown, Child, Kind};
-
-/// A one-liner is cut to this many characters, the ellipsis included (design §2).
-const CLIP: usize = 120;
 
 /// The placeholder of a folder with no README, which is also its body (design §3.3).
 const NO_README: &str = "(no README)";
@@ -342,14 +340,4 @@ fn with_newline(text: &str) -> String {
     } else {
         format!("{text}\n")
     }
-}
-
-/// A one-liner cut to `CLIP` characters: the first `CLIP - 1` and an ellipsis, when it is longer.
-pub fn clip(text: &str) -> String {
-    if text.chars().count() <= CLIP {
-        return text.to_string();
-    }
-    let mut cut: String = text.chars().take(CLIP - 1).collect();
-    cut.push('…');
-    cut
 }

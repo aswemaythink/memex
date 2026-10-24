@@ -3,6 +3,6 @@ exit 0
 stdout
 | memex  $SANDBOX/repo · log store .memex/logs/
 | graph  2 readmes · 0 headers
-| here   src — This folder holds the library code that the command line calls, and every module in it is described by a header that sa…
+| here   src — This folder holds the library code that the command line calls, and every module in it is described by a header that…
 | use    memex show <path|ref> · memex search <words> · memex log <stream> <<'EOF' … EOF
 stderr (empty)

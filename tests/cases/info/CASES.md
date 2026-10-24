@@ -56,8 +56,8 @@ memex: cases
   Scenario: cwd `src/deep`, which has no README, under a `src/README.md` whose one-liner is `The source folder holds the library.`; the line names the folder `src` and gives that one-liner after `—`. design §3.5 `here` line.
 - `INFO-HERE-02` From the root itself the here line is left out, though the root has a README.
   Scenario: the cwd is the root, which has a README. design §3.5 `here` line (shown only when the cwd is not the root).
-- `INFO-HERE-03` A one-liner in the here line is cut at 120 characters, the last of them `…`.
-  Scenario: a `src/README.md` whose first sentence is 150 characters; the here line keeps its first 119 characters and ends with `…`, 120 characters in all. design §2 One-liners and §3.5 `here` line.
+- `INFO-HERE-03` A one-liner in the here line is cut to at most 120 characters, the last of them `…`, on a whole word.
+  Scenario: a `src/README.md` whose first sentence is 150 characters; the here line keeps the whole words among its first 119 characters and ends with `…`. design §2 One-liners and §3.5 `here` line.
 - `INFO-HERE-04` With no README at or above the cwd, the here line is left out.
   Scenario: a root with no README and a cwd in `src/`, which has none. design §3.5 `here` line.
 
