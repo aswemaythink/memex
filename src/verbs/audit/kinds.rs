@@ -11,6 +11,7 @@ use super::roots;
 use super::scope::Scope;
 use crate::cite;
 use crate::corpus::{label_of, parent_of, readme_label, Corpus, Doc, Kind};
+use crate::intent::coverage::{self, has_header};
 use crate::intent::header::has_family;
 use crate::intent::{shared, Origin};
 use crate::render::audit::{Group, Item};
@@ -105,14 +106,10 @@ pub(super) fn group(
 /// The walked files in scope with a comment family, no header and at least one byte (design §3.5d kind 1), as the corpus's head
 /// facts give them. A file that cannot be read has none and is not judged, since its read already warned (design §4.2).
 fn headers(ctx: &Ctx<'_>) -> Group {
-    let items = ctx
-        .corpus
-        .heads
-        .iter()
-        .filter(|(rel, head)| ctx.scope.holds_file(rel) && !head.is_empty())
-        .filter(|(rel, _)| !has_header(ctx.corpus, rel))
+    let items = coverage::expected(ctx.corpus)
+        .filter(|(rel, has)| !has && ctx.scope.holds_file(rel))
         .map(|(rel, _)| Item {
-            reference: rel.clone(),
+            reference: rel.to_string(),
             detail: None,
         })
         .collect();
@@ -123,11 +120,6 @@ fn headers(ctx: &Ctx<'_>) -> Group {
         Some(NO_HEADER),
         items,
     )
-}
-
-/// True when the graph holds a header doc for the file at this root-relative path.
-fn has_header(corpus: &Corpus, rel: &str) -> bool {
-    corpus.labelled(rel).iter().any(Doc::is_header)
 }
 
 /// The walked folders in scope with no README.md whose subtree holds a file with a comment family, the root included (design §3.5d

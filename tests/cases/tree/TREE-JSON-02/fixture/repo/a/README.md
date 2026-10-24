@@ -1,0 +1,3 @@
+# A
+
+The documented folder.

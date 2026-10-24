@@ -1,0 +1,1 @@
+{"steps": [{"args": ["tree", "src/*"]}, {"args": ["tree", "cases:SHOP-001"]}, {"args": ["tree", "SHOP-001"]}]}

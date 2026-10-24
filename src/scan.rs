@@ -1,6 +1,6 @@
 //! Reads one verb's arguments against its row of the grammar.
 //! Words, flags and their values, each checked as design §3 says.
-//! Cases: CLI-*, CLI-ARGS-01, CLI-ARGS-02, CLI-ARGS-03, CLI-ARGS-04, CLI-ARGS-05, CLI-BARE-02, CLI-FLAG-01, CLI-FLAG-02, CLI-FLAG-03, CLI-FLAG-04, CLI-FLAG-05, CLI-FLAG-07, CLI-FLAG-08, CLI-FLAG-09, CLI-FLAG-10, CLI-FLAG-11, CLI-FLAG-12, CLI-FLAG-13, CLI-HELP-02, CLI-HELP-03, CLI-HELP-04, CLI-HELP-05, CLI-HELP-06, CLI-HELP-07, CLI-HELP-08, CLI-HINT-07, CLI-HINT-08, CLI-HINT-09, AUD-EXIT-02, AUD-EXIT-03, SRCH-EXCLUDE-06
+//! Cases: TREE-USAGE-01, TREE-USAGE-02, TREE-USAGE-03, TREE-USAGE-04, CLI-*, CLI-ARGS-01, CLI-ARGS-02, CLI-ARGS-03, CLI-ARGS-04, CLI-ARGS-05, CLI-BARE-02, CLI-FLAG-01, CLI-FLAG-02, CLI-FLAG-03, CLI-FLAG-04, CLI-FLAG-05, CLI-FLAG-07, CLI-FLAG-08, CLI-FLAG-09, CLI-FLAG-10, CLI-FLAG-11, CLI-FLAG-12, CLI-FLAG-13, CLI-HELP-02, CLI-HELP-03, CLI-HELP-04, CLI-HELP-05, CLI-HELP-06, CLI-HELP-07, CLI-HELP-08, CLI-HINT-07, CLI-HINT-08, CLI-HINT-09, AUD-EXIT-02, AUD-EXIT-03, SRCH-EXCLUDE-06
 
 use std::iter::Peekable;
 use std::slice::Iter;
@@ -168,6 +168,12 @@ fn parse_value(verb: Verb, flag: &'static str, takes: Takes, raw: &str) -> Resul
             .map(Value::Count)
             .map_err(|_| bad("expected a non-negative integer")),
         Takes::Count => Err(bad("expected a non-negative integer")),
+        Takes::Whole => match raw.parse::<usize>() {
+            Ok(count) if count >= 1 && raw.bytes().all(|b| b.is_ascii_digit()) => {
+                Ok(Value::Count(count))
+            }
+            _ => Err(bad("expected a whole number of 1 or more")),
+        },
         Takes::List if raw.split(',').all(|item| !item.is_empty()) => {
             Ok(Value::List(raw.split(',').map(str::to_string).collect()))
         }
@@ -217,6 +223,12 @@ fn command(verb: Verb, args: Args) -> Command {
         },
         Verb::Info => Command::Info {
             agent: flags.text("--agent"),
+            json,
+        },
+        Verb::Tree => Command::Tree {
+            path: words.into_iter().next(),
+            depth: flags.count("--depth"),
+            limit: flags.count("--limit"),
             json,
         },
         Verb::Audit => Command::Audit {

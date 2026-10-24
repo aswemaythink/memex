@@ -109,6 +109,7 @@ When any rule fails, the case trials are not created, and only the failing rules
 - [search](search/README.md): `SRCH-*`, design §3.2 and §3.6 (words).
 - [info](info/README.md): `INFO-*`, design §3.5 and §3.6 (the atlas).
 - [audit](audit/README.md): `AUD-*`, design §3.5d and §3.6 (the intent-layer report).
+- [tree](tree/README.md): `TREE-*`, design §3.5e and §3.6 (the folder listing).
 - [init](init/README.md): `INIT-*`, design §3.5b and §6.1 (setup).
 - [port](port/README.md): `PORT-*`, design §4.4 (portability).
 

@@ -4,6 +4,7 @@
 //! label (design §3.1).
 //! Cases: SHOW-DIR-01, SHOW-FILE-01, SHOW-LINE-01, CITE-FIELD-01, CITE-FIELD-06, CITE-FIELD-07, CITE-FIELD-09
 
+pub mod coverage;
 pub mod entries;
 pub mod files;
 pub mod front;

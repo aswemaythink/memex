@@ -1,0 +1,1 @@
+{"steps": [{"args": ["tree"], "cwd": "repo/src"}, {"args": ["tree", "deep", "--depth", "1"], "cwd": "repo/src"}, {"args": ["tree", ".."], "cwd": "repo/src/deep"}]}

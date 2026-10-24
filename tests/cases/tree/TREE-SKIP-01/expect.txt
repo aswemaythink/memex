@@ -1,0 +1,8 @@
+$ memex tree
+exit 0
+stdout
+| tree  . · 1 file  (showing 2 of 2)
+|   app/  (no README)  (1 file)
+|     app/main.rs  The app.
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+stderr (empty)

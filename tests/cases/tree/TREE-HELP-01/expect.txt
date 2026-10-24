@@ -1,0 +1,32 @@
+$ memex tree --help
+exit 0
+stdout
+| memex tree   [<path>] [--depth N] [--limit N] [--json]
+| Print the shape of a folder in one call: its folders and files a few levels down, each with its one-liner, and how many files lack a header.
+|   --depth N   levels below the path to list, 1 or more (default 2)
+|   --limit N   entries printed (default 200)
+|   --json      print one JSON document instead of text
+stderr (empty)
+
+$ memex --help
+exit 0
+stdout
+| memex is authored context compression: it indexes a repo's intent layer so agents read intent before code.
+| 
+| memex search [<word|field:value>...] [--in <coll>[,<coll>...]] [--limit N] [--json]
+| memex show   <path|ref>... [--up N] [--comments] [--limit N] [--json]
+| memex log    <stream> [--to <id>[,...]] [--tag <t>[,...]] [--agent <id>] [--json]  <<'EOF' … EOF
+| memex info   [--agent <id>] [--json]
+| memex tree   [<path>] [--depth N] [--limit N] [--json]
+| memex audit  [<path|glob>...] [--limit N] [--json]
+| memex init
+| memex --help | --version
+| 
+| search  find docs by words and field:value filters
+| show    print the header, citations and chain of each ref
+| log     append an entry from stdin and print its ref
+| info    print where things are, never their contents
+| tree    print the shape of a folder: its folders and files with one-liners and header coverage
+| audit   report where intent is missing or broken, for the root or some of it
+| init    set up .memex/ and the AGENTS.md snippet
+stderr (empty)

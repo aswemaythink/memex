@@ -1,0 +1,3 @@
+# Shop notes
+
+Written text.

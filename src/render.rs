@@ -8,6 +8,7 @@ pub mod info;
 pub mod json;
 pub mod search;
 pub mod text;
+pub mod tree;
 
 use std::io;
 

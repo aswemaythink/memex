@@ -1,0 +1,24 @@
+$ memex tree src
+exit 0
+stdout
+| tree  src · 6 files · 3 no header  (showing 8 of 8)
+|   src/deep/  The deepest folder of the source.  (2 files)
+|     src/deep/deeper/  (no README)  (1 file)
+|     src/deep/lib.rs  The deep library.
+|   src/main.rs  Starts the shop.
+|   src/raw/  (no README)  (2 files · 2 no header)
+|     src/raw/go.rs  (no header)
+|     src/raw/run.rs  (no header)
+|   src/util.rs  (no header)
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+| (no header): add a comment block atop the file; its first sentence states the file's purpose
+stderr (empty)
+
+$ memex tree src/deep --depth 1
+exit 0
+stdout
+| tree  src/deep · 2 files  (showing 2 of 2)
+|   src/deep/deeper/  (no README)  (1 file)
+|   src/deep/lib.rs  The deep library.
+| (no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is
+stderr (empty)

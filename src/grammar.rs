@@ -1,6 +1,6 @@
 //! The tables of design §3's grammar.
 //! Which flags each verb takes, what each flag takes after it, and how many words each verb takes.
-//! Cases: CLI-*, CLI-HINTB-01, AUD-EXIT-02, AUD-EXIT-03
+//! Cases: TREE-USAGE-01, TREE-USAGE-02, TREE-USAGE-03, CLI-*, CLI-HINTB-01, AUD-EXIT-02, AUD-EXIT-03
 
 use crate::cli::Verb;
 
@@ -9,17 +9,20 @@ use crate::cli::Verb;
 pub(crate) enum Takes {
     Nothing,
     Count,
+    /// A whole number of 1 or more, as `--depth` takes.
+    Whole,
     List,
     Text,
 }
 
 /// Every flag memex knows. A verb accepts the ones its grammar line names, and `--help` after any verb.
-pub(crate) const FLAGS: [(&str, Takes); 10] = [
+pub(crate) const FLAGS: [(&str, Takes); 11] = [
     ("--help", Takes::Nothing),
     ("--version", Takes::Nothing),
     ("--in", Takes::List),
     ("--limit", Takes::Count),
     ("--up", Takes::Count),
+    ("--depth", Takes::Whole),
     ("--comments", Takes::Nothing),
     ("--json", Takes::Nothing),
     ("--to", Takes::List),
@@ -37,7 +40,7 @@ pub(crate) struct Spec {
 }
 
 /// One row per verb, in `Verb::ALL` order, so `Verb as usize` indexes it.
-pub(crate) const SPECS: [Spec; 6] = [
+pub(crate) const SPECS: [Spec; 7] = [
     Spec {
         flags: &["--in", "--limit", "--json"],
         min: 0,
@@ -60,6 +63,12 @@ pub(crate) const SPECS: [Spec; 6] = [
         flags: &["--agent", "--json"],
         min: 0,
         max: Some(0),
+        missing: "",
+    },
+    Spec {
+        flags: &["--depth", "--limit", "--json"],
+        min: 0,
+        max: Some(1),
         missing: "",
     },
     Spec {

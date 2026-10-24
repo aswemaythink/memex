@@ -1,6 +1,6 @@
 //! memex library: the module map for the intent-layer CLI, and the run function that main.rs calls.
 //! src/README.md says what each module does.
-//! Cases: CLI-*, LOG-WRITE-*, SHOW-*, SRCH-*, INFO-NOW-01, SRCH-NOW-01, SHOW-NOW-01, AUD-EXIT-01
+//! Cases: TREE-DEFAULT-01, CLI-*, LOG-WRITE-*, SHOW-*, SRCH-*, INFO-NOW-01, SRCH-NOW-01, SHOW-NOW-01, AUD-EXIT-01
 
 mod atomic;
 mod cite;
@@ -93,6 +93,12 @@ fn dispatch(command: Command) -> i32 {
             let request = verbs::info::Request { agent, json };
             finish(started(|now| verbs::info::run(&request, now)), json)
         }
+        Command::Tree {
+            path,
+            depth,
+            limit,
+            json,
+        } => list_tree(path, depth, limit, json),
         Command::Audit { paths, limit, json } => {
             let request = verbs::audit::Request { paths, limit, json };
             finish_audit(started(|_| verbs::audit::run(&request)), json)
@@ -102,6 +108,17 @@ fn dispatch(command: Command) -> i32 {
             Err(error) => error::report(&error, false),
         },
     }
+}
+
+/// Lists the tree of a `tree` command and prints it; a path that names nothing is a fatal error (design §3.5e).
+fn list_tree(path: Option<String>, depth: Option<usize>, limit: Option<usize>, json: bool) -> i32 {
+    let request = verbs::tree::Request {
+        path,
+        depth,
+        limit,
+        json,
+    };
+    finish(started(|_| verbs::tree::run(&request)), json)
 }
 
 /// Shows the refs of a `show` command and prints its report, its stderr misses after its stdout (design §3.3).
