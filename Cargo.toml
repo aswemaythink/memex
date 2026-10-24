@@ -69,7 +69,7 @@ tempfile = "3.27.0"
 [dev-dependencies]
 libtest-mimic = "0.8.2"
 # Pinned: proptest 1.10.0 declares rust-version 1.84, within this crate's MSRV of 1.88. Only the stress suite uses it.
-proptest = { version = "=1.10.0", default-features = false, features = ["std"] }
+proptest = { version = "=1.12.0", default-features = false, features = ["std"] }
 similar = "3.2.0"
 
 [lints.rust]
