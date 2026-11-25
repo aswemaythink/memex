@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <!--
-The configuration reference: .memex/config.json, its two keys and what a bad value does. It names max_logs_mb and keep_logs, and it is the one docs page that names these keys and numbers.
+The configuration reference: .memex/config.json, its three keys and what a bad value does.
+It names max_logs_mb, keep_logs and max_one_liner, and it is the one docs page that names these keys and numbers.
 Layout and chrome are shared by every page under docs/: the header, footer, site.css and site.js match the intro; docs.js renders the sidebar, the "On this page" table of contents and the mobile drawer.
 -->
 <html lang="en">
@@ -57,11 +58,11 @@ Layout and chrome are shared by every page under docs/: the header, footer, site
   <main id="main" class="min-w-0 pb-6 pt-10 sm:pt-14">
     <p class="mb-3 font-mono text-[0.78rem] font-semibold uppercase tracking-[0.06em] text-accent">Reference</p>
     <h1 class="font-serif text-[2rem] leading-[1.15] font-medium sm:text-[2.4rem]">Configuration</h1>
-    <p class="mt-4 font-serif text-[1.2rem] leading-[1.5] sm:text-[1.3rem]">Logs are a rolling window. Two optional settings in <code>.memex/config.json</code> decide how much of it is kept.</p>
+    <p class="mt-4 font-serif text-[1.2rem] leading-[1.5] sm:text-[1.3rem]">Optional settings in <code>.memex/config.json</code> control log retention and the one-liner limit that <code>audit</code> checks.</p>
     <section class="mt-16" aria-labelledby="file">
       <h2 id="file" class="font-serif text-[1.5rem] leading-tight font-medium">The file</h2>
-      <p class="mt-3"><code>memex init</code> creates <code>.memex/config.json</code>. Both keys are optional, and a missing file means the defaults. In a worktree, the main checkout’s file applies, since every worktree shares its log store.</p><div class="mt-5 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="A sample config"><code><span class="d"># .memex/config.json</span>
-{ <span class="k">"max_logs_mb"</span>: 10, <span class="k">"keep_logs"</span>: "2w" }</code></pre></div>
+      <p class="mt-3"><code>memex init</code> creates <code>.memex/config.json</code>. All keys are optional, and a missing file means the defaults. In a worktree, <code>log</code> reads the main checkout’s file (every worktree shares its log store), while <code>audit</code> reads the root it audits.</p><div class="mt-5 overflow-hidden rounded-[10px] border border-term-line bg-term"><pre tabindex="0" aria-label="A sample config"><code><span class="d"># .memex/config.json</span>
+{ <span class="k">"max_logs_mb"</span>: 10, <span class="k">"keep_logs"</span>: "2w", <span class="k">"max_one_liner"</span>: 120 }</code></pre></div>
     </section>
     <section class="mt-16" aria-labelledby="max_logs_mb">
       <h2 id="max_logs_mb" class="font-serif text-[1.5rem] leading-tight font-medium"><code class="!bg-transparent !p-0 font-mono !text-[0.95em] font-semibold">max_logs_mb</code></h2>
@@ -71,9 +72,13 @@ Layout and chrome are shared by every page under docs/: the header, footer, site
       <h2 id="keep_logs" class="font-serif text-[1.5rem] leading-tight font-medium"><code class="!bg-transparent !p-0 font-mono !text-[0.95em] font-semibold">keep_logs</code></h2>
       <p class="mt-3">An age limit, off unless set. Set, it deletes every entry older than it before the size cap applies; with both set, both apply. It takes <code>Nm</code>, <code>Nh</code>, <code>Nd</code>, <code>Nw</code> or <code>forever</code>.</p>
     </section>
+    <section class="mt-16" aria-labelledby="max_one_liner">
+      <h2 id="max_one_liner" class="font-serif text-[1.5rem] leading-tight font-medium"><code class="!bg-transparent !p-0 font-mono !text-[0.95em] font-semibold">max_one_liner</code></h2>
+      <p class="mt-3">The longest one-liner <code>memex audit</code> allows for a header or README, in Unicode scalar values. Positive whole number; default <code>120</code>, matching the text display width.</p>
+    </section>
     <section class="mt-16" aria-labelledby="bad">
       <h2 id="bad" class="font-serif text-[1.5rem] leading-tight font-medium">When a value is wrong</h2>
-      <p class="mt-3">An invalid value prints one warning naming the key and disables only its own limit; the other still applies. A config that can’t be read, isn’t a JSON object, or has an unknown key prints a warning and prunes nothing at all.</p><p class="mt-4 text-[0.95rem] text-muted">Pruning happens only when <code>memex log</code> writes; reads never delete. What is still true belongs in a README, a header or a collection.</p>
+      <p class="mt-3">An invalid value prints one warning naming the key and affects only its own limit (disabling that log limit, or using default <code>120</code> for <code>max_one_liner</code>); the other settings still apply. A config that can’t be read, isn’t a JSON object, or has an unknown key prints a warning, prunes nothing on <code>log</code>, and uses default <code>120</code> on <code>audit</code>.</p><p class="mt-4 text-[0.95rem] text-muted">Pruning happens only when <code>memex log</code> writes; reads never delete. What is still true belongs in a README, a header or a collection.</p>
     </section><p class="mt-16 border-t border-rule pt-5 text-[0.95rem]"><a href="index.html">← All verbs</a></p>
   </main>
 

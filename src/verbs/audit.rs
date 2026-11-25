@@ -1,7 +1,7 @@
 //! Carries out `memex audit` (design §3.5d): where the intent layer is missing or broken.
 //! `audit/scope.rs` turns the arguments into the scope they name, `audit/kinds.rs` finds each kind's findings over it, and
 //! `render/audit.rs` prints the report. A path that names nothing is reported, and the others are still audited.
-//! Cases: AUD-SCOPE-01, AUD-SCOPE-02, AUD-SCOPE-03, AUD-SCOPE-04, AUD-SCOPE-05, AUD-SCOPE-06, AUD-SCOPE-07, AUD-GLOB-01, AUD-GLOB-02, AUD-GLOB-03, AUD-HEADERS-01, AUD-HEADERS-02, AUD-HEADERS-03, AUD-READMES-01, AUD-READMES-02, AUD-READMES-03, AUD-READMES-04, AUD-READMES-05, AUD-LENGTH-01, AUD-LENGTH-02, AUD-LENGTH-03, AUD-LENGTH-04, AUD-LENGTH-05, AUD-LENGTH-06, AUD-LENGTH-07, AUD-ONELINERS-01, AUD-ONELINERS-02, AUD-ONELINERS-03, AUD-ONELINERS-04, AUD-THIN-01, AUD-THIN-02, AUD-THIN-03, AUD-THIN-04, AUD-THIN-05, AUD-THIN-06, AUD-THIN-07, AUD-CITES-01, AUD-CITES-02, AUD-CITES-03, AUD-CITES-04, AUD-CITES-05, AUD-CITES-06, AUD-IDS-01, AUD-IDS-02, AUD-LIMIT-01, AUD-LIMIT-02, AUD-LIMIT-03, AUD-JSON-01, AUD-JSON-02, AUD-JSON-03, AUD-EMPTY-01, AUD-EXIT-01, AUD-EXIT-02, AUD-EXIT-03, AUD-REFINE-01, AUD-REFINE-02, AUD-REFINE-03, AUD-REFINE-04
+//! Cases: AUD-SCOPE-01, AUD-SCOPE-02, AUD-SCOPE-03, AUD-SCOPE-04, AUD-SCOPE-05, AUD-SCOPE-06, AUD-SCOPE-07, AUD-GLOB-01, AUD-GLOB-02, AUD-GLOB-03, AUD-HEADERS-01, AUD-HEADERS-02, AUD-HEADERS-03, AUD-READMES-01, AUD-READMES-02, AUD-READMES-03, AUD-READMES-04, AUD-READMES-05, AUD-LENGTH-01, AUD-LENGTH-02, AUD-LENGTH-03, AUD-LENGTH-04, AUD-LENGTH-05, AUD-LENGTH-06, AUD-LENGTH-07, AUD-ONELINERS-01, AUD-ONELINERS-02, AUD-ONELINERS-03, AUD-ONELINERS-04, AUD-ONELINERS-05, AUD-ONELINERS-06, AUD-ONELINERS-07, AUD-ONELINERS-08, AUD-THIN-01, AUD-THIN-02, AUD-THIN-03, AUD-THIN-04, AUD-THIN-05, AUD-THIN-06, AUD-THIN-07, AUD-CITES-01, AUD-CITES-02, AUD-CITES-03, AUD-CITES-04, AUD-CITES-05, AUD-CITES-06, AUD-IDS-01, AUD-IDS-02, AUD-LIMIT-01, AUD-LIMIT-02, AUD-LIMIT-03, AUD-JSON-01, AUD-JSON-02, AUD-JSON-03, AUD-EMPTY-01, AUD-EXIT-01, AUD-EXIT-02, AUD-EXIT-03, AUD-REFINE-01, AUD-REFINE-02, AUD-REFINE-03, AUD-REFINE-04
 
 mod counts;
 mod kinds;
@@ -11,8 +11,9 @@ pub(crate) mod scope;
 use std::path::Path;
 
 use crate::cli::Verb;
+use crate::config;
 use crate::corpus::Corpus;
-use crate::error::Error;
+use crate::error::{self, Error};
 use crate::render::audit::Summary;
 use crate::render::{self, text};
 use crate::scan::fail;
@@ -59,6 +60,8 @@ fn audit_in(corpus: &Corpus, cwd: &Path, store: Option<&Path>, request: &Request
     } else {
         &request.paths[..]
     };
+    let config = config::load(&corpus.root);
+    error::warn(&config.warnings);
     let tree = scope::walked(corpus);
     let resolved = scope::resolve_args(corpus, cwd, store, args, &tree);
     let (files, folders) = scope::counts(&resolved.scope, &tree);
@@ -67,6 +70,7 @@ fn audit_in(corpus: &Corpus, cwd: &Path, store: Option<&Path>, request: &Request
         scope: &resolved.scope,
         tree: &tree,
         limit: request.limit.unwrap_or(DEFAULT_LIMIT),
+        max_one_liner: config.max_one_liner,
     };
     let summary = Summary {
         scope: resolved.labels,

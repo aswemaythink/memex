@@ -1,6 +1,6 @@
-//! Reads the two limits of `.memex/config.json` (design §4.1 item 4): keep_logs and max_logs_mb.
-//! A missing file means no age limit and the default 10 MiB cap. A file that cannot be used prunes nothing at all, and one warning says why. A value outside its grammar disables only its own limit, and its warning names it (design §4.3 Bad config).
-//! Cases: DISC-CONFIG-01, DISC-CONFIG-02, DISC-CONFIG-03, DISC-CONFIG-04, LOG-PRUNE-01, LOG-PRUNE-02, LOG-PRUNE-06, LOG-PRUNE-07, LOG-PRUNE-08, LOG-PRUNE-09, LOG-PRUNE-16, LOG-PRUNE-18, LOG-PRUNE-21, LOG-CAP-02, LOG-CAP-07, LOG-CAP-08, LOG-CAP-09, LOG-CAP-10, PORT-NAME-04
+//! Reads `.memex/config.json` (design §4.1 item 4): keep_logs, max_logs_mb and max_one_liner.
+//! A missing file means no age limit, the default 10 MiB cap and 120-character one-liners. An unusable file prunes nothing and uses default 120, with one warning. An invalid value warns and affects only its own limit (design §4.3).
+//! Cases: DISC-CONFIG-01, DISC-CONFIG-02, DISC-CONFIG-03, DISC-CONFIG-04, LOG-PRUNE-01, LOG-PRUNE-02, LOG-PRUNE-06, LOG-PRUNE-07, LOG-PRUNE-08, LOG-PRUNE-09, LOG-PRUNE-16, LOG-PRUNE-18, LOG-PRUNE-21, LOG-CAP-02, LOG-CAP-07, LOG-CAP-08, LOG-CAP-09, LOG-CAP-10, AUD-ONELINERS-05, AUD-ONELINERS-06, AUD-ONELINERS-07, AUD-ONELINERS-08, PORT-NAME-04
 
 use std::io;
 use std::path::Path;
@@ -17,8 +17,10 @@ use crate::text;
 const MIB: u64 = 1_048_576;
 /// The max_logs_mb default of design §4.3: the store is capped at 10 MiB.
 const DEFAULT_MAX_LOGS_MB: u64 = 10;
+/// The max_one_liner default of design §3.5d kind 4: 120 Unicode scalar values.
+pub const DEFAULT_MAX_ONE_LINER: usize = 120;
 
-/// The two limits `log` reads, and the warnings to print once per run, in the order they were found.
+/// The limits `.memex/config.json` gives, and the warnings to print once per run, in the order they were found.
 pub struct Loaded {
     /// Entries older than this many seconds are pruned by age. None means no age limit: keep_logs is absent, `forever`, outside
     /// the grammar, or in a file that cannot be used.
@@ -26,13 +28,15 @@ pub struct Loaded {
     /// The store is pruned to at or under this many bytes. None means no size pruning: max_logs_mb is outside the grammar, or the
     /// file cannot be used.
     pub cap: Option<u64>,
+    /// The longest one-liner `audit` allows, in Unicode scalar values. Uses `DEFAULT_MAX_ONE_LINER` when absent, invalid or unusable.
+    pub max_one_liner: usize,
     /// Full stderr lines, `memex: warning: <path>: <reason>` or `memex: warning: cannot read <path> (<ErrorKind>)`. A file that
-    /// cannot be used has one; otherwise each invalid value has its own, keep_logs first.
+    /// cannot be used has one; otherwise each invalid value has its own, keep_logs, max_logs_mb, then max_one_liner.
     pub warnings: Vec<String>,
 }
 
 /// The keys of config.json, each read as its raw value so that `null` is a value and not an absent key. An unknown key is an
-/// error, so a typo is reported and not ignored, and serde's message names both keys.
+/// error, so a typo is reported and not ignored, and serde's message names every valid key.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct File {
@@ -40,6 +44,8 @@ struct File {
     keep_logs: Option<Value>,
     #[serde(default, deserialize_with = "present")]
     max_logs_mb: Option<Value>,
+    #[serde(default, deserialize_with = "present")]
+    max_one_liner: Option<Value>,
 }
 
 /// Reads a key that is there as its value, `null` included. `Option`'s own reading would make `null` the same as no key.
@@ -64,17 +70,18 @@ pub fn load(owner: &Path) -> Loaded {
     }
 }
 
-/// The limits of a folder with no config.json: no age limit, and the default size cap (design §4.3).
+/// The limits of a folder with no config.json: no age limit, the default size cap and 120-character one-liners (design §4.1, §4.3).
 fn defaults() -> Loaded {
     Loaded {
         keep: None,
         cap: Some(DEFAULT_MAX_LOGS_MB * MIB),
+        max_one_liner: DEFAULT_MAX_ONE_LINER,
         warnings: Vec::new(),
     }
 }
 
-/// Parses the text of a config file. It must be a JSON object, and its keys must be the two known ones. An array, string or number
-/// is not read by position, so it warns and prunes nothing.
+/// Parses the text of a config file. It must be a JSON object, and its keys must be the known ones. An array, string or number
+/// is not read by position, so it warns, prunes nothing and uses the default one-liner limit.
 fn parse(path: &Path, contents: &str) -> Loaded {
     let value = match serde_json::from_str::<Value>(contents) {
         Ok(value) => value,
@@ -89,29 +96,36 @@ fn parse(path: &Path, contents: &str) -> Loaded {
     }
 }
 
-/// A config file that cannot be read: nothing is pruned, and the warning names the path and the io::ErrorKind.
+/// A config file that cannot be read: nothing is pruned, one-liners use default 120, and the warning names path and io::ErrorKind.
 fn unreadable(path: &Path, failure: &io::Error) -> Loaded {
     let message = error::Error::io_at("cannot read", path, failure).message;
     unusable(error::warning(&message))
 }
 
-/// A config file that cannot be used: nothing is pruned, by age or by size, and the warning says why.
+/// A config file that cannot be used: nothing is pruned, one-liners use default 120, and the warning says why.
 fn unusable(warning: String) -> Loaded {
     Loaded {
         keep: None,
         cap: None,
+        max_one_liner: DEFAULT_MAX_ONE_LINER,
         warnings: vec![warning],
     }
 }
 
-/// Judges the two values of a file that parsed. Each invalid value warns and disables only its own limit (design §4.3 Bad config).
+/// Judges the values of a file that parsed. Each invalid value warns and affects only its own limit (design §4.3 Bad config).
 fn judge(path: &Path, file: &File) -> Loaded {
     let (keep, keep_warning) = keep_limit(path, file.keep_logs.as_ref());
     let (cap, cap_warning) = cap_limit(path, file.max_logs_mb.as_ref());
+    let (max_one_liner, one_liner_warning) = one_liner_limit(path, file.max_one_liner.as_ref());
     Loaded {
         keep,
         cap,
-        warnings: keep_warning.into_iter().chain(cap_warning).collect(),
+        max_one_liner,
+        warnings: keep_warning
+            .into_iter()
+            .chain(cap_warning)
+            .chain(one_liner_warning)
+            .collect(),
     }
 }
 
@@ -152,6 +166,25 @@ fn cap_limit(path: &Path, value: Option<&Value>) -> (Option<u64>, Option<String>
     }
 }
 
+/// The one-liner ceiling of max_one_liner (design §3.5d kind 4): no key means the default 120, and a whole number from 1 that fits
+/// in a usize sets the limit. Any other value warns and falls back to the default.
+fn one_liner_limit(path: &Path, value: Option<&Value>) -> (usize, Option<String>) {
+    let Some(value) = value else {
+        return (DEFAULT_MAX_ONE_LINER, None);
+    };
+    let parsed = value
+        .as_u64()
+        .filter(|&chars| chars >= 1)
+        .and_then(|chars| usize::try_from(chars).ok());
+    match parsed {
+        Some(limit) => (limit, None),
+        None => (
+            DEFAULT_MAX_ONE_LINER,
+            Some(invalid(path, "max_one_liner", value, "using default 120")),
+        ),
+    }
+}
+
 /// The warning for a value outside its grammar: a string in single quotes, any other value as its JSON text.
 fn invalid(path: &Path, key: &str, value: &Value, effect: &str) -> String {
     let shown = match value {
@@ -181,11 +214,16 @@ mod tests {
         format!("memex: warning: config.json: {reason}")
     }
 
+    /// The three parsed limits as a tuple for compact assertions.
+    fn limits(loaded: &Loaded) -> (Option<i64>, Option<u64>, usize) {
+        (loaded.keep, loaded.cap, loaded.max_one_liner)
+    }
+
     #[test]
     fn a_value_that_is_not_an_object_is_unusable_and_prunes_nothing() {
         for contents in [r#"["1h"]"#, r#""3d""#, "5", "null"] {
             let loaded = read(contents);
-            assert_eq!((loaded.keep, loaded.cap), (None, None), "{contents}");
+            assert_eq!(limits(&loaded), (None, None, 120), "{contents}");
             assert_eq!(loaded.warnings.len(), 1, "{contents}");
             assert!(
                 loaded.warnings[0].ends_with("not a JSON object: not pruning"),
@@ -195,23 +233,48 @@ mod tests {
     }
 
     #[test]
-    fn an_unknown_key_is_unusable_and_its_warning_names_both_keys() {
+    fn an_unknown_key_is_unusable_and_its_warning_names_all_keys() {
         let loaded = read(r#"{"keep_log": "3d"}"#);
-        assert_eq!((loaded.keep, loaded.cap), (None, None));
+        assert_eq!(limits(&loaded), (None, None, 120));
         assert_eq!(loaded.warnings.len(), 1, "{:?}", loaded.warnings);
+        let expected =
+            "unknown field `keep_log`, expected one of `keep_logs`, `max_logs_mb`, `max_one_liner`";
         assert!(
-            loaded.warnings[0]
-                .contains("unknown field `keep_log`, expected `keep_logs` or `max_logs_mb`"),
+            loaded.warnings[0].contains(expected),
             "{:?}",
             loaded.warnings
         );
     }
 
     #[test]
-    fn absent_keys_give_no_age_limit_and_the_default_cap() {
+    fn absent_keys_give_defaults() {
         let loaded = read("{}");
-        assert_eq!((loaded.keep, loaded.cap), (None, Some(10 * MIB)));
+        assert_eq!(limits(&loaded), (None, Some(10 * MIB), 120));
         assert!(loaded.warnings.is_empty());
+    }
+
+    /// Asserts that `{key: value}` emits the single invalid-value warning for `shown` and `effect`.
+    fn read_invalid(key: &str, value: &str, shown: &str, effect: &str) -> Loaded {
+        let loaded = read(&format!(r#"{{"{key}": {value}}}"#));
+        let expected = line(&format!("invalid {key} {shown}: {effect}"));
+        assert_eq!(loaded.warnings, vec![expected], "{key}={value}");
+        loaded
+    }
+
+    #[test]
+    fn max_one_liner_accepts_positive_integers_and_warns_otherwise() {
+        assert_eq!(read(r#"{"max_one_liner": 80}"#).max_one_liner, 80);
+        assert_eq!(read(r#"{"max_one_liner": 1}"#).max_one_liner, 1);
+        for (value, shown) in [
+            ("0", "0"),
+            ("-1", "-1"),
+            ("1.5", "1.5"),
+            (r#""80""#, "'80'"),
+            ("null", "null"),
+        ] {
+            let loaded = read_invalid("max_one_liner", value, shown, "using default 120");
+            assert_eq!(loaded.max_one_liner, 120, "{value}");
+        }
     }
 
     #[test]
@@ -225,23 +288,11 @@ mod tests {
 
     #[test]
     fn an_invalid_keep_logs_warns_and_gives_no_age_limit() {
-        let soon = read(r#"{"keep_logs": "soon"}"#);
+        let soon = read_invalid("keep_logs", r#""soon""#, "'soon'", "not pruning by age");
         assert_eq!((soon.keep, soon.cap), (None, Some(10 * MIB)));
-        assert_eq!(
-            soon.warnings,
-            vec![line("invalid keep_logs 'soon': not pruning by age")]
-        );
-        // A non-string is a warning too, null included: it is a value, not an absent key.
         for (value, shown) in [("3", "3"), ("null", "null"), (r#"["1d"]"#, r#"["1d"]"#)] {
-            let loaded = read(&format!(r#"{{"keep_logs": {value}}}"#));
+            let loaded = read_invalid("keep_logs", value, shown, "not pruning by age");
             assert_eq!(loaded.keep, None, "{value}");
-            assert_eq!(
-                loaded.warnings,
-                vec![line(&format!(
-                    "invalid keep_logs {shown}: not pruning by age"
-                ))],
-                "{value}"
-            );
         }
     }
 
@@ -249,7 +300,6 @@ mod tests {
     fn max_logs_mb_is_a_whole_number_of_mebibytes() {
         assert_eq!(read(r#"{"max_logs_mb": 1}"#).cap, Some(MIB));
         assert_eq!(read(r#"{"max_logs_mb": 10}"#).cap, Some(10 * MIB));
-        // The largest count whose bytes still fit in a u64.
         let largest = read(r#"{"max_logs_mb": 17592186044415}"#);
         assert_eq!(largest.cap, Some(17_592_186_044_415 * MIB));
         assert!(largest.warnings.is_empty());
@@ -266,18 +316,10 @@ mod tests {
             ("null", "null"),
             ("true", "true"),
             ("[1]", "[1]"),
-            // 2^44 mebibytes is 2^64 bytes, one more than a u64 holds.
             ("17592186044416", "17592186044416"),
         ] {
-            let loaded = read(&format!(r#"{{"max_logs_mb": {value}}}"#));
+            let loaded = read_invalid("max_logs_mb", value, shown, "not pruning by size");
             assert_eq!((loaded.keep, loaded.cap), (None, None), "{value}");
-            assert_eq!(
-                loaded.warnings,
-                vec![line(&format!(
-                    "invalid max_logs_mb {shown}: not pruning by size"
-                ))],
-                "{value}"
-            );
         }
     }
 
@@ -303,21 +345,16 @@ mod tests {
     }
 
     #[test]
-    fn a_config_named_in_another_case_is_not_the_file() {
+    fn load_uses_defaults_when_missing_or_wrong_case() {
         let dir = tempfile::tempdir().expect("a temporary folder");
+        let empty = load(dir.path());
+        assert_eq!(limits(&empty), (None, Some(10 * MIB), 120));
+        assert!(empty.warnings.is_empty());
         let memex = dir.path().join(".memex");
         fs::create_dir(&memex).expect("a memex folder");
         fs::write(memex.join("Config.json"), br#"{"keep_logs": "1d"}"#).expect("a config");
-        let loaded = load(dir.path());
-        assert_eq!((loaded.keep, loaded.cap), (None, Some(10 * MIB)));
-        assert!(loaded.warnings.is_empty());
-    }
-
-    #[test]
-    fn a_folder_with_no_memex_folder_has_the_defaults() {
-        let dir = tempfile::tempdir().expect("a temporary folder");
-        let loaded = load(dir.path());
-        assert_eq!((loaded.keep, loaded.cap), (None, Some(10 * MIB)));
-        assert!(loaded.warnings.is_empty());
+        let wrong_case = load(dir.path());
+        assert_eq!(limits(&wrong_case), (None, Some(10 * MIB), 120));
+        assert!(wrong_case.warnings.is_empty());
     }
 }

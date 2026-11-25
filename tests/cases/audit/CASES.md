@@ -76,14 +76,22 @@ memex: cases
 
 ## ONELINERS
 
-- `AUD-ONELINERS-01` A README whose one-liner is over 100 characters is listed by its path with its character count and the one-liners fix line, exit 0.
+- `AUD-ONELINERS-01` A README whose one-liner is over the default 120 characters is listed by its path with its character count and the one-liners fix line, exit 0.
   design §3.5d kind 4 and §2. Run: memex audit.
-- `AUD-ONELINERS-02` A one-liner of exactly 100 characters is not a finding.
+- `AUD-ONELINERS-02` A one-liner of exactly 120 characters is not a finding under the default limit.
   design §3.5d kind 4. Run: memex audit.
-- `AUD-ONELINERS-03` Characters count as Unicode scalar values, so 100 accented letters with a full stop are fine and 101 are listed with `101 characters`.
+- `AUD-ONELINERS-03` Characters count as Unicode scalar values, so 120 accented letters with a full stop are fine and 121 are listed with `121 characters`.
   design §3.5d kind 4 (Unicode scalar values). Run: memex audit.
-- `AUD-ONELINERS-04` A header whose one-liner is over 100 characters is listed by its file path, exit 0.
+- `AUD-ONELINERS-04` A header whose one-liner is over the default 120 characters is listed by its file path, exit 0.
   design §3.5d kind 4 (a header or README). Run: memex audit.
+- `AUD-ONELINERS-05` `max_one_liner` in `.memex/config.json` lowers the limit: with `80`, an 80-character README passes and an 81-character header is listed under `over 80 characters` with the 80-character fix line, exit 0.
+  design §3.5d kind 4 and §4.1 item 4. Run: memex audit.
+- `AUD-ONELINERS-06` `max_one_liner` in `.memex/config.json` raises the limit: with `150`, a 130-character README is not a finding, exit 0.
+  design §3.5d kind 4 and §4.1 item 4. Run: memex audit.
+- `AUD-ONELINERS-07` An invalid `max_one_liner` in `.memex/config.json` (`0`) prints one warning on stderr and falls back to the default 120, exit 0.
+  design §3.5d kind 4 and §4.3 Bad config. Run: memex audit.
+- `AUD-ONELINERS-08` An unusable `.memex/config.json` (an unknown key) prints one warning on stderr and `audit` falls back to the default 120, exit 0.
+  design §3.5d kind 4 and §4.3 Bad config. Run: memex audit.
 
 ## THIN
 

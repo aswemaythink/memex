@@ -1,0 +1,9 @@
+$ memex audit
+exit 0
+stdout
+| audit       . · 3 files · 2 folders · 1 finding
+| one-liners  (showing 1 of 1; over 120 characters)
+|   README.md  123 characters
+| (one-liners): shorten the first sentence to 120 characters or fewer
+stderr
+| memex: warning: $SANDBOX/repo/.memex/config.json: unknown field `extra`, expected one of `keep_logs`, `max_logs_mb`, `max_one_liner` at line 1 column 8
