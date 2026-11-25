@@ -201,7 +201,7 @@ Logs are scaffolding: what a run did, useful for a couple of working days. Each 
 - `headers`: a file with a comment syntax that is not empty and has no header.
 - `readmes`: a folder with no README.md whose subtree holds a file with a comment syntax. A folder of data alone needs none.
 - `length`: a file with more than 500 code lines, not counting its header and license blocks.
-- `one-liners`: a header or README whose one-liner is over 100 characters.
+- `one-liners`: a header or README whose one-liner is over `max_one_liner` characters (default 120, configurable in `.memex/config.json`).
 - `thin`: a file of 80 lines or more with a header, lowest header ratio first.
 - `cites`: an explicit reference that resolves to nothing. Logs are not audited.
 - `ids`: a duplicate id within a collection.

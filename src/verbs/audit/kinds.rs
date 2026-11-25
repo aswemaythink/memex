@@ -2,8 +2,9 @@
 //! The kinds are headers, readmes, length, one-liners, thin, cites, ids and roots, which `roots.rs` finds. Each is one function over `Ctx`; `headers` reads the
 //! corpus's head facts, and `length` and `thin` the line counts that `counts.rs` makes from them. Each list is sorted by label (`thin` by its header share) and cut to `--limit` (design §3.3 Limits),
 //! and a kind with no finding is left out. `thin` is listed but is not a finding (design §3.5d).
-//! Cases: AUD-HEADERS-01, AUD-HEADERS-02, AUD-HEADERS-03, AUD-READMES-01, AUD-READMES-02, AUD-READMES-03, AUD-READMES-04, AUD-READMES-05, AUD-LENGTH-01, AUD-LENGTH-02, AUD-LENGTH-03, AUD-LENGTH-04, AUD-LENGTH-05, AUD-LENGTH-06, AUD-LENGTH-07, AUD-ONELINERS-01, AUD-ONELINERS-02, AUD-ONELINERS-03, AUD-ONELINERS-04, AUD-THIN-01, AUD-THIN-02, AUD-THIN-03, AUD-THIN-04, AUD-THIN-05, AUD-THIN-06, AUD-THIN-07, AUD-CITES-01, AUD-CITES-02, AUD-CITES-03, AUD-CITES-04, AUD-CITES-05, AUD-CITES-06, AUD-IDS-01, AUD-IDS-02, AUD-LIMIT-01, AUD-LIMIT-02, AUD-LIMIT-03, AUD-JSON-01, AUD-JSON-03, AUD-REFINE-01, AUD-REFINE-02, AUD-REFINE-03, AUD-REFINE-04
+//! Cases: AUD-HEADERS-01, AUD-HEADERS-02, AUD-HEADERS-03, AUD-READMES-01, AUD-READMES-02, AUD-READMES-03, AUD-READMES-04, AUD-READMES-05, AUD-LENGTH-01, AUD-LENGTH-02, AUD-LENGTH-03, AUD-LENGTH-04, AUD-LENGTH-05, AUD-LENGTH-06, AUD-LENGTH-07, AUD-ONELINERS-01, AUD-ONELINERS-02, AUD-ONELINERS-03, AUD-ONELINERS-04, AUD-ONELINERS-05, AUD-ONELINERS-06, AUD-ONELINERS-07, AUD-ONELINERS-08, AUD-THIN-01, AUD-THIN-02, AUD-THIN-03, AUD-THIN-04, AUD-THIN-05, AUD-THIN-06, AUD-THIN-07, AUD-CITES-01, AUD-CITES-02, AUD-CITES-03, AUD-CITES-04, AUD-CITES-05, AUD-CITES-06, AUD-IDS-01, AUD-IDS-02, AUD-LIMIT-01, AUD-LIMIT-02, AUD-LIMIT-03, AUD-JSON-01, AUD-JSON-03, AUD-REFINE-01, AUD-REFINE-02, AUD-REFINE-03, AUD-REFINE-04
 
+use std::borrow::Cow;
 use std::collections::BTreeSet;
 
 use super::counts::{self, Counted};
@@ -18,9 +19,6 @@ use crate::render::audit::{Group, Item};
 use crate::render::Listing;
 use crate::walk::Entry;
 
-/// The longest one-liner that an audit allows, in characters (design §3.5d kind 4).
-const ONE_LINER_MAX: usize = 100;
-
 /// The fix line of `headers`: the legend of design §3.3 Gaps for a file with no header.
 const NO_HEADER: &str =
     "(no header): add a comment block atop the file; its first sentence states the file's purpose";
@@ -28,9 +26,6 @@ const NO_HEADER: &str =
 /// The fix line of `readmes`: the legend of design §3.3 Gaps for a folder with no README.
 const NO_README: &str =
     "(no README): add README.md here; line 1 is # Name, then a paragraph saying what the folder is";
-
-/// The fix line of `one-liners` (design §3.5d).
-const ONE_LINERS: &str = "(one-liners): shorten the first sentence to 100 characters or fewer";
 
 /// The fix line of `cites` (design §3.5d).
 const CITES: &str = "(cites): fix the reference or remove it";
@@ -54,7 +49,7 @@ const THIN_MIN: u32 = 80;
 /// What `thin` lists, in its heading (design §3.5d kind 5).
 const THIN_WHAT: &str = "files of 80 lines or more, lowest header share first";
 
-/// What the kinds read: the corpus, the scope, the walked entries and the `--limit` of each list.
+/// What the kinds read: the corpus, the scope, the walked entries, the `--limit` and `max_one_liner`.
 pub struct Ctx<'a> {
     /// The corpus of the root that is audited.
     pub corpus: &'a Corpus,
@@ -64,6 +59,8 @@ pub struct Ctx<'a> {
     pub tree: &'a [Entry],
     /// How many findings each kind lists.
     pub limit: usize,
+    /// The longest one-liner allowed, in Unicode scalar values (design §3.5d kind 4).
+    pub max_one_liner: usize,
 }
 
 /// The findings of every kind over the scope, in §3.5d order, with each kind that has none left out. The line counts are read once,
@@ -89,15 +86,15 @@ pub fn all(ctx: &Ctx<'_>) -> Vec<Group> {
 pub(super) fn group(
     ctx: &Ctx<'_>,
     kind: &'static str,
-    what: &'static str,
-    fix: Option<&'static str>,
+    what: impl Into<Cow<'static, str>>,
+    fix: Option<impl Into<Cow<'static, str>>>,
     mut items: Vec<Item>,
 ) -> Group {
     items.sort_by(|left, right| left.reference.cmp(&right.reference));
     Group {
         kind,
-        what,
-        fix,
+        what: what.into(),
+        fix: fix.map(Into::into),
         finding: true,
         listing: Listing::of(&items, ctx.limit),
     }
@@ -181,8 +178,9 @@ fn length(ctx: &Ctx<'_>, counted: &[Counted]) -> Group {
     group(ctx, "length", LENGTH_WHAT, Some(LENGTH), items)
 }
 
-/// The READMEs and headers in scope whose one-liner is over 100 characters, counted as Unicode scalar values (design §3.5d kind 4).
+/// The READMEs and headers in scope whose one-liner is over `max_one_liner` characters, counted as Unicode scalar values (design §3.5d kind 4).
 fn one_liners(ctx: &Ctx<'_>) -> Group {
+    let max = ctx.max_one_liner;
     let items = ctx
         .corpus
         .all_docs()
@@ -194,17 +192,24 @@ fn one_liners(ctx: &Ctx<'_>) -> Group {
         })
         .filter_map(|doc| {
             let count = doc.title.chars().count();
-            (count > ONE_LINER_MAX).then(|| Item {
+            (count > max).then(|| Item {
                 reference: doc.label.clone(),
                 detail: Some(format!("{count} characters")),
             })
         })
         .collect();
+    let unit = if max == 1 {
+        "1 character".to_string()
+    } else {
+        format!("{max} characters")
+    };
     group(
         ctx,
         "one-liners",
-        "over 100 characters",
-        Some(ONE_LINERS),
+        format!("over {unit}"),
+        Some(format!(
+            "(one-liners): shorten the first sentence to {unit} or fewer"
+        )),
         items,
     )
 }
@@ -239,7 +244,7 @@ fn thin(ctx: &Ctx<'_>, counted: &[Counted]) -> Group {
         .collect();
     Group {
         kind: "thin",
-        what: THIN_WHAT,
+        what: Cow::Borrowed(THIN_WHAT),
         fix: None,
         finding: false,
         listing: Listing::of(&items, ctx.limit),

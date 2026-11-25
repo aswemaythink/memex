@@ -3,6 +3,8 @@
 //! the paths that named nothing. Paths in labels and JSON are root-relative, with `/` separators.
 //! Cases: AUD-SCOPE-01, AUD-SCOPE-02, AUD-SCOPE-04, AUD-HEADERS-01, AUD-READMES-01, AUD-ONELINERS-01, AUD-CITES-01, AUD-IDS-01, AUD-LIMIT-01, AUD-LIMIT-02, AUD-LIMIT-03, AUD-EMPTY-01, AUD-LENGTH-01, AUD-THIN-01, AUD-THIN-06, AUD-THIN-07, AUD-JSON-01, AUD-JSON-02, AUD-JSON-03, AUD-EXIT-01
 
+use std::borrow::Cow;
+
 use serde_json::{json, Value as Json};
 
 use super::{Listing, Miss};
@@ -24,9 +26,9 @@ pub struct Group {
     /// The kind's name, such as `headers`.
     pub kind: &'static str,
     /// What the list holds, for its heading, such as `files with no header`.
-    pub what: &'static str,
+    pub what: Cow<'static, str>,
     /// The line that follows the list with the fix, or None for a kind with no fix line.
-    pub fix: Option<&'static str>,
+    pub fix: Option<Cow<'static, str>>,
     /// True for a finding, which the count of findings includes. False for a pointer such as `thin`: it is listed, but not counted
     /// (design §3.5d).
     pub finding: bool,
@@ -112,7 +114,7 @@ fn group_text(out: &mut String, group: &Group) {
     for item in &listing.items {
         out.push_str(&item_line(item));
     }
-    if let Some(fix) = group.fix {
+    if let Some(fix) = &group.fix {
         out.push_str(fix);
         out.push('\n');
     }

@@ -1,0 +1,8 @@
+$ memex audit
+exit 0
+stdout
+| audit       . · 3 files · 2 folders · 1 finding
+| one-liners  (showing 1 of 1; over 80 characters)
+|   src/long.rs  81 characters
+| (one-liners): shorten the first sentence to 80 characters or fewer
+stderr (empty)

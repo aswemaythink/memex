@@ -1,5 +1,5 @@
 //! Repo quality gate: short files, purpose headers, folder READMEs, and no silenced lints in src/.
-//! It also holds tests/ to dead_code as its only allow, each header's first sentence to 100 characters, and the
+//! It also holds tests/ to dead_code as its only allow, each header's first sentence to 120 characters, and the
 //! non-test code of src/ to no panicking call.
 //! Cases: none (repo quality gate)
 
@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 const MAX_LINES: usize = 365;
 
 /// The most characters a header's first sentence may have: the limit of a one-liner that a folder listing shows whole.
-const MAX_SENTENCE: usize = 100;
+const MAX_SENTENCE: usize = 120;
 
 /// The trees the gate walks, relative to the crate root.
 const ROOTS: [&str; 2] = ["src", "tests"];
@@ -85,7 +85,7 @@ fn source_files_open_with_a_purpose_header() {
 }
 
 #[test]
-fn header_first_sentences_are_at_most_100_chars() {
+fn header_first_sentences_are_at_most_120_chars() {
     let nodes = tree();
     let mut problems = Vec::new();
     for node in rust_files(&nodes) {
