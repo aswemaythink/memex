@@ -35,3 +35,7 @@ publish-jobs = ["homebrew", "npm", "./publish-crates"]
 plan-jobs = ["./check-versions"]
 # No allow-dirty: `dist plan` on every PR fails if release.yml differs from what dist generates, so a hand edit, or a
 # lost publish job, cannot ship. Regenerate with `dist generate --mode ci` after editing this file.
+
+# GitHub retired macos-14; pin Apple Silicon builds to macos-15.
+[dist.github-custom-runners]
+aarch64-apple-darwin = "macos-15"
