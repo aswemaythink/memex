@@ -2,10 +2,11 @@
 
 The release notes of memex. Each GitHub release takes its notes from the matching section here.
 
-## 0.4.0 - 2026-11-25
+## 0.4.1 - 2026-11-25
 
 - `audit`'s `one-liners` limit is now configurable via `max_one_liner` in `.memex/config.json`, and its default is raised from 100 to 120 characters (Unicode scalar values), matching the 120-character text display clip.
 - `audit` reads `max_one_liner` from the audited root's `.memex/config.json`; a missing file, an unusable file or an invalid value falls back to 120 (printing a config warning on stderr when the file is unusable or the value is invalid), and both the `one-liners` heading and fix line reflect the active limit.
+- Release CI pins Apple Silicon builds (`aarch64-apple-darwin`) to `macos-15` after GitHub retired `macos-14` (`v0.4.0` was not published).
 
 ## 0.3.1 - 2026-10-24
 
